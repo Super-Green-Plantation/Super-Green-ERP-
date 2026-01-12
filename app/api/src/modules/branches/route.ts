@@ -5,7 +5,7 @@ export async function GET() {
   try {
     const res = await prisma.branch.findMany({
       include: {
-        members: true, // <-- include related members
+        members: true, // <-- include related members foregin key data
       },
     });
 
@@ -15,5 +15,22 @@ export async function GET() {
       { error: "Failed to fetch branches" },
       { status: 500 }
     );
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    
+    const data = await request.json();
+    const newBranch = await prisma.branch.create({
+      data: {
+        name: data.name,
+        location: data.location,
+      },
+    })
+
+    return NextResponse.json({message: "Branch created successfully", newBranch});
+  } catch (error) {
+    return NextResponse.json({error})
   }
 }

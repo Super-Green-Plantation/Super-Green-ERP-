@@ -1,7 +1,27 @@
-import BranchTable from "@/app/components/BranchTable";
+"use client";
+
+import AddBranchModal from "@/app/components/Branch/Add";
+import BranchTable from "@/app/components/Branch/BranchTable";
 import { ChevronDown, Search } from "lucide-react";
+import { useState } from "react";
 
 const page = () => {
+  const [showAddModal, setShowAddModal] = useState(false);
+
+  const handleAddBranch = async (data: { name: string; location: string }) => {
+    console.log("Branch Data:", data);
+    try {
+      const res = await fetch("/api/src/modules/branches", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data }),
+      });
+
+      if (!res.ok) throw new Error("Failed to save branch");
+    } catch (error) {
+      throw new Error("Failed to save branch");
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -14,7 +34,10 @@ const page = () => {
           </p>
         </div>
 
-        <button className="px-4 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-lg">
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="px-4 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-lg"
+        >
           + Add Branch
         </button>
       </div>
@@ -72,9 +95,15 @@ const page = () => {
 
         {/* Table Placeholder */}
         <div className="text-sm text-gray-500 py-6 text-center">
-          <BranchTable/>
+          <BranchTable />
         </div>
       </div>
+      {showAddModal && (
+        <AddBranchModal
+          onSubmit={handleAddBranch}
+          onClose={() => setShowAddModal(false)}
+        />
+      )}
     </div>
   );
 };
