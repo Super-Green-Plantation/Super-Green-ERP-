@@ -1,28 +1,12 @@
 "use client";
 
-import BranchModal from "@/app/components/Branch/Model";
-import AddBranchModal from "@/app/components/Branch/Model";
 import BranchTable from "@/app/components/Branch/BranchTable";
+import BranchModal from "@/app/components/Branch/Model";
 import { ChevronDown, Search } from "lucide-react";
 import { useState } from "react";
 
 const page = () => {
   const [showAddModal, setShowAddModal] = useState(false);
-
-  const setShowModal = async (data: { name: string; location: string }) => {
-    console.log("Branch Data:", data);
-    try {
-      const res = await fetch("/api/src/branches", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      if (!res.ok) throw new Error("Failed to save branch");
-    } catch (error) {
-      throw new Error("Failed to save branch");
-    }
-  };
 
   return (
     <div className="space-y-4">
@@ -100,14 +84,7 @@ const page = () => {
         </div>
       </div>
       {showAddModal && (
-        <BranchModal
-          mode="add"
-          onClose={() => setShowAddModal(false)}
-          onSubmit={(data) => {
-            setShowModal(data);
-            console.log("Add", data);
-          }}
-        />
+        <BranchModal mode="add" onClose={() => setShowAddModal(false)} />
       )}
     </div>
   );

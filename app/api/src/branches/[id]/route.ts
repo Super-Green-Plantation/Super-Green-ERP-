@@ -1,6 +1,6 @@
 import { prisma } from "../../utils/prisma";
 
-export async function PUT(req:Request, { params }: { params: { id: string } }) {
+export async function PUT(req:Request, { params }: { params: Promise<{ id: string }> }) {
     const body = await req.json();
     const {id} = await params;
 
@@ -22,6 +22,7 @@ export async function PUT(req:Request, { params }: { params: { id: string } }) {
   // Logic to update a branch by ID
   return new Response(`Update branch with ID:`);
 }
+
 
 export async function DELETE(
   _: Request,

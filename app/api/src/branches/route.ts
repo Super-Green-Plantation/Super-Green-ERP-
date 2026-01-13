@@ -12,6 +12,7 @@ export async function GET() {
     return NextResponse.json({
       message: "Branch fetch success",
       res: branches,
+      len : branches.length
     });
   } catch (error) {
     console.error(error); // <-- log actual error

@@ -17,7 +17,11 @@ interface BranchModalProps {
   onClose: () => void;
 }
 
-const BranchModal = ({ mode, initialData, onClose }: BranchModalProps) => {
+const BranchModal = ({
+  mode,
+  initialData,
+  onClose,
+}: BranchModalProps) => {
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
   const [loading, setLoading] = useState(false);
@@ -86,7 +90,9 @@ const BranchModal = ({ mode, initialData, onClose }: BranchModalProps) => {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Branch Name</label>
+            <label className="block text-sm font-medium mb-1">
+              Branch Name
+            </label>
             <input
               type="text"
               value={name}
@@ -111,15 +117,19 @@ const BranchModal = ({ mode, initialData, onClose }: BranchModalProps) => {
             type="submit"
             disabled={loading}
             className={`w-full text-white py-2 rounded-lg font-semibold ${
-              mode === "add" ? "bg-blue-500 hover:bg-blue-600" : "bg-green-500 hover:bg-green-600"
+              mode === "add"
+                ? "bg-blue-500 hover:bg-blue-600"
+                : "bg-green-500 hover:bg-green-600"
             }`}
           >
             {loading ? (
               <div className="flex justify-center items-center gap-2">
                 {mode === "add" ? "Adding..." : "Updating..."} <Spinner />
               </div>
+            ) : mode === "add" ? (
+              "Add Branch"
             ) : (
-              mode === "add" ? "Add Branch" : "Update Branch"
+              "Update Branch"
             )}
           </button>
         </form>
