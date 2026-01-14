@@ -34,7 +34,7 @@ const Page = () => {
         {branches.map((branch:Branch) => (
           <Link
             key={branch.id}
-            href={`/features/branches/employee/${branch.id}`}
+            href={`/features/branches/employees/${branch.id}`}
             className="group"
           >
             <div
