@@ -1,8 +1,11 @@
 "use client";
 
-import { Pen, ToggleLeft, ToggleRight, Trash2 } from "lucide-react";
-import { useBranches } from "../../hooks/useBranches";
+import { Pen, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { useBranches } from "../../hooks/useBranches";
+import BranchModal from "./Model";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { deleteBranch } from "@/app/api/src/utils/mutation";
 
 interface Branch {
   id: number;
@@ -12,12 +15,30 @@ interface Branch {
 }
 
 const BranchTable = () => {
-  const { data:branches, isLoading, error } = useBranches();
-  const [isActive, setIsActive] = useState(false);
-  console.log(branches);
+  const [updateModel, setUpdateModel] = useState(false);
+  const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
 
-  const toggleStatus = () => {
-    setIsActive(!isActive);
+  const { data: branches, isLoading, error } = useBranches();
+  // console.log(branches);
+
+  const queryClient = useQueryClient()
+
+ const deleteMutation = useMutation({
+  mutationFn: (id: number) => deleteBranch(id),
+  onSuccess: () => {
+    // Refetch branches after deletion
+    queryClient.invalidateQueries({ queryKey: ["branches"] });
+  },
+});
+
+  const handelUpdate = (branch: Branch) => {
+    setSelectedBranch(branch);
+    setUpdateModel(true);
+  };
+  const handelDelete = async (branchId: number) => {
+    if (confirm("Are you sure you want to delete this branch?")) {
+    deleteMutation.mutate(branchId);
+  }
   };
 
   // Styled Loading State
@@ -33,13 +54,11 @@ const BranchTable = () => {
       </div>
     );
   }
-
   // Styled Error State
   if (error) {
     return (
       <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-center">
         <p className="font-semibold text-red-600">Error loading data</p>
-        
       </div>
     );
   }
@@ -61,7 +80,6 @@ const BranchTable = () => {
                 Team Size
               </th>
               <th className="px-6 py-4 font-semibold text-gray-600">Action</th>
-
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 bg-white">
@@ -112,15 +130,20 @@ const BranchTable = () => {
                 {/* Action Column */}
                 <td>
                   <div className="flex gap-4 px-6 py-4">
-                    <button className="cursor-pointer text-blue-400 bg-blue-300/20 rounded-md px-2 py-1">
+                    <button
+                      onClick={() => handelUpdate(branch)}
+                      className="cursor-pointer text-blue-400 bg-blue-300/20 rounded-md px-2 py-1"
+                    >
                       <Pen className="w-5" />
                     </button>
-                    <button className="cursor-pointer text-red-400 bg-red-300/20 rounded-md px-2 py-1">
+                    <button
+                      onClick={() => handelDelete(branch.id)}
+                      className="cursor-pointer text-red-400 bg-red-300/20 rounded-md px-2 py-1"
+                    >
                       <Trash2 className="w-5" />
                     </button>
                   </div>
                 </td>
-                
               </tr>
             ))}
           </tbody>
@@ -130,6 +153,22 @@ const BranchTable = () => {
       {/* Empty State Handling */}
       {branches?.length === 0 && (
         <div className="p-8 text-center text-gray-500">No branches found.</div>
+      )}
+
+      {/* Update Modal */}
+      {updateModel && selectedBranch && (
+        <BranchModal
+          mode="edit"
+          initialData={{
+            id: selectedBranch.id,
+            name: selectedBranch.name,
+            location: selectedBranch.location,
+          }}
+          onClose={() => {
+            setUpdateModel(false);
+            setSelectedBranch(null);
+          }}
+        />
       )}
     </div>
   );
