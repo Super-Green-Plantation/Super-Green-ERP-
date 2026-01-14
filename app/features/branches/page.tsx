@@ -2,11 +2,24 @@
 
 import BranchTable from "@/app/components/Branch/BranchTable";
 import BranchModal from "@/app/components/Branch/Model";
+import { getBranches } from "@/app/services/branches.service";
 import { ChevronDown, Search } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const page = () => {
   const [showAddModal, setShowAddModal] = useState(false);
+  const [count,setCount]= useState(0)
+
+    
+  
+  const getcount = async () => {
+    const data = await getBranches();
+    setCount(data.len)
+    console.log(data);
+  };
+  useEffect(() => {
+    getcount();
+  }, []);
 
   return (
     <div className="space-y-4">
@@ -35,17 +48,17 @@ const page = () => {
           <div className="flex gap-3">
             <div className="min-w-30 rounded-lg border border-gray-300 px-4 py-3">
               <p className="text-xs text-gray-500">Total</p>
-              <p className="text-lg font-semibold">10</p>
+              <p className="text-lg font-semibold">{count}</p>
             </div>
 
             <div className="min-w-30 rounded-lg border border-gray-300 px-4 py-3">
               <p className="text-xs text-gray-500">Active</p>
-              <p className="text-lg font-semibold text-green-600">8</p>
+              <p className="text-lg font-semibold text-green-600">{count}</p>
             </div>
 
             <div className="min-w-30 rounded-lg border border-gray-300 px-4 py-3">
               <p className="text-xs text-gray-500">Inactive</p>
-              <p className="text-lg font-semibold text-red-500">2</p>
+              <p className="text-lg font-semibold text-red-500">0</p>
             </div>
           </div>
 
