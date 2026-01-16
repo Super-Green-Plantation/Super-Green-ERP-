@@ -40,3 +40,29 @@ export async function DELETE(
     return new Response(JSON.stringify({ message: "Failed to delete branch", error: error.message }), { status: 500 });
   }
 }
+
+export async function GET(_:Request,{ params }: { params: Promise<{ id: string }> } ){
+  const {id} = await params;
+
+  try {
+    const res = await prisma.branch.findUnique({
+      where:{
+        id:Number(id)
+      },
+      include:{
+        members:{
+          include:{
+            position:true
+          }
+        }
+      }
+    })
+
+    if (res) {
+       return new Response(JSON.stringify(res));
+     }
+    
+  } catch (error:any) {
+    throw new Error(error)
+  }
+}

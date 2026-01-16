@@ -14,7 +14,7 @@ import { usePathname } from "next/navigation";
 const links = [
   { name: "Dashboard", href: "/features/dashboard", icon: LayoutDashboard  },
   { name: "Branches", href: "/features/branches", icon: GitBranch },
-  { name: "Employee", href: "/features/branches/employee", icon: IdCardLanyard },
+  { name: "Employee", href: "/features/branches/employees", icon: IdCardLanyard },
   { name: "Financial Plans", href: "/features/financial_plans", icon: Landmark },
   { name: "Commissions", href: "/features/commissions", icon: Percent },
   { name: "Clients", href: "/features/clients", icon: Users },
