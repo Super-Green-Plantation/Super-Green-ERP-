@@ -78,9 +78,10 @@ model Client{
 model FinancialPlan {
   id          Int      @id @default(autoincrement())
   name        String
-  duration    Int      // මාස ගණන
-  rate        Float    // පොලී අනුපාතය
+  duration    Int
+  rate        Float
   description String
+  investment  Float?   // ? ලකුණින් මෙය අනිවාර්ය නොවන (Optional/Nullable) බව අඟවයි
   status      String   @default("Active")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

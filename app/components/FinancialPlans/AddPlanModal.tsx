@@ -47,6 +47,18 @@ const AddPlanModal = ({ isOpen, onClose }: AddPlanModalProps) => {
             </div>
           </div>
 
+{/* Duration සහ Rate ඇති තැනට යටින් මෙය එක් කරන්න */}
+<div>
+  <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">
+    Initial Investment (Optional)
+  </label>
+  <input 
+    name="investment" 
+    type="number" 
+    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none" 
+    placeholder="e.g. 50000" 
+  />
+</div>
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Description</label>
             <textarea name="description" required className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none h-28 resize-none" placeholder="Describe the benefits of this plan..."></textarea>
