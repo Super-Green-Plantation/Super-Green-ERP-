@@ -4,6 +4,8 @@ import "./globals.css";
 import Sidebar from "./components/SideBar/Sidebar";
 import Providers from "./providers";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { Toaster } from "@/components/ui/sonner";
+import Toast from "./Toast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,8 +37,7 @@ export default function RootLayout({
 
           <main className="ml-0 md:ml-60 p-6 bg-gray-100 min-h-screen w-full">
             <Providers>
-              
-              {children}
+              <Toast>{children}</Toast>
 
               <ReactQueryDevtools initialIsOpen={false} />
             </Providers>

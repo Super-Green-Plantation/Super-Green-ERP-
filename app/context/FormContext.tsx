@@ -15,6 +15,7 @@ export interface FormData {
     dateOfBirth?: string;
     occupation?: string;
     address?: string;
+    branchId?: string;
   };
   beneficiary: {
     fullName?: string;
