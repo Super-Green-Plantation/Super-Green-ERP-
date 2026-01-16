@@ -16,7 +16,12 @@ export interface Position {
   commissionRate:CommissionRate
 }
 
-export interface CommissionRate{
+export interface CommissionRate {
   id: number;
   rate: number;
+  positionId: number;
+  position?: Position;
+
+  createdAt: string | Date;
+  updatedAt: string | Date;
 }

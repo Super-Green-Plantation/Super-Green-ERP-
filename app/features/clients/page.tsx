@@ -13,7 +13,7 @@ const Page = () => {
             Registration Portal
           </h1>
           <p className="text-gray-600">
-            Please complete all sections to proceed with your investment.
+            Please complete all sections to proceed with investment.
           </p>
         </div>
 
