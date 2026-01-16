@@ -30,7 +30,7 @@ const Page = () => {
   }, [selectedBranchId]);
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-6">
       {/* Page Title */}
       <h1 className="text-2xl font-semibold mb-6">Commissions</h1>
 

@@ -8,10 +8,17 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-enum Status{
+enum Status {
   Active
   Inactive
 }
+
+enum ReturnFrequency {
+  Monthly
+  HalfYearly
+  Yearly
+}
+
 
 model Branch {
   id        Int   @id @default(autoincrement())
@@ -62,26 +69,102 @@ model Member {
 }
 
 
-model Client{
-  id        Int   @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  phone     String?
-  address   String?
-
-  branchId  Int
-  branch    Branch   @relation(fields: [branchId], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
 model FinancialPlan {
   id          Int      @id @default(autoincrement())
   name        String
-  duration    Int      // මාස ගණන
-  rate        Float    // පොලී අනුපාතය
+  duration    Int      // months
+  rate        Float
   description String
-  status      String   @default("Active")
+  status      Status   @default(Active)
+
+  investments Investment[]
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model Client {
+  id              Int      @id @default(autoincrement())
+
+  fullName        String
+  nic             String?  @unique
+  drivingLicense  String?  @unique
+  passportNo      String?  @unique
+
+  email           String?  @unique
+  phoneMobile     String
+  phoneLand       String?
+
+  dateOfBirth     DateTime?
+  occupation      String?
+
+  address         String
+
+  branchId        Int
+  branch          Branch   @relation(fields: [branchId], references: [id])
+
+  status          Status   @default(Active)
+
+  investments     Investment[]
+  beneficiary     Beneficiary?
+  nominee         Nominee?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+
+model Beneficiary {
+  id            Int    @id @default(autoincrement())
+
+  fullName      String
+  nic           String?
+  phone         String
+
+  bankName      String
+  bankBranch    String
+  accountNo     String
+
+  relationship  String
+
+  clientId      Int    @unique
+  client        Client @relation(fields: [clientId], references: [id])
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+
+model Nominee {
+  id               Int    @id @default(autoincrement())
+
+  fullName         String
+  permanentAddress String
+  postalAddress    String?
+
+  clientId         Int    @unique
+  client           Client @relation(fields: [clientId], references: [id])
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+
+model Investment {
+  id              Int      @id @default(autoincrement())
+
+  investmentDate  DateTime
+  amount          Float
+  rate            Float
+
+  returnFrequency ReturnFrequency
+
+  clientId        Int
+  client          Client   @relation(fields: [clientId], references: [id])
+
+  planId          Int?
+  plan            FinancialPlan? @relation(fields: [planId], references: [id])
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
