@@ -83,6 +83,7 @@ model FinancialPlan {
   updatedAt   DateTime @updatedAt
 }
 
+
 model Client {
   id              Int      @id @default(autoincrement())
 
