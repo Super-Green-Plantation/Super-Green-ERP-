@@ -13,7 +13,7 @@ const AddPlanModal = ({ isOpen, onClose }: AddPlanModalProps) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-gray-900/60  flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
         <div className="p-6 border-b bg-gray-50 flex justify-between items-center">
           <div>
