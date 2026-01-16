@@ -1,28 +1,30 @@
 import { prisma } from "../../utils/prisma";
 
-export async function PUT(req:Request, { params }: { params: Promise<{ id: string }> }) {
-    const body = await req.json();
-    const {id} = await params;
+export async function PUT(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const body = await req.json();
+  const { id } = await params;
 
-     console.log(body);
-     console.log(id);
+  console.log(body);
+  console.log(id);
 
-     const res = await prisma.branch.update({
-      where: { id: Number(id) },
-      data: {
-        name: body.name,
-        location: body.location,
-      },
-     })
+  const res = await prisma.branch.update({
+    where: { id: Number(id) },
+    data: {
+      name: body.name,
+      location: body.location,
+    },
+  });
 
-     if (res) {
-       return new Response(JSON.stringify(res));
-     }
-    
+  if (res) {
+    return new Response(JSON.stringify(res));
+  }
+
   // Logic to update a branch by ID
   return new Response(`Update branch with ID:`);
 }
-
 
 export async function DELETE(
   _: Request,
@@ -37,32 +39,57 @@ export async function DELETE(
 
     return new Response(JSON.stringify(res), { status: 200 });
   } catch (error: any) {
-    return new Response(JSON.stringify({ message: "Failed to delete branch", error: error.message }), { status: 500 });
+    return new Response(
+      JSON.stringify({
+        message: "Failed to delete branch",
+        error: error.message,
+      }),
+      { status: 500 }
+    );
   }
 }
 
-export async function GET(_:Request,{ params }: { params: Promise<{ id: string }> } ){
-  const {id} = await params;
+export async function GET(
+  _: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
 
   try {
     const res = await prisma.branch.findUnique({
-      where:{
-        id:Number(id)
+      where: {
+        id: Number(id),
       },
-      include:{
-        members:{
-          include:{
-            position:true
-          }
-        }
-      }
-    })
+      include: {
+        members: {
+          include: {
+            position: {
+              include: {
+                commissionRate: true,
+              },
+            },
+          },
+        },
+      },
+    });
 
-    if (res) {
-       return new Response(JSON.stringify(res));
-     }
-    
-  } catch (error:any) {
-    throw new Error(error)
-  }
+    if (!res) {
+      return new Response(JSON.stringify({ message: "Branch not found" }), {
+        status: 404,
+      });
+    }
+
+    return new Response(JSON.stringify(res), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (error) {
+  console.error("Branch fetch error:", error);
+
+  return new Response(
+    JSON.stringify({ message: "Internal Server Error" }),
+    { status: 500 }
+  );
+}
+
 }

@@ -1,16 +1,4 @@
-interface Position {
-  title: string;
-  baseSalary: number;
-}
-
-interface Member {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  totalCommission: number;
-  position: Position;
-}
+import { Member } from "@/app/types/member";
 
 export default function MemberCard({ member }: { member: Member }) {
   return (
