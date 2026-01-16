@@ -2,57 +2,54 @@ import { prisma } from "@/lib/prisma";
 
 export async function POST(req: Request) {
   const body = await req.json();
-  
+
+  // Check required fields
+  const applicant = body.applicant;
+  if (!applicant.fullName || !applicant.address || !applicant.branchId) {
+    return new Response(
+      JSON.stringify({ message: "Missing required fields: fullName, address, branchId" }),
+      { status: 400 }
+    );
+  }
+
   try {
     const client = await prisma.$transaction(async (prisma) => {
-      // Create client (Applicant)
+      // Create Client
       const createdClient = await prisma.client.create({
         data: {
-          fullName: body.fullName,
-          nic: body.nic,
-          drivingLicense: body.drivingLicense,
-          passportNo: body.passportNo,
-          email: body.email,
-          phoneMobile: body.phoneMobile,
-          phoneLand: body.phoneLand,
-          dateOfBirth: body.dateOfBirth ? new Date(body.dateOfBirth) : null,
-          occupation: body.occupation,
-          address: body.address,
-          branchId: body.branchId,
-        }
+          fullName: applicant.fullName,
+          nic: applicant.nic || null,
+          drivingLicense: applicant.drivingLicense || null,
+          passportNo: applicant.passportNo || null,
+          email: applicant.email || null,
+          phoneMobile: applicant.phoneMobile || null,
+          phoneLand: applicant.phoneLand || null,
+          dateOfBirth: applicant.dateOfBirth
+            ? new Date(applicant.dateOfBirth)
+            : null,
+          occupation: applicant.occupation || null,
+          address: applicant.address,
+          branchId: applicant.branchId,
+        },
       });
 
-      // Beneficiary
+      // Create Beneficiary if exists
       if (body.beneficiary) {
         await prisma.beneficiary.create({
           data: {
+            ...body.beneficiary,
             clientId: createdClient.id,
-            ...body.beneficiary
-          }
+          },
         });
       }
 
-      // Nominee
+      // Create Nominee if exists
       if (body.nominee) {
         await prisma.nominee.create({
           data: {
+            ...body.nominee,
             clientId: createdClient.id,
-            ...body.nominee
-          }
-        });
-      }
-
-      // Investments
-      if (body.investments?.length) {
-        await prisma.investment.createMany({
-          data: body.investments.map(inv => ({
-            clientId: createdClient.id,
-            investmentDate: inv.investmentDate ? new Date(inv.investmentDate) : null,   
-            amount: inv.amount,
-            rate: inv.rate,
-            returnFrequency: inv.returnFrequency,
-            planId: inv.planId || null,
-          }))
+          },
         });
       }
 
@@ -60,8 +57,9 @@ export async function POST(req: Request) {
     });
 
     return new Response(JSON.stringify(client), { status: 201 });
-  } catch (error: any) {
-    console.error(error);
-    return new Response(JSON.stringify({ message: error.message }), { status: 400 });
+  } catch (err) {
+    console.error(err);
+    return new Response(JSON.stringify({ message: "Server error" }), { status: 500 });
   }
 }
+
