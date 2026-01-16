@@ -2,33 +2,14 @@
 
 import MemberCard from "@/app/components/Branch/MemberCard";
 import { getBranchDetails } from "@/app/services/branches.service";
+import { Branch } from "@/app/types/branch";
+import { Member } from "@/app/types/member";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
-interface Branch {
-  id: number;
-  name: string;
-  location: string;
-  status: boolean;
-  members: Member[];
-}
 
-interface Member {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  totalCommission: number;
-  position: Position;
-}
 
-interface Position {
-  id: number;
-  title: string;
-  baseSalary: number;
-  createdAt: string;
-  updatedAt: string;
-}
+
 
 export default function Page() {
   const params = useParams();
