@@ -92,7 +92,7 @@ model Client {
   passportNo      String?  @unique
 
   email           String?  @unique
-  phoneMobile     String
+  phoneMobile     String?
   phoneLand       String?
 
   dateOfBirth     DateTime?

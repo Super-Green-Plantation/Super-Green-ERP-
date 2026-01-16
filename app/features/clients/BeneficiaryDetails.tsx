@@ -1,102 +1,81 @@
-import React from "react";
+"use client";
+
+import { useFormContext } from "@/app/context/FormContext";
 
 const BeneficiaryDetails = () => {
+  const { form } = useFormContext();
+  const { register } = form;
+
   return (
     <div className="max-w-4xl mx-auto p-8 bg-white shadow-lg rounded-xl border border-gray-100 mt-10">
       <h2 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">
         Beneficiary Details
       </h2>
-      
-      <form action="" className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
-        {/* Name - Spans full width */}
+
+      <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="md:col-span-2 flex flex-col gap-1">
-          <label className="text-sm font-semibold text-gray-700">
-            Full Name
-          </label>
+          <label>Full Name</label>
           <input
             type="text"
-            placeholder="Enter beneficiary name"
-            className="p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition"
+            {...register("beneficiary.fullName")}
+            placeholder="Full Name"
+            className="p-2.5 border rounded-lg"
           />
         </div>
-
-        {/* Identity & Contact */}
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-semibold text-gray-700">
-            NIC / ID Number
-          </label>
+          <label>NIC</label>
           <input
             type="text"
+            {...register("beneficiary.nic")}
             placeholder="NIC"
-            className="p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+            className="p-2.5 border rounded-lg"
           />
         </div>
-
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-semibold text-gray-700">
-            Phone Number
-          </label>
+          <label>Phone</label>
           <input
             type="text"
-            placeholder="07X XXX XXXX"
-            className="p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+            {...register("beneficiary.phone")}
+            placeholder="Phone Number"
+            className="p-2.5 border rounded-lg"
           />
         </div>
-
-        {/* Banking Section */}
-        <div className="md:col-span-2 mt-2">
-          <h3 className="text-sm font-bold uppercase text-blue-600 tracking-wider mb-2">
-            Banking Information
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-semibold text-gray-700">
-                Bank Account Number
-              </label>
-              <input
-                type="text"
-                placeholder="A/C Number"
-                className="p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <label className="text-sm font-semibold text-gray-700">
-                Bank Name
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. Bank of Ceylon"
-                className="p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-              />
-            </div>
-          </div>
-        </div>
-
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-semibold text-gray-700">
-            Branch
-          </label>
+          <label>Bank Name</label>
           <input
             type="text"
-            placeholder="Branch name"
-            className="p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+            {...register("beneficiary.bankName")}
+            placeholder="Bank Name"
+            className="p-2.5 border rounded-lg"
           />
         </div>
-
         <div className="flex flex-col gap-1">
-          <label className="text-sm font-semibold text-gray-700">
-            Relationship
-          </label>
+          <label>Bank Branch</label>
           <input
             type="text"
-            placeholder="e.g. Spouse, Child, Parent"
-            className="p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+            {...register("beneficiary.bankBranch")}
+            placeholder="Branch"
+            className="p-2.5 border rounded-lg"
           />
         </div>
-
-        
+        <div className="flex flex-col gap-1">
+          <label>Account No</label>
+          <input
+            type="text"
+            {...register("beneficiary.accountNo")}
+            placeholder="A/C No"
+            className="p-2.5 border rounded-lg"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label>Relationship</label>
+          <input
+            type="text"
+            {...register("beneficiary.relationship")}
+            placeholder="Relationship"
+            className="p-2.5 border rounded-lg"
+          />
+        </div>
       </form>
     </div>
   );

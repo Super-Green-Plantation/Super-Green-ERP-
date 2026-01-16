@@ -1,21 +1,67 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "../utils/prisma";
+import { prisma } from "@/lib/prisma";
 
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { name, email } = body;
+export async function POST(req: Request) {
+  const body = await req.json();
+  console.log(body);
+  
 
-    const client = await prisma.client.create({
-      data: { name, email },
-    });
-
-    return NextResponse.json(client, { status: 201 });
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json(
-      { error: "Failed to save client" },
-      { status: 500 }
+  // Check required fields
+  const applicant = body.applicant;
+  if (!applicant.fullName || !applicant.address || !applicant.branchId) {
+    return new Response(
+      JSON.stringify({ message: "Missing required fields: fullName, address, branchId" }),
+      { status: 400 }
     );
   }
+
+  try {
+    const client = await prisma.$transaction(async (prisma) => {
+      // Create Client
+      const createdClient = await prisma.client.create({
+        data: {
+          fullName: applicant.fullName,
+          nic: applicant.nic || null,
+          drivingLicense: applicant.drivingLicense || null,
+          passportNo: applicant.passportNo || null,
+          email: applicant.email || null,
+          phoneMobile: applicant.phoneMobile || null,
+          phoneLand: applicant.phoneLand || null,
+          dateOfBirth: applicant.dateOfBirth
+            ? new Date(applicant.dateOfBirth)
+            : null,
+          occupation: applicant.occupation || null,
+          address: applicant.address,
+          branchId: applicant.branchId,
+        },
+      });
+
+      // Create Beneficiary if exists
+      if (body.beneficiary) {
+        await prisma.beneficiary.create({
+          data: {
+            ...body.beneficiary,
+            clientId: createdClient.id,
+          },
+        });
+      }
+
+      // Create Nominee if exists
+      if (body.nominee) {
+        await prisma.nominee.create({
+          data: {
+            ...body.nominee,
+            clientId: createdClient.id,
+          },
+        });
+      }
+
+      return createdClient;
+    });
+
+    return new Response(JSON.stringify(client), { status: 201 });
+  } catch (err) {
+    console.error(err);
+    return new Response(JSON.stringify({ message: "Server error" }), { status: 500 });
+  }
 }
+
