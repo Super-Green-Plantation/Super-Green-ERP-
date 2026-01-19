@@ -20,6 +20,8 @@ const Page = () => {
 
   const [branch, setBranch] = useState<Branch | null>(null);
   const [client, setClient] = useState<Client | null>(null);
+  console.log(client);
+  
 
   /* ---------------- Load branches ---------------- */
   useEffect(() => {
@@ -52,12 +54,12 @@ const Page = () => {
     }
 
     const data = await getClientsByBranch(selectedBranchId);
-    setClients(data.clients); // ✅ FIX
+    setClients(data.clients); 
   };
 
   useEffect(() => {
     loadClients();
-  }, [selectedBranchId]); // ✅ FIX
+  }, [selectedBranchId]); 
 
   useEffect(() => {
     if (!selectedClientId) {
@@ -71,7 +73,7 @@ const Page = () => {
     };
 
     loadClient();
-  }, [selectedClientId]); // ✅ FIX
+  }, [selectedClientId]); 
 
   return (
     <div className="p-6">
@@ -185,6 +187,18 @@ const Page = () => {
                 <p className="text-sm text-gray-600">
                   NIC: {client.nic ?? "-"}
                 </p>
+                <p className="text-sm text-gray-600">
+                  Plan:{" "}
+                  {client.investments?.map((inv) => (
+                    <p>{inv.plan?.name}</p>
+                  )) || "-"}
+                </p>
+
+                 <p className="text-sm text-gray-600">
+                  Branch:{" "}
+                  {client.branch?.name}
+                </p>
+
                 <p className="text-sm text-gray-600">
                   Address: {client.address}
                 </p>

@@ -11,6 +11,10 @@ export async function GET(
       where: {
         branchId: Number(branchId),
       },
+      include:{
+        investments:true,
+        branch:true
+      },
       orderBy: {
         createdAt: "desc",
       },

@@ -11,6 +11,10 @@ export async function GET(
       where: {
         id: Number(id),
       },
+      include:{
+        investments:true,
+        branch:true
+      }
     });
 
     return NextResponse.json(client);
