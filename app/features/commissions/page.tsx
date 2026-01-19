@@ -1,12 +1,10 @@
 "use client";
 
-import {
-  getBranchDetails,
-  getBranches,
-} from "@/app/services/branches.service";
+import { getBranchDetails, getBranches } from "@/app/services/branches.service";
 import {
   getClientDetails,
   getClients,
+  getClientsByBranch,
 } from "@/app/services/clients.service";
 import { Branch } from "@/app/types/branch";
 import { Client } from "@/app/types/client";
@@ -32,15 +30,6 @@ const Page = () => {
     loadBranches();
   }, []);
 
-  /* ---------------- Load clients ---------------- */
-  useEffect(() => {
-    const loadClients = async () => {
-      const data = await getClients();
-      setClients(data.clients); // ✅ fixed
-    };
-    loadClients();
-  }, []);
-
   /* ---------------- Load branch details ---------------- */
   useEffect(() => {
     if (!selectedBranchId) {
@@ -56,20 +45,33 @@ const Page = () => {
     fetchBranch();
   }, [selectedBranchId]);
 
-  /* ---------------- Load client details ---------------- */
+  const loadClients = async () => {
+    if (!selectedBranchId) {
+      setClients([]);
+      return;
+    }
+
+    const data = await getClientsByBranch(selectedBranchId);
+    setClients(data.clients); // ✅ FIX
+  };
+
+  useEffect(() => {
+    loadClients();
+  }, [selectedBranchId]); // ✅ FIX
+
   useEffect(() => {
     if (!selectedClientId) {
       setClient(null);
       return;
     }
 
-    const fetchClient = async () => {
+    const loadClient = async () => {
       const data = await getClientDetails(selectedClientId);
       setClient(data);
     };
 
-    fetchClient();
-  }, [selectedClientId]);
+    loadClient();
+  }, [selectedClientId]); // ✅ FIX
 
   return (
     <div className="p-6">
@@ -105,9 +107,7 @@ const Page = () => {
             )}
 
             {branch?.members?.length === 0 && (
-              <p className="text-sm text-gray-500">
-                No members in this branch
-              </p>
+              <p className="text-sm text-gray-500">No members in this branch</p>
             )}
 
             {branch?.members?.map((m: Member) => (
@@ -123,9 +123,7 @@ const Page = () => {
 
                   <div>
                     <p className="text-xs text-gray-500">Position</p>
-                    <p className="font-semibold">
-                      {m.position.title}
-                    </p>
+                    <p className="font-semibold">{m.position.title}</p>
                   </div>
 
                   <div>
@@ -136,9 +134,7 @@ const Page = () => {
                   </div>
 
                   <div>
-                    <p className="text-xs text-gray-500">
-                      Total Commission
-                    </p>
+                    <p className="text-xs text-gray-500">Total Commission</p>
                     <p className="font-semibold">
                       Rs. {m.totalCommission ?? "-"} /-
                     </p>
@@ -179,9 +175,7 @@ const Page = () => {
 
             {client && (
               <div className="rounded-xl border bg-white p-4 shadow-sm space-y-2">
-                <h2 className="text-lg font-semibold">
-                  {client.fullName}
-                </h2>
+                <h2 className="text-lg font-semibold">{client.fullName}</h2>
                 <p className="text-sm text-gray-600">
                   Email: {client.email ?? "-"}
                 </p>

@@ -15,3 +15,11 @@ export const getClientDetails = async (id: number) => {
 
   return res.json();
 };
+
+export const getClientsByBranch = async (branchId: number) => {
+  const res = await fetch(`/api/src/clients/by-branch/${branchId}`);
+  if (!res.ok) {
+    throw new Error("Failed to fetch branch clients");
+  }
+  return res.json();
+};
