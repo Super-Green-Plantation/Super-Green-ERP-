@@ -12,7 +12,7 @@ const NomineeDetails = () => {
   
 
   return (
-    <div className="max-w-4xl mx-auto p-8 bg-white shadow-lg rounded-xl border border-gray-100 mt-10">
+    <div className="max-w-4xl mx-auto p-8 bg-white shadow-lg rounded-xl border border-gray-100 mt-2">
       <h2 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">
         Nominee Details
       </h2>

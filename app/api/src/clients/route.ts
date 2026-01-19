@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -65,3 +66,12 @@ export async function POST(req: Request) {
   }
 }
 
+export async function GET() {
+  try {
+    const clients = await prisma.client.findMany();
+    return NextResponse.json({clients})
+    
+  } catch (error) {
+    return NextResponse.json({message:"Failed to get clients",error})
+  }
+}
