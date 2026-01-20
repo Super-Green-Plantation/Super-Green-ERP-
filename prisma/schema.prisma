@@ -56,6 +56,7 @@ model Member {
   name            String
   email           String   @unique
   phone           String
+  empNo           String
   totalCommission Float    @default(0)
 
   branchId  Int

@@ -1,9 +1,11 @@
 "use client";
 
 import { useFormContext } from "@/app/context/FormContext";
-import React, { useEffect, useState } from "react";
-import { Branch } from "@/app/types/branch";
 import { getBranchDetails, getBranches } from "@/app/services/branches.service";
+import { getPlans } from "@/app/services/plans.service";
+import { Branch } from "@/app/types/branch";
+import { FinancialPlan } from "@/app/types/FinancialPlan";
+import { useEffect, useState } from "react";
 
 const ApplicantDetails = () => {
   const { form } = useFormContext();
@@ -12,11 +14,28 @@ const ApplicantDetails = () => {
   const [branch, setBranch] = useState<Branch[] | null>(null);
   const [selectedBranchId, setSelectedBranchId] = useState<number | null>(null);
   const [branchDetails, setBranchDetails] = useState<Branch | null>(null);
+  const [plans, setPlans] = useState<FinancialPlan[] | null>([]);
 
   const fetchBranch = async () => {
     const braches = await getBranches();
     setBranch(braches.res);
   };
+
+  useEffect(() => {
+  const fetchPlans = async () => {
+    try {
+      const plans = await getPlans();
+      setPlans(plans);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  fetchPlans();
+}, []);
+
+
+   console.log("plans log",plans);
 
   useEffect(() => {
     if (!selectedBranchId) return;
@@ -140,6 +159,23 @@ const ApplicantDetails = () => {
           >
             <option value="">Choose a branch...</option>
             {branch?.map((b) => (
+              <option value={b.id} key={b.id}>
+                {b.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+         <div className="md:col-span-2 flex flex-col gap-1">
+          <label className="text-[15px] font-semibold text-gray-700">
+            Select Plan
+          </label>
+          <select
+            className="p-2.5 border rounded-lg"
+            {...register("investment.planId", { valueAsNumber: true })}
+          >
+            <option value="">Choose a Plan...</option>
+            {plans?.map((b) => (
               <option value={b.id} key={b.id}>
                 {b.name}
               </option>

@@ -129,7 +129,7 @@ const Page = () => {
                   </div>
 
                   <div>
-                    <p className="text-xs text-gray-500">Commission Rate</p>
+                    <p className="text-xs text-gray-500">Commission Rate ( ORC )</p>
                     <p className="font-semibold">
                       {m.position.commissionRate?.rate ?? "-"}%
                     </p>
@@ -187,12 +187,12 @@ const Page = () => {
                 <p className="text-sm text-gray-600">
                   NIC: {client.nic ?? "-"}
                 </p>
-                <p className="text-sm text-gray-600">
+                <div className="text-sm text-gray-600">
                   Plan:{" "}
                   {client.investments?.map((inv) => (
-                    <p>{inv.plan?.name}</p>
+                    <p key={inv.id}>{inv?.planId}</p>
                   )) || "-"}
-                </p>
+                </div>
 
                  <p className="text-sm text-gray-600">
                   Branch:{" "}

@@ -8,7 +8,8 @@ export async function POST(req: Request) {
 
   // Check required fields
   const applicant = body.applicant;
-  if (!applicant.fullName || !applicant.address || !applicant.branchId) {
+  const investment = body.investment;
+  if (!applicant.fullName || !applicant.address || !applicant.branchId ) {
     return new Response(
       JSON.stringify({ message: "Missing required fields: fullName, address, branchId" }),
       { status: 400 }
@@ -33,6 +34,15 @@ export async function POST(req: Request) {
           occupation: applicant.occupation || null,
           address: applicant.address,
           branchId: applicant.branchId,
+          investments:{
+            create:[{
+              planId: investment.planId,
+              investmentDate: new Date || "",
+              amount: 0,
+              rate: 0,
+              returnFrequency: "Monthly"
+            }]
+          }
         },
       });
 

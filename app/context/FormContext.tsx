@@ -17,6 +17,11 @@ export interface FormData {
     address?: string;
     branchId?: string;
   };
+  investment: {
+    planId?: string;              
+    
+  };
+
   beneficiary: {
     fullName?: string;
     nic?: string;
