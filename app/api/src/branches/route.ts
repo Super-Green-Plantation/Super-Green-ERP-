@@ -5,7 +5,15 @@ export async function GET() {
   try {
     const branches = await prisma.branch.findMany({
       include: {
-        members: true,
+        members: {
+          include:{
+            position:{
+              include:{
+                commissionRate:true
+              }
+            }
+          }
+        }
       },
     });
 

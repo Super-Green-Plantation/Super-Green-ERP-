@@ -2,6 +2,7 @@ import { Status } from "./enum";
 import { Investment } from "./investment";
 
 export interface FinancialPlan {
+  investment: any;
   id: number;
   name: string;
   duration: number; // months
