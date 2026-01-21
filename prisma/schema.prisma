@@ -42,8 +42,9 @@ enum Title {
 
 model Position {
   id        Int   @id @default(autoincrement())
-  title     Title[]
+  title     Title
   baseSalary Float
+  rank      Int    @unique
   commissionRate CommissionRate?
   members   Member[]
   createdAt DateTime @default(now())

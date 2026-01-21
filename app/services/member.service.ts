@@ -10,3 +10,12 @@ export const getMembers = async (id: number) => {
 
   return res.json();
 };
+export const getEligibleMembers = async(empNo:string, branchId: number)=>{
+  const members = await fetch(`/api/src/commissions/eligible/${empNo}/${branchId}`)
+
+  if (!members.ok) {
+    throw new Error("Failed to get eligible members")
+  }
+
+  return members.json()
+}
