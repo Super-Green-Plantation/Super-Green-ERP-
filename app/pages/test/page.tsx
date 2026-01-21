@@ -19,7 +19,6 @@ const Test = () => {
       if (!res.ok) throw new Error('Failed to save client');
 
       const data = await res.json();
-      console.log('Saved client:', data);
       setName('');
       setEmail('');
     } catch (err) {

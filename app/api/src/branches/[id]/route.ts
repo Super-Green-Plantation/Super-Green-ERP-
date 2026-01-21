@@ -7,9 +7,6 @@ export async function PUT(
   const body = await req.json();
   const { id } = await params;
 
-  console.log(body);
-  console.log(id);
-
   const res = await prisma.branch.update({
     where: { id: Number(id) },
     data: {

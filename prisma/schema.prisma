@@ -30,11 +30,21 @@ model Branch {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+enum Title {
+  AGM
+  ZM
+  RM
+  BM
+  TL
+  FA
+}
+
 
 model Position {
   id        Int   @id @default(autoincrement())
-  title     String
+  title     Title
   baseSalary Float
+  rank      Int    @unique
   commissionRate CommissionRate?
   members   Member[]
   createdAt DateTime @default(now())
@@ -56,6 +66,7 @@ model Member {
   name            String
   email           String   @unique
   phone           String
+  empNo           String @unique
   totalCommission Float    @default(0)
 
   branchId  Int

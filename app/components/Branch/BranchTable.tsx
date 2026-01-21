@@ -19,8 +19,7 @@ const BranchTable = () => {
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
 
   const { data: branches, isLoading, error } = useBranches();
-  // console.log(branches);
-
+  
   const queryClient = useQueryClient()
 
  const deleteMutation = useMutation({

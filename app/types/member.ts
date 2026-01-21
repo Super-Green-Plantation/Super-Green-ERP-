@@ -2,6 +2,7 @@ export interface Member {
   id: number;
   name: string;
   email: string;
+  empNo: string;
   phone: string;
   totalCommission: number;
   position: Position;

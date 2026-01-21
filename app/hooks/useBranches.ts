@@ -7,7 +7,6 @@ export const fetchBranches = async () => {
   
   if (!res.ok) throw new Error("Failed to fetch branches");
   const data = await res.json();
-  console.log("from hook",data);
   return data.res || [];
 };
 
