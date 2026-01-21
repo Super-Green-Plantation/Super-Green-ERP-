@@ -1,14 +1,13 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
+//create
 export async function POST(req: Request) {
   const body = await req.json();
-  console.log(body);
-  
 
   // Check required fields
-  const applicant = body.applicant;
-  const investment = body.investment;
+  const applicant = body;
+  const investment = body;
   if (!applicant.fullName || !applicant.address || !applicant.branchId ) {
     return new Response(
       JSON.stringify({ message: "Missing required fields: fullName, address, branchId" }),
@@ -76,9 +75,17 @@ export async function POST(req: Request) {
   }
 }
 
+//get all clients
 export async function GET() {
   try {
-    const clients = await prisma.client.findMany();
+    const clients = await prisma.client.findMany({
+      include:{
+        beneficiary:true,
+        nominee:true,
+        investments:true,
+        branch:true
+      }
+    });
     return NextResponse.json({clients})
     
   } catch (error) {

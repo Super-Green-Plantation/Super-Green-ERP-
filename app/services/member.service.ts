@@ -4,18 +4,16 @@ export const getMembers = async (id: number) => {
   if (!res.ok) {
     throw new Error("Failed to get member - service");
   }
-
-  console.log(res);
-  
-
   return res.json();
 };
-export const getEligibleMembers = async(empNo:string, branchId: number)=>{
-  const members = await fetch(`/api/src/commissions/eligible/${empNo}/${branchId}`)
+export const getEligibleMembers = async (empNo: string, branchId: number) => {
+  const members = await fetch(
+    `/api/src/commissions/eligible/${empNo}/${branchId}`,
+  );
 
   if (!members.ok) {
-    throw new Error("Failed to get eligible members")
+    throw new Error("Failed to get eligible members");
   }
 
-  return members.json()
-}
+  return members.json();
+};

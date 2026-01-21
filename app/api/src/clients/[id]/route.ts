@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
+//get [id] client 
 export async function GET(
   _: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -13,7 +14,9 @@ export async function GET(
       },
       include:{
         investments:true,
-        branch:true
+        branch:true,
+        nominee:true,
+        beneficiary:true,
       }
     });
 
@@ -22,3 +25,6 @@ export async function GET(
     return NextResponse.json({ messsage: "Failed to get client" });
   }
 }
+
+//update
+//delete

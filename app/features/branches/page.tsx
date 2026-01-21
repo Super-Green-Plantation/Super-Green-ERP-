@@ -15,7 +15,6 @@ const page = () => {
   const getcount = async () => {
     const data = await getBranches();
     setCount(data.len)
-    console.log(data);
   };
   useEffect(() => {
     getcount();

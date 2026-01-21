@@ -1,11 +1,15 @@
+//fetch all branch members
+
 import { prisma } from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
-  _: Request,
-  { params }: { params: Promise<{ branchId: string }> } // keep it as Promise
+  _: NextRequest,
+  { params }: { params: Promise<{ id: string }> } 
 ) {
-  const branchId = Number(params);
+  // Unwrap the params
+  const { id } = await params;
+  const branchId = Number(id);
 
   const employees = await prisma.member.findMany({
     where: { branchId },

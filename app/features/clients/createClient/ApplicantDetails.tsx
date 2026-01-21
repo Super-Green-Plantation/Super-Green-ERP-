@@ -34,9 +34,6 @@ const ApplicantDetails = () => {
   fetchPlans();
 }, []);
 
-
-   console.log("plans log",plans);
-
   useEffect(() => {
     if (!selectedBranchId) return;
 

@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
+//get [id]plan
 export async function GET(
   _: Request,
   { params }: { params: Promise<{ id: string }> } // keep it as Promise
@@ -22,3 +23,6 @@ export async function GET(
     return NextResponse.json({ message: "Failed to get plans", error });
   }
 }
+
+//update
+//delete

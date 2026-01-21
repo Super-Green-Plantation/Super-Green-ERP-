@@ -1,9 +1,9 @@
 import { prisma } from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
-  _: Request,
-  { params }: { params: { empNo: string; branchId: string } },
+  _: NextRequest,
+  { params }: { params: Promise<{ empNo: string; branchId: string }> }
 ) {
   const empNo = (await params).empNo;
   const branchId = Number((await params).branchId);
@@ -21,7 +21,7 @@ export async function GET(
         branchId,
         position: {
           rank: {
-            gte: selectedMember?.position.rank, // 🔥 magic
+            gte: selectedMember?.position.rank,
           },
         },
       },
