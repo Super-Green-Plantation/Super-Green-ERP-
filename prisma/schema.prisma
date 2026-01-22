@@ -64,8 +64,8 @@ model CommissionRate {
 model Member {
   id              Int   @id @default(autoincrement())
   name            String
-  email           String   @unique
-  phone           String
+  email           String ?  @unique
+  phone           String ?
   empNo           String @unique
   totalCommission Float    @default(0)
 

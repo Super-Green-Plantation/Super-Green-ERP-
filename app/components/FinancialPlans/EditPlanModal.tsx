@@ -37,7 +37,7 @@ export default function EditPlanModal({ isOpen, onClose, plan }: EditPlanModalPr
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] backdrop-blur-sm">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[100] ">
       <div className="bg-white p-8 rounded-3xl w-[450px] shadow-2xl">
         <h2 className="text-2xl font-bold mb-6 text-gray-800">Edit Financial Plan</h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">

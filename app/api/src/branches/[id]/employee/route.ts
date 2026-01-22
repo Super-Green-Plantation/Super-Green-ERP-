@@ -5,7 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   _: NextRequest,
-  { params }: { params: Promise<{ id: string }> } 
+  { params }: { params: Promise<{ id: string }> },
 ) {
   // Unwrap the params
   const { id } = await params;
@@ -17,6 +17,9 @@ export async function GET(
       id: true,
       empNo: true,
       name: true,
+      email: true,
+      phone: true,
+      totalCommission: true,
       position: true,
     },
     orderBy: { empNo: "asc" },

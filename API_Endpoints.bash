@@ -43,6 +43,7 @@ GET /api/src/members/by-code/[empCode] ------> employee
 =============================================
                     Plan  
 =============================================
-### POST
+### POST ---- Done in action. need to structure in api route
 GET /api/src/plans ------> plans
-### PUT
+### PUT ---- Done in action. need to structure in api route
+### DELETE ---- Done in action. need to structure in api route

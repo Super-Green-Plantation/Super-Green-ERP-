@@ -10,8 +10,9 @@ export async function GET(
     const emp = await prisma.member.findMany({
       where: { branchId: Number(byBranch) },
       include:{
-        position:true
-      }
+        position:true,
+        
+      },
     });
     return NextResponse.json({ emp });
   } catch (err) {
@@ -23,5 +24,3 @@ export async function GET(
   }
 }
 
-//update
-//delete

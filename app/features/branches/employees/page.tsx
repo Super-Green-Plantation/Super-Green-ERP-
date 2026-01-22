@@ -20,7 +20,7 @@ const Page = () => {
     return <div>Error loading branches.</div>;
   }
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 max-w-5xl mx-auto">
       {/* Header */}
       <div>
         <h2 className="text-2xl font-bold">Manage Employees</h2>

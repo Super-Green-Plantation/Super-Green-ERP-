@@ -1,90 +1,73 @@
 "use client";
 
-import { getMembers } from "@/app/services/member.service";
+import { deletMember } from "@/app/services/member.service";
 import { Member } from "@/app/types/member";
-import { Pen, Trash2 } from "lucide-react";
-import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Pen, Trash2, Phone } from "lucide-react";
+import { toast } from "sonner";
 
-const EmpTable = () => {
-  const { branchId } = useParams();
-  const [employees, setEmployees] = useState<Member[] | null>(null);
-  useEffect(() => {
-    const fetchEmp = async () => {
-      const res = await getMembers(Number(branchId));
-      console.log(res);
-      setEmployees(res.emp);
-    };
-    fetchEmp();
-  }, []);
+interface EmpTableProps {
+  employees: Member[] | null;
+  onEdit: (emp: Member) => void;
+  onRefresh: () => void;
+}
 
-  const handleAction = (id: number) => {};
+const EmpTable = ({ employees, onEdit, onRefresh }: EmpTableProps) => {
+  
+  const handleDelete = async (id: number) => {
+    if (confirm("Delete this employee?")) {
+      // Add your delete API call here
+      console.log("Deleting:", id);
+      const res = await deletMember(id);
+      if (!res.ok) {
+        toast.error("Faild to delete employee")
+      }
+      toast.success("Employee deleted success")
+      onRefresh(); 
+    }
+  };
+
   return (
-    <div>
-      <div>
-        <table className=" w-full min-w-full text-left text-sm">
-          <thead className="rounded-2xl border-b border-gray-100 bg-gray-50">
-            <tr>
-              <th className="px-6 py-4 font-semibold text-gray-600">Emp No</th>
-              <th className="px-6 py-4 font-semibold text-gray-600">
-                Employee Name
-              </th>
-              <th className="px-6 py-4 font-semibold text-gray-600">
-                Position
-              </th>
-              <th className="px-6 py-4 font-semibold text-gray-600">Phone</th>
-              <th className="px-6 py-4 font-semibold text-gray-600">Action</th>
-            </tr>
-          </thead>
-          <tbody className="rounded-2xl divide-y divide-gray-100 bg-white">
-            {employees?.map((e) => (
-              <tr key={e.id} className="transition-colors hover:bg-gray-50">
-                {/* ID/EmpNo Column */}
-                <td className="px-6 py-4 font-medium text-gray-400">
-                  #{e.empNo}
-                </td>
-
-                {/* Name Column */}
-                <td className="px-6 py-4">
-                  <span className="font-semibold text-gray-900">{e.name}</span>
-                </td>
-
-                {/* Position Column */}
-                <td className="px-6 py-4 text-gray-500">
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-full text-left text-sm">
+        <thead className="border-b border-gray-100 bg-gray-50">
+          <tr>
+            <th className="px-6 py-4 font-semibold text-gray-600 text-xs uppercase">Emp No</th>
+            <th className="px-6 py-4 font-semibold text-gray-600 text-xs uppercase">Name</th>
+            <th className="px-6 py-4 font-semibold text-gray-600 text-xs uppercase">Position</th>
+            <th className="px-6 py-4 font-semibold text-gray-600 text-xs uppercase">Phone</th>
+            <th className="px-6 py-4 font-semibold text-gray-600 text-xs uppercase">Action</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-100 bg-white">
+          {employees?.map((e) => (
+            <tr key={e.id} className="transition-colors hover:bg-gray-50/80">
+              <td className="px-6 py-4 text-gray-400">#{e.empNo}</td>
+              <td className="px-6 py-4 font-semibold text-gray-900">{e.name}</td>
+              <td className="px-6 py-4">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
                   {e.position?.title || "N/A"}
-                </td>
-
-                {/* Phone Column */}
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-2 text-gray-500">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      className="h-4 w-4 text-gray-400"
-                    >
-                      <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                    </svg>
-                    {e.phone}
-                  </div>
-                </td>
-
-                {/* Action Column */}
-                <td className="px-6 py-4">
-                  <div className="flex gap-4">
-                    <button className="cursor-pointer text-blue-400 bg-blue-300/20 rounded-md px-2 py-1 hover:bg-blue-300/30 transition-colors">
-                      <Pen className="w-5" />
-                    </button>
-                    <button className="cursor-pointer text-red-400 bg-red-300/20 rounded-md px-2 py-1 hover:bg-red-300/30 transition-colors">
-                      <Trash2 className="w-5" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                </span>
+              </td>
+              <td className="px-6 py-4 text-gray-500">
+                <div className="flex items-center gap-2">
+                  <Phone className="w-3.5 h-3.5" /> {e.phone}
+                </div>
+              </td>
+              <td className="px-6 py-4">
+                <div className="flex gap-3">
+                  <button onClick={() => onEdit(e)} className="p-1.5 text-blue-500 bg-blue-50 rounded-md hover:bg-blue-100">
+                    <Pen className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => handleDelete(e.id)} className="p-1.5 text-red-500 bg-red-50 rounded-md hover:bg-red-100">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {employees?.length === 0 && <p className="text-center py-10 text-gray-500">No employees found.</p>}
     </div>
   );
 };
