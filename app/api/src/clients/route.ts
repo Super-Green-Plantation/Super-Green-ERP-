@@ -16,7 +16,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const client = await prisma.$transaction(async (prisma) => {
+    const client = await prisma.$transaction(async (prisma:any) => {
       const createdClient = await prisma.client.create({
         data: {
           fullName: applicant.fullName,
