@@ -1,15 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
-//create
+// Create client with investment, beneficiary, and nominee
 export async function POST(req: Request) {
   const body = await req.json();
 
-  // Check required fields
-  const {applicant} = body.data;
-  const {investment} = body.data;
-  
-  if (!applicant.fullName || !applicant.address || !applicant.branchId ) {
+  const { applicant, investment, beneficiary, nominee } = body.data;
+
+  // Validate required fields
+  if (!applicant.fullName || !applicant.address || !applicant.branchId) {
     return new Response(
       JSON.stringify({ message: "Missing required fields: fullName, address, branchId" }),
       { status: 400 }
@@ -18,7 +17,6 @@ export async function POST(req: Request) {
 
   try {
     const client = await prisma.$transaction(async (prisma) => {
-      // Create Client
       const createdClient = await prisma.client.create({
         data: {
           fullName: applicant.fullName,
@@ -28,43 +26,52 @@ export async function POST(req: Request) {
           email: applicant.email || null,
           phoneMobile: applicant.phoneMobile || null,
           phoneLand: applicant.phoneLand || null,
-          dateOfBirth: applicant.dateOfBirth
-            ? new Date(applicant.dateOfBirth)
-            : null,
+          dateOfBirth: applicant.dateOfBirth ? new Date(applicant.dateOfBirth) : null,
           occupation: applicant.occupation || null,
           address: applicant.address,
           branchId: applicant.branchId,
-          investments:{
-            create:[{
-              planId: investment.planId,
-              investmentDate: new Date || "",
-              amount: 0,
-              rate: 0,
-              returnFrequency: "Monthly"
-            }]
-          }
+          // Nested create for investments, beneficiary, and nominee
+          investments: {
+            create: [
+              {
+                planId: investment.planId,
+                investmentDate: new Date(),
+                amount: 0,
+                rate: 0,
+                returnFrequency: "Monthly",
+              },
+            ],
+            
+          },
+          beneficiary: beneficiary
+            ? {
+                create: {
+                  fullName: beneficiary.fullName,
+                  nic: beneficiary.nic || null,
+                  phone: beneficiary.phone || null,
+                  bankName: beneficiary.bankName || null,
+                  bankBranch: beneficiary.bankBranch || null,
+                  accountNo: beneficiary.accountNo || null,
+                  relationship: beneficiary.relationship || null,
+                },
+              }
+            : undefined,
+          nominee: nominee
+            ? {
+                create: {
+                  fullName: nominee.fullName,
+                  permanentAddress: nominee.permanentAddress || null,
+                  postalAddress: nominee.postalAddress || null,
+                },
+              }
+            : undefined,
+        },
+        include: {
+          investments: true,
+          beneficiary: true,
+          nominee: true,
         },
       });
-
-      // Create Beneficiary if exists
-      if (body.beneficiary) {
-        await prisma.beneficiary.create({
-          data: {
-            ...body.beneficiary,
-            clientId: createdClient.id,
-          },
-        });
-      }
-
-      // Create Nominee if exists
-      if (body.nominee) {
-        await prisma.nominee.create({
-          data: {
-            ...body.nominee,
-            clientId: createdClient.id,
-          },
-        });
-      }
 
       return createdClient;
     });
@@ -75,6 +82,7 @@ export async function POST(req: Request) {
     return new Response(JSON.stringify({ message: "Server error" }), { status: 500 });
   }
 }
+
 
 //get all clients
 export async function GET() {

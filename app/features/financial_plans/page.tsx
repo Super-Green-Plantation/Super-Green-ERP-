@@ -54,7 +54,7 @@ export default function Page() {
   };
 
   return (
-    <div className="font-sans p-6 min-h-screen">
+    <div className="font-sans p-6 min-h-screen max-w-5xl mx-auto">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-2xl font-bold text-gray-800 tracking-tight">Financial Plans</h1>

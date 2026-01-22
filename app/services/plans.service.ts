@@ -22,3 +22,13 @@ export const getPlansByClient = async (id:number) => {
   const data = await res.json();
   return data; 
 };
+
+export const getPlanDetails = async(id:number)=>{
+  const res = await fetch(`/api/src/plans/${id}`);
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch plans");
+  }
+  return res.json();
+
+}

@@ -17,6 +17,7 @@ export async function GET(
         branch:true,
         nominee:true,
         beneficiary:true,
+        
       }
     });
 

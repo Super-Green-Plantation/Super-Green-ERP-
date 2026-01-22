@@ -1,10 +1,9 @@
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
 import Sidebar from "./components/SideBar/Sidebar";
+import "./globals.css";
 import Providers from "./providers";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { Toaster } from "@/components/ui/sonner";
 import Toast from "./Toast";
 
 const geistSans = Geist({

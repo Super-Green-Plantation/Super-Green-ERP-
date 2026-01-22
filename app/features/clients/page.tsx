@@ -18,7 +18,7 @@ const Page = () => {
   }, [])
 
   return (
-    <div className="p-6">
+    <div className="p-6 max-w-5xl mx-auto">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold">Clients</h1>
@@ -31,70 +31,84 @@ const Page = () => {
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto rounded-lg border">
-        <table className="min-w-full bg-white">
-          <thead className="bg-gray-100 text-left text-sm uppercase text-gray-600">
-            <tr>
-              <th className="px-4 py-3">Name</th>
-              <th className="px-4 py-3">Email</th>
-              <th className="px-4 py-3">Mobile</th>
-              <th className="px-4 py-3">NIC</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3 text-center">Actions</th>
-            </tr>
-          </thead>
+      <div className="overflow-x-auto">
+  <table className="w-full min-w-full text-left text-sm">
+    <thead className="border-b border-gray-100 bg-gray-50">
+      <tr className="text-gray-600 uppercase text-xs tracking-wider">
+        <th className="px-6 py-4 font-semibold text-gray-600">ID</th>
+        <th className="px-6 py-4 font-semibold text-gray-600">Name</th>
+        <th className="px-6 py-4 font-semibold text-gray-600">Contact Info</th>
+        <th className="px-6 py-4 font-semibold text-gray-600">NIC</th>
+        <th className="px-6 py-4 font-semibold text-gray-600">Status</th>
+        <th className="px-6 py-4 font-semibold text-gray-600 text-center">Action</th>
+      </tr>
+    </thead>
+    <tbody className="divide-y divide-gray-100 bg-white">
+      {clients.length === 0 && (
+        <tr>
+          <td colSpan={6} className="px-6 py-10 text-center text-gray-500 italic">
+            No clients found
+          </td>
+        </tr>
+      )}
 
-          <tbody className="divide-y">
-            {clients.length === 0 && (
-              <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-gray-500">
-                  No clients found
-                </td>
-              </tr>
-            )}
+      {clients.map((client) => (
+        <tr
+          key={client.id}
+          className="transition-colors hover:bg-gray-50"
+        >
+          {/* ID Column */}
+          <td className="px-6 py-4 font-medium text-gray-400">
+            #{client.id.toString().slice(-4)}
+          </td>
 
-            {clients.map((client) => (
-              <tr
-                key={client.id}
-                className="hover:bg-gray-50 transition"
-              >
-                <td className="px-4 py-3 font-medium">
-                  {client.fullName}
-                </td>
-                <td className="px-4 py-3">
-                  {client.email || '-'}
-                </td>
-                <td className="px-4 py-3">
-                  {client.phoneMobile || '-'}
-                </td>
-                <td className="px-4 py-3">
-                  {client.nic || '-'}
-                </td>
-                <td className="px-4 py-3">
-                  <span
-                    className={`px-2 py-1 text-xs rounded-full font-semibold
-                      ${
-                        client.status === 'Active'
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-red-100 text-red-700'
-                      }`}
-                  >
-                    {client.status}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-center">
-                  <Link
-                    href={`/features/clients/${client.id}`}
-                    className="text-blue-600 hover:underline text-sm"
-                  >
-                    View
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          {/* Name Column */}
+          <td className="px-6 py-4">
+            <span className="font-semibold text-gray-900">
+              {client.fullName}
+            </span>
+          </td>
+
+          {/* Contact Info Column */}
+          <td className="px-6 py-4">
+            <div className="flex flex-col gap-1">
+              <span className="text-gray-700 font-medium">{client.phoneMobile || '-'}</span>
+              <span className="text-xs text-gray-400">{client.email || '-'}</span>
+            </div>
+          </td>
+
+          {/* NIC Column */}
+          <td className="px-6 py-4 text-gray-500">
+            {client.nic || '-'}
+          </td>
+
+          {/* Status Column */}
+          <td className="px-6 py-4">
+            <span
+              className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
+                client.status === 'Active'
+                  ? 'bg-green-50 text-green-700 ring-green-600/20'
+                  : 'bg-red-50 text-red-700 ring-red-600/20'
+              }`}
+            >
+              {client.status}
+            </span>
+          </td>
+
+          {/* Action Column */}
+          <td className="px-6 py-4 text-center">
+            <Link
+              href={`/features/clients/${client.id}`}
+              className="inline-flex items-center gap-1 cursor-pointer text-blue-500 bg-blue-50 hover:bg-blue-100 transition-colors rounded-md px-3 py-1.5 text-xs font-bold"
+            >
+              View Profile
+            </Link>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
     </div>
   )
 }
