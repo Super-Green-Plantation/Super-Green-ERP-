@@ -1,4 +1,3 @@
-import { Member } from "../types/member";
 
 export const getMembers = async (id: number) => {
   const res = await fetch(`/api/src/branches/${id}/employee`);
@@ -8,6 +7,24 @@ export const getMembers = async (id: number) => {
   }
   return res.json();
 };
+export const UpdateMembers = async (id: string, empId:number |undefined, formData:any) => {
+
+  const res = await fetch(`/api/src/branches/${id}/employee/${empId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(formData),
+    });
+    return res;
+  
+};
+
+export const deletMember = async( empId:number)=>{
+  const res = await fetch(`/api/src/employee/id/${empId}`, {
+      method: "DELETE"
+    })
+
+    return res
+}
 export const getEligibleMembers = async (empNo: string, branchId: number) => {
   const members = await fetch(
     `/api/src/commissions/eligible/${empNo}/${branchId}`,

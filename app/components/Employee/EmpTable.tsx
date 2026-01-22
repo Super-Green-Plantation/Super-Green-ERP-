@@ -1,7 +1,9 @@
 "use client";
 
+import { deletMember } from "@/app/services/member.service";
 import { Member } from "@/app/types/member";
 import { Pen, Trash2, Phone } from "lucide-react";
+import { toast } from "sonner";
 
 interface EmpTableProps {
   employees: Member[] | null;
@@ -10,12 +12,17 @@ interface EmpTableProps {
 }
 
 const EmpTable = ({ employees, onEdit, onRefresh }: EmpTableProps) => {
+  
   const handleDelete = async (id: number) => {
     if (confirm("Delete this employee?")) {
       // Add your delete API call here
       console.log("Deleting:", id);
-      // await deleteMember(id);
-      // onRefresh(); 
+      const res = await deletMember(id);
+      if (!res.ok) {
+        toast.error("Faild to delete employee")
+      }
+      toast.success("Employee deleted success")
+      onRefresh(); 
     }
   };
 

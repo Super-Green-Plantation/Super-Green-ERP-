@@ -16,13 +16,15 @@ export const SubmitButton = () => {
     setLoading(true);
     setStatus(null);
 
-    const data = form.getValues(); // ✅ correct
+    const data = form.getValues(); 
+    console.log(data);
+    
 
     try {
       const res = await fetch("/api/src/clients", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({data}),
       });
 
       if (!res.ok) {

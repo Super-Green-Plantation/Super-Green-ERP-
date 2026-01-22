@@ -6,8 +6,9 @@ export async function POST(req: Request) {
   const body = await req.json();
 
   // Check required fields
-  const applicant = body;
-  const investment = body;
+  const {applicant} = body.data;
+  const {investment} = body.data;
+  
   if (!applicant.fullName || !applicant.address || !applicant.branchId ) {
     return new Response(
       JSON.stringify({ message: "Missing required fields: fullName, address, branchId" }),

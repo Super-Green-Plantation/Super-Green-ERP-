@@ -16,7 +16,8 @@ import { Member } from "@/app/types/member";
 import { getBranchDetails } from "@/app/services/branches.service";
 import { useParams } from "next/navigation";
 import { Branch } from "@/app/types/branch";
-import { saveMember } from "@/app/services/member.service";
+import { saveMember, UpdateMembers } from "@/app/services/member.service";
+import { toast } from "sonner";
 
 interface EmpModalProps {
   mode: "add" | "edit";
@@ -65,15 +66,27 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
     setLoading(true);
 
     try {
-      if(mode ==="add"){
-        const res = saveMember({formData})
+      if (mode === "add") {
+        const res = saveMember({ formData });
         if (!res) {
-          throw new Error("Failed to save emp")
+          toast.error("Failed to add employee");
+          throw new Error("Failed to save emp");
         }
+        toast.success("Successfully Added Employee ");
         console.log("Submitting Employee Data:", formData);
         onSuccess?.();
         onClose();
+      } else {
+        const res = await UpdateMembers(branchId, initialData?.id, formData);
+        if (!res) {
+          toast.error("Failed to update employee");
+          throw new Error("Failed to update emp");
+        }
+        console.log(res);
 
+        toast.success("Successfully Updated Employee ");
+        onSuccess?.();
+        onClose();
       }
     } catch {
       alert("Error saving employee details");
@@ -83,8 +96,10 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
   };
 
   // Reusable Input Style Class
-  const inputStyles = "w-full pl-10 pr-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm";
-  const labelStyles = "block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 ml-1";
+  const inputStyles =
+    "w-full pl-10 pr-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm";
+  const labelStyles =
+    "block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 ml-1";
 
   return (
     <div
@@ -110,7 +125,6 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            
             {/* Name */}
             <div className="md:col-span-2">
               <label className={labelStyles}>Full Name</label>
@@ -119,7 +133,9 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                 <input
                   placeholder="e.g. John Doe"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   required
                   className={inputStyles}
                 />
@@ -135,7 +151,9 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                   type="email"
                   placeholder="email@example.com"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
                   required
                   className={inputStyles}
                 />
@@ -150,7 +168,9 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                 <input
                   value={branch?.name ?? "Loading..."}
                   disabled
-                  className={inputStyles + " bg-gray-50 text-gray-500 cursor-not-allowed"}
+                  className={
+                    inputStyles + " bg-gray-50 text-gray-500 cursor-not-allowed"
+                  }
                 />
               </div>
             </div>
@@ -163,7 +183,9 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                 <input
                   placeholder="EMP-000"
                   value={formData.empNo}
-                  onChange={(e) => setFormData({ ...formData, empNo: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, empNo: e.target.value })
+                  }
                   required
                   className={inputStyles}
                 />
@@ -178,7 +200,9 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                 <input
                   placeholder="07XXXXXXXX"
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, phone: e.target.value })
+                  }
                   className={inputStyles}
                 />
               </div>
@@ -192,7 +216,12 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                 <input
                   type="number"
                   value={formData.totalCommission}
-                  onChange={(e) => setFormData({ ...formData, totalCommission: Number(e.target.value) })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      totalCommission: Number(e.target.value),
+                    })
+                  }
                   className={inputStyles}
                 />
               </div>
@@ -205,11 +234,15 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                 <Briefcase className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
                 <select
                   value={formData.positionId}
-                  onChange={(e) => setFormData({ ...formData, positionId: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, positionId: e.target.value })
+                  }
                   required
                   className={inputStyles + " appearance-none pr-10"}
                 >
-                  <option value="" disabled>Select Position</option>
+                  <option value="" disabled>
+                    Select Position
+                  </option>
                   <option value="6">AGM</option>
                   <option value="5">ZM</option>
                   <option value="4">RM</option>
@@ -218,7 +251,9 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                   <option value="1">FA</option>
                 </select>
                 <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-400">
-                  <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>
+                  <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
+                    <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                  </svg>
                 </div>
               </div>
             </div>
@@ -238,7 +273,13 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
               disabled={loading}
               className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-2 rounded-lg font-bold shadow-lg shadow-blue-500/20 flex items-center justify-center transition-all active:scale-95"
             >
-              {loading ? <Spinner className="w-5 h-5" /> : mode === "add" ? "Create Employee" : "Save Changes"}
+              {loading ? (
+                <Spinner className="w-5 h-5" />
+              ) : mode === "add" ? (
+                "Create Employee"
+              ) : (
+                "Save Changes"
+              )}
             </button>
           </div>
         </form>
