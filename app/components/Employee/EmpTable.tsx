@@ -2,20 +2,21 @@
 
 import { deletMember } from "@/app/services/member.service";
 import { Member } from "@/app/types/member";
-import { Pen, Trash2, Phone } from "lucide-react";
+import { Pen, Phone, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { toast } from "sonner";
 
 interface EmpTableProps {
   employees: Member[] | null;
   onEdit: (emp: Member) => void;
   onRefresh: () => void;
+  branchId?:any
 }
 
-const EmpTable = ({ employees, onEdit, onRefresh }: EmpTableProps) => {
+const EmpTable = ({ employees, onEdit, onRefresh,branchId }: EmpTableProps) => {
   
   const handleDelete = async (id: number) => {
     if (confirm("Delete this employee?")) {
-      // Add your delete API call here
       console.log("Deleting:", id);
       const res = await deletMember(id);
       if (!res.ok) {
@@ -25,6 +26,10 @@ const EmpTable = ({ employees, onEdit, onRefresh }: EmpTableProps) => {
       onRefresh(); 
     }
   };
+
+  console.log(branchId);
+  
+
 
   return (
     <div className="overflow-x-auto">
@@ -61,6 +66,9 @@ const EmpTable = ({ employees, onEdit, onRefresh }: EmpTableProps) => {
                   <button onClick={() => handleDelete(e.id)} className="p-1.5 text-red-500 bg-red-50 rounded-md hover:bg-red-100">
                     <Trash2 className="w-4 h-4" />
                   </button>
+
+                  <Link href={`/features/branches/employees/${branchId}/${e.id}`}>View</Link>
+
                 </div>
               </td>
             </tr>

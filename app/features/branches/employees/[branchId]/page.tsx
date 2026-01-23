@@ -10,7 +10,13 @@ import { getMembers } from "@/app/services/member.service";
 import EmpModal from "@/app/components/Employee/Model";
 
 const Page = () => {
-  const { branchId } = useParams();
+  const params = useParams();
+  const branchId = params.branchId;
+
+  if (!branchId) {
+    return <div className="text-red-500">Branch ID missing in URL</div>;
+  }
+
   const router = useRouter();
   const [branchName, setBranchName] = useState("");
   const [employees, setEmployees] = useState<Member[] | null>(null);
@@ -25,7 +31,6 @@ const Page = () => {
       const memberRes = await getMembers(Number(branchId));
       console.log(branchRes);
       console.log(memberRes.employees);
-      
 
       setBranchName(branchRes.name);
       setEmployees(memberRes.employees);
@@ -104,6 +109,7 @@ const Page = () => {
           employees={employees}
           onEdit={handleEdit}
           onRefresh={fetchData}
+           branchId={branchId}
         />
       </div>
 

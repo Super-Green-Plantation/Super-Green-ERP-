@@ -22,17 +22,17 @@ const ApplicantDetails = () => {
   };
 
   useEffect(() => {
-  const fetchPlans = async () => {
-    try {
-      const plans = await getPlans();
-      setPlans(plans);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+    const fetchPlans = async () => {
+      try {
+        const plans = await getPlans();
+        setPlans(plans);
+      } catch (err) {
+        console.error(err);
+      }
+    };
 
-  fetchPlans();
-}, []);
+    fetchPlans();
+  }, []);
 
   useEffect(() => {
     if (!selectedBranchId) return;
@@ -136,15 +136,26 @@ const ApplicantDetails = () => {
             className="p-2.5 border rounded-lg"
           />
         </div>
-        <div className="md:col-span-2 flex flex-col gap-1">
-          <label>Address</label>
-          <input
-            type="text"
-            {...register("applicant.address")}
-            placeholder="Full Address"
-            className="p-2.5 border rounded-lg"
-          />
-        </div>
+        
+          <div className="md:col-span-2 flex flex-col gap-1">
+            <label>Address</label>
+            <input
+              type="text"
+              {...register("applicant.address")}
+              placeholder="Full Address"
+              className="p-2.5 border rounded-lg"
+            />
+          </div>
+          <div className="md:col-span-2 flex flex-col gap-1">
+            <label>Investment Amount</label>
+            <input
+              type="text"
+              {...register("applicant.investmentAmount")}
+              placeholder="50,000"
+              className="p-2.5 border rounded-lg"
+            />
+          </div>
+
 
         <div className="md:col-span-2 flex flex-col gap-1">
           <label className="text-[15px] font-semibold text-gray-700">
@@ -163,7 +174,7 @@ const ApplicantDetails = () => {
           </select>
         </div>
 
-         <div className="md:col-span-2 flex flex-col gap-1">
+        <div className="md:col-span-2 flex flex-col gap-1">
           <label className="text-[15px] font-semibold text-gray-700">
             Select Plan
           </label>

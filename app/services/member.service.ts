@@ -48,3 +48,11 @@ export const saveMember = async ({ formData }: any) => {
     throw new Error("Failed to save member - service" + error);
   }
 };
+
+export const getMemberDetails= async(empId:number, branchId:number)=>{
+  const data = await fetch(`/api/src/branches/${branchId}/employee/${empId}`)
+  if (!data.ok) {
+    throw new Error("Failed to fetch member details")
+  }
+  return data.json()
+}
