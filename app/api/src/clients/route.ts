@@ -29,6 +29,7 @@ export async function POST(req: Request) {
           dateOfBirth: applicant.dateOfBirth ? new Date(applicant.dateOfBirth) : null,
           occupation: applicant.occupation || null,
           address: applicant.address,
+          investmentAmount: Number(applicant.investmentAmount),
           branchId: applicant.branchId,
           // Nested create for investments, beneficiary, and nominee
           investments: {

@@ -10,44 +10,58 @@ interface EmpTableProps {
   employees: Member[] | null;
   onEdit: (emp: Member) => void;
   onRefresh: () => void;
-  branchId?:any
+  branchId?: any;
 }
 
-const EmpTable = ({ employees, onEdit, onRefresh,branchId }: EmpTableProps) => {
-  
+const EmpTable = ({
+  employees,
+  onEdit,
+  onRefresh,
+  branchId,
+}: EmpTableProps) => {
   const handleDelete = async (id: number) => {
     if (confirm("Delete this employee?")) {
       console.log("Deleting:", id);
       const res = await deletMember(id);
       if (!res.ok) {
-        toast.error("Faild to delete employee")
+        toast.error("Faild to delete employee");
       }
-      toast.success("Employee deleted success")
-      onRefresh(); 
+      toast.success("Employee deleted success");
+      onRefresh();
     }
   };
 
   console.log(branchId);
-  
-
 
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-full text-left text-sm">
         <thead className="border-b border-gray-100 bg-gray-50">
           <tr>
-            <th className="px-6 py-4 font-semibold text-gray-600 text-xs uppercase">Emp No</th>
-            <th className="px-6 py-4 font-semibold text-gray-600 text-xs uppercase">Name</th>
-            <th className="px-6 py-4 font-semibold text-gray-600 text-xs uppercase">Position</th>
-            <th className="px-6 py-4 font-semibold text-gray-600 text-xs uppercase">Phone</th>
-            <th className="px-6 py-4 font-semibold text-gray-600 text-xs uppercase">Action</th>
+            <th className="px-6 py-4 font-semibold text-gray-600 text-xs uppercase">
+              Emp No
+            </th>
+            <th className="px-6 py-4 font-semibold text-gray-600 text-xs uppercase">
+              Name
+            </th>
+            <th className="px-6 py-4 font-semibold text-gray-600 text-xs uppercase">
+              Position
+            </th>
+            <th className="px-6 py-4 font-semibold text-gray-600 text-xs uppercase">
+              Phone
+            </th>
+            <th className="px-6 py-4 font-semibold text-gray-600 text-xs uppercase">
+              Action
+            </th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100 bg-white">
           {employees?.map((e) => (
             <tr key={e.id} className="transition-colors hover:bg-gray-50/80">
               <td className="px-6 py-4 text-gray-400">#{e.empNo}</td>
-              <td className="px-6 py-4 font-semibold text-gray-900">{e.name}</td>
+              <td className="px-6 py-4 font-semibold text-gray-900">
+                {e.name}
+              </td>
               <td className="px-6 py-4">
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
                   {e.position?.title || "N/A"}
@@ -59,23 +73,41 @@ const EmpTable = ({ employees, onEdit, onRefresh,branchId }: EmpTableProps) => {
                 </div>
               </td>
               <td className="px-6 py-4">
-                <div className="flex gap-3">
-                  <button onClick={() => onEdit(e)} className="p-1.5 text-blue-500 bg-blue-50 rounded-md hover:bg-blue-100">
+                <div className="flex items-center gap-2">
+                  {/* Edit Button */}
+                  <button
+                    onClick={() => onEdit(e)}
+                    className="p-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 hover:text-blue-700 transition-colors shadow-sm shadow-blue-100/50"
+                    title="Edit Employee"
+                  >
                     <Pen className="w-4 h-4" />
                   </button>
-                  <button onClick={() => handleDelete(e.id)} className="p-1.5 text-red-500 bg-red-50 rounded-md hover:bg-red-100">
+
+                  {/* Delete Button */}
+                  <button
+                    onClick={() => handleDelete(e.id)}
+                    className="p-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 hover:text-red-700 transition-colors shadow-sm shadow-red-100/50"
+                    title="Delete Employee"
+                  >
                     <Trash2 className="w-4 h-4" />
                   </button>
 
-                  <Link href={`/features/branches/employees/${branchId}/${e.id}`}>View</Link>
-
+                  {/* View Link Styled as Pill Button */}
+                  <Link
+                    href={`/features/branches/employees/${branchId}/${e.id}`}
+                    className="ml-1 px-4 py-1.5 text-xs font-bold text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-all shadow-sm flex items-center gap-1.5 active:scale-95"
+                  >
+                    View Profile
+                  </Link>
                 </div>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
-      {employees?.length === 0 && <p className="text-center py-10 text-gray-500">No employees found.</p>}
+      {employees?.length === 0 && (
+        <p className="text-center py-10 text-gray-500">No employees found.</p>
+      )}
     </div>
   );
 };

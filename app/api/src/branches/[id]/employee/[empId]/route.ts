@@ -75,7 +75,12 @@ export async function GET(
       include: {
         investments: true,
         manager: true,
-        position: true,
+        position: {
+          include:{
+            personalCommissionTiers:true,
+            orc:true
+          }
+        },
         subordinates: true,
         branch: true,
       },

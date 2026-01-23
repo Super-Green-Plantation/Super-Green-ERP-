@@ -32,6 +32,10 @@ const Page = () => {
   const [eligibleMembers, setEligibleMembers] = useState<Member[]>([]);
   const [loadingEligible, setLoadingEligible] = useState(false);
 
+  const [selectedInvestmentId, setSelectedInvestmentId] = useState<
+    number | null
+  >(null);
+
   /* ---------------- Load branches ---------------- */
   useEffect(() => {
     const loadBranches = async () => {
@@ -128,7 +132,10 @@ const Page = () => {
     ? eligibleMembers
     : branch?.members;
 
-  /* ---------------- UI ---------------- */
+  const uniquePlans = plans.filter(
+    (plan, index, self) => index === self.findIndex((p) => p.id === plan.id),
+  );
+
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <h1 className="text-2xl font-semibold mb-6 text-gray-800">
@@ -264,19 +271,55 @@ const Page = () => {
               <h2 className="text-lg font-bold text-gray-800">
                 {client.fullName}
               </h2>
+
               <div className="grid grid-cols-1 gap-2 text-sm text-gray-600">
                 <p>
                   <span className="font-medium text-gray-400">NIC:</span>{" "}
                   {client.nic}
                 </p>
+
                 <p>
                   <span className="font-medium text-gray-400">Mobile:</span>{" "}
                   {client.phoneMobile}
                 </p>
+
                 <p>
                   <span className="font-medium text-gray-400">Branch:</span>{" "}
                   {client.branch?.name}
                 </p>
+
+                {/* ✅ Select Plan */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-400 mb-1">
+                    Select Plan
+                  </label>
+
+                  <select
+                    className="w-full rounded-lg border px-3 py-2 bg-gray-50"
+                    value={selectedInvestmentId ?? ""}
+                    onChange={(e) =>
+                      setSelectedInvestmentId(
+                        e.target.value ? Number(e.target.value) : null,
+                      )
+                    }
+                  >
+                    <option value="">Choose a plan</option>
+
+                    {client.investments?.map((inv) => (
+                      <option key={inv.id} value={inv.id}>
+                        {inv.plan?.name ?? "Plan"} — Rs.{" "}
+                        {inv.amount.toLocaleString()}
+                      </option>
+                    ))}
+                  </select>
+
+                  {/* Empty state */}
+                  {client.investments?.length === 0 && (
+                    <p className="text-xs text-red-500 mt-1 italic">
+                      No investments found
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -287,12 +330,12 @@ const Page = () => {
           <h2 className="text-sm font-bold uppercase text-blue-600 px-1">
             Active Plan
           </h2>
-          {!plans || plans.length === 0 ? (
+          {!uniquePlans || uniquePlans.length === 0 ? (
             <div className="h-32 flex items-center justify-center border-2 border-dashed rounded-xl text-gray-400 text-sm italic bg-gray-50">
               No plan details found
             </div>
           ) : (
-            plans.map((p) => (
+            uniquePlans.map((p) => (
               <div
                 key={p.id}
                 className="rounded-xl border bg-linear-to-br from-blue-50 to-white p-5 shadow-md border-t-4 border-t-blue-600"

@@ -13,6 +13,7 @@ export async function GET(
       where: { empNo },
       include: {
         position: true,
+        investments:true
       },
     });
 
