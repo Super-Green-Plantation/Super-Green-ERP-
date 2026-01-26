@@ -61,3 +61,43 @@ export async function PUT(
     return NextResponse.json(error);
   }
 }
+
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ empId: string }> },
+) {
+  const { empId } = await params;
+  const id = Number(empId);
+  console.log("emp id ------------",id);
+  
+  try {
+    const member = await prisma.member.findUnique({
+      where: {
+        id: id,
+      },
+      include: { position: true },
+    });
+
+    const rank = member?.position.rank;
+    console.log(rank);
+
+    const upperMembers = await prisma.member.findMany({
+      where: {
+        position: {
+          rank: {
+            gt: rank,
+          },
+        },
+      },
+      include: {
+        position: true,
+      },
+    });
+
+    return NextResponse.json(upperMembers);
+  } catch (error) {
+    console.log(error);
+
+    return NextResponse.json(error);
+  }
+}

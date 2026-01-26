@@ -67,3 +67,10 @@ export const updateTotalCommission = async(id:number, totCommission:number)=>{
 
   return res
 }
+
+export const getUpperMembers = async(id:number)=>{
+  const res = await fetch(`/api/src/employee/id/${id}`)
+  console.log("upper res",res);
+  
+  return res
+}
