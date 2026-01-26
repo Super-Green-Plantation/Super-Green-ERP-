@@ -5,7 +5,7 @@ import {
   getClientDetails,
   getClientsByBranch,
 } from "@/app/services/clients.service";
-import { getEligibleMembers } from "@/app/services/member.service";
+import { getEligibleMembers, updateTotalCommission } from "@/app/services/member.service";
 import { getPlansByClient } from "@/app/services/plans.service";
 
 import { Branch } from "@/app/types/branch";
@@ -19,6 +19,8 @@ import MemberList from "./components/MemberList";
 import PlanCard from "./components/PlanCard";
 import ClientSelector from "./components/ClientSelector";
 import ClientDetailsCard from "./components/ClientDetailsCard";
+import { updateAdvisorId } from "@/app/services/investments.service";
+import { calculatePersonalCommission } from "@/app/services/commission.service";
 
 const Page = () => {
   /* ---------------- State ---------------- */
@@ -40,6 +42,19 @@ const Page = () => {
   const [selectedInvestmentId, setSelectedInvestmentId] = useState<
     number | null
   >(null);
+  console.log(selectedInvestmentId);
+  
+
+  useEffect(() => {
+    const updateAdvisor = async () => {
+      const res = await updateAdvisorId(
+        Number(selectedInvestmentId),
+        selectedEmpNo,
+      );
+      console.log(res);
+    };
+    updateAdvisor();
+  }, [selectedInvestmentId]);
 
   /* ---------------- Load branches ---------------- */
   useEffect(() => {
@@ -141,43 +156,85 @@ const Page = () => {
     (plan, index, self) => index === self.findIndex((p) => p.id === plan.id),
   );
 
+  const handleProcess = () => {
+    if (!selectedEmpNo || !selectedInvestmentId || !branch || !client) return;
+
+    // find selected member
+    const member = displayedMembers?.find((m) => m.empNo === selectedEmpNo);
+    if (!member) return;
+
+    // find selected investment
+    const investment = client.investments?.find(
+      (inv) => inv.id === selectedInvestmentId,
+    );
+    if (!investment) return;
+
+    // calculate personal commission
+    const personalCommission = calculatePersonalCommission(
+      member.position.title,
+      investment.amount,
+    );
+
+    console.log("Member:", member.name);
+    console.log("Investment Amount:", investment.amount);
+    console.log("Personal Commission:", personalCommission);
+
+    updateTotalCommission(member.id, personalCommission)
+    updateAdvisorId(selectedInvestmentId, selectedEmpNo);
+  };
+
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <h1 className="text-2xl font-semibold mb-6 text-gray-800">
         Commissions Dashboard
       </h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        <BranchStaffPanel
-          branches={branches}
-          branch={branch}
-          selectedBranchId={selectedBranchId}
-          selectedEmpNo={selectedEmpNo}
-          onBranchChange={setSelectedBranchId}
-          onEmployeeChange={setSelectedEmpNo}
-        />
-
-        <MemberList
-          members={displayedMembers}
-          loading={loadingEligible}
-          selectedEmpNo={selectedEmpNo}
-        />
-
-        <ClientSelector
-          clients={clients}
-          selectedClientId={selectedClientId}
-          onChange={setSelectedClientId}
-        />
-
-        {client && (
-          <ClientDetailsCard
-            client={client}
-            selectedInvestmentId={selectedInvestmentId}
-            onInvestmentChange={setSelectedInvestmentId}
+      <div className="flex flex-col lg:flex-row gap-8 p-6">
+        {/* Sidebar: Navigation and Selection */}
+        <aside className="w-full lg:w-1/3 space-y-6">
+          <BranchStaffPanel
+            branches={branches}
+            branch={branch}
+            selectedBranchId={selectedBranchId}
+            selectedEmpNo={selectedEmpNo}
+            onBranchChange={setSelectedBranchId}
+            onEmployeeChange={setSelectedEmpNo}
           />
-        )}
+          <MemberList
+            members={displayedMembers}
+            loading={loadingEligible}
+            selectedEmpNo={selectedEmpNo}
+          />
+        </aside>
 
-        <PlanCard plans={uniquePlans} />
+        {/* Main Content: Client Data and Plans */}
+        <main className="w-full lg:w-2/3 flex flex-col gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <ClientSelector
+              clients={clients}
+              selectedClientId={selectedClientId}
+              onChange={setSelectedClientId}
+            />
+            <PlanCard plans={uniquePlans} />
+          </div>
+
+          {client && (
+            <div className="w-full">
+              <ClientDetailsCard
+                client={client}
+                selectedInvestmentId={selectedInvestmentId}
+                onInvestmentChange={setSelectedInvestmentId}
+              />
+              <button
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                onClick={handleProcess}
+                disabled={!selectedEmpNo || !selectedInvestmentId}
+              >
+                Process Commission
+              </button>
+            </div>
+          )}
+        </main>
       </div>
     </div>
   );

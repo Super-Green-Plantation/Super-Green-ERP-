@@ -9,6 +9,7 @@ const PlanSelector = ({
   selectedInvestmentId,
   onChange,
 }: PlanSelectorProps) => {
+  
   return (
     <div>
       <label className="block text-xs font-medium text-gray-400 mb-1">

@@ -14,7 +14,7 @@ export default function MemberCard({ member }: Props) {
 
       <div className="grid grid-cols-3 gap-2 pt-2 border-t border-gray-100">
         <div>
-          <p className="text-[10px] text-gray-500 uppercase">ORC Rate</p>
+          <p className="text-[10px] text-gray-500 uppercase">Personal Comm Rate</p>
           <p className="font-bold text-gray-700">
             {member.position?.orc
               ? `${member.position.orc.rate}%`
@@ -24,7 +24,7 @@ export default function MemberCard({ member }: Props) {
 
         <div>
           <p className="text-[10px] text-gray-500 uppercase">
-            Personal Comm Rate
+            ORC Rate
           </p>
           <p className="font-bold text-gray-700">
             {member.position?.personalCommissionTiers?.length

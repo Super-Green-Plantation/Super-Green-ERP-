@@ -1,13 +1,15 @@
-export function getPersonalRate(tiers, amount) {
-  return (
-    tiers.find(
-      t =>
-        amount >= t.minAmount &&
-        (t.maxAmount === null || amount <= t.maxAmount)
-    )?.rate ?? 0
-  );
-}
+export const calculatePersonalCommission = (
+  position: string,
+  invAmount: number
+) => {
+  let threshold = 500_000; // default threshold
 
-export function calculateCommission(amount, rate) {
-  return (amount * rate) / 100;
-}
+  if (position === "AGM") {
+    threshold = 1_500_000;
+  }
+
+  const rate = invAmount > threshold ? 10 : 7;
+  const personalCommission = (invAmount * rate) / 100;
+
+  return personalCommission;
+};

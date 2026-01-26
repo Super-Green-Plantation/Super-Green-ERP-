@@ -57,3 +57,13 @@ export const getMemberDetails = async (empId: number, branchId: number) => {
   }
   return data.json();
 };
+
+export const updateTotalCommission = async(id:number, totCommission:number)=>{
+  const res = await fetch(`/api/src/employee/id/${id}`,{
+    method:"PUT",
+   headers: { "Content-Type": "application/json" },
+   body:JSON.stringify(totCommission),
+  })
+
+  return res
+}
