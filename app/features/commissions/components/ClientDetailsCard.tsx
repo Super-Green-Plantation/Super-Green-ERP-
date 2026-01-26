@@ -12,32 +12,46 @@ const ClientDetailsCard = ({
   onInvestmentChange,
 }: ClientDetailsCardProps) => {
   return (
-    <div className="rounded-xl border bg-white p-5 shadow-sm space-y-3 border-l-4 border-green-500">
-      <h2 className="text-lg font-bold text-gray-800">
-        {client.fullName}
-      </h2>
+    <div className="overflow-hidden rounded-xl border border-gray-100 bg-white shadow-md transition-shadow hover:shadow-lg">
+      <div className="border-l-4 border-green-500 bg-gray-50/50 p-4">
+        <h2 className="text-xl font-bold tracking-tight text-gray-900">
+          {client.fullName}
+        </h2>
+      </div>
 
-      <div className="grid grid-cols-1 gap-2 text-sm text-gray-600">
-        <p>
-          <span className="font-medium text-gray-400">NIC:</span>{" "}
-          {client.nic}
-        </p>
+      <div className="p-5 space-y-4">
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="flex flex-col">
+            <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+              NIC
+            </span>
+            <span className="font-medium text-gray-700">{client.nic}</span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+              Mobile
+            </span>
+            <span className="font-medium text-gray-700">
+              {client.phoneMobile}
+            </span>
+          </div>
+          <div className="flex flex-col col-span-2">
+            <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+              Branch
+            </span>
+            <span className="font-medium text-gray-700">
+              {client.branch?.name}
+            </span>
+          </div>
+        </div>
 
-        <p>
-          <span className="font-medium text-gray-400">Mobile:</span>{" "}
-          {client.phoneMobile}
-        </p>
-
-        <p>
-          <span className="font-medium text-gray-400">Branch:</span>{" "}
-          {client.branch?.name}
-        </p>
-
-        <PlanSelector
-          investments={client.investments}
-          selectedInvestmentId={selectedInvestmentId}
-          onChange={onInvestmentChange}
-        />
+        <div className="pt-2 border-t border-gray-50">
+          <PlanSelector
+            investments={client.investments}
+            selectedInvestmentId={selectedInvestmentId}
+            onChange={onInvestmentChange}
+          />
+        </div>
       </div>
     </div>
   );

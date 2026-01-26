@@ -52,7 +52,7 @@ const Page = () => {
   };
 
   return (
-    <div className="space-y-4 max-w-5xl mx-auto">
+    <div className="space-y-4 max-w-7xl mx-auto">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button
@@ -62,7 +62,7 @@ const Page = () => {
             <ArrowLeft className="w-5 h-5 text-gray-600" />
           </button>
           <div>
-            <h2 className="text-xl font-semibold">
+            <h2 className="text-2xl font-semibold">
               {loading ? "Loading..." : `${branchName} Branch`}
             </h2>
             <p className="text-sm text-gray-500">

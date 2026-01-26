@@ -31,7 +31,7 @@ export async function DELETE(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: Promise<{ empId: number }> },
+  { params }: { params: Promise<{ empId: string }> },
 ) {
   const { empId } = await params;
   const id = Number(empId);

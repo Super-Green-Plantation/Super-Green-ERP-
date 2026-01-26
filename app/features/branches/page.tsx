@@ -21,11 +21,11 @@ const page = () => {
   }, []);
 
   return (
-    <div className="space-y-4 max-w-5xl mx-auto">
+    <div className="space-y-4 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold">Branches</h2>
+          <h2 className="text-2xl font-semibold">Branches</h2>
           <p className="text-sm text-gray-500">
             Manage branches and reporting hierarchy
           </p>

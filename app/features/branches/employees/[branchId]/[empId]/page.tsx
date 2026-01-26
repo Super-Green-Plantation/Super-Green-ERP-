@@ -122,7 +122,7 @@ const EmployeeDetailsPage = () => {
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-6  min-h-screen">
+    <div className="max-w-7xl mx-auto p-6 space-y-6  min-h-screen">
       {/* Header */}
       <div className="flex items-center justify-between border-b pb-5">
         <div className="flex items-center gap-4">
@@ -226,11 +226,11 @@ const EmployeeDetailsPage = () => {
               Rank Level: {employee.position?.rank || "0"}
             </p>
             <p className="text-xs text-gray-400 font-medium mb-2">
-              Personal Comm. rate :{" "}
+              ORC rate :{" "}
               {employee.position?.personalCommissionTiers[0].rate + "%" || "0"}
             </p>
             <p className="text-xs text-gray-400 font-medium mb-8">
-              ORC rate : {employee.position?.orc.rate + "%" || "0"}
+               Personal Comm. rate : {employee.position?.orc.rate + "%" || "0"}
             </p>
 
             <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
