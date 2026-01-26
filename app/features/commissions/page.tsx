@@ -14,6 +14,11 @@ import { FinancialPlan } from "@/app/types/FinancialPlan";
 import { Member } from "@/app/types/member";
 
 import { useEffect, useState } from "react";
+import BranchStaffPanel from "./components/BranchStaffPanel";
+import MemberList from "./components/MemberList";
+import PlanCard from "./components/PlanCard";
+import ClientSelector from "./components/ClientSelector";
+import ClientDetailsCard from "./components/ClientDetailsCard";
 
 const Page = () => {
   /* ---------------- State ---------------- */
@@ -143,248 +148,36 @@ const Page = () => {
       </h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {/* ================= Branch & Staff ================= */}
-        <div className="space-y-4">
-          <div className="bg-white p-5 rounded-xl border shadow-sm">
-            <h2 className="text-sm font-bold uppercase text-blue-600 mb-4">
-              Branch & Staff
-            </h2>
+        <BranchStaffPanel
+          branches={branches}
+          branch={branch}
+          selectedBranchId={selectedBranchId}
+          selectedEmpNo={selectedEmpNo}
+          onBranchChange={setSelectedBranchId}
+          onEmployeeChange={setSelectedEmpNo}
+        />
 
-            {/* Branch select */}
-            <label className="block mb-1 text-xs font-medium text-gray-500">
-              Select Branch
-            </label>
-            <select
-              className="w-full rounded-lg border px-3 py-2 mb-4 bg-gray-50"
-              onChange={(e) =>
-                setSelectedBranchId(
-                  e.target.value ? Number(e.target.value) : null,
-                )
-              }
-            >
-              <option value="">Choose a branch</option>
-              {branches.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name}
-                </option>
-              ))}
-            </select>
+        <MemberList
+          members={displayedMembers}
+          loading={loadingEligible}
+          selectedEmpNo={selectedEmpNo}
+        />
 
-            {/* Employee select */}
-            <label className="block mb-1 text-xs font-medium text-gray-500">
-              Select Employee
-            </label>
-            <select
-              className="w-full rounded-lg border px-3 py-2 bg-gray-50"
-              value={selectedEmpNo}
-              onChange={(e) => setSelectedEmpNo(e.target.value)}
-            >
-              <option value="">All Employees</option>
-              {branch?.members?.map((m) => (
-                <option key={m.empNo} value={m.empNo}>
-                  {m.name} ({m.empNo})
-                </option>
-              ))}
-            </select>
-          </div>
+        <ClientSelector
+          clients={clients}
+          selectedClientId={selectedClientId}
+          onChange={setSelectedClientId}
+        />
 
-          {/* Members list */}
-          <div className="space-y-3">
-            {loadingEligible && (
-              <p className="text-sm text-gray-400 italic">
-                Loading eligible members…
-              </p>
-            )}
+        {client && (
+          <ClientDetailsCard
+            client={client}
+            selectedInvestmentId={selectedInvestmentId}
+            onInvestmentChange={setSelectedInvestmentId}
+          />
+        )}
 
-            {!loadingEligible &&
-              selectedEmpNo &&
-              displayedMembers?.length === 0 && (
-                <p className="text-sm text-red-500 italic">
-                  No eligible members found
-                </p>
-              )}
-
-            {displayedMembers?.map((m) => (
-              <div
-                key={m.id}
-                className="rounded-xl border bg-white p-4 shadow-sm border-l-4 border-blue-500"
-              >
-                <p className="font-bold text-gray-800">{m.name}</p>
-                <p className="text-xs text-blue-600 mb-3">
-                  {m.position?.title}
-                </p>
-
-                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-100">
-                  <div>
-                    <p className="text-[10px] text-gray-500 uppercase">
-                      ORC Rate
-                    </p>
-                    <p className="font-bold text-gray-700">
-                      {m.position?.commissionRate?.rate
-                        ? `${m.position.commissionRate.rate}%`
-                        : "0%"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-gray-500 uppercase">
-                      Total Earned
-                    </p>
-                    <p className="font-bold text-green-600">
-                      Rs. {m.totalCommission?.toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ================= Client ================= */}
-        <div className="space-y-4">
-          <div className="bg-white p-5 rounded-xl border shadow-sm">
-            <h2 className="text-sm font-bold uppercase text-blue-600 mb-4">
-              Client Details
-            </h2>
-
-            <label className="block mb-1 text-xs font-medium text-gray-500">
-              Select Client
-            </label>
-            <select
-              className="w-full rounded-lg border px-3 py-2 bg-gray-50"
-              onChange={(e) =>
-                setSelectedClientId(
-                  e.target.value ? Number(e.target.value) : null,
-                )
-              }
-            >
-              <option value="">Choose a client</option>
-              {clients.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.fullName}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {client && (
-            <div className="rounded-xl border bg-white p-5 shadow-sm space-y-3 border-l-4 border-green-500">
-              <h2 className="text-lg font-bold text-gray-800">
-                {client.fullName}
-              </h2>
-
-              <div className="grid grid-cols-1 gap-2 text-sm text-gray-600">
-                <p>
-                  <span className="font-medium text-gray-400">NIC:</span>{" "}
-                  {client.nic}
-                </p>
-
-                <p>
-                  <span className="font-medium text-gray-400">Mobile:</span>{" "}
-                  {client.phoneMobile}
-                </p>
-
-                <p>
-                  <span className="font-medium text-gray-400">Branch:</span>{" "}
-                  {client.branch?.name}
-                </p>
-
-                {/* ✅ Select Plan */}
-                <div>
-                  <label className="block text-xs font-medium text-gray-400 mb-1">
-                    Select Plan
-                  </label>
-
-                  <select
-                    className="w-full rounded-lg border px-3 py-2 bg-gray-50"
-                    value={selectedInvestmentId ?? ""}
-                    onChange={(e) =>
-                      setSelectedInvestmentId(
-                        e.target.value ? Number(e.target.value) : null,
-                      )
-                    }
-                  >
-                    <option value="">Choose a plan</option>
-
-                    {client.investments?.map((inv) => (
-                      <option key={inv.id} value={inv.id}>
-                        {inv.plan?.name ?? "Plan"} — Rs.{" "}
-                        {inv.amount.toLocaleString()}
-                      </option>
-                    ))}
-                  </select>
-
-                  {/* Empty state */}
-                  {client.investments?.length === 0 && (
-                    <p className="text-xs text-red-500 mt-1 italic">
-                      No investments found
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* ================= Plans ================= */}
-        <div className="space-y-4">
-          <h2 className="text-sm font-bold uppercase text-blue-600 px-1">
-            Active Plan
-          </h2>
-          {!uniquePlans || uniquePlans.length === 0 ? (
-            <div className="h-32 flex items-center justify-center border-2 border-dashed rounded-xl text-gray-400 text-sm italic bg-gray-50">
-              No plan details found
-            </div>
-          ) : (
-            uniquePlans.map((p) => (
-              <div
-                key={p.id}
-                className="rounded-xl border bg-linear-to-br from-blue-50 to-white p-5 shadow-md border-t-4 border-t-blue-600"
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-xl font-black text-blue-900 tracking-tight">
-                    {p.name}
-                  </h3>
-                  <span className="bg-blue-600 text-white text-[10px] font-bold px-2 py-1 rounded">
-                    {p.status}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-2 gap-y-4">
-                  <div>
-                    <p className="text-[10px] text-gray-400 uppercase font-bold">
-                      Investment
-                    </p>
-                    <p className="text-lg font-bold text-gray-900">
-                      Rs. {p.investment?.toLocaleString() ?? "0"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-gray-400 uppercase font-bold">
-                      Interest Rate
-                    </p>
-                    <p className="text-lg font-bold text-gray-900">{p.rate}%</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-gray-400 uppercase font-bold">
-                      Duration
-                    </p>
-                    <p className="font-semibold text-gray-700">
-                      {p.duration} Months
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] text-gray-400 uppercase font-bold">
-                      Type
-                    </p>
-                    <p className="font-semibold text-gray-700 uppercase">
-                      {p.description}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
+        <PlanCard plans={uniquePlans} />
       </div>
     </div>
   );

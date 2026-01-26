@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   _: NextRequest,
-  { params }: { params: Promise<{ empNo: string; branchId: string }> }
+  { params }: { params: Promise<{ empNo: string; branchId: string }> },
 ) {
   const empNo = (await params).empNo;
   const branchId = Number((await params).branchId);
@@ -12,8 +12,13 @@ export async function GET(
     const selectedMember = await prisma.member.findUnique({
       where: { empNo },
       include: {
-        position: true,
-        investments:true
+        position: {
+          include: {
+            personalCommissionTiers: true,
+            orc: true,
+          },
+        },
+        investments: true,
       },
     });
 
@@ -23,6 +28,14 @@ export async function GET(
         position: {
           rank: {
             gte: selectedMember?.position.rank,
+          },
+        },
+      },
+      include: {
+        position: {
+          include: {
+            orc: true,
+            personalCommissionTiers: true,
           },
         },
       },
