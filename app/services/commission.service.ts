@@ -13,3 +13,8 @@ export const calculatePersonalCommission = (
 
   return personalCommission;
 };
+
+export const updateOrc = async(members: [], invId:number)=>{
+  console.log(members, invId);
+  
+}

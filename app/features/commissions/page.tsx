@@ -7,8 +7,9 @@ import {
 } from "@/app/services/clients.service";
 import {
   getEligibleMembers,
-  getUpperMembers,
+  getAllUpperMembers,
   updateTotalCommission,
+  saveOrcCommission,
 } from "@/app/services/member.service";
 import { getPlansByClient } from "@/app/services/plans.service";
 
@@ -24,7 +25,11 @@ import PlanCard from "./components/PlanCard";
 import ClientSelector from "./components/ClientSelector";
 import ClientDetailsCard from "./components/ClientDetailsCard";
 import { updateAdvisorId } from "@/app/services/investments.service";
-import { calculatePersonalCommission } from "@/app/services/commission.service";
+import {
+  calculatePersonalCommission,
+  updateOrc,
+} from "@/app/services/commission.service";
+import { getUpperMembers } from "@/app/api/src/utils/member";
 
 const Page = () => {
   /* ---------------- State ---------------- */
@@ -49,10 +54,7 @@ const Page = () => {
 
   useEffect(() => {
     const updateAdvisor = async () => {
-      await updateAdvisorId(
-        Number(selectedInvestmentId),
-        selectedEmpNo,
-      );
+      await updateAdvisorId(Number(selectedInvestmentId), selectedEmpNo);
     };
     updateAdvisor();
   }, [selectedInvestmentId]);
@@ -135,8 +137,9 @@ const Page = () => {
 
       try {
         setLoadingEligible(true);
+        if (!selectedEmpNo || !selectedBranchId) return;
         const data = await getEligibleMembers(selectedEmpNo, selectedBranchId);
-        setEligibleMembers(data.eligibleMembers);
+        setEligibleMembers(data.upperMember);
       } catch (error) {
         console.error(error);
         setEligibleMembers([]);
@@ -157,38 +160,39 @@ const Page = () => {
     (plan, index, self) => index === self.findIndex((p) => p.id === plan.id),
   );
 
-  const handleProcess = () => {
-    if (!selectedEmpNo || !selectedInvestmentId || !branch || !client) return;
+  const handleProcess = async () => {
+  if (!selectedEmpNo || !selectedInvestmentId || !selectedBranchId) return;
 
-    // find selected member
-    const member = displayedMembers?.find((m) => m.empNo === selectedEmpNo);
-    if (!member) return;
-
-    // find selected investment
-    const investment = client.investments?.find(
-      (inv) => inv.id === selectedInvestmentId,
-    );
-    if (!investment) return;
-
-    // calculate personal commission
-    const personalCommission = calculatePersonalCommission(
-      member.position.title,
-      investment.amount,
+  try {
+    const result = await saveOrcCommission(
+      selectedInvestmentId,
+      selectedEmpNo,
+      selectedBranchId
     );
 
-    console.log("Member:", member.name);
-    console.log("Investment Amount:", investment.amount);
-    console.log("Personal Commission:", personalCommission);
+    console.log("Commission processed:", result);
+  } catch (err) {
+    console.error(err);
+  }
+};
 
-    updateTotalCommission(member.id, personalCommission);
-    updateAdvisorId(selectedInvestmentId, selectedEmpNo);
+  useEffect(() => {
+    const fetchUpperMembers = async () => {
+      if (!selectedEmpNo || !selectedBranchId) return;
 
-    useEffect(() => {
-      const members = getUpperMembers(member.id);
-      console.log(members);
-      console.log(selectedEmpNo);
-    }, [member]);
-  };
+      const members = await getAllUpperMembers(
+        selectedEmpNo,
+        Number(selectedBranchId),
+      );
+
+      console.log(
+        "upper member ORC rate:",
+        members?.upperMember?.[0]?.position?.orc?.rate,
+      );
+    };
+
+    fetchUpperMembers();
+  }, [selectedEmpNo, selectedBranchId]);
 
   return (
     <div className="min-h-screen  p-4 md:p-8">

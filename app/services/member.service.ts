@@ -58,19 +58,52 @@ export const getMemberDetails = async (empId: number, branchId: number) => {
   return data.json();
 };
 
-export const updateTotalCommission = async(id:number, totCommission:number)=>{
-  const res = await fetch(`/api/src/employee/id/${id}`,{
-    method:"PUT",
-   headers: { "Content-Type": "application/json" },
-   body:JSON.stringify(totCommission),
-  })
+export const updateTotalCommission = async (
+  empNo: string,
+  commission: number,
+) => {
+  const res = await fetch(`/api/src/employee/id/${empNo}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ commission }),
+  });
 
-  return res
-}
+  if (!res.ok) {
+    throw new Error("Failed to update total commission");
+  }
 
-export const getUpperMembers = async(id:number)=>{
-  const res = await fetch(`/api/src/employee/id/${id}`)
-  console.log("upper res",res);
-  
-  return res
-}
+  return res.json();
+};
+
+export const getAllUpperMembers = async (empNo: string, branchId: number) => {
+  if (!empNo || !branchId) return null;
+
+  const res = await fetch(`/api/src/commissions/eligible/${empNo}/${branchId}`);
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch upper members");
+  }
+
+  return res.json();
+};
+
+export const saveOrcCommission = async (
+  investmentId: number,
+  empNo: string,
+  branchId: number,
+) => {
+  const res = await fetch("/api/src/commissions/process", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json", //  REQUIRED
+    },
+    body: JSON.stringify({ investmentId, empNo, branchId }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err || "Failed to save commission");
+  }
+
+  return res.json(); //  IMPORTANT
+};
