@@ -78,13 +78,9 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      if (!advisor?.position) {
-        throw new Error("Advisor position not found");
-      }
-
-      const orc = advisor.position.orc ?? 0;
-
       for (const upline of uplines) {
+        if (!upline.position?.orc) continue;
+        
         const uplineCommission = investment.amount * upline.position.orc.rate;
 
         await tx.member.update({
