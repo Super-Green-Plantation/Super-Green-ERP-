@@ -37,7 +37,7 @@ export async function POST(req: Request) {
               {
                 planId: investment.planId,
                 investmentDate: new Date(),
-                amount: 0,
+                amount: Number(applicant.investmentAmount),
                 rate: 0,
                 returnFrequency: "Monthly",
               },

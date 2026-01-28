@@ -201,6 +201,9 @@ model Investment {
   advisor   Member? @relation(fields: [advisorId], references: [id])
 
   commission Commission[]
+
+  commissionsProcessed Boolean @default(false)
+  
   createdAt  DateTime   @default(now())
   updatedAt  DateTime   @updatedAt
 }

@@ -1,3 +1,5 @@
+import { toast } from "sonner";
+
 export const getMembers = async (id: number) => {
   const res = await fetch(`/api/src/branches/${id}/employee`);
 
@@ -6,6 +8,7 @@ export const getMembers = async (id: number) => {
   }
   return res.json();
 };
+
 export const UpdateMembers = async (
   id: string,
   empId: number | undefined,
@@ -26,6 +29,7 @@ export const deletMember = async (empId: number) => {
 
   return res;
 };
+
 export const getEligibleMembers = async (empNo: string, branchId: number) => {
   const members = await fetch(
     `/api/src/commissions/eligible/${empNo}/${branchId}`,
@@ -100,10 +104,26 @@ export const saveOrcCommission = async (
     body: JSON.stringify({ investmentId, empNo, branchId }),
   });
 
+  const data = await res.json();
   if (!res.ok) {
-    const err = await res.text();
-    throw new Error(err || "Failed to save commission");
-  }
+    switch (data.error.code) {
+      case "COMMISSION_ALREADY_PROCESSED":
+        toast.warning("Commission already processed");
+        break;
 
-  return res.json(); //  IMPORTANT
+      case "INVESTMENT_NOT_FOUND":
+        toast.error("Investment not found");
+        break;
+
+      case "ORC_NOT_SET":
+        toast.error("Advisor ORC rate is missing");
+        break;
+
+      default:
+        toast.error("Unexpected error occurred");
+    }
+  }
+  toast.success("Commission created success")
+
+  return res; //  return only res since once did .json
 };
