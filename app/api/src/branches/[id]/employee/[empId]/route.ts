@@ -74,14 +74,12 @@ export async function GET(
       where: { id: employeeId },
       include: {
         investments: true,
-        manager: true,
         position: {
           include:{
             personalCommissionTiers:true,
             orc:true
           }
         },
-        subordinates: true,
         branch: true,
       },
     });

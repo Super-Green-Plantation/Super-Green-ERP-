@@ -12,20 +12,8 @@ export async function POST(req: NextRequest) {
   console.log(investmentId, empNo, branchId);
 
   try {
-    await prisma.$transaction(async (tx) => {
-      //alreadyProcessed = any commission exists for investmentId
-      // const alreadyProcessed = await tx.commission.count({
-      //   where: { investmentId },
-      // });
-
-      // if (alreadyProcessed > 0) {
-      //   throw new ApiError(
-      //     "COMMISSION_ALREADY_PROCESSED",
-      //     "Commission already processed for this investment",
-      //     409,
-      //   );
-      // }
-
+    const res = await prisma.$transaction(async (tx) => {
+      const createdCommissions: any = [];
       // 2. Load investment
       const investment = await tx.investment.findUnique({
         where: { id: investmentId },
@@ -34,14 +22,28 @@ export async function POST(req: NextRequest) {
       if (!investment)
         throw new ApiError("INVESTMENT_NOT_FOUND", "Investment not found", 404);
 
-      if (investment.commissionsProcessed)
-        throw new ApiError(
-          "COMMISSION_ALREADY_PROCESSED",
-          "Commission already processed for this investment",
-          409,
-        );
+      if (investment.commissionsProcessed) {
+        const existingCommissions = await tx.commission.findMany({
+          where: { investmentId },
+          include: {
+            member: {
+              select: {
+                empNo: true,
+                name: true,
+                position: true,
+              },
+            },
+          },
+        });
 
-      await tx.investment.update({
+        return {
+          alreadyProcessed: true,
+          investment,
+          commissions: existingCommissions,
+        };
+      }
+
+      const updatedInvestment = await tx.investment.update({
         where: { id: investmentId },
         data: { commissionsProcessed: true },
       });
@@ -65,9 +67,23 @@ export async function POST(req: NextRequest) {
         throw new ApiError("ORC_NOT_SET", "Advisor ORC not set");
 
       // 4. PERSONAL commission
-      const personalCommission = investment.amount * advisor.position.orc.rate;
+      const personalComm = await tx.personalCommissionTier.findFirst({
+        where: { positionId: advisor.positionId },
+      });
 
-      await tx.member.update({
+      if (!personalComm) {
+        throw new ApiError("NO_TIER", "No personal commission tier found");
+      }
+      const personalRate = Number(personalComm.rate) / 100; // if DB stores 7
+
+      if (personalRate > 10) {
+        throw new ApiError("PERSONAL_RATE_TOO_HIGH", "Personal commission rate too high! Possible config error.");
+        
+      }
+
+      const personalCommission = investment.amount * Number(personalRate);
+
+      const member = await tx.member.update({
         where: { empNo },
         data: {
           totalCommission: {
@@ -76,7 +92,7 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      await tx.commission.create({
+      const commission = await tx.commission.create({
         data: {
           investmentId,
           memberEmpNo: empNo,
@@ -85,7 +101,9 @@ export async function POST(req: NextRequest) {
         },
       });
 
-      // 🔁 6. UPLINE commissions
+      createdCommissions.push(commission);
+
+      //  6. UPLINE commissions
       const uplines = await tx.member.findMany({
         where: {
           branchId,
@@ -105,7 +123,14 @@ export async function POST(req: NextRequest) {
       for (const upline of uplines) {
         if (!upline.position?.orc) continue;
 
-        const uplineCommission = investment.amount * upline.position.orc.rate;
+        const uplineRate = Number(upline.position.orc.rate) / 100;
+
+        if (uplineRate > 1) {
+          throw new ApiError("ORC_RATE_TOO_HIGH", "ORC Commission rate too high! Possible config error.");
+        
+        }
+
+        const uplineCommission = investment.amount * uplineRate;
 
         await tx.member.update({
           where: { empNo: upline.empNo },
@@ -116,7 +141,7 @@ export async function POST(req: NextRequest) {
           },
         });
 
-        await tx.commission.create({
+        const uplineComm = await tx.commission.create({
           data: {
             investmentId,
             memberEmpNo: upline.empNo,
@@ -124,10 +149,21 @@ export async function POST(req: NextRequest) {
             type: "UPLINE",
           },
         });
+
+        createdCommissions.push(uplineComm);
       }
+      return {
+        alreadyProcessed: false,
+        investment: updatedInvestment,
+        advisor: member,
+        commissions: createdCommissions,
+      };
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      success: true,
+      receipt: res,
+    });
   } catch (err: any) {
     console.error(err);
 

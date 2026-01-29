@@ -19,5 +19,9 @@ export const getAllInvestments = async()=>{
 
 export const getInvestmentById = async(id:number)=>{
   //fetch investment from id - investment/details/[inveId]
-
+  const res = await fetch(`/api/src/investments/details/${id}`)
+  if (!res.ok) {
+    return null;
+  }
+  return res.json()
 }

@@ -6,10 +6,9 @@ import {
   getClientsByBranch,
 } from "@/app/services/clients.service";
 import {
-  getEligibleMembers,
   getAllUpperMembers,
-  updateTotalCommission,
-  saveOrcCommission,
+  getEligibleMembers,
+  handleOrcCommission
 } from "@/app/services/member.service";
 import { getPlansByClient } from "@/app/services/plans.service";
 
@@ -20,19 +19,22 @@ import { Member } from "@/app/types/member";
 
 import { useEffect, useState } from "react";
 
+import CommissionReceipt from "@/app/components/Commission/CommissionReceipt";
 import { updateAdvisorId } from "@/app/services/investments.service";
-import {
-  calculatePersonalCommission,
-  updateOrc,
-} from "@/app/services/commission.service";
-import { getUpperMembers } from "@/app/api/src/utils/member";
-import MemberList from "./components/MemberList";
-import BranchStaffPanel from "./components/BranchStaffPanel";
-import ClientSelector from "./components/ClientSelector";
-import PlanCard from "./components/PlanCard";
-import ClientDetailsCard from "./components/ClientDetailsCard";
-import { ArrowBigLeft, ArrowLeft, CornerLeftDown } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+import BranchStaffPanel from "./components/BranchStaffPanel";
+import ClientDetailsCard from "./components/ClientDetailsCard";
+import ClientSelector from "./components/ClientSelector";
+import MemberList from "./components/MemberList";
+import PlanCard from "./components/PlanCard";
+
+type CommissionReceipt = {
+  alreadyProcessed: boolean;
+  investment: any;
+  advisor?: any;
+  commissions: any[];
+};
 
 const Page = () => {
   /* ---------------- State ---------------- */
@@ -54,6 +56,8 @@ const Page = () => {
   const [selectedInvestmentId, setSelectedInvestmentId] = useState<
     number | null
   >(null);
+  const [commissionDetails, setCommissionDetails] =
+    useState<CommissionReceipt | null>(null);
 
   const router = useRouter();
 
@@ -169,11 +173,13 @@ const Page = () => {
     if (!selectedEmpNo || !selectedInvestmentId || !selectedBranchId) return;
 
     try {
-      const result = await saveOrcCommission(
+      const result = await handleOrcCommission(
         selectedInvestmentId,
         selectedEmpNo,
         selectedBranchId,
       );
+
+      setCommissionDetails(result);
 
       console.log("Commission processed:", result);
     } catch (err) {
@@ -200,13 +206,14 @@ const Page = () => {
   }, [selectedEmpNo, selectedBranchId]);
 
   return (
+    <>
     <div className="min-h-screen  px-4 ">
       <div className="max-w-7xl mx-auto">
         {/* Header Section */}
         <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex gap-2 items-center">
-              <ArrowLeft onClick={router.back} className="cursor-pointer"/>
+              <ArrowLeft onClick={router.back} className="cursor-pointer" />
               <h1 className="text-2xl font-semibold ">Commissions Portal</h1>
             </div>
             <p className="text-sm font-medium text-gray-500">
@@ -343,7 +350,13 @@ const Page = () => {
           </main>
         </div>
       </div>
+
+      
     </div>
+    <div>
+        <CommissionReceipt data= {commissionDetails}/>
+      </div>
+      </>
   );
 };
 

@@ -91,7 +91,7 @@ export const getAllUpperMembers = async (empNo: string, branchId: number) => {
   return res.json();
 };
 
-export const saveOrcCommission = async (
+export const handleOrcCommission = async (
   investmentId: number,
   empNo: string,
   branchId: number,
@@ -119,11 +119,35 @@ export const saveOrcCommission = async (
         toast.error("Advisor ORC rate is missing");
         break;
 
+      case "ORC_NOT_SET":
+        toast.error("Advisor ORC rate is missing");
+        break;
+
+      case "ORC_RATE_TOO_HIGH":
+        toast.error("ORC Commission rate too high! Possible config error.");
+        break;
+
+      case "PERSONAL_RATE_TOO_HIGH":
+        toast.error(
+          "Personal commission rate too high! Possible config error.",
+        );
+        break;
+
+      case "NO_TIER":
+        toast.error("No personal commission tier found");
+        break;
+
       default:
         toast.error("Unexpected error occurred");
     }
   }
-  toast.success("Commission created success")
+  if (data.receipt.alreadyProcessed) {
+    toast.warning("Commission already processed — showing existing receipt");
+  } else {
+    toast.success("Commission created successfully");
+  }
 
-  return res; //  return only res since once did .json
+  console.log(data);
+
+  return data.receipt; //  return only res since once did .json
 };
