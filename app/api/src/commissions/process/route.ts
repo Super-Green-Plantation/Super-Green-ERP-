@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { ApiError } from "../../utils/errorHelper";
+import { PrismaClient } from "@prisma/client";
 
 export async function POST(req: NextRequest) {
   const {
@@ -12,7 +13,7 @@ export async function POST(req: NextRequest) {
   console.log(investmentId, empNo, branchId);
 
   try {
-    const res = await prisma.$transaction(async (tx) => {
+    const res = await prisma.$transaction(async (tx:any) => {
       const createdCommissions: any = [];
       // 2. Load investment
       const investment = await tx.investment.findUnique({
