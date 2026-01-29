@@ -190,8 +190,7 @@ model Investment {
 
   investmentDate  DateTime
   amount          Float
-  rate            Float
-  returnFrequency ReturnFrequency
+ 
 
   clientId Int
   client   Client @relation(fields: [clientId], references: [id])

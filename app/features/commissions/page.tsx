@@ -27,6 +27,7 @@ const Commission = () => {
       {/* Table Container */}
       <div className="overflow-x-auto rounded-xl border border-gray-100 bg-white shadow-sm">
         <InvestmentTable/>
+        
       </div>
     </div>
   );

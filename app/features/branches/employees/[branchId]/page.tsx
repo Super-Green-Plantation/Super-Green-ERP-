@@ -1,13 +1,14 @@
 "use client";
 
+import Back from "@/app/components/Back";
 import EmpTable from "@/app/components/Employee/EmpTable";
-import { getBranchDetails } from "@/app/services/branches.service";
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState, useCallback } from "react";
-import { Search, ArrowLeft, Users } from "lucide-react";
-import { Member } from "@/app/types/member";
-import { getMembers } from "@/app/services/member.service";
 import EmpModal from "@/app/components/Employee/Model";
+import { getBranchDetails } from "@/app/services/branches.service";
+import { getMembers } from "@/app/services/member.service";
+import { Member } from "@/app/types/member";
+import { Search, Users } from "lucide-react";
+import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 const Page = () => {
   const params = useParams();
@@ -17,7 +18,6 @@ const Page = () => {
     return <div className="text-red-500">Branch ID missing in URL</div>;
   }
 
-  const router = useRouter();
   const [branchName, setBranchName] = useState("");
   const [employees, setEmployees] = useState<Member[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -55,12 +55,7 @@ const Page = () => {
     <div className="space-y-4 max-w-7xl mx-auto">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <button
-            onClick={() => router.back()}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
-          </button>
+          <Back/>
           <div>
             <h2 className="text-2xl font-semibold">
               {loading ? "Loading..." : `${branchName} Branch`}

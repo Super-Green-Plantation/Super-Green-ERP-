@@ -15,7 +15,7 @@ export async function GET(
       include: { plan: true }, // include FinancialPlan details
     });
 
-    const plans = investments.map((inv:any) => inv.plan).filter(Boolean);
+    const plans = investments.map((inv: any) => inv.plan).filter(Boolean);
 
     return NextResponse.json(plans);
   } catch (error) {
@@ -31,10 +31,8 @@ export async function PUT(
   try {
     const { empNo } = await req.json();
     console.log(empNo);
-    const {id} = await params
+    const { id } = await params;
     console.log(id);
-    
-    
 
     // 1️⃣ Find member by empNo
     const advisor = await prisma.member.findUnique({

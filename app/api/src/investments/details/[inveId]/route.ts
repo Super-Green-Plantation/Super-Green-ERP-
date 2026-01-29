@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
-  req: NextRequest,
+  _: NextRequest,
   { params }: { params: Promise<{ inveId: string }> },
 ) {
   const { inveId } = await params;
@@ -32,12 +32,12 @@ export async function GET(
 
     const member = await prisma.member.findUnique({
       where: { id: advisorId },
-      include:{branch:true}
+      include: { branch: true },
     });
 
-    return NextResponse.json({client, member,plan})
+    return NextResponse.json({ client, member, plan });
   } catch (error) {
     console.log(error);
+    return NextResponse.json(error);
   }
-  return NextResponse.json(inveId);
 }

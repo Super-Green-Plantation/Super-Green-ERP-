@@ -1,24 +1,24 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import Back from "@/app/components/Back";
+import { getClientDetails } from "@/app/services/clients.service";
+import { getPlanDetails } from "@/app/services/plans.service";
 import {
-  User,
-  TrendingUp,
-  HeartHandshake,
-  ShieldCheck,
-  ArrowLeft,
-  Printer,
+  Briefcase,
   Calendar,
-  Phone,
+  HeartHandshake,
   Mail,
   MapPin,
-  Briefcase,
-  Trash2,
   Pen,
+  Phone,
+  Printer,
+  ShieldCheck,
+  Trash2,
+  TrendingUp,
+  User
 } from "lucide-react";
-import { useParams, useRouter } from "next/navigation";
-import { getClientDetails } from "@/app/services/clients.service";
-import { getPlanDetails, getPlansByClient } from "@/app/services/plans.service";
+import { useParams } from "next/navigation";
+import React, { useEffect, useState } from "react";
 
 // --- Types ---
 export interface FormData {
@@ -93,7 +93,6 @@ const mapClientToFormData = (client: any): FormData => ({
 });
 
 const ApplicationViewPage = () => {
-  const router = useRouter();
   const { id } = useParams();
   const [formData, setFormData] = useState<FormData | null>(null);
   const [plan, setPlan] = useState<any>();
@@ -157,12 +156,7 @@ const ApplicationViewPage = () => {
       {/* Header Actions */}
       <div className="flex items-center justify-between border-b pb-4">
         <div className="flex items-center gap-4">
-          <button
-            onClick={() => router.back()}
-            className="p-2 hover:bg-white rounded-full border border-transparent hover:border-gray-200 transition-all shadow-sm"
-          >
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
-          </button>
+          <Back/>
           <div>
             <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
               Application Details

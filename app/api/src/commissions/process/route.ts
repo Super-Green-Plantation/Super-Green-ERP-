@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
   console.log(investmentId, empNo, branchId);
 
   try {
-    const res = await prisma.$transaction(async (tx:any) => {
+    const res = await prisma.$transaction(async (tx: any) => {
       const createdCommissions: any = [];
       // 2. Load investment
       const investment = await tx.investment.findUnique({
@@ -77,8 +77,10 @@ export async function POST(req: NextRequest) {
       const personalRate = Number(personalComm.rate) / 100; // if DB stores 7
 
       if (personalRate > 10) {
-        throw new ApiError("PERSONAL_RATE_TOO_HIGH", "Personal commission rate too high! Possible config error.");
-        
+        throw new ApiError(
+          "PERSONAL_RATE_TOO_HIGH",
+          "Personal commission rate too high! Possible config error.",
+        );
       }
 
       const personalCommission = investment.amount * Number(personalRate);
@@ -126,8 +128,10 @@ export async function POST(req: NextRequest) {
         const uplineRate = Number(upline.position.orc.rate) / 100;
 
         if (uplineRate > 1) {
-          throw new ApiError("ORC_RATE_TOO_HIGH", "ORC Commission rate too high! Possible config error.");
-        
+          throw new ApiError(
+            "ORC_RATE_TOO_HIGH",
+            "ORC Commission rate too high! Possible config error.",
+          );
         }
 
         const uplineCommission = investment.amount * uplineRate;

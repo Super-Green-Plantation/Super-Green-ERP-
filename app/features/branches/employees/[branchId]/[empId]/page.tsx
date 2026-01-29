@@ -1,23 +1,23 @@
 "use client";
 
+import Back from "@/app/components/Back";
+import { DetailItem } from "@/app/components/DetailItem";
 import { getMemberDetails } from "@/app/services/member.service";
-import { useParams, useRouter } from "next/navigation";
-import React, { useEffect, useState } from "react";
 import {
-  User,
-  Mail,
-  Phone,
-  Hash,
   Briefcase,
-  MapPin,
   Calendar,
+  Hash,
+  Loader2,
+  Mail,
+  MapPin,
+  Pen,
+  Phone,
   ShieldCheck,
   Trash2,
-  Pen,
-  ArrowLeft,
-  Loader2,
+  User
 } from "lucide-react";
-import { DetailItem } from "@/app/components/DetailItem";
+import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 interface PersonalCommissionTiers {
   id: number;
@@ -62,7 +62,6 @@ interface Employee {
 
 const EmployeeDetailsPage = () => {
   const params = useParams();
-  const router = useRouter();
   const { branchId, empId } = params;
 
   const [employee, setEmployee] = useState<Employee | null>(null);
@@ -111,12 +110,7 @@ const EmployeeDetailsPage = () => {
           <User className="w-12 h-12 text-red-400" />
         </div>
         <p className="text-xl font-bold text-gray-800">Employee Not Found</p>
-        <button
-          onClick={() => router.back()}
-          className="text-blue-600 font-semibold flex items-center gap-2"
-        >
-          <ArrowLeft className="w-4 h-4" /> Go Back
-        </button>
+        <Back/>
       </div>
     );
   }
@@ -126,6 +120,7 @@ const EmployeeDetailsPage = () => {
       {/* Header */}
       <div className="flex items-center justify-between border-b pb-5">
         <div className="flex items-center gap-4">
+          <Back/>
           <div className="p-3 bg-blue-600 rounded-2xl shadow-lg shadow-blue-200">
             <User className="w-6 h-6 text-white" />
           </div>
@@ -138,12 +133,6 @@ const EmployeeDetailsPage = () => {
             </p>
           </div>
         </div>
-        <button
-          onClick={() => router.back()}
-          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all shadow-sm active:scale-95"
-        >
-          <ArrowLeft className="w-4 h-4" /> Back
-        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -230,7 +219,7 @@ const EmployeeDetailsPage = () => {
               {employee.position?.personalCommissionTiers[0].rate + "%" || "0"}
             </p>
             <p className="text-xs text-gray-400 font-medium mb-8">
-               Personal Comm. rate : {employee.position?.orc.rate + "%" || "0"}
+              Personal Comm. rate : {employee.position?.orc.rate + "%" || "0"}
             </p>
 
             <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
@@ -300,6 +289,5 @@ const EmployeeDetailsPage = () => {
 };
 
 // Reusable Detail Item
-
 
 export default EmployeeDetailsPage;
