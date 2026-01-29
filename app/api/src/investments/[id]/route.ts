@@ -15,8 +15,7 @@ export async function GET(
       include: { plan: true }, // include FinancialPlan details
     });
 
-    // If you want only plans, not the full investments:
-    const plans = investments.map((inv) => inv.plan).filter(Boolean);
+    const plans = investments.map((inv:any) => inv.plan).filter(Boolean);
 
     return NextResponse.json(plans);
   } catch (error) {
