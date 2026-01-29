@@ -1,7 +1,8 @@
 "use client";
 
 import Back from "@/app/components/Back";
-import { getClientDetails } from "@/app/services/clients.service";
+import UpdateClientModal from "@/app/components/Client/UpdateModel";
+import { deleteClient, getClientDetails } from "@/app/services/clients.service";
 import { getPlanDetails } from "@/app/services/plans.service";
 import {
   Briefcase,
@@ -15,7 +16,7 @@ import {
   ShieldCheck,
   Trash2,
   TrendingUp,
-  User
+  User,
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -96,6 +97,7 @@ const ApplicationViewPage = () => {
   const { id } = useParams();
   const [formData, setFormData] = useState<FormData | null>(null);
   const [plan, setPlan] = useState<any>();
+  const [showUpdateModel, setShowUpdateModel] = useState(false);
 
   useEffect(() => {
     const fetchClientDetails = async () => {
@@ -151,12 +153,22 @@ const ApplicationViewPage = () => {
     </div>
   );
 
+  const handleUpdate = async (updatedData: any) => {
+    console.log(updatedData);
+  };
+
+const handelDelete = async(nic:any)=>{
+  
+  const res = await deleteClient(nic)
+  
+}
+
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-8 min-h-screen">
       {/* Header Actions */}
       <div className="flex items-center justify-between border-b pb-4">
         <div className="flex items-center gap-4">
-          <Back/>
+          <Back />
           <div>
             <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
               Application Details
@@ -343,7 +355,7 @@ const ApplicationViewPage = () => {
             <div className="flex items-center gap-3 w-full sm:w-auto">
               {/* Update Button */}
               <button
-                onClick={() => console.log("Update Clicked")}
+                onClick={() => setShowUpdateModel(true)}
                 className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-blue-200 active:scale-95"
               >
                 <Pen className="w-4 h-4" />
@@ -358,7 +370,7 @@ const ApplicationViewPage = () => {
                       "Are you sure you want to delete this application? This action cannot be undone.",
                     )
                   ) {
-                    console.log("Delete Confirmed");
+                    handelDelete(formData.applicant.nic)
                   }
                 }}
                 className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-sm font-bold transition-all active:scale-95"
@@ -370,6 +382,14 @@ const ApplicationViewPage = () => {
           </section>
         </div>
       </div>
+      {showUpdateModel ? (
+        <UpdateClientModal
+          isOpen={showUpdateModel}
+          onClose={() => setShowUpdateModel(false)}
+          initialData={formData}
+          onUpdate={(updatedData) => handleUpdate(updatedData)}
+        />
+      ) : null}
     </div>
   );
 };

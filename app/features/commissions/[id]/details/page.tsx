@@ -97,9 +97,9 @@ const InvestmentDetails = () => {
           </div>
         </div>
 
-        <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all">
+        {/* <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all">
           <Pen className="w-4 h-4" /> Modify
-        </button>
+        </button> */}
       </div>
 
       {/* Main Stats Row */}
@@ -255,7 +255,7 @@ const InvestmentDetails = () => {
       </div>
 
       {/* Danger Zone */}
-      <div className="bg-red-50 border border-red-100 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+      {/* <div className="bg-red-50 border border-red-100 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div>
           <h4 className="text-sm font-bold text-red-800">
             Termination Controls
@@ -268,7 +268,7 @@ const InvestmentDetails = () => {
         <button className="px-6 py-2.5 bg-red-600 text-white rounded-xl text-sm font-bold hover:bg-red-700 transition-all shadow-lg shadow-red-200 flex items-center gap-2">
           <Trash2 className="w-4 h-4" /> Deactivate Account
         </button>
-      </div>
+      </div> */}
     </div>
   );
 };

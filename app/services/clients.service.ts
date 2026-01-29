@@ -23,3 +23,8 @@ export const getClientsByBranch = async (branchId: number) => {
   }
   return res.json();
 };
+
+export const deleteClient = async(nic:any)=>{
+  //client/[id]
+  console.log(nic);
+}
