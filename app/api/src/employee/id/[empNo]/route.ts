@@ -32,9 +32,9 @@ export async function DELETE(
 
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { empNo: string } }
+  { params }: { params: Promise<{ empNo: string } >}
 ) {
-  const empNo = params.empNo;
+  const empNo = (await params).empNo;
   const { commission } = await req.json(); // 👈 expect object
 
   try {
