@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { ApiError } from "../../utils/errorHelper";
-import { PrismaClient } from "@prisma/client";
 
 export async function POST(req: NextRequest) {
   const {
