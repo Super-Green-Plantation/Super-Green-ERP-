@@ -7,6 +7,7 @@ import { getPlans } from "@/app/services/plans.service";
 import { Branch } from "@/app/types/branch";
 import { FinancialPlan } from "@/app/types/FinancialPlan";
 import { useEffect, useState } from "react";
+import { User } from "lucide-react";
 
 const ApplicantDetails = () => {
   const { form } = useFormContext();
@@ -31,18 +32,15 @@ const ApplicantDetails = () => {
         console.error(err);
       }
     };
-
     fetchPlans();
   }, []);
 
   useEffect(() => {
     if (!selectedBranchId) return;
-
     const fetchBranchDetails = async () => {
       const data = await getBranchDetails(selectedBranchId);
       setBranchDetails(data);
     };
-
     fetchBranchDetails();
   }, [selectedBranchId]);
 
@@ -50,149 +48,91 @@ const ApplicantDetails = () => {
     fetchBranch();
   }, []);
 
+  const inputClass = "bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all w-full";
+  const labelClass = "text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1 ml-1";
+
   return (
-    <div className="max-w-4xl mx-auto p-8 bg-white shadow-lg rounded-xl border border-gray-100 mt-10 pb-15">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-2">
-        Applicant Details
-      </h2>
+    <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
+      <div className="px-8 py-5 bg-gray-50/50 border-b border-gray-100 flex items-center gap-2">
+        <User className="w-4 h-4 text-blue-600" />
+        <h2 className="text-xs font-black uppercase tracking-widest text-gray-800">Primary Applicant Information</h2>
+      </div>
 
-      <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="md:col-span-2 flex flex-col gap-1">
-          <label>Full Name</label>
-          <input
-            type="text"
-            {...register("applicant.fullName")}
-            placeholder="Enter full name"
-            className="p-2.5 border rounded-lg"
-          />
-        </div>
-        <div className="flex flex-col gap-1">
-          <label>NIC</label>
-          <input
-            type="text"
-            {...register("applicant.nic")}
-            placeholder="NIC"
-            className="p-2.5 border rounded-lg"
-          />
-        </div>
-        <div className="flex flex-col gap-1">
-          <label>Driving License</label>
-          <input
-            type="text"
-            {...register("applicant.drivingLicense")}
-            placeholder="Driving License"
-            className="p-2.5 border rounded-lg"
-          />
-        </div>
-        <div className="flex flex-col gap-1">
-          <label>Passport No</label>
-          <input
-            type="text"
-            {...register("applicant.passportNo")}
-            placeholder="Passport No"
-            className="p-2.5 border rounded-lg"
-          />
-        </div>
-        <div className="flex flex-col gap-1">
-          <label>Email</label>
-          <input
-            type="email"
-            {...register("applicant.email")}
-            placeholder="Email"
-            className="p-2.5 border rounded-lg"
-          />
-        </div>
-        <div className="flex flex-col gap-1">
-          <label>Mobile Phone</label>
-          <input
-            type="text"
-            {...register("applicant.phoneMobile")}
-            placeholder="Mobile"
-            className="p-2.5 border rounded-lg"
-          />
-        </div>
-        <div className="flex flex-col gap-1">
-          <label>Land Phone</label>
-          <input
-            type="text"
-            {...register("applicant.phoneLand")}
-            placeholder="Landline"
-            className="p-2.5 border rounded-lg"
-          />
-        </div>
-        <div className="flex flex-col gap-1">
-          <label>Date of Birth</label>
-          <input
-            type="date"
-            {...register("applicant.dateOfBirth")}
-            className="p-2.5 border rounded-lg"
-          />
-        </div>
-        <div className="flex flex-col gap-1">
-          <label>Occupation</label>
-          <input
-            type="text"
-            {...register("applicant.occupation")}
-            placeholder="Occupation"
-            className="p-2.5 border rounded-lg"
-          />
-        </div>
-        
-          <div className="md:col-span-2 flex flex-col gap-1">
-            <label>Address</label>
-            <input
-              type="text"
-              {...register("applicant.address")}
-              placeholder="Full Address"
-              className="p-2.5 border rounded-lg"
-            />
+      <div className="p-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="md:col-span-2">
+            <label className={labelClass}>Full Name</label>
+            <input type="text" {...register("applicant.fullName")} placeholder="Legal name as per NIC" className={inputClass} />
           </div>
-          <div className="md:col-span-2 flex flex-col gap-1">
-            <label>Investment Amount</label>
-            <input
-              type="text"
-              {...register("applicant.investmentAmount")}
-              placeholder="50,000"
-              className="p-2.5 border rounded-lg"
-            />
+          
+          <div>
+            <label className={labelClass}>NIC Number</label>
+            <input type="text" {...register("applicant.nic")} className={inputClass} />
+          </div>
+          <div>
+            <label className={labelClass}>Driving License</label>
+            <input type="text" {...register("applicant.drivingLicense")} className={inputClass} />
+          </div>
+          <div>
+            <label className={labelClass}>Passport No</label>
+            <input type="text" {...register("applicant.passportNo")} className={inputClass} />
+          </div>
+          <div>
+            <label className={labelClass}>Email Address</label>
+            <input type="email" {...register("applicant.email")} className={inputClass} />
+          </div>
+          <div>
+            <label className={labelClass}>Mobile Phone</label>
+            <input type="text" {...register("applicant.phoneMobile")} className={inputClass} />
+          </div>
+          <div>
+            <label className={labelClass}>Land Phone</label>
+            <input type="text" {...register("applicant.phoneLand")} className={inputClass} />
+          </div>
+          <div>
+            <label className={labelClass}>Date of Birth</label>
+            <input type="date" {...register("applicant.dateOfBirth")} className={inputClass} />
+          </div>
+          <div>
+            <label className={labelClass}>Occupation</label>
+            <input type="text" {...register("applicant.occupation")} className={inputClass} />
+          </div>
+          
+          <div className="md:col-span-2">
+            <label className={labelClass}>Full Residential Address</label>
+            <input type="text" {...register("applicant.address")} className={inputClass} />
           </div>
 
-
-        <div className="md:col-span-2 flex flex-col gap-1">
-          <label className="text-[15px] font-semibold text-gray-700">
-            Select Branch
-          </label>
-          <select
-            className="p-2.5 border rounded-lg"
-            {...register("applicant.branchId", { valueAsNumber: true })}
-          >
-            <option value="">Choose a branch...</option>
-            {branch?.map((b) => (
-              <option value={b.id} key={b.id}>
-                {b.name}
-              </option>
-            ))}
-          </select>
+          <div className="md:col-span-2 p-6 bg-blue-50/50 rounded-2xl border border-blue-100 space-y-4">
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-blue-600">Financial Selection</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className={labelClass}>Investment Amount (LKR)</label>
+                <input type="text" {...register("applicant.investmentAmount")} placeholder="0.00" className={`${inputClass} font-bold text-blue-700`} />
+              </div>
+              <div>
+                <label className={labelClass}>Target Plan</label>
+                <select className={inputClass} {...register("investment.planId", { valueAsNumber: true })}>
+                  <option value="">Choose a Plan...</option>
+                  {plans?.map((b) => <option value={b.id} key={b.id}>{b.name}</option>)}
+                </select>
+              </div>
+            </div>
+            <div>
+              <label className={labelClass}>Assigned Branch</label>
+              <select className={inputClass} {...register("applicant.branchId", { valueAsNumber: true })}>
+                <option value="">Choose a branch...</option>
+                {branch?.map((b) => <option value={b.id} key={b.id}>{b.name}</option>)}
+              </select>
+            </div>
+          </div>
+          
+          <div className="md:col-span-2 pt-4">
+            <label className={labelClass}>E-Signature</label>
+            <SignaturePad />
+          </div>
         </div>
-
-        <div className="md:col-span-2 flex flex-col gap-1">
-          <label className="text-[15px] font-semibold text-gray-700">
-            Select Plan
-          </label>
-          <select
-            className="p-2.5 border rounded-lg"
-            {...register("investment.planId", { valueAsNumber: true })}
-          >
-            <option value="">Choose a Plan...</option>
-            {plans?.map((b) => (
-              <option value={b.id} key={b.id}>
-                {b.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <SignaturePad/>
-      </form>
+      </div>
     </div>
   );
 };
