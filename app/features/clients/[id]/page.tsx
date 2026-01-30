@@ -2,8 +2,10 @@
 
 import Back from "@/app/components/Back";
 import UpdateClientModal from "@/app/components/Client/UpdateModel";
+import { DetailItem } from "@/app/components/DetailItem";
 import { deleteClient, getClientDetails } from "@/app/services/clients.service";
 import { getPlanDetails } from "@/app/services/plans.service";
+import { FormData } from "@/app/types/fromData";
 import {
   Briefcase,
   Calendar,
@@ -19,39 +21,7 @@ import {
   User,
 } from "lucide-react";
 import { useParams } from "next/navigation";
-import React, { useEffect, useState } from "react";
-
-// --- Types ---
-export interface FormData {
-  applicant: {
-    fullName?: string;
-    nic?: string;
-    drivingLicense?: string;
-    passportNo?: string;
-    email?: string;
-    phoneMobile?: string;
-    phoneLand?: string;
-    dateOfBirth?: string;
-    occupation?: string;
-    address?: string;
-    branchId?: string;
-  };
-  investment: { planId?: string };
-  beneficiary: {
-    fullName?: string;
-    nic?: string;
-    phone?: string;
-    bankName?: string;
-    bankBranch?: string;
-    accountNo?: string;
-    relationship?: string;
-  };
-  nominee: {
-    fullName?: string;
-    permanentAddress?: string;
-    postalAddress?: string;
-  };
-}
+import { useEffect, useState } from "react";
 
 // Mapper: backend client → FormData
 const mapClientToFormData = (client: any): FormData => ({
@@ -125,43 +95,15 @@ const ApplicationViewPage = () => {
 
   if (!formData) return <p className="text-center mt-8">Loading...</p>;
 
-  // --- Helper Component ---
-  const DetailItem = ({
-    label,
-    value,
-    icon,
-    isCode = false,
-  }: {
-    label: string;
-    value?: string;
-    icon?: React.ReactNode;
-    isCode?: boolean;
-  }) => (
-    <div className="space-y-1">
-      <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5">
-        {icon} {label}
-      </p>
-      <p
-        className={`text-sm font-semibold text-gray-700 ${
-          isCode
-            ? "font-mono bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100"
-            : ""
-        }`}
-      >
-        {value || "—"}
-      </p>
-    </div>
-  );
-
   const handleUpdate = async (updatedData: any) => {
     console.log(updatedData);
   };
 
-const handelDelete = async(nic:any)=>{
-  
-  const res = await deleteClient(nic)
-  
-}
+  const handelDelete = async (nic: any) => {
+    const res = await deleteClient(nic);
+    if (res) {
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-8 min-h-screen">
@@ -370,7 +312,7 @@ const handelDelete = async(nic:any)=>{
                       "Are you sure you want to delete this application? This action cannot be undone.",
                     )
                   ) {
-                    handelDelete(formData.applicant.nic)
+                    handelDelete(formData.applicant.nic);
                   }
                 }}
                 className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-sm font-bold transition-all active:scale-95"

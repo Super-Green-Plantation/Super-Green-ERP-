@@ -5,6 +5,7 @@ import ApplicantDetails from "./ApplicantDetails";
 import BeneficiaryDetails from "./BeneficiaryDetails";
 import NomineeDetails from "./NomineeDetails";
 import { SubmitButton } from "./SubmitButto";
+import Back from "@/app/components/Back";
 
 const Page = () => {
   return (
@@ -13,9 +14,13 @@ const Page = () => {
         <div className="mx-auto">
           {/* Optional Header */}
           <div className="mb-3">
+            <div className="flex gap-2">
+            <Back/>
             <h1 className="text-3xl font-bold text-gray-800">
               Registration Portal
             </h1>
+
+            </div>
             <p className="text-gray-600">
               Please complete all sections to proceed with client investment.
             </p>

@@ -56,7 +56,8 @@ export const FormProvider = ({ children }: { children: ReactNode }) => {
     defaultValues: {
       applicant: {},
       beneficiary: {},
-      nominee: {}
+      nominee: {},
+      investment: {}
     },
   });
 

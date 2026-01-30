@@ -1,5 +1,6 @@
 "use client";
 
+import SignaturePad from "@/app/components/SignaturePad";
 import { useFormContext } from "@/app/context/FormContext";
 import { getBranchDetails, getBranches } from "@/app/services/branches.service";
 import { getPlans } from "@/app/services/plans.service";
@@ -190,6 +191,7 @@ const ApplicantDetails = () => {
             ))}
           </select>
         </div>
+        <SignaturePad/>
       </form>
     </div>
   );

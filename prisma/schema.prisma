@@ -165,7 +165,7 @@ model Beneficiary {
   relationship String
 
   clientId Int    @unique
-  client   Client @relation(fields: [clientId], references: [id])
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -179,7 +179,7 @@ model Nominee {
   postalAddress    String?
 
   clientId Int    @unique
-  client   Client @relation(fields: [clientId], references: [id])
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -193,7 +193,7 @@ model Investment {
  
 
   clientId Int
-  client   Client @relation(fields: [clientId], references: [id])
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   planId Int?
   plan   FinancialPlan? @relation(fields: [planId], references: [id])
@@ -218,7 +218,7 @@ model Commission {
   createdAt    DateTime @default(now())
 
   member     Member     @relation(fields: [memberEmpNo], references: [empNo])
-  investment Investment @relation(fields: [investmentId], references: [id])
+  investment Investment @relation(fields: [investmentId], references: [id], onDelete: Cascade)
 
   @@index([investmentId])
   @@index([memberEmpNo])

@@ -1,10 +1,10 @@
 import { prisma } from "@/lib/prisma";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-//get [id] client 
+//get [id] client
 export async function GET(
   _: Request,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
   try {
@@ -12,13 +12,12 @@ export async function GET(
       where: {
         id: Number(id),
       },
-      include:{
-        investments:true,
-        branch:true,
-        nominee:true,
-        beneficiary:true,
-        
-      }
+      include: {
+        investments: true,
+        branch: true,
+        nominee: true,
+        beneficiary: true,
+      },
     });
 
     return NextResponse.json(client);
@@ -29,3 +28,15 @@ export async function GET(
 
 //update
 //delete
+export async function DELETE(
+  _: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+  const nic = id;
+  console.log(id);
+  const res = await prisma.client.delete({
+    where: { nic: nic },
+  });
+  return NextResponse.json(res);
+}

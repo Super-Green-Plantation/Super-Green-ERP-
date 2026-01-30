@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { connect } from "http2";
 import { NextResponse } from "next/server";
 
 // Create client with investment, beneficiary, and nominee
@@ -32,14 +33,18 @@ export async function POST(req: Request) {
           investmentAmount: Number(applicant.investmentAmount),
           branchId: applicant.branchId,
           // Nested create for investments, beneficiary, and nominee
+          
+          
           investments: {
             create: [
-              {
-                planId: investment.planId,
+              {plan:{
+                connect:{
+                  id:Number(investment.planId)
+                },
+              },
                 investmentDate: new Date(),
                 amount: Number(applicant.investmentAmount),
-                rate: 0,
-                returnFrequency: "Monthly",
+                // returnFrequency: "Monthly",
               },
             ],
             
