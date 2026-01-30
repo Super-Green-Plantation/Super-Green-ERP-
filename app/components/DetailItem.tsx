@@ -14,13 +14,13 @@ export const DetailItem = ({
       {icon} {label}
     </p>
     <p
-        className={`text-sm font-semibold text-gray-700 ${
-          isCode
-            ? "font-mono bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100"
-            : ""
-        }`}
-      >
-        {value || "—"}
-      </p>
+      className={`text-sm font-semibold text-gray-700 ${
+        isCode
+          ? "font-mono bg-gray-50 px-1.5 py-0.5 rounded border border-gray-100"
+          : ""
+      }`}
+    >
+      {value || "—"}
+    </p>
   </div>
 );
