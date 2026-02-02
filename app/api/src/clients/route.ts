@@ -32,6 +32,11 @@ export async function POST(req: Request) {
           address: applicant.address,
           investmentAmount: Number(applicant.investmentAmount),
           branchId: applicant.branchId,
+          signature: applicant.signature,
+          idFront: applicant.idFront,
+          idBack: applicant.idBack,
+          proposal: applicant.proposal,
+          agreement: applicant.agreement,
           // Nested create for investments, beneficiary, and nominee
           
           

@@ -65,7 +65,7 @@ model CommissionRate {
 }
 
 model PersonalCommissionTier {
-  id         Int    @id @default(autoincrement())
+  id         Int     @id @default(autoincrement())
   positionId Int
   minAmount  Float
   maxAmount  Float? // null = no upper limit
@@ -138,6 +138,12 @@ model Client {
   address          String
   investmentAmount Int
 
+  signature String?
+  idFront   String?
+  idBack    String?
+  proposal  String?
+  agreement String?
+
   branchId Int
   branch   Branch @relation(fields: [branchId], references: [id])
 
@@ -188,9 +194,8 @@ model Nominee {
 model Investment {
   id Int @id @default(autoincrement())
 
-  investmentDate  DateTime
-  amount          Float
- 
+  investmentDate DateTime
+  amount         Float
 
   clientId Int
   client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
@@ -204,18 +209,18 @@ model Investment {
   commission Commission[]
 
   commissionsProcessed Boolean @default(false)
-  
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Commission {
-  id           Int      @id @default(autoincrement())
+  id           Int            @id @default(autoincrement())
   investmentId Int
   memberEmpNo  String
   amount       Float
   type         CommissionType
-  createdAt    DateTime @default(now())
+  createdAt    DateTime       @default(now())
 
   member     Member     @relation(fields: [memberEmpNo], references: [empNo])
   investment Investment @relation(fields: [investmentId], references: [id], onDelete: Cascade)

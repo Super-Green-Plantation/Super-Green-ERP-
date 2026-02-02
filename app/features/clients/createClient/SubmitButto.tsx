@@ -61,7 +61,7 @@ export const SubmitButton = () => {
           </>
         ) : (
           <>
-            <Rocket className="w-5 h-5" />
+            
             Finalize & Register Client
           </>
         )}

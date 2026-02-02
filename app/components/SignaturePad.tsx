@@ -3,17 +3,29 @@
 import SignatureCanvas from "react-signature-canvas";
 import { useRef } from "react";
 import { Eraser, CheckCircle2 } from "lucide-react";
+import { useFormContext } from "../context/FormContext";
 
 export default function SignaturePad() {
+  const { form } = useFormContext();
+  const { setValue } = form;
   const sigRef = useRef<SignatureCanvas>(null);
 
-  const saveSignature = (e: any) => {
+  const saveSignature = async (e: any) => {
     e.preventDefault();
     if (!sigRef.current || sigRef.current.isEmpty()) return;
 
     const dataUrl = sigRef.current.toDataURL("image/png");
     console.log("Signature captured:", dataUrl);
-    // Suggestion: Update your FormContext here with the dataUrl
+
+    const res = await fetch("/api/src/client-signature", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dataUrl }),
+    });
+
+    const data = await res.json();
+    setValue("applicant.signature", data.url);
+    console.log("Cloudinary URL:", data.url);
   };
 
   const clear = (e: any) => {
@@ -53,7 +65,7 @@ export default function SignaturePad() {
             <Eraser className="w-3 h-3" />
             Clear
           </button>
-          
+
           <button
             type="button"
             onClick={saveSignature}

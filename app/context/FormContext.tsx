@@ -16,11 +16,16 @@ export interface FormData {
     occupation?: string;
     address?: string;
     branchId?: string;
-    investmentAmount?:number;
+    investmentAmount?: number;
+
+    idFront?: string;
+    idBack?: string;
+    proposal?: string;
+    agreement?: string;
+    signature?: string;
   };
   investment: {
-    planId?: string;              
-    
+    planId?: string;
   };
 
   beneficiary: {
@@ -47,7 +52,8 @@ const FormContext = createContext<FormContextProps | undefined>(undefined);
 
 export const useFormContext = () => {
   const context = useContext(FormContext);
-  if (!context) throw new Error("useFormContext must be used within FormProvider");
+  if (!context)
+    throw new Error("useFormContext must be used within FormProvider");
   return context;
 };
 
@@ -57,9 +63,11 @@ export const FormProvider = ({ children }: { children: ReactNode }) => {
       applicant: {},
       beneficiary: {},
       nominee: {},
-      investment: {}
+      investment: {},
     },
   });
 
-  return <FormContext.Provider value={{ form }}>{children}</FormContext.Provider>;
+  return (
+    <FormContext.Provider value={{ form }}>{children}</FormContext.Provider>
+  );
 };
