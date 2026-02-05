@@ -8,24 +8,22 @@ import { useEffect, useState } from "react";
 
 const page = () => {
   const [showAddModal, setShowAddModal] = useState(false);
-  const [count,setCount]= useState(0)
+  const [count, setCount] = useState(0);
 
-    
-  
   const getcount = async () => {
     const data = await getBranches();
-    setCount(data.len)
+    setCount(data.len);
   };
   useEffect(() => {
     getcount();
   }, []);
 
   return (
-    <div className="space-y-4 max-w-5xl mx-auto">
+    <div className="space-y-4 max-w-7xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold">Branches</h2>
+          <h2 className="text-2xl font-semibold">Branches</h2>
           <p className="text-sm text-gray-500">
             Manage branches and reporting hierarchy
           </p>
@@ -71,18 +69,6 @@ const page = () => {
                 placeholder="Search branches..."
                 className="h-9 w-full rounded-lg border border-gray-200 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-            </div>
-
-            {/* Status Filter */}
-            <div className="relative w-40">
-              <select
-                className="h-9 w-full appearance-none rounded-lg border border-gray-200 px-3 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                defaultValue="Active"
-              >
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-              </select>
-              <ChevronDown className="absolute right-2 top-2.5 h-4 w-4 text-gray-400 pointer-events-none" />
             </div>
           </div>
         </div>

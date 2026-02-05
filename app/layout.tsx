@@ -1,47 +1,34 @@
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+"use client";
+
+import { useState } from "react";
 import Sidebar from "./components/SideBar/Sidebar";
 import "./globals.css";
 import Providers from "./providers";
 import Toast from "./Toast";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
-export const metadata: Metadata = {
-  title: "SGP ERP",
-  description: "SGP ERP",
-};
-
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <div className="flex">
-          <Sidebar />
+      <body className="antialiased">
+        <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
 
-          <main className="ml-0 md:ml-60 p-6 bg-gray-100 min-h-screen w-full">
-            <Providers>
-              <Toast>{children}</Toast>
-
-              <ReactQueryDevtools initialIsOpen={false} />
-            </Providers>
-          </main>
-        </div>
+        <main
+          className={`
+            min-h-screen bg-gray-100 p-6 pt-20 md:pt-6
+            transition-all duration-300
+            ${isCollapsed ? "md:ml-20" : "md:ml-64"}
+          `}
+        >
+          <Providers>
+            <Toast>{children}</Toast>
+          </Providers>
+        </main>
       </body>
     </html>
   );

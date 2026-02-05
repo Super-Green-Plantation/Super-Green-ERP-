@@ -1,33 +1,17 @@
-import { prisma } from "@/lib/prisma";
+import { getUpperMembers } from "@/app/api/src/utils/member";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   _: NextRequest,
-  { params }: { params: Promise<{ empNo: string; branchId: string }> }
+  { params }: { params: Promise<{ empNo: string; branchId: string }> },
 ) {
   const empNo = (await params).empNo;
   const branchId = Number((await params).branchId);
 
   try {
-    const selectedMember = await prisma.member.findUnique({
-      where: { empNo },
-      include: {
-        position: true,
-      },
-    });
+    const upperMember = await getUpperMembers(empNo, branchId);
 
-    const eligibleMembers = await prisma.member.findMany({
-      where: {
-        branchId,
-        position: {
-          rank: {
-            gte: selectedMember?.position.rank,
-          },
-        },
-      },
-    });
-
-    return NextResponse.json({ eligibleMembers });
+    return NextResponse.json({ upperMember });
   } catch (err) {
     console.error(err);
     return NextResponse.json(

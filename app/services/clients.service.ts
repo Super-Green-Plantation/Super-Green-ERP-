@@ -1,3 +1,5 @@
+import { toast } from "sonner";
+
 export const getClients = async () => {
   const res = await fetch("/api/src/clients");
   if (!res.ok) {
@@ -23,3 +25,19 @@ export const getClientsByBranch = async (branchId: number) => {
   }
   return res.json();
 };
+
+export const deleteClient = async(nic:any)=>{
+  //client/[id]
+  console.log(nic);
+  const res = await fetch(`/api/src/clients/${nic}`,{
+    method:"DELETE"
+  })
+  if (!res.ok) {
+    toast.error("Something went wrong, try again !")
+    return null;
+  }else{
+    toast.success("Client deleted")
+  }
+  
+  return res.json()
+}

@@ -1,9 +1,168 @@
-import React from 'react'
+"use client";
+import InvestmentTable from "@/app/components/InvestmentTable";
+import { getStats } from "@/app/services/dashboard.service";
+import { Briefcase, MapPin, TrendingUp, Users } from "lucide-react";
+import React, { useEffect, useState } from "react";
 
-const page = () => {
-  return (
-    <div>Dashboard</div>
-  )
+// Define an interface for the incoming data structure
+interface DashboardStats {
+  totProfit: { _sum: { totalProfit: number } };
+  totCommissionPayout: { _sum: { commissionPayout: number } };
+  investmentSum: { _sum: { amount: number } };
+  totClients: number;
+  totMembers: number;
+  totBranchs: number;
 }
 
-export default page
+const DashboardPage = () => {
+  const [data, setData] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchStats = async () => {
+    try {
+      const res = await getStats();
+      if (res) {
+        setData(res);
+      }
+    } catch (error) {
+      console.error("Failed to fetch stats:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  if (loading)
+    return (
+      <div className="p-6 text-gray-400 font-bold animate-pulse">
+        Loading Analytics...
+      </div>
+    );
+  if (!data)
+    return (
+      <div className="p-6 text-red-400">Error loading dashboard data.</div>
+    );
+
+  return (
+    <div className="max-w-7xl mx-auto pb-20">
+      {/* 1. Main Page Header */}
+      <header className="mb-10 px-2 pt-6">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600">
+            Executive Overview
+          </span>
+          <div className="h-px flex-1 bg-slate-100" />
+        </div>
+        <h1 className="text-4xl font-black text-slate-900 tracking-tighter">
+          Dashboard<span className="text-blue-600">.</span>
+        </h1>
+      </header>
+
+      {/* 2. Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        {/* Investment Card */}
+        <StatCard
+          label="Investment Sum"
+          value={`Rs. ${data.investmentSum._sum.amount?.toLocaleString()}`}
+          subText={`Profit: Rs. ${data.totProfit._sum.totalProfit?.toLocaleString()}`}
+          icon={<TrendingUp size={20} />}
+          color="emerald"
+        />
+
+        {/* Clients Card */}
+        <StatCard
+          label="Total Clients"
+          value={data.totClients.toString()}
+          subText="Active Accounts"
+          icon={<Users size={20} />}
+          color="blue"
+        />
+
+        {/* Staff Card */}
+        <StatCard
+          label="Staff Count"
+          value={data.totMembers.toString()}
+          subText={`Payout: Rs. ${data.totCommissionPayout._sum.commissionPayout?.toLocaleString()}`}
+          icon={<Briefcase size={20} />}
+          color="purple"
+        />
+
+        {/* Branches Card */}
+        <StatCard
+          label="Branches"
+          value={data.totBranchs.toString()}
+          subText="Island-wide"
+          icon={<MapPin size={20} />}
+          color="orange"
+        />
+      </div>
+
+      {/* 3. Table Header Section */}
+      <section className="mt-16 mb-8 px-2">
+        <div className="flex items-end justify-between border-b border-slate-100 pb-6">
+          <div>
+            <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase">
+              Investments
+            </h2>
+            <p className="mt-1 text-[11px] font-bold text-slate-400 uppercase tracking-[0.15em]">
+              Capital Contribution Ledger
+            </p>
+          </div>
+
+          <div className="hidden md:flex items-center gap-4">
+            <div className="text-right">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                System Status
+              </p>
+              <p className="text-xs font-bold text-emerald-500 flex items-center gap-1 justify-end">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Live Syncing
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. Table Component */}
+      <div className="px-1">
+        <InvestmentTable investments={data} />
+      </div>
+    </div>
+  );
+};
+
+// Reusable StatCard Component for cleaner main code
+const StatCard = ({ label, value, subText, icon, color }: any) => {
+  const colors: any = {
+    emerald: "bg-emerald-50 text-emerald-600 border-emerald-100",
+    blue: "bg-blue-50 text-blue-600 border-blue-100",
+    purple: "bg-purple-50 text-purple-600 border-purple-100",
+    orange: "bg-orange-50 text-orange-600 border-orange-100",
+  };
+
+  return (
+    <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-200 transition-all group">
+      <div className="flex items-center gap-3 mb-4">
+        <div className={`p-2 rounded-xl ${colors[color]}`}>{icon}</div>
+        <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-slate-600 transition-colors">
+          {label}
+        </h3>
+      </div>
+      <div className="space-y-1">
+        <p className="text-2xl font-black text-slate-900 tracking-tight">
+          {value}
+        </p>
+        <p
+          className={`text-[10px] font-bold px-2 py-0.5 rounded-md inline-block ${colors[color]}`}
+        >
+          {subText}
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default DashboardPage;

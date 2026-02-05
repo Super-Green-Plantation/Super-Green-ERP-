@@ -3,38 +3,34 @@
 import { useFormContext } from "@/app/context/FormContext";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Loader2, Rocket } from "lucide-react"; // Matching our icon set
 
 type Status = "success" | "error" | null;
 
 export const SubmitButton = () => {
   const { form } = useFormContext();
-
-  const [status, setStatus] = useState<Status>(null);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async () => {
     setLoading(true);
-    setStatus(null);
 
     const data = form.getValues(); 
     console.log(data);
-    
 
     try {
       const res = await fetch("/api/src/clients", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({data}),
+        body: JSON.stringify({ data }),
       });
 
       if (!res.ok) {
-        setStatus("error");
         toast.error("Something went wrong, please try again");
         return;
       }
 
-      toast.success("Client Saved success !");
-      form.reset(); // ✅ optional: reset form after success
+      toast.success("Client Saved successfully!");
+      form.reset(); 
     } catch (err) {
       toast.error("Something went wrong, please try again");
     } finally {
@@ -43,22 +39,39 @@ export const SubmitButton = () => {
   };
 
   return (
-    <>
-      {/* Submit Button */}
+    <div className="w-full">
       <button
         onClick={handleSubmit}
         type="submit"
         disabled={loading}
-        className={`w-full py-3 rounded-lg font-bold transition mt-5
+        className={`
+          w-full py-4 px-6 rounded-2xl font-black uppercase tracking-widest text-sm transition-all duration-300
+          flex items-center justify-center gap-3
           ${
             loading
-              ? "bg-gray-400 cursor-not-allowed"
-              : "bg-blue-600 hover:bg-blue-700 text-white"
+              ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
+              : "bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-blue-200 active:scale-[0.98] hover:-translate-y-0.5"
           }
         `}
       >
-        {loading ? "Submitting..." : "Submit Application"}
+        {loading ? (
+          <>
+            <Loader2 className="w-5 h-5 animate-spin" />
+            Processing Application...
+          </>
+        ) : (
+          <>
+            
+            Finalize & Register Client
+          </>
+        )}
       </button>
-    </>
+      
+      {!loading && (
+        <p className="text-center text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em] mt-4">
+          Encrypted Secure Submission
+        </p>
+      )}
+    </div>
   );
 };

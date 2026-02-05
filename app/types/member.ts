@@ -9,12 +9,21 @@ export interface Member {
 }
 
 export interface Position {
+  orc: any;
   id: number;
   title: string;
   baseSalary: number;
   createdAt: string;
   updatedAt: string;
-  commissionRate:CommissionRate
+  commissionRate:CommissionRate;
+   personalCommissionTiers:PersonalCommissionTiers[]
+}
+
+export interface PersonalCommissionTiers{
+  id: number;
+  positionId:number;
+  minAmount:number;
+  rate:number
 }
 
 export interface CommissionRate {

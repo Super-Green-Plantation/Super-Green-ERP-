@@ -13,7 +13,7 @@ export const getPlans = async (): Promise<FinancialPlan[]> => {
 
 
 export const getPlansByClient = async (id:number) => {
-  const res = await fetch(`/api/src/invest/${id}`);
+  const res = await fetch(`/api/src/investments/${id}`);
 
   if (!res.ok) {
     throw new Error("Failed to fetch plans");

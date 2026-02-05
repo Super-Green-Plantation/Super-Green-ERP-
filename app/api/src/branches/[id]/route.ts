@@ -62,7 +62,8 @@ export async function GET(
           include: {
             position: {
               include: {
-                commissionRate: true,
+                personalCommissionTiers:true,
+                orc:true
               },
             },
           },

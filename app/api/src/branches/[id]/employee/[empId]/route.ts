@@ -3,17 +3,14 @@ import { prisma } from "@/app/api/src/utils/prisma";
 
 export async function PUT(
   req: Request,
-  { params }: { params: Promise<{ id: string; empId: string }> }
+  { params }: { params: Promise<{ id: string; empId: string }> },
 ) {
   let body;
 
   try {
     body = await req.json();
   } catch {
-    return NextResponse.json(
-      { message: "Invalid JSON body" },
-      { status: 400 }
-    );
+    return NextResponse.json({ message: "Invalid JSON body" }, { status: 400 });
   }
 
   const { id, empId } = await params;
@@ -24,7 +21,7 @@ export async function PUT(
   if (isNaN(branchId) || isNaN(employeeId)) {
     return NextResponse.json(
       { message: "Invalid branchId or employeeId" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
@@ -55,8 +52,45 @@ export async function PUT(
     console.error("Update employee failed:", error);
     return NextResponse.json(
       { message: "Failed to update employee" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
+export async function GET(
+  req: Request,
+  context: { params: Promise<{ id: string; empId: string }> }
+) {
+  // unwrap params
+  const { id, empId } = await context.params;
+
+  const employeeId = Number(empId);
+  if (isNaN(employeeId)) {
+    return NextResponse.json({ message: "Invalid empId" }, { status: 400 });
+  }
+
+  try {
+    const res = await prisma.member.findUnique({
+      where: { id: employeeId },
+      include: {
+        investments: true,
+        position: {
+          include:{
+            personalCommissionTiers:true,
+            orc:true
+          }
+        },
+        branch: true,
+      },
+    });
+
+    if (!res) {
+      return NextResponse.json({ message: "Employee not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ res });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ message: "Failed to fetch employee" }, { status: 500 });
+  }
+}
