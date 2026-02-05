@@ -18,3 +18,13 @@ export const updateOrc = async(members: [], invId:number)=>{
   console.log(members, invId);
   
 }
+
+//get all personal commission
+export const getAllMemberCommission = async(empNo:number)=>{
+  const res = await fetch(`/api/src/commissions/${empNo}`)
+
+  if (!res.ok) {
+    return;
+  }
+  return res.json()
+}

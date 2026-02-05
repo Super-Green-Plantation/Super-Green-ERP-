@@ -3,6 +3,8 @@
 import Back from "@/app/components/Back";
 import UpdateClientModal from "@/app/components/Client/UpdateModel";
 import { DetailItem } from "@/app/components/DetailItem";
+import { DocPreview } from "@/app/components/DocPreview";
+import { PdfViewer } from "@/app/components/PdfViewer";
 import { deleteClient, getClientDetails } from "@/app/services/clients.service";
 import { getPlanDetails } from "@/app/services/plans.service";
 import { FormData } from "@/app/types/fromData";
@@ -68,12 +70,13 @@ const ApplicationViewPage = () => {
   const [formData, setFormData] = useState<FormData | null>(null);
   const [plan, setPlan] = useState<any>();
   const [showUpdateModel, setShowUpdateModel] = useState(false);
-
+  const [rawClient, setRawClient] = useState<any>(null);
   useEffect(() => {
     const fetchClientDetails = async () => {
       const client = await getClientDetails(Number(id));
 
       console.log(client);
+      setRawClient(client);
 
       setFormData(mapClientToFormData(client));
     };
@@ -116,7 +119,7 @@ const ApplicationViewPage = () => {
               Application Details
             </h1>
             <p className="text-sm text-gray-500 font-medium">
-              Ref ID: APP-99283-2024
+              Ref ID: APP-{formData.applicant.nic}
             </p>
           </div>
         </div>
@@ -203,10 +206,62 @@ const ApplicationViewPage = () => {
               <DetailItem label="Phone" value={formData.beneficiary.phone} />
             </div>
           </section>
-        </div>
 
-        {/* Right Column: Investment & Nominee */}
-        <div className="space-y-8">
+          {/* Section: Nominee */}
+          <section className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
+              <User className="w-5 h-5 text-purple-600" />
+              <h2 className="font-bold text-gray-800">Nominee Info</h2>
+            </div>
+            <div className="p-6 space-y-4">
+              <DetailItem label="Name" value={formData.nominee.fullName} />
+              <DetailItem
+                label="Permanent Address"
+                value={formData.nominee.permanentAddress}
+              />
+              <DetailItem
+                label="Postal Address"
+                value={formData.nominee.postalAddress}
+              />
+            </div>
+          </section>
+        </div>
+        {/* Section : Documents */}
+        <section className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="px-6 py-4 bg-slate-50 border-b border-gray-100 flex items-center gap-3">
+            <ShieldCheck className="w-5 h-5 text-slate-600" />
+            <h2 className="font-bold text-gray-800">
+              Compliance & KYC Documents
+            </h2>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* ID Documents Grid */}
+              <DocPreview label="ID Card Front" url={rawClient.idFront} />
+              <DocPreview label="ID Card Back" url={rawClient.idBack} />
+
+              {/* Paperwork Grid */}
+              <DocPreview label="Proposal Form" url={rawClient.proposal} />
+              <DocPreview label="Agreement" url={rawClient.agreement} />
+
+              {/* Signature (Full width) */}
+              <div className="md:col-span-2 pt-4 border-t border-gray-100">
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">
+                  Verified Digital Signature
+                </p>
+                <div className="bg-gray-50 rounded-xl p-4 border border-dashed border-gray-200 flex items-center justify-center">
+                  <img
+                    src={rawClient.signature}
+                    alt="Signature"
+                    className="max-h-24 object-contain mix-blend-multiply"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <div className="space-y-3">
           {/* Section: Investment Plan */}
           <section className="bg-linear-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl shadow-xl p-6 text-white relative overflow-hidden border border-white/10">
             {/* Background Decoration */}
@@ -270,25 +325,6 @@ const ApplicationViewPage = () => {
                   <span className="text-[10px] font-normal">mo</span>
                 </p>
               </div>
-            </div>
-          </section>
-
-          {/* Section: Nominee */}
-          <section className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
-              <User className="w-5 h-5 text-purple-600" />
-              <h2 className="font-bold text-gray-800">Nominee Info</h2>
-            </div>
-            <div className="p-6 space-y-4">
-              <DetailItem label="Name" value={formData.nominee.fullName} />
-              <DetailItem
-                label="Permanent Address"
-                value={formData.nominee.permanentAddress}
-              />
-              <DetailItem
-                label="Postal Address"
-                value={formData.nominee.postalAddress}
-              />
             </div>
           </section>
 

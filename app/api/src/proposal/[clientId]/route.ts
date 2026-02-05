@@ -4,7 +4,7 @@ import {proposalTemplate}  from "../../../../components/templates/proposalTempla
 
 export async function GET(
   _: Request,
-  { params }: { params: { clientId: string } }
+  { params }: { params: Promise<{ clientId: string }> }
 ) {
   const proposalData = {
     fullName: "Dev Sanjana",

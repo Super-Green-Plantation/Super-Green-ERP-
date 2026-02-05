@@ -111,14 +111,6 @@ const DocumentUploadSection = () => {
             {isPDF ? (
               <div className="flex flex-col items-center justify-center h-full bg-slate-100">
                 <FileText className="w-12 h-12 text-slate-400 mb-2" />
-                <a
-                  href={previewUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-blue-600 underline"
-                >
-                  Open PDF
-                </a>
               </div>
             ) : (
               <img
@@ -184,36 +176,22 @@ const DocumentUploadSection = () => {
     const sig = await sigRes.json();
 
     const formData = new FormData();
-    console.log(formData);
-
     formData.append("file", file);
     formData.append("api_key", sig.apiKey);
     formData.append("timestamp", String(sig.timestamp));
     formData.append("signature", sig.signature);
-    formData.append("folder", "compliance-docs"); // MUST MATCH
+    formData.append("folder", "compliance-docs");
 
     const isPDF = file.type === "application/pdf";
-
-    // const uploadRes = await fetch(
-    //   `https://api.cloudinary.com/v1_1/${sig.cloudName}/auto/upload`,
-    //   {
-    //     method: "POST",
-    //     body: formData,
-    //   },
-    // );
 
     const url = `https://api.cloudinary.com/v1_1/${sig.cloudName}/${
       isPDF ? "raw" : "image"
     }/upload`;
 
-    const res = await fetch(url, {
-      method: "POST",
-      body: formData,
-    });
-
+    const res = await fetch(url, { method: "POST", body: formData });
     if (!res.ok) throw new Error("Upload failed");
 
-    return await res.json();
+    return await res.json(); // res.secure_url will be a usable link
   };
 
   const uploadAllDocuments = async () => {
