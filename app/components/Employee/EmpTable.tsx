@@ -2,7 +2,7 @@
 
 import { deletMember } from "@/app/services/member.service";
 import { Member } from "@/app/types/member";
-import { Pen, Phone, Trash2 } from "lucide-react";
+import { Briefcase, ExternalLink, Pen, Phone, Trash2, User } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -34,80 +34,118 @@ const EmpTable = ({
   console.log(branchId);
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full min-w-full text-left text-sm">
-        <thead className="border-b border-gray-100 bg-gray-50">
-          <tr>
-            <th className="px-6 py-4 font-semibold text-gray-600 text-xs uppercase">
-              Emp No
-            </th>
-            <th className="px-6 py-4 font-semibold text-gray-600 text-xs uppercase">
-              Name
-            </th>
-            <th className="px-6 py-4 font-semibold text-gray-600 text-xs uppercase">
-              Position
-            </th>
-            <th className="px-6 py-4 font-semibold text-gray-600 text-xs uppercase">
-              Phone
-            </th>
-            <th className="px-6 py-4 font-semibold text-gray-600 text-xs uppercase">
-              Action
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-100 bg-white">
-          {employees?.map((e) => (
-            <tr key={e.id} className="transition-colors hover:bg-gray-50/80">
-              <td className="px-6 py-4 text-gray-400">#{e.empNo}</td>
-              <td className="px-6 py-4 font-semibold text-gray-900">
-                {e.name}
-              </td>
-              <td className="px-6 py-4">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
-                  {e.position?.title || "N/A"}
-                </span>
-              </td>
-              <td className="px-6 py-4 text-gray-500">
-                <div className="flex items-center gap-2">
-                  <Phone className="w-3.5 h-3.5" /> {e.phone}
-                </div>
-              </td>
-              <td className="px-6 py-4">
-                <div className="flex items-center gap-2">
-                  {/* Edit Button */}
-                  <button
-                    onClick={() => onEdit(e)}
-                    className="p-2 text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 hover:text-blue-700 transition-colors shadow-sm shadow-blue-100/50"
-                    title="Edit Employee"
-                  >
-                    <Pen className="w-4 h-4" />
-                  </button>
-
-                  {/* Delete Button */}
-                  <button
-                    onClick={() => handleDelete(e.id)}
-                    className="p-2 text-red-600 bg-red-50 rounded-lg hover:bg-red-100 hover:text-red-700 transition-colors shadow-sm shadow-red-100/50"
-                    title="Delete Employee"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-
-                  {/* View Link Styled as Pill Button */}
-                  <Link
-                    href={`/features/branches/employees/${branchId}/${e.id}`}
-                    className="ml-1 px-4 py-1.5 text-xs font-bold text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-all shadow-sm flex items-center gap-1.5 active:scale-95"
-                  >
-                    View Profile
-                  </Link>
-                </div>
-              </td>
+    <div className="w-full bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="bg-slate-50/50 border-b border-slate-200">
+              <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
+                Emp No
+              </th>
+              <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
+                Employee Name
+              </th>
+              <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
+                Position
+              </th>
+              <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
+                Contact
+              </th>
+              <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500 text-center">
+                Actions
+              </th>
             </tr>
-          ))}
-        </tbody>
-      </table>
-      {employees?.length === 0 && (
-        <p className="text-center py-10 text-gray-500">No employees found.</p>
-      )}
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {employees?.map((e) => (
+              <tr
+                key={e.id}
+                className="hover:bg-slate-50/80 transition-colors group"
+              >
+                {/* ID Column */}
+                <td className="px-6 py-4">
+                  <span className="text-xs font-bold text-slate-400 tabular-nums">
+                    #{e.empNo}
+                  </span>
+                </td>
+
+                {/* Name Column with Avatar Placeholder */}
+                <td className="px-6 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-xs border border-slate-200 group-hover:bg-white transition-colors">
+                      {e.name.charAt(0)}
+                    </div>
+                    <span className="text-sm font-bold text-slate-900 leading-tight">
+                      {e.name}
+                    </span>
+                  </div>
+                </td>
+
+                {/* Position Column */}
+                <td className="px-6 py-4">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-black bg-blue-50 text-blue-600 border border-blue-100 uppercase tracking-tight">
+                    <Briefcase size={12} className="opacity-70" />
+                    {e.position?.title || "N/A"}
+                  </div>
+                </td>
+
+                {/* Phone Column */}
+                <td className="px-6 py-4 text-slate-500">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-slate-600">
+                    <div className="w-6 h-6 rounded-md bg-slate-50 flex items-center justify-center text-slate-400">
+                      <Phone size={12} />
+                    </div>
+                    {e.phone ?? '-'}
+                  </div>
+                </td>
+
+                {/* Action Column */}
+                <td className="px-6 py-4">
+                  <div className="flex items-center justify-center gap-2">
+                    {/* Edit */}
+                    <button
+                      onClick={() => onEdit(e)}
+                      className="p-2 text-slate-400 hover:text-blue-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-xl transition-all"
+                      title="Edit"
+                    >
+                      <Pen size={16} />
+                    </button>
+
+                    {/* Delete */}
+                    <button
+                      onClick={() => handleDelete(e.id)}
+                      className="p-2 text-slate-400 hover:text-rose-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-xl transition-all"
+                      title="Delete"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+
+                    {/* Profile Link */}
+                    <Link
+                      href={`/features/branches/employees/${branchId}/${e.id}`}
+                      className="ml-2 px-4 py-2 text-[10px] font-black uppercase tracking-tighter text-slate-600 bg-slate-50 border border-slate-200 rounded-xl hover:bg-white hover:shadow-md hover:text-blue-600 transition-all flex items-center gap-1.5 active:scale-95"
+                    >
+                      Profile
+                      <ExternalLink size={12} />
+                    </Link>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {(!employees || employees.length === 0) && (
+          <div className="flex flex-col items-center justify-center py-16">
+            <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 mb-3">
+              <User size={24} />
+            </div>
+            <p className="text-sm font-bold text-slate-400 italic">
+              No employees found in records
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

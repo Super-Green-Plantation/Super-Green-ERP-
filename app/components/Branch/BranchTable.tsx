@@ -1,6 +1,6 @@
 "use client";
 
-import { Pen, Trash2 } from "lucide-react";
+import { ExternalLink, Link, MapPin, Pen, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useBranches } from "../../hooks/useBranches";
 import BranchModal from "./Model";
@@ -19,16 +19,16 @@ const BranchTable = () => {
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
 
   const { data: branches, isLoading, error } = useBranches();
-  
-  const queryClient = useQueryClient()
 
- const deleteMutation = useMutation({
-  mutationFn: (id: number) => deleteBranch(id),
-  onSuccess: () => {
-    // Refetch branches after deletion
-    queryClient.invalidateQueries({ queryKey: ["branches"] });
-  },
-});
+  const queryClient = useQueryClient();
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => deleteBranch(id),
+    onSuccess: () => {
+      // Refetch branches after deletion
+      queryClient.invalidateQueries({ queryKey: ["branches"] });
+    },
+  });
 
   const handelUpdate = (branch: Branch) => {
     setSelectedBranch(branch);
@@ -36,8 +36,8 @@ const BranchTable = () => {
   };
   const handelDelete = async (branchId: number) => {
     if (confirm("Are you sure you want to delete this branch?")) {
-    deleteMutation.mutate(branchId);
-  }
+      deleteMutation.mutate(branchId);
+    }
   };
 
   // Styled Loading State
@@ -64,90 +64,115 @@ const BranchTable = () => {
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-full text-left text-sm">
-          <thead className="border-b border-gray-100 bg-gray-50">
-            <tr>
-              <th className="px-6 py-4 font-semibold text-gray-600">ID</th>
-              <th className="px-6 py-4 font-semibold text-gray-600">
-                Branch Name
-              </th>
-              <th className="px-6 py-4 font-semibold text-gray-600">
-                Location
-              </th>
-              <th className="px-6 py-4 font-semibold text-gray-600">
-                Team Size
-              </th>
-              <th className="px-6 py-4 font-semibold text-gray-600">Action</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100 bg-white">
-            {branches?.map((branch: Branch) => (
-              <tr
-                key={branch.id}
-                className="transition-colors hover:bg-gray-50"
-              >
-                {/* ID Column */}
-                <td className="px-6 py-4 font-medium text-gray-400">
-                  #{branch.id}
-                </td>
-
-                {/* Name Column */}
-                <td className="px-6 py-4">
-                  <span className="font-semibold text-gray-900">
-                    {branch.name}
-                  </span>
-                </td>
-
-                {/* Location Column */}
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-2 text-gray-500">
-                    {/* Location Icon */}
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      className="h-4 w-4 text-gray-400"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 00.281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 14.988 17 12.493 17 9A7 7 0 103 9c0 3.492 1.698 5.988 3.355 7.584a13.731 13.731 0 002.273 1.765 11.842 11.842 0 00.976.544l.062.029.006.004.003.001a.75.75 0 01-.01-.003zM10 11a2 2 0 100-4 2 2 0 000 4z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    {branch.location}
-                  </div>
-                </td>
-
-                {/* Members Count Column (Calculated) */}
-                <td className="px-6 py-4">
-                  <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">
-                    {branch.members?.length || 0} Members
-                  </span>
-                </td>
-
-                {/* Action Column */}
-                <td>
-                  <div className="flex gap-4 px-6 py-4">
-                    <button
-                      onClick={() => handelUpdate(branch)}
-                      className="cursor-pointer text-blue-400 bg-blue-300/20 rounded-md px-2 py-1"
-                    >
-                      <Pen className="w-5" />
-                    </button>
-                    <button
-                      onClick={() => handelDelete(branch.id)}
-                      className="cursor-pointer text-red-400 bg-red-300/20 rounded-md px-2 py-1"
-                    >
-                      <Trash2 className="w-5" />
-                    </button>
-                  </div>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50/50 border-b border-slate-200">
+                <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
+                  Code
+                </th>
+                <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
+                  Branch Identity
+                </th>
+                <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
+                  Region / Location
+                </th>
+                <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
+                  Operational Capacity
+                </th>
+                <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500 text-center">
+                  Management
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {branches?.map((branch: Branch) => (
+                <tr
+                  key={branch.id}
+                  className="hover:bg-slate-50/80 transition-colors group"
+                >
+                  {/* ID Column */}
+                  <td className="px-6 py-4">
+                    <span className="text-xs font-bold text-slate-400 tabular-nums">
+                      #{branch.id.toString().padStart(3, "0")}
+                    </span>
+                  </td>
+
+                  {/* Branch Name */}
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center border border-orange-100 group-hover:bg-orange-100 transition-colors">
+                        <MapPin size={16} />
+                      </div>
+                      <span className="text-sm font-black text-slate-900 tracking-tight">
+                        {branch.name}
+                      </span>
+                    </div>
+                  </td>
+
+                  {/* Location Column */}
+                  <td className="px-6 py-4">
+                      <div className="flex items-center gap-1.5 text-sm font-bold text-slate-600">
+                        {branch.location}
+                      </div>
+                  </td>
+
+                  {/* Team Size Column */}
+                  <td className="px-6 py-4">
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      <span className="text-[11px] font-black uppercase tracking-tight">
+                        {branch.members?.length || 0} Staff Members
+                      </span>
+                    </div>
+                  </td>
+
+                  {/* Action Column */}
+                  <td className="px-6 py-4">
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => handelUpdate(branch)}
+                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-xl transition-all"
+                        title="Edit Branch"
+                      >
+                        <Pen size={18} />
+                      </button>
+
+                      <button
+                        onClick={() => handelDelete(branch.id)}
+                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-xl transition-all"
+                        title="Archive Branch"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+
+                      <div className="h-4 w-px bg-slate-200 mx-1" />
+
+                      {/* <Link
+                        href={`/features/branches/${branch.id}`}
+                        className="p-2 text-slate-400 hover:text-slate-900 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-xl transition-all"
+                      >
+                        <ExternalLink size={18} />
+                      </Link> */}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {(!branches || branches.length === 0) && (
+            <div className="py-20 flex flex-col items-center justify-center">
+              <div className="p-4 bg-slate-50 rounded-full text-slate-200 mb-4">
+                <MapPin size={32} />
+              </div>
+              <p className="text-sm font-bold text-slate-400 italic">
+                No registered branches found
+              </p>
+            </div>
+          )}
+        </div>
+      
 
       {/* Empty State Handling */}
       {branches?.length === 0 && (

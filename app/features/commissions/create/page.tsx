@@ -28,6 +28,8 @@ import ClientDetailsCard from "./components/ClientDetailsCard";
 import ClientSelector from "./components/ClientSelector";
 import MemberList from "./components/MemberList";
 import PlanCard from "./components/PlanCard";
+import { setEarning } from "@/app/services/earning.service";
+import Back from "@/app/components/Back";
 
 type CommissionReceipt = {
   alreadyProcessed: boolean;
@@ -60,6 +62,10 @@ const Page = () => {
     useState<CommissionReceipt | null>(null);
 
   const router = useRouter();
+
+  console.log(commissionDetails);
+  
+  
 
   useEffect(() => {
     const updateAdvisor = async () => {
@@ -180,6 +186,7 @@ const Page = () => {
       );
 
       setCommissionDetails(result);
+      setEarning(commissionDetails)
 
       console.log("Commission processed:", result);
     } catch (err) {
@@ -213,7 +220,7 @@ const Page = () => {
         <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex gap-2 items-center">
-              <ArrowLeft onClick={router.back} className="cursor-pointer" />
+              <Back/>
               <h1 className="text-2xl font-semibold ">Commissions Portal</h1>
             </div>
             <p className="text-sm font-medium text-gray-500">
@@ -224,9 +231,7 @@ const Page = () => {
           {/* Quick Stats Placeholder (Optional) */}
           <div className="flex gap-4">
             <div className=" px-4 py-2 rounded-xl border ">
-              <p className="text-[10px] font-bold uppercase text-gray-400">
-                System Status
-              </p>
+             
               <p className="text-xs font-bold text-emerald-600 flex items-center gap-1">
                 <span className="h-2 w-2 bg-emerald-500 rounded-full animate-ping mr-2" />
                 Live Data

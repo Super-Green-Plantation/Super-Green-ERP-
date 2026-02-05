@@ -11,6 +11,7 @@ export interface FormData {
     occupation?: string;
     address?: string;
     branchId?: string;
+    investmentAmount?:string;
   };
   investment: { planId?: string };
   beneficiary: {

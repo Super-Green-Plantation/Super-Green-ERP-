@@ -1,150 +1,168 @@
-import React from "react";
+"use client";
+import InvestmentTable from "@/app/components/InvestmentTable";
+import { getStats } from "@/app/services/dashboard.service";
+import { Briefcase, MapPin, TrendingUp, Users } from "lucide-react";
+import React, { useEffect, useState } from "react";
 
-const page = () => {
+// Define an interface for the incoming data structure
+interface DashboardStats {
+  totProfit: { _sum: { totalProfit: number } };
+  totCommissionPayout: { _sum: { commissionPayout: number } };
+  investmentSum: { _sum: { amount: number } };
+  totClients: number;
+  totMembers: number;
+  totBranchs: number;
+}
+
+const DashboardPage = () => {
+  const [data, setData] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const fetchStats = async () => {
+    try {
+      const res = await getStats();
+      if (res) {
+        setData(res);
+      }
+    } catch (error) {
+      console.error("Failed to fetch stats:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  if (loading)
+    return (
+      <div className="p-6 text-gray-400 font-bold animate-pulse">
+        Loading Analytics...
+      </div>
+    );
+  if (!data)
+    return (
+      <div className="p-6 text-red-400">Error loading dashboard data.</div>
+    );
+
   return (
-    <div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 p-1">
-        {/* Total Revenue - The Hero Stat */}
-        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden group hover:border-blue-500 transition-all">
-          <div className="absolute right-[-10%] top-[-10%] opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
-            <svg className="h-32 w-32" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 14h-2v-2h2v2zm0-4h-2V7h2v5z" />
-            </svg>
-          </div>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-emerald-50 rounded-lg text-emerald-600">
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </div>
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-              Total Revenue
-            </h3>
-          </div>
-          <div className="flex items-baseline gap-1">
-            <span className="text-sm font-bold text-gray-400">Rs.</span>
-            <span className="text-2xl font-black text-gray-900">4,250,000</span>
-          </div>
-          <div className="mt-2 flex items-center gap-1">
-            <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
-              +12.5%
-            </span>
-            <span className="text-[10px] text-gray-400 font-medium tracking-tight italic text-nowrap">
-              vs last month
-            </span>
-          </div>
+    <div className="max-w-7xl mx-auto pb-20">
+      {/* 1. Main Page Header */}
+      <header className="mb-10 px-2 pt-6">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600">
+            Executive Overview
+          </span>
+          <div className="h-px flex-1 bg-slate-100" />
         </div>
+        <h1 className="text-4xl font-black text-slate-900 tracking-tighter">
+          Dashboard<span className="text-blue-600">.</span>
+        </h1>
+      </header>
 
-        {/* Total Clients */}
-        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:border-blue-500 transition-all">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
-            </div>
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-              Total Clients
-            </h3>
-          </div>
-          <span className="text-2xl font-black text-gray-900">1,482</span>
-          <div className="mt-2 flex items-center gap-1">
-            <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
-              Active
-            </span>
-            <span className="text-[10px] text-gray-400 font-medium">
-              94% Retention
-            </span>
-          </div>
-        </div>
+      {/* 2. Stats Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        {/* Investment Card */}
+        <StatCard
+          label="Investment Sum"
+          value={`Rs. ${data.investmentSum._sum.amount?.toLocaleString()}`}
+          subText={`Profit: Rs. ${data.totProfit._sum.totalProfit?.toLocaleString()}`}
+          icon={<TrendingUp size={20} />}
+          color="emerald"
+        />
 
-        {/* Total Employees */}
-        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:border-blue-500 transition-all">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-purple-50 rounded-lg text-purple-600">
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                />
-              </svg>
-            </div>
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-              Staff Count
-            </h3>
-          </div>
-          <span className="text-2xl font-black text-gray-900">156</span>
-          <div className="mt-2 flex items-center gap-1 text-gray-400">
-            <div className="flex -space-x-2">
-              <div className="h-5 w-5 rounded-full border-2 border-white bg-gray-200" />
-              <div className="h-5 w-5 rounded-full border-2 border-white bg-gray-300" />
-              <div className="h-5 w-5 rounded-full border-2 border-white bg-gray-400" />
-            </div>
-            <span className="text-[10px] font-medium ml-1">
-              +12 this quarter
-            </span>
-          </div>
-        </div>
+        {/* Clients Card */}
+        <StatCard
+          label="Total Clients"
+          value={data.totClients.toString()}
+          subText="Active Accounts"
+          icon={<Users size={20} />}
+          color="blue"
+        />
 
-        {/* Total Branches */}
-        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:border-blue-500 transition-all">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-orange-50 rounded-lg text-orange-600">
-              <svg
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                />
-              </svg>
-            </div>
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400">
-              Branches
-            </h3>
+        {/* Staff Card */}
+        <StatCard
+          label="Staff Count"
+          value={data.totMembers.toString()}
+          subText={`Payout: Rs. ${data.totCommissionPayout._sum.commissionPayout?.toLocaleString()}`}
+          icon={<Briefcase size={20} />}
+          color="purple"
+        />
+
+        {/* Branches Card */}
+        <StatCard
+          label="Branches"
+          value={data.totBranchs.toString()}
+          subText="Island-wide"
+          icon={<MapPin size={20} />}
+          color="orange"
+        />
+      </div>
+
+      {/* 3. Table Header Section */}
+      <section className="mt-16 mb-8 px-2">
+        <div className="flex items-end justify-between border-b border-slate-100 pb-6">
+          <div>
+            <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase">
+              Investments
+            </h2>
+            <p className="mt-1 text-[11px] font-bold text-slate-400 uppercase tracking-[0.15em]">
+              Capital Contribution Ledger
+            </p>
           </div>
-          <span className="text-2xl font-black text-gray-900">24</span>
-          <div className="mt-2 flex items-center gap-1">
-            <span className="text-[10px] font-bold text-orange-600">
-              Island-wide coverage
-            </span>
+
+          <div className="hidden md:flex items-center gap-4">
+            <div className="text-right">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                System Status
+              </p>
+              <p className="text-xs font-bold text-emerald-500 flex items-center gap-1 justify-end">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Live Syncing
+              </p>
+            </div>
           </div>
         </div>
+      </section>
+
+      {/* 4. Table Component */}
+      <div className="px-1">
+        <InvestmentTable investments={data} />
       </div>
     </div>
   );
 };
 
-export default page;
+// Reusable StatCard Component for cleaner main code
+const StatCard = ({ label, value, subText, icon, color }: any) => {
+  const colors: any = {
+    emerald: "bg-emerald-50 text-emerald-600 border-emerald-100",
+    blue: "bg-blue-50 text-blue-600 border-blue-100",
+    purple: "bg-purple-50 text-purple-600 border-purple-100",
+    orange: "bg-orange-50 text-orange-600 border-orange-100",
+  };
+
+  return (
+    <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-200 transition-all group">
+      <div className="flex items-center gap-3 mb-4">
+        <div className={`p-2 rounded-xl ${colors[color]}`}>{icon}</div>
+        <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-slate-600 transition-colors">
+          {label}
+        </h3>
+      </div>
+      <div className="space-y-1">
+        <p className="text-2xl font-black text-slate-900 tracking-tight">
+          {value}
+        </p>
+        <p
+          className={`text-[10px] font-bold px-2 py-0.5 rounded-md inline-block ${colors[color]}`}
+        >
+          {subText}
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default DashboardPage;

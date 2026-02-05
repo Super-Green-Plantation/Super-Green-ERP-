@@ -35,6 +35,7 @@ const mapClientToFormData = (client: any): FormData => ({
     email: client.email || "",
     phoneMobile: client.phoneMobile ? `+94 ${client.phoneMobile}` : "",
     phoneLand: client.phoneLand ? `+94 ${client.phoneLand}` : "",
+    investmentAmount: client.investmentAmount ? ` ${client.investmentAmount}` : "",
     dateOfBirth: client.dateOfBirth
       ? new Date(client.dateOfBirth).toISOString().split("T")[0]
       : "",

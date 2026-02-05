@@ -13,7 +13,7 @@ export async function GET(
         id: Number(id),
       },
       include: {
-        investments: true,
+        investments: { include: { plan: true } },
         branch: true,
         nominee: true,
         beneficiary: true,

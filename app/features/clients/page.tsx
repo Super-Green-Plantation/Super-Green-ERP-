@@ -1,21 +1,22 @@
-'use client'
+"use client";
 
-import { getClients } from '@/app/services/clients.service'
-import { Client } from '@/app/types/client'
-import Link from 'next/link'
-import { useEffect, useState } from 'react'
+import { getClients } from "@/app/services/clients.service";
+import { Client } from "@/app/types/client";
+import { ExternalLink, Phone, User } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
 const Page = () => {
-  const [clients, setClients] = useState<Client[]>([])
+  const [clients, setClients] = useState<Client[]>([]);
 
   const loadClients = async () => {
-    const data = await getClients()
-    setClients(data.clients)
-  }
+    const data = await getClients();
+    setClients(data.clients);
+  };
 
   useEffect(() => {
-    loadClients()
-  }, [])
+    loadClients();
+  }, []);
 
   return (
     <div className=" max-w-7xl mx-auto">
@@ -31,86 +32,130 @@ const Page = () => {
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto">
-  <table className="w-full min-w-full text-left text-sm">
-    <thead className="border-b border-gray-100 bg-gray-50">
-      <tr className="text-gray-600 uppercase text-xs tracking-wider">
-        <th className="px-6 py-4 font-semibold text-gray-600">ID</th>
-        <th className="px-6 py-4 font-semibold text-gray-600">Name</th>
-        <th className="px-6 py-4 font-semibold text-gray-600">Contact Info</th>
-        <th className="px-6 py-4 font-semibold text-gray-600">NIC</th>
-        <th className="px-6 py-4 font-semibold text-gray-600">Status</th>
-        <th className="px-6 py-4 font-semibold text-gray-600 text-center">Action</th>
-      </tr>
-    </thead>
-    <tbody className="divide-y divide-gray-100 bg-white">
-      {clients.length === 0 && (
-        <tr>
-          <td colSpan={6} className="px-6 py-10 text-center text-gray-500 italic">
-            No clients found
-          </td>
-        </tr>
-      )}
+      <div className="w-full bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50/50 border-b border-slate-200">
+                <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
+                  Client ID
+                </th>
+                <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
+                  Basic Details
+                </th>
+                <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
+                  Contact Info
+                </th>
+                <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
+                  Identification
+                </th>
+                <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
+                  Account Status
+                </th>
+                <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500 text-center">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {clients.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center gap-2">
+                      <div className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-slate-300">
+                        <User size={20} />
+                      </div>
+                      <span className="text-sm font-bold text-slate-400 italic">
+                        No clients found in the ledger
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                clients.map((client) => (
+                  <tr
+                    key={client.id}
+                    className="hover:bg-slate-50/80 transition-colors group"
+                  >
+                    {/* ID Column */}
+                    <td className="px-6 py-4">
+                      <span className="text-xs font-bold text-slate-400">
+                        #{client.id.toString().slice(-4)}
+                      </span>
+                    </td>
 
-      {clients.map((client) => (
-        <tr
-          key={client.id}
-          className="transition-colors hover:bg-gray-50"
-        >
-          {/* ID Column */}
-          <td className="px-6 py-4 font-medium text-gray-400">
-            #{client.id.toString().slice(-4)}
-          </td>
+                    {/* Name Column */}
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-black text-[10px]">
+                          {client.fullName.charAt(0)}
+                        </div>
+                        <span className="text-sm font-bold text-slate-900 leading-tight">
+                          {client.fullName}
+                        </span>
+                      </div>
+                    </td>
 
-          {/* Name Column */}
-          <td className="px-6 py-4">
-            <span className="font-semibold text-gray-900">
-              {client.fullName}
-            </span>
-          </td>
+                    {/* Contact Info Column */}
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col gap-0.5">
+                        <div className="flex items-center gap-1.5 text-sm font-bold text-slate-700">
+                          <span className="text-[10px] text-slate-300">
+                            <Phone size={12} />
+                          </span>
+                          {client.phoneMobile || "No Phone"}
+                        </div>
+                        <div className="text-[11px] text-slate-400 font-medium ml-4">
+                          {client.email || "No Email"}
+                        </div>
+                      </div>
+                    </td>
 
-          {/* Contact Info Column */}
-          <td className="px-6 py-4">
-            <div className="flex flex-col gap-1">
-              <span className="text-gray-700 font-medium">{client.phoneMobile || '-'}</span>
-              <span className="text-xs text-gray-400">{client.email || '-'}</span>
-            </div>
-          </td>
+                    {/* NIC Column */}
+                    <td className="px-6 py-4">
+                      <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-slate-100 text-slate-500 rounded font-bold text-[10px] uppercase">
+                        {client.nic || "Pending"}
+                      </div>
+                    </td>
 
-          {/* NIC Column */}
-          <td className="px-6 py-4 text-gray-500">
-            {client.nic || '-'}
-          </td>
+                    {/* Status Column */}
+                    <td className="px-6 py-4">
+                      <div
+                        className={`
+                  inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tight
+                  ${
+                    client.status === "Active"
+                      ? "bg-emerald-100 text-emerald-700"
+                      : "bg-rose-100 text-rose-700"
+                  }
+                `}
+                      >
+                        <div
+                          className={`w-1.5 h-1.5 rounded-full ${client.status === "Active" ? "bg-emerald-500" : "bg-rose-500"}`}
+                        />
+                        {client.status}
+                      </div>
+                    </td>
 
-          {/* Status Column */}
-          <td className="px-6 py-4">
-            <span
-              className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
-                client.status === 'Active'
-                  ? 'bg-green-50 text-green-700 ring-green-600/20'
-                  : 'bg-red-50 text-red-700 ring-red-600/20'
-              }`}
-            >
-              {client.status}
-            </span>
-          </td>
-
-          {/* Action Column */}
-          <td className="px-6 py-4 text-center">
-            <Link
-              href={`/features/clients/${client.id}`}
-              className="inline-flex items-center gap-1 cursor-pointer text-blue-500 bg-blue-50 hover:bg-blue-100 transition-colors rounded-md px-3 py-1.5 text-xs font-bold"
-            >
-              View Profile
-            </Link>
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  </table>
-</div>
+                    {/* Action Column */}
+                    <td className="px-6 py-4 text-center">
+                      <Link
+                        href={`/features/clients/${client.id}`}
+                        className="inline-flex items-center gap-2 text-slate-400 hover:text-blue-600 bg-transparent hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 transition-all rounded-xl px-4 py-2 text-xs font-black uppercase tracking-tighter"
+                      >
+                        Profile
+                        <ExternalLink size={14} />
+                      </Link>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
-  )
-}
+  );
+};
 
-export default Page
+export default Page;

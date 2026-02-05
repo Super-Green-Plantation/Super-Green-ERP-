@@ -208,6 +208,8 @@ model Investment {
 
   commission Commission[]
 
+  profit Profit? // optional is safer (see below)
+
   commissionsProcessed Boolean @default(false)
 
   createdAt DateTime @default(now())
@@ -232,4 +234,15 @@ model Commission {
 enum CommissionType {
   PERSONAL
   UPLINE
+}
+
+model Profit {
+  id Int @id @default(autoincrement())
+
+  investmentId Int     @unique
+  investment       Investment @relation(fields: [investmentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  investmentAmount Float @default(0)
+  commissionPayout Float @default(0)
+  totalProfit      Float @default(0)
 }
