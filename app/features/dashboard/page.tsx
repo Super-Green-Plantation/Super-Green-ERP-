@@ -1,6 +1,9 @@
 "use client";
+import Error from "@/app/components/Error";
 import InvestmentTable from "@/app/components/InvestmentTable";
+import Loading from "@/app/components/Loading";
 import { StatCard } from "@/app/components/StatCard";
+import { useDashboard } from "@/app/hooks/useDashboard";
 import { getStats } from "@/app/services/dashboard.service";
 import { Briefcase, MapPin, TrendingUp, Users } from "lucide-react";
 import React, { useEffect, useState } from "react";
@@ -16,36 +19,11 @@ interface DashboardStats {
 }
 
 const DashboardPage = () => {
-  const [data, setData] = useState<DashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  const fetchStats = async () => {
-    try {
-      const res = await getStats();
-      if (res) {
-        setData(res);
-      }
-    } catch (error) {
-      console.error("Failed to fetch stats:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchStats();
-  }, []);
-
-  if (loading)
-    return (
-      <div className="p-6 text-gray-400 font-bold animate-pulse">
-        Loading Analytics...
-      </div>
-    );
-  if (!data)
-    return (
-      <div className="p-6 text-red-400">Error loading dashboard data.</div>
-    );
+  const {data, isLoading, isError}= useDashboard()
+  
+  if (isLoading) return <Loading/>
+   
+  if (isError) return <Error/>
 
   return (
     <div className="max-w-7xl mx-auto pb-20">

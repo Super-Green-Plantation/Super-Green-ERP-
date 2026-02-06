@@ -194,7 +194,7 @@ model Nominee {
 model Investment {
   id Int @id @default(autoincrement())
 
-  investmentDate DateTime
+  investmentDate DateTime 
   amount         Float
 
   clientId Int

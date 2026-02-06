@@ -5,7 +5,6 @@ import UpdateDocsModal from "@/app/components/Client/UpdateDocsModal";
 import UpdateClientModal from "@/app/components/Client/UpdateModel";
 import { DetailItem } from "@/app/components/DetailItem";
 import { DocPreview } from "@/app/components/DocPreview";
-import { PdfViewer } from "@/app/components/PdfViewer";
 import { deleteClient, getClientDetails } from "@/app/services/clients.service";
 import { getPlanDetails } from "@/app/services/plans.service";
 import { FormData } from "@/app/types/fromData";
@@ -17,11 +16,10 @@ import {
   MapPin,
   Pen,
   Phone,
-  Printer,
   ShieldCheck,
   Trash2,
   TrendingUp,
-  User,
+  User
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
