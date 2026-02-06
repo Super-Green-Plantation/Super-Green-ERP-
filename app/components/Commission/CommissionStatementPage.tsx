@@ -16,6 +16,7 @@ import {
 const CommissionStatementPage = ({ data }: { data: any }) => {
   // Ensure we are hitting the 'res' array from your JSON
   const commissions = data?.res || [];
+  console.log("from receipt",data);
   
   // Aggregated Totals
   const totalEarned = commissions.reduce((sum: number, item: any) => sum + item.amount, 0);

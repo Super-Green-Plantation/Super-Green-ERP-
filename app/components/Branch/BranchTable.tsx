@@ -104,7 +104,7 @@ const BranchTable = () => {
                       <div className="w-8 h-8 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center border border-orange-100 group-hover:bg-orange-100 transition-colors">
                         <MapPin size={16} />
                       </div>
-                      <span className="text-sm font-black text-slate-900 tracking-tight">
+                      <span className="text-sm font-semibold text-slate-900 tracking-tight">
                         {branch.name}
                       </span>
                     </div>

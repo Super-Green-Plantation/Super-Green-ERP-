@@ -80,8 +80,8 @@ const EmployeeDetailsPage = () => {
     const fetchMember = async () => {
       setLoading(true);
       try {
-        const res = await getMemberDetails(Number(empId), Number(branchId));
-        setEmployee(res.res);
+        const data = await getMemberDetails(Number(empId), Number(branchId));
+        setEmployee(data.res);
       } catch (err) {
         console.error("Failed to fetch employee", err);
       } finally {
@@ -93,7 +93,7 @@ const EmployeeDetailsPage = () => {
 
   useEffect(() => {
     const fetchAllCommission = async () => {
-      const res = await getAllMemberCommission(Number(empId));
+      const res = await getAllMemberCommission(Number(empId));     
       setAllCommission(res);
     };
     fetchAllCommission();

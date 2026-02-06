@@ -1,5 +1,6 @@
 "use client";
 import InvestmentTable from "@/app/components/InvestmentTable";
+import { StatCard } from "@/app/components/StatCard";
 import { getStats } from "@/app/services/dashboard.service";
 import { Briefcase, MapPin, TrendingUp, Users } from "lucide-react";
 import React, { useEffect, useState } from "react";
@@ -56,7 +57,7 @@ const DashboardPage = () => {
           </span>
           <div className="h-px flex-1 bg-slate-100" />
         </div>
-        <h1 className="text-4xl font-black text-slate-900 tracking-tighter">
+        <h1 className="text-4xl font-semibold text-slate-900 tracking-tighter">
           Dashboard<span className="text-blue-600">.</span>
         </h1>
       </header>
@@ -104,7 +105,7 @@ const DashboardPage = () => {
       <section className="mt-16 mb-8 px-2">
         <div className="flex items-end justify-between border-b border-slate-100 pb-6">
           <div>
-            <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase">
+            <h2 className="text-2xl text-slate-900 tracking-tight uppercase">
               Investments
             </h2>
             <p className="mt-1 text-[11px] font-bold text-slate-400 uppercase tracking-[0.15em]">
@@ -134,35 +135,6 @@ const DashboardPage = () => {
   );
 };
 
-// Reusable StatCard Component for cleaner main code
-const StatCard = ({ label, value, subText, icon, color }: any) => {
-  const colors: any = {
-    emerald: "bg-emerald-50 text-emerald-600 border-emerald-100",
-    blue: "bg-blue-50 text-blue-600 border-blue-100",
-    purple: "bg-purple-50 text-purple-600 border-purple-100",
-    orange: "bg-orange-50 text-orange-600 border-orange-100",
-  };
 
-  return (
-    <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-200 transition-all group">
-      <div className="flex items-center gap-3 mb-4">
-        <div className={`p-2 rounded-xl ${colors[color]}`}>{icon}</div>
-        <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-slate-600 transition-colors">
-          {label}
-        </h3>
-      </div>
-      <div className="space-y-1">
-        <p className="text-2xl font-black text-slate-900 tracking-tight">
-          {value}
-        </p>
-        <p
-          className={`text-[10px] font-bold px-2 py-0.5 rounded-md inline-block ${colors[color]}`}
-        >
-          {subText}
-        </p>
-      </div>
-    </div>
-  );
-};
 
 export default DashboardPage;

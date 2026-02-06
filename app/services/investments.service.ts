@@ -8,6 +8,7 @@ export const updateAdvisorId = async (id: number, empNo: string) => {
   });
 };
 
+//get investments
 export const getAllInvestments = async()=>{
   const res = await fetch("/api/src/investments/details/")
   if (!res.ok) {

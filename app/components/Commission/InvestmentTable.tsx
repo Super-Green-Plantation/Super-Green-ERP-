@@ -20,6 +20,7 @@ const InvestmentTable = () => {
   const fetchInv = async () => {
     const result = await getAllInvestments();
 
+    
     // Map nested objects into flat structure
     const mapped = result.map((inv: any) => ({
       id: inv.id,

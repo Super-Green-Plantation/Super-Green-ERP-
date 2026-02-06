@@ -1,6 +1,6 @@
 export const getStats=async()=>{
     const data = await fetch("/api/src/dashboard")
-    if (!~data.ok) {
+    if (!data.ok) {
         return null
     }
 

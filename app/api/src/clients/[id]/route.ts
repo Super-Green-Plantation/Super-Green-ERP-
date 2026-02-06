@@ -27,6 +27,23 @@ export async function GET(
 }
 
 //update
+export async function PUT(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const data = await req.json();
+  console.log(data);
+
+  const {id} = (await params);
+  const nic = id;
+  console.log(nic);
+
+  const res = await prisma.client.update({
+    where: {id : Number(nic) },
+  });
+
+  return NextResponse.json({ data });
+}
 //delete
 export async function DELETE(
   _: NextRequest,
