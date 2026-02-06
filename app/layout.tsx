@@ -5,6 +5,7 @@ import Sidebar from "./components/SideBar/Sidebar";
 import "./globals.css";
 import Providers from "./providers";
 import Toast from "./Toast";
+import { Analytics } from "@vercel/analytics/next"
 
 export default function RootLayout({
   children,
@@ -26,6 +27,7 @@ export default function RootLayout({
           `}
         >
           <Providers>
+            <Analytics/>
             <Toast>{children}</Toast>
           </Providers>
         </main>
