@@ -1,20 +1,14 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import {
-  X,
-  Save,
-  User,
-  Landmark,
-  Users,
-  Briefcase,
-  MapPin,
-} from "lucide-react";
-import { getPlanDetails, getPlans } from "@/app/services/plans.service";
+import React, { useEffect, useState } from "react";
+import { getPlans } from "@/app/services/plans.service";
 import { FinancialPlan } from "@/app/types/FinancialPlan";
+import { X, Save, User, Briefcase, Landmark, Users } from "lucide-react";
+import { updateClient } from "@/app/services/clients.service";
 
 interface UpdateClientModalProps {
   isOpen: boolean;
+  id:number
   onClose: () => void;
   initialData: any;
   onUpdate: (updatedData: any) => void;
@@ -22,24 +16,57 @@ interface UpdateClientModalProps {
 
 const UpdateClientModal = ({
   isOpen,
+  id,
   onClose,
   initialData,
   onUpdate,
 }: UpdateClientModalProps) => {
-  const [formData, setFormData] = useState<any>(initialData);
+  // Initialize formData with safe defaults
+  const [formData, setFormData] = useState<any>({
+    applicant: {
+      fullName: "",
+      nic: "",
+      email: "",
+      phoneMobile: "",
+      occupation: "",
+      address: "",
+      // investmentAmount: "", // default empty
+      ...initialData.applicant,
+      investmentAmount: initialData?.applicant?.investmentAmount
+        ? initialData.applicant.investmentAmount.toString().trim()
+        : "",
+    },
+    investment: {
+      planId: "",
+      ...initialData.investment,
+    },
+    beneficiary: {
+      fullName: "",
+      relationship: "",
+      bankName: "",
+      accountNo: "",
+      bankBranch: "",
+      ...initialData.beneficiary,
+    },
+    nominee: {
+      fullName: "",
+      permanentAddress: "",
+      postalAddress: "",
+      ...initialData.nominee,
+    },
+  });
+
   const [plans, setPlans] = useState<FinancialPlan[]>([]);
-  console.log(formData);
 
   if (!isOpen) return null;
 
+  // Fetch all plans
   useEffect(() => {
-    const fetchAllPlans = async () => {
+    const fetchPlans = async () => {
       const res = await getPlans();
-      setPlans(res); // all plans
-      console.log("all from model", res);
+      setPlans(res);
     };
-
-    fetchAllPlans();
+    fetchPlans();
   }, []);
 
   const handleChange = (section: string | null, field: string, value: any) => {
@@ -53,9 +80,21 @@ const UpdateClientModal = ({
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onUpdate(formData);
+
+    // Convert investmentAmount to number before sending
+    const payload = {
+      ...formData,
+      applicant: {
+        ...formData.applicant,
+        investmentAmount: Number(
+          formData.applicant.investmentAmount?.toString().trim() || 0,
+        ),
+      },
+    };
+    const res = await updateClient(formData, id);
+    onUpdate(payload);
     onClose();
   };
 
@@ -65,7 +104,7 @@ const UpdateClientModal = ({
     "block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 ml-1";
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 p-4">
       <div className="bg-white w-full max-w-4xl max-h-[90vh] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col">
         {/* Header */}
         <div className="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
@@ -85,12 +124,12 @@ const UpdateClientModal = ({
           </button>
         </div>
 
-        {/* Form Content */}
+        {/* Form */}
         <form
           onSubmit={handleSubmit}
           className="overflow-y-auto p-8 space-y-10"
         >
-          {/* Section 1: Client Personal Details */}
+          {/* Personal Info */}
           <div className="space-y-6">
             <div className="flex items-center gap-2 pb-2 border-b border-gray-50">
               <User className="w-4 h-4 text-blue-600" />
@@ -104,7 +143,7 @@ const UpdateClientModal = ({
                 <input
                   value={formData.applicant.fullName}
                   onChange={(e) =>
-                    handleChange(null, "fullName", e.target.value)
+                    handleChange("applicant", "fullName", e.target.value)
                   }
                   className={inputClass}
                 />
@@ -113,7 +152,9 @@ const UpdateClientModal = ({
                 <label className={labelClass}>NIC Number</label>
                 <input
                   value={formData.applicant.nic}
-                  onChange={(e) => handleChange(null, "nic", e.target.value)}
+                  onChange={(e) =>
+                    handleChange("applicant", "nic", e.target.value)
+                  }
                   className={inputClass}
                 />
               </div>
@@ -122,7 +163,9 @@ const UpdateClientModal = ({
                 <input
                   type="email"
                   value={formData.applicant.email}
-                  onChange={(e) => handleChange(null, "email", e.target.value)}
+                  onChange={(e) =>
+                    handleChange("applicant", "email", e.target.value)
+                  }
                   className={inputClass}
                 />
               </div>
@@ -131,7 +174,7 @@ const UpdateClientModal = ({
                 <input
                   value={formData.applicant.phoneMobile}
                   onChange={(e) =>
-                    handleChange(null, "phoneMobile", e.target.value)
+                    handleChange("applicant", "phoneMobile", e.target.value)
                   }
                   className={inputClass}
                 />
@@ -141,7 +184,7 @@ const UpdateClientModal = ({
                 <input
                   value={formData.applicant.occupation}
                   onChange={(e) =>
-                    handleChange(null, "occupation", e.target.value)
+                    handleChange("applicant", "occupation", e.target.value)
                   }
                   className={inputClass}
                 />
@@ -152,7 +195,7 @@ const UpdateClientModal = ({
                   rows={2}
                   value={formData.applicant.address}
                   onChange={(e) =>
-                    handleChange(null, "address", e.target.value)
+                    handleChange("applicant", "address", e.target.value)
                   }
                   className={inputClass}
                 />
@@ -160,7 +203,7 @@ const UpdateClientModal = ({
             </div>
           </div>
 
-          {/* Section 2: Investment Settings */}
+          {/* Financial Configuration */}
           <div className="space-y-6 bg-blue-50/50 p-6 rounded-2xl border border-blue-100">
             <div className="flex items-center gap-2">
               <Briefcase className="w-4 h-4 text-blue-600" />
@@ -190,9 +233,13 @@ const UpdateClientModal = ({
                 <label className={labelClass}>Investment Amount (LKR)</label>
                 <input
                   type="number"
-                  value={Number(formData.applicant.investmentAmount) || ""}
+                  value={formData.applicant.investmentAmount}
                   onChange={(e) =>
-                    handleChange(null, "investmentAmount", e.target.value)
+                    handleChange(
+                      "applicant",
+                      "investmentAmount",
+                      e.target.value,
+                    )
                   }
                   className={`${inputClass} font-bold text-blue-700`}
                 />
@@ -200,7 +247,7 @@ const UpdateClientModal = ({
             </div>
           </div>
 
-          {/* Section 3: Beneficiary Details */}
+          {/* Beneficiary */}
           <div className="space-y-6">
             <div className="flex items-center gap-2 pb-2 border-b border-gray-50">
               <Landmark className="w-4 h-4 text-emerald-600" />
@@ -212,7 +259,7 @@ const UpdateClientModal = ({
               <div className="md:col-span-2">
                 <label className={labelClass}>Beneficiary Name</label>
                 <input
-                  value={formData.beneficiary?.fullName}
+                  value={formData.beneficiary.fullName}
                   onChange={(e) =>
                     handleChange("beneficiary", "fullName", e.target.value)
                   }
@@ -222,7 +269,7 @@ const UpdateClientModal = ({
               <div>
                 <label className={labelClass}>Relationship</label>
                 <input
-                  value={formData.beneficiary?.relationship}
+                  value={formData.beneficiary.relationship}
                   onChange={(e) =>
                     handleChange("beneficiary", "relationship", e.target.value)
                   }
@@ -232,7 +279,7 @@ const UpdateClientModal = ({
               <div>
                 <label className={labelClass}>Bank Name</label>
                 <input
-                  value={formData.beneficiary?.bankName}
+                  value={formData.beneficiary.bankName}
                   onChange={(e) =>
                     handleChange("beneficiary", "bankName", e.target.value)
                   }
@@ -242,7 +289,7 @@ const UpdateClientModal = ({
               <div>
                 <label className={labelClass}>Account Number</label>
                 <input
-                  value={formData.beneficiary?.accountNo}
+                  value={formData.beneficiary.accountNo}
                   onChange={(e) =>
                     handleChange("beneficiary", "accountNo", e.target.value)
                   }
@@ -252,7 +299,7 @@ const UpdateClientModal = ({
               <div>
                 <label className={labelClass}>Bank Branch</label>
                 <input
-                  value={formData.beneficiary?.bankBranch}
+                  value={formData.beneficiary.bankBranch}
                   onChange={(e) =>
                     handleChange("beneficiary", "bankBranch", e.target.value)
                   }
@@ -262,7 +309,7 @@ const UpdateClientModal = ({
             </div>
           </div>
 
-          {/* Section 4: Nominee Details */}
+          {/* Nominee */}
           <div className="space-y-6">
             <div className="flex items-center gap-2 pb-2 border-b border-gray-50">
               <Users className="w-4 h-4 text-purple-600" />
@@ -274,7 +321,7 @@ const UpdateClientModal = ({
               <div>
                 <label className={labelClass}>Nominee Full Name</label>
                 <input
-                  value={formData.nominee?.fullName}
+                  value={formData.nominee.fullName}
                   onChange={(e) =>
                     handleChange("nominee", "fullName", e.target.value)
                   }
@@ -285,7 +332,7 @@ const UpdateClientModal = ({
                 <div>
                   <label className={labelClass}>Permanent Address</label>
                   <input
-                    value={formData.nominee?.permanentAddress}
+                    value={formData.nominee.permanentAddress}
                     onChange={(e) =>
                       handleChange(
                         "nominee",
@@ -299,7 +346,7 @@ const UpdateClientModal = ({
                 <div>
                   <label className={labelClass}>Postal Address</label>
                   <input
-                    value={formData.nominee?.postalAddress}
+                    value={formData.nominee.postalAddress}
                     onChange={(e) =>
                       handleChange("nominee", "postalAddress", e.target.value)
                     }
@@ -311,7 +358,7 @@ const UpdateClientModal = ({
           </div>
         </form>
 
-        {/* Footer Actions */}
+        {/* Footer */}
         <div className="px-8 py-6 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
           <button
             type="button"

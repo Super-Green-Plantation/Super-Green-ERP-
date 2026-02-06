@@ -1,10 +1,10 @@
 "use client";
 
 import Back from "@/app/components/Back";
+import UpdateDocsModal from "@/app/components/Client/UpdateDocsModal";
 import UpdateClientModal from "@/app/components/Client/UpdateModel";
 import { DetailItem } from "@/app/components/DetailItem";
 import { DocPreview } from "@/app/components/DocPreview";
-import { PdfViewer } from "@/app/components/PdfViewer";
 import { deleteClient, getClientDetails } from "@/app/services/clients.service";
 import { getPlanDetails } from "@/app/services/plans.service";
 import { FormData } from "@/app/types/fromData";
@@ -16,11 +16,10 @@ import {
   MapPin,
   Pen,
   Phone,
-  Printer,
   ShieldCheck,
   Trash2,
   TrendingUp,
-  User,
+  User
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -35,7 +34,9 @@ const mapClientToFormData = (client: any): FormData => ({
     email: client.email || "",
     phoneMobile: client.phoneMobile ? `+94 ${client.phoneMobile}` : "",
     phoneLand: client.phoneLand ? `+94 ${client.phoneLand}` : "",
-    investmentAmount: client.investmentAmount ? ` ${client.investmentAmount}` : "",
+    investmentAmount: client.investmentAmount
+      ? ` ${client.investmentAmount}`
+      : "",
     dateOfBirth: client.dateOfBirth
       ? new Date(client.dateOfBirth).toISOString().split("T")[0]
       : "",
@@ -71,6 +72,7 @@ const ApplicationViewPage = () => {
   const [formData, setFormData] = useState<FormData | null>(null);
   const [plan, setPlan] = useState<any>();
   const [showUpdateModel, setShowUpdateModel] = useState(false);
+  const [showDocUpdateModel, setDocShowUpdateModel] = useState(false);
   const [rawClient, setRawClient] = useState<any>(null);
   useEffect(() => {
     const fetchClientDetails = async () => {
@@ -124,12 +126,38 @@ const ApplicationViewPage = () => {
             </p>
           </div>
         </div>
-        <button
-          onClick={() => window.print()}
-          className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-semibold hover:bg-gray-50 transition-colors shadow-sm"
-        >
-          <Printer className="w-4 h-4" /> Print PDF
-        </button>
+        <div className="flex gap-3">
+          {/* Section: Manage Application */}
+          <section className="overflow-hidden">
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              {/* Update Button */}
+              <button
+                onClick={() => setShowUpdateModel(true)}
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-blue-200 active:scale-95"
+              >
+                <Pen className="w-4 h-4" />
+                Update Details
+              </button>
+
+              {/* Delete Button */}
+              <button
+                onClick={() => {
+                  if (
+                    confirm(
+                      "Are you sure you want to delete this application? This action cannot be undone.",
+                    )
+                  ) {
+                    handelDelete(formData.applicant.nic);
+                  }
+                }}
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-sm font-bold transition-all active:scale-95"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete
+              </button>
+            </div>
+          </section>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -228,13 +256,24 @@ const ApplicationViewPage = () => {
           </section>
         </div>
         {/* Section : Documents */}
-        <section className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="px-6 py-4 bg-slate-50 border-b border-gray-100 flex items-center gap-3">
-            <ShieldCheck className="w-5 h-5 text-slate-600" />
-            <h2 className="font-bold text-gray-800">
-              Compliance & KYC Documents
-            </h2>
+        <section className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div className="px-6 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white rounded-lg border border-slate-200 shadow-sm">
+                <ShieldCheck className="w-5 h-5 text-blue-600" />
+              </div>
+              <h2 className="text-[11px] font-black uppercase tracking-widest text-slate-700">
+                Compliance & KYC Documents
+              </h2>
+            </div>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 border border-emerald-100 rounded-full">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[10px] font-black text-emerald-700 uppercase tracking-tight">
+                Verified
+              </span>
+            </div>
           </div>
+
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* ID Documents Grid */}
@@ -246,19 +285,32 @@ const ApplicationViewPage = () => {
               <DocPreview label="Agreement" url={rawClient.agreement} />
 
               {/* Signature (Full width) */}
-              <div className="md:col-span-2 pt-4 border-t border-gray-100">
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">
+              <div className="md:col-span-2 pt-4 border-t border-slate-100">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
                   Verified Digital Signature
                 </p>
-                <div className="bg-gray-50 rounded-xl p-4 border border-dashed border-gray-200 flex items-center justify-center">
+                <div className="bg-slate-50 rounded-2xl p-6 border border-dashed border-slate-200 flex items-center justify-center group hover:bg-white hover:border-blue-300 transition-all cursor-crosshair">
                   <img
                     src={rawClient.signature}
                     alt="Signature"
-                    className="max-h-24 object-contain mix-blend-multiply"
+                    className="max-h-20 object-contain mix-blend-multiply opacity-80 group-hover:opacity-100 transition-opacity"
                   />
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Refined Action Footer */}
+          <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100">
+            <button
+              onClick={() => setDocShowUpdateModel(true)}
+              className="group relative flex items-center justify-center gap-3 w-full px-6 py-3.5 
+        bg-slate-900 hover:bg-slate-800 text-white rounded-xl
+        text-[11px] font-black uppercase tracking-[0.15em] 
+        transition-all shadow-xl shadow-slate-200 active:scale-[0.98] active:shadow-none"
+            >
+              Update Regulatory Documents
+            </button>
           </div>
         </section>
 
@@ -328,47 +380,29 @@ const ApplicationViewPage = () => {
               </div>
             </div>
           </section>
-
-          {/* Section: Manage Application */}
-          <section className="overflow-hidden">
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              {/* Update Button */}
-              <button
-                onClick={() => setShowUpdateModel(true)}
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-blue-200 active:scale-95"
-              >
-                <Pen className="w-4 h-4" />
-                Update Details
-              </button>
-
-              {/* Delete Button */}
-              <button
-                onClick={() => {
-                  if (
-                    confirm(
-                      "Are you sure you want to delete this application? This action cannot be undone.",
-                    )
-                  ) {
-                    handelDelete(formData.applicant.nic);
-                  }
-                }}
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-sm font-bold transition-all active:scale-95"
-              >
-                <Trash2 className="w-4 h-4" />
-                Delete
-              </button>
-            </div>
-          </section>
         </div>
       </div>
       {showUpdateModel ? (
         <UpdateClientModal
+        id={Number(id)}
           isOpen={showUpdateModel}
           onClose={() => setShowUpdateModel(false)}
           initialData={formData}
           onUpdate={(updatedData) => handleUpdate(updatedData)}
         />
       ) : null}
+
+      {showDocUpdateModel ? (
+        <UpdateDocsModal
+          isOpen={showDocUpdateModel}
+          onClose={() => setDocShowUpdateModel(false)}
+          onSave={(files) => {
+            console.log("Files received:", files);
+            // Logic to update the database/API goes here
+            setDocShowUpdateModel(false);
+          }}
+        />
+      ):null}
     </div>
   );
 };

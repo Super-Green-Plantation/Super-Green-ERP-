@@ -1,22 +1,17 @@
 "use client";
 
-import { getClients } from "@/app/services/clients.service";
-import { Client } from "@/app/types/client";
+import Error from "@/app/components/Error";
+import Loading from "@/app/components/Loading";
+import { useClients } from "@/app/hooks/useClients";
+import { Spinner } from "@/components/ui/spinner";
 import { ExternalLink, Phone, User } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
 const Page = () => {
-  const [clients, setClients] = useState<Client[]>([]);
+  const { data: c, isLoading, isError } = useClients();
 
-  const loadClients = async () => {
-    const data = await getClients();
-    setClients(data.clients);
-  };
-
-  useEffect(() => {
-    loadClients();
-  }, []);
+  if (isLoading) return <Loading/>;
+  if (isError) return <Error/>;
 
   return (
     <div className=" max-w-7xl mx-auto">
@@ -58,7 +53,7 @@ const Page = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {clients.length === 0 ? (
+              {c?.clients.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center gap-2">
@@ -72,7 +67,7 @@ const Page = () => {
                   </td>
                 </tr>
               ) : (
-                clients.map((client) => (
+                c?.clients.map((client: any) => (
                   <tr
                     key={client.id}
                     className="hover:bg-slate-50/80 transition-colors group"

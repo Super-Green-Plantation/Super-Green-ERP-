@@ -7,14 +7,17 @@ export async function GET(
 ) {
   const empNo = (await params).empNo;
   try {
+    const member = await prisma.member.findUnique({
+      where: { id: Number(empNo) },
+    });
     const res = await prisma.commission.findMany({
-      where: { memberEmpNo: empNo },
+      where: { memberEmpNo: member?.empNo },
       include: {
         investment: true,
       },
     });
 
-    return NextResponse.json({res})
+    return NextResponse.json({ res });
   } catch (error) {
     return NextResponse.json({ error });
   }

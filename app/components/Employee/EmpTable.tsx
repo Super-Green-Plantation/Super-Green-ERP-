@@ -1,37 +1,55 @@
 "use client";
 
+import { useEmployee } from "@/app/hooks/useEmployee";
 import { deletMember } from "@/app/services/member.service";
 import { Member } from "@/app/types/member";
-import { Briefcase, ExternalLink, Pen, Phone, Trash2, User } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  Briefcase,
+  ExternalLink,
+  Pen,
+  Phone,
+  Trash2,
+  User,
+} from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
 
 interface EmpTableProps {
-  employees: Member[] | null;
   onEdit: (emp: Member) => void;
   onRefresh: () => void;
   branchId?: any;
 }
 
-const EmpTable = ({
-  employees,
-  onEdit,
-  onRefresh,
-  branchId,
-}: EmpTableProps) => {
-  const handleDelete = async (id: number) => {
-    if (confirm("Delete this employee?")) {
-      console.log("Deleting:", id);
-      const res = await deletMember(id);
-      if (!res.ok) {
-        toast.error("Faild to delete employee");
-      }
-      toast.success("Employee deleted success");
+const EmpTable = ({ onEdit, onRefresh, branchId }: EmpTableProps) => {
+  const queryClient = useQueryClient();
+
+  const { data, isLoading, isError } = useEmployee(branchId);
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => deletMember(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["employees", branchId],
+      });
+      toast.success("Employee deleted successfully");
       onRefresh();
-    }
+    },
+    onError: () => {
+      toast.error("Failed to delete employee");
+    },
+  });
+
+  const handleDelete = (id: number) => {
+    if (!confirm("Delete this employee?")) return;
+    deleteMutation.mutate(id);
   };
 
-  console.log(branchId);
+  if (isLoading) return <Spinner />;
+  if (isError) return <div>Error loading employees</div>;
+
+  const employees = data?.employees ?? [];
 
   return (
     <div className="w-full bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -57,7 +75,7 @@ const EmpTable = ({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {employees?.map((e) => (
+            {employees?.map((e: any) => (
               <tr
                 key={e.id}
                 className="hover:bg-slate-50/80 transition-colors group"
@@ -95,7 +113,7 @@ const EmpTable = ({
                     <div className="w-6 h-6 rounded-md bg-slate-50 flex items-center justify-center text-slate-400">
                       <Phone size={12} />
                     </div>
-                    {e.phone ?? '-'}
+                    {e.phone ?? "-"}
                   </div>
                 </td>
 

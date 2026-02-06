@@ -2,7 +2,10 @@
 
 import { useBranches } from "@/app/hooks/useBranches";
 import Link from "next/link";
-import { Users } from "lucide-react";
+import { AlertCircle, Loader2, Users } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
+import Loading from "@/app/components/Loading";
+import Error from "@/app/components/Error";
 
 interface Branch {
   id: string;
@@ -14,11 +17,15 @@ const Page = () => {
   const { data: branches, isLoading, error } = useBranches();
 
   if (isLoading) {
-    return <div>Loading branches...</div>;
+    return (
+     <Loading/>
+    );
   }
   if (error) {
-    return <div>Error loading branches.</div>;
-  }
+  return (
+    <Error />
+  );
+}
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
       {/* Header */}
@@ -31,7 +38,7 @@ const Page = () => {
 
       {/* Branch Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {branches.map((branch:Branch) => (
+        {branches.map((branch: Branch) => (
           <Link
             key={branch.id}
             href={`/features/branches/employees/${branch.id}`}
@@ -60,7 +67,7 @@ const Page = () => {
                     {branch.members.length} employees
                   </p>
                   <p className="text-sm text-gray-500">
-                   Click to Manage employees
+                    Click to Manage employees
                   </p>
                 </div>
               </div>
