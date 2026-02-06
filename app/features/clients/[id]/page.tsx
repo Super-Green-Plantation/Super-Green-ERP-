@@ -53,7 +53,7 @@ const ApplicationViewPage = () => {
     fetchPlan();
   }, [formData]);
 
-  if (!formData) return <p className="text-center mt-8">Loading...</p>;
+  if (!formData) return <p className="text-center mt-8"><Loading/></p>;
 
   const handleUpdate = async (updatedData: any) => {
     console.log(updatedData);
