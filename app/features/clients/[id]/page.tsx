@@ -5,9 +5,13 @@ import UpdateDocsModal from "@/app/components/Client/UpdateDocsModal";
 import UpdateClientModal from "@/app/components/Client/UpdateModel";
 import { DetailItem } from "@/app/components/DetailItem";
 import { DocPreview } from "@/app/components/DocPreview";
+import Error from "@/app/components/Error";
+import Loading from "@/app/components/Loading";
+import { useClient } from "@/app/hooks/useClient";
 import { deleteClient, getClientDetails } from "@/app/services/clients.service";
 import { getPlanDetails } from "@/app/services/plans.service";
 import { FormData } from "@/app/types/fromData";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Briefcase,
   Calendar,
@@ -19,72 +23,22 @@ import {
   ShieldCheck,
   Trash2,
   TrendingUp,
-  User
+  User,
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
-// Mapper: backend client → FormData
-const mapClientToFormData = (client: any): FormData => ({
-  applicant: {
-    fullName: client.fullName || "",
-    nic: client.nic || "",
-    drivingLicense: client.drivingLicense || "",
-    passportNo: client.passportNo || "",
-    email: client.email || "",
-    phoneMobile: client.phoneMobile ? `+94 ${client.phoneMobile}` : "",
-    phoneLand: client.phoneLand ? `+94 ${client.phoneLand}` : "",
-    investmentAmount: client.investmentAmount
-      ? ` ${client.investmentAmount}`
-      : "",
-    dateOfBirth: client.dateOfBirth
-      ? new Date(client.dateOfBirth).toISOString().split("T")[0]
-      : "",
-    occupation: client.occupation || "",
-    address: client.address || "",
-    branchId: client.branch?.name || "", // display branch name
-  },
-  investment: {
-    planId: client.investments?.[0]?.planId?.toString() || "N/A",
-  },
-  beneficiary: client.beneficiary
-    ? {
-        fullName: client.beneficiary.fullName || "",
-        nic: client.beneficiary.nic || "",
-        phone: client.beneficiary.phone || "",
-        bankName: client.beneficiary.bankName || "",
-        bankBranch: client.beneficiary.bankBranch || "",
-        accountNo: client.beneficiary.accountNo || "",
-        relationship: client.beneficiary.relationship || "",
-      }
-    : {},
-  nominee: client.nominee
-    ? {
-        fullName: client.nominee.fullName || "",
-        permanentAddress: client.nominee.permanentAddress || "",
-        postalAddress: client.nominee.postalAddress || "",
-      }
-    : {},
-});
+
 
 const ApplicationViewPage = () => {
+  const queryClient = useQueryClient();
   const { id } = useParams();
-  const [formData, setFormData] = useState<FormData | null>(null);
   const [plan, setPlan] = useState<any>();
   const [showUpdateModel, setShowUpdateModel] = useState(false);
   const [showDocUpdateModel, setDocShowUpdateModel] = useState(false);
-  const [rawClient, setRawClient] = useState<any>(null);
-  useEffect(() => {
-    const fetchClientDetails = async () => {
-      const client = await getClientDetails(Number(id));
 
-      console.log(client);
-      setRawClient(client);
-
-      setFormData(mapClientToFormData(client));
-    };
-    fetchClientDetails();
-  }, [id]);
+  const { data: formData, isLoading, isError } = useClient(Number(id));
 
   useEffect(() => {
     if (!formData?.investment.planId) return;
@@ -103,13 +57,24 @@ const ApplicationViewPage = () => {
 
   const handleUpdate = async (updatedData: any) => {
     console.log(updatedData);
+    queryClient.invalidateQueries({
+      queryKey: ["client", Number(id)],
+    });
   };
 
   const handelDelete = async (nic: any) => {
     const res = await deleteClient(nic);
-    if (res) {
+    queryClient.invalidateQueries({
+      queryKey: ["client", Number(id)],
+    });
+
+    if (!res) {
+      toast.error("Failed to delete client")
     }
   };
+
+  if(isLoading) return <Loading/>
+  if(isError) return <Error/>
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-8 min-h-screen">
@@ -277,12 +242,12 @@ const ApplicationViewPage = () => {
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* ID Documents Grid */}
-              <DocPreview label="ID Card Front" url={rawClient.idFront} />
-              <DocPreview label="ID Card Back" url={rawClient.idBack} />
+              <DocPreview label="ID Card Front" url={formData.applicant.idFront} />
+              <DocPreview label="ID Card Back" url={formData.applicant.idBack} />
 
               {/* Paperwork Grid */}
-              <DocPreview label="Proposal Form" url={rawClient.proposal} />
-              <DocPreview label="Agreement" url={rawClient.agreement} />
+              <DocPreview label="Proposal Form" url={formData.applicant.proposal} />
+              <DocPreview label="Agreement" url={formData.applicant.agreement} />
 
               {/* Signature (Full width) */}
               <div className="md:col-span-2 pt-4 border-t border-slate-100">
@@ -291,7 +256,7 @@ const ApplicationViewPage = () => {
                 </p>
                 <div className="bg-slate-50 rounded-2xl p-6 border border-dashed border-slate-200 flex items-center justify-center group hover:bg-white hover:border-blue-300 transition-all cursor-crosshair">
                   <img
-                    src={rawClient.signature}
+                    src={formData.applicant.signature}
                     alt="Signature"
                     className="max-h-20 object-contain mix-blend-multiply opacity-80 group-hover:opacity-100 transition-opacity"
                   />
@@ -384,7 +349,7 @@ const ApplicationViewPage = () => {
       </div>
       {showUpdateModel ? (
         <UpdateClientModal
-        id={Number(id)}
+          id={Number(id)}
           isOpen={showUpdateModel}
           onClose={() => setShowUpdateModel(false)}
           initialData={formData}
@@ -402,7 +367,7 @@ const ApplicationViewPage = () => {
             setDocShowUpdateModel(false);
           }}
         />
-      ):null}
+      ) : null}
     </div>
   );
 };
