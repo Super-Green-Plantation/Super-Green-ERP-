@@ -101,7 +101,7 @@ const Page = () => {
         <div className="border-t border-gray-100" />
 
         <EmpTable
-          employees={employees}
+          
           onEdit={handleEdit}
           onRefresh={fetchData}
            branchId={branchId}
