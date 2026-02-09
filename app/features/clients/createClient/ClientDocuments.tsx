@@ -12,6 +12,7 @@ import {
   Eye,
 } from "lucide-react";
 import { useFormContext } from "@/app/context/FormContext";
+import { uploadMultipleDocuments } from "@/lib/uploadMultipleDocuments";
 
 interface FileUploadState {
   [key: string]: File | null;
@@ -72,6 +73,8 @@ const DocumentUploadSection = () => {
       };
     });
   };
+
+
 
   const FileCard = ({
     label,
@@ -194,7 +197,7 @@ const DocumentUploadSection = () => {
     return await res.json(); // res.secure_url will be a usable link
   };
 
-  const uploadAllDocuments = async () => {
+  const handleOrcCommission = async () => {
     setUploading(true);
 
     try {
@@ -217,10 +220,10 @@ const DocumentUploadSection = () => {
     }
   };
 
-  setValue("applicant.idFront", uploadedUrls.idFront ?? undefined);
-  setValue("applicant.idBack", uploadedUrls.idBack ?? undefined);
-  setValue("applicant.proposal", uploadedUrls.proposal ?? undefined);
-  setValue("applicant.agreement", uploadedUrls.agreement ?? undefined);
+  // setValue("applicant.idFront", uploadedUrls.idFront ?? undefined);
+  // setValue("applicant.idBack", uploadedUrls.idBack ?? undefined);
+  // setValue("applicant.proposal", uploadedUrls.proposal ?? undefined);
+  // setValue("applicant.agreement", uploadedUrls.agreement ?? undefined);
 
   return (
     <div className="space-y-8 py-4">
@@ -287,7 +290,7 @@ const DocumentUploadSection = () => {
       </div>
 
       <button
-        onClick={uploadAllDocuments}
+        onClick={handleOrcCommission}
         disabled={uploading}
         className="w-full py-3 rounded-xl bg-blue-600 text-white text-sm font-bold tracking-wide hover:bg-blue-700 disabled:opacity-50"
       >
