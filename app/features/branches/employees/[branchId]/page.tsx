@@ -55,7 +55,7 @@ const Page = () => {
     <div className="space-y-4 max-w-7xl mx-auto">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Back/>
+          <Back />
           <div>
             <h2 className="text-2xl font-semibold">
               {loading ? "Loading..." : `${branchName} Branch`}
@@ -101,10 +101,9 @@ const Page = () => {
         <div className="border-t border-gray-100" />
 
         <EmpTable
-          
           onEdit={handleEdit}
           onRefresh={fetchData}
-           branchId={branchId}
+          branchId={branchId}
         />
       </div>
 
