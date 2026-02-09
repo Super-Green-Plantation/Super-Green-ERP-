@@ -6,6 +6,7 @@ import { useBranches } from "../../hooks/useBranches";
 import BranchModal from "./Model";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteBranch } from "@/app/api/src/utils/mutation";
+import { toast } from "sonner";
 
 interface Branch {
   id: number;
@@ -26,7 +27,11 @@ const BranchTable = () => {
     mutationFn: (id: number) => deleteBranch(id),
     onSuccess: () => {
       // Refetch branches after deletion
+      toast.success("Branch Deleted");
       queryClient.invalidateQueries({ queryKey: ["branches"] });
+    },
+    onError: () => {
+      toast.error("Something went wrong, try again!");
     },
   });
 

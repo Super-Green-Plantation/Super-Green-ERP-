@@ -19,12 +19,14 @@ interface DashboardStats {
 }
 
 const DashboardPage = () => {
-  const {data, isLoading, isError}= useDashboard()
-  
-  if (isLoading) return <Loading/>
-   
-  if (isError) return <Error/>
+  const { data, isLoading, isError } = useDashboard();
 
+  if (isLoading) return <Loading />;
+
+  if (isError) return <Error />;
+  if (!data) {
+    return null;
+  }
   return (
     <div className="max-w-7xl mx-auto pb-20">
       {/* 1. Main Page Header */}
@@ -112,7 +114,5 @@ const DashboardPage = () => {
     </div>
   );
 };
-
-
 
 export default DashboardPage;
