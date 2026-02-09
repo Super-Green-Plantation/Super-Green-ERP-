@@ -41,7 +41,7 @@ const UpdateDocsModal = ({ isOpen, onClose, onSave }: UpdateDocsModalProps) => {
     });
     const uploaded = await res.json();
     console.log("from model --- ", uploaded.secure_url);
-    
+
     return uploaded.secure_url; // URL from Cloudinary
   };
 
@@ -132,6 +132,7 @@ const UpdateDocsModal = ({ isOpen, onClose, onSave }: UpdateDocsModalProps) => {
                 <div className="relative flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50 group-hover:bg-white group-hover:border-blue-400 transition-all cursor-pointer">
                   <input
                     type="file"
+                    accept="image/*"
                     className="absolute inset-0 opacity-0 cursor-pointer"
                     onChange={(e) =>
                       setFiles((prev) => ({
@@ -150,6 +151,27 @@ const UpdateDocsModal = ({ isOpen, onClose, onSave }: UpdateDocsModalProps) => {
                   <p className="text-[9px] text-slate-400 mt-1">
                     {doc.description}
                   </p>
+
+                  {/* Preview with Remove Button */}
+                  {files[doc.id] && (
+                    <div className="mt-3 relative w-20 h-20">
+                      <img
+                        src={URL.createObjectURL(files[doc.id] as File)}
+                        alt="Preview"
+                        className="w-20 h-20 object-cover rounded-lg border border-slate-200 shadow-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation(); // prevent triggering file input
+                          setFiles((prev) => ({ ...prev, [doc.id]: null }));
+                        }}
+                        className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-[10px] font-bold hover:bg-red-600 transition-colors"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
