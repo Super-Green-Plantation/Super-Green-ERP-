@@ -269,20 +269,28 @@ const ApplicationViewPage = () => {
               <DocPreview
                 label="ID Card Front"
                 url={formData?.applicant.idFront}
+                id={formData?.applicant.nic}
+                docKey="idFront"
               />
               <DocPreview
                 label="ID Card Back"
                 url={formData?.applicant.idBack}
+                id={formData?.applicant.nic}
+                docKey="idBack"
               />
 
               {/* Paperwork Grid */}
               <DocPreview
                 label="Proposal Form"
                 url={formData?.applicant.proposal}
+                id={formData?.applicant.nic}
+                docKey="proposal"
               />
               <DocPreview
                 label="Agreement"
                 url={formData?.applicant.agreement}
+                id={formData?.applicant.nic}
+                docKey="agreement"
               />
 
               {/* Signature (Full width) */}
@@ -292,7 +300,7 @@ const ApplicationViewPage = () => {
                 </p>
                 <div className="bg-slate-50 rounded-2xl p-6 border border-dashed border-slate-200 flex items-center justify-center group hover:bg-white hover:border-blue-300 transition-all cursor-crosshair">
                   <img
-                    src={formData?.applicant.signature}
+                    src={formData?.applicant.signature || null}
                     alt="Signature"
                     className="max-h-20 object-contain mix-blend-multiply opacity-80 group-hover:opacity-100 transition-opacity"
                   />
