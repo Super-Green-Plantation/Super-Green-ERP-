@@ -32,10 +32,21 @@ export const DocPreview = ({
   const { mutateAsync: deleteDoc } = useDeleteDoc();
 
   const handleDelete = async (id: any, docKey: string) => {
-    await deleteDoc({ nic: id, docKey });
-    queryClient.invalidateQueries({
-      queryKey: ["client"],
-    });
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this document?",
+    );
+    if (!confirmed) return; // Exit if user clicks "Cancel"
+
+    try {
+      await deleteDoc({ nic: id, docKey });
+      queryClient.invalidateQueries({
+        queryKey: ["client"],
+      });
+      alert("Document deleted successfully."); // optional success message
+    } catch (error) {
+      console.error("Error deleting document:", error);
+      alert("Failed to delete document. Please try again.");
+    }
   };
 
   return (
