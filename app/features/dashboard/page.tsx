@@ -47,8 +47,8 @@ const DashboardPage = () => {
         {/* Investment Card */}
         <StatCard
           label="Investment Sum"
-          value={`Rs. ${data.investmentSum._sum.amount?.toLocaleString()}`}
-          subText={`Profit: Rs. ${data.totProfit._sum.totalProfit?.toLocaleString()}`}
+          value={`Rs. ${data.investmentSum._sum.amount?.toLocaleString() || 0}`}
+          subText={`Profit: Rs. ${data.totProfit._sum.totalProfit?.toLocaleString() || 0}`}
           icon={<TrendingUp size={20} />}
           color="emerald"
         />
@@ -66,7 +66,7 @@ const DashboardPage = () => {
         <StatCard
           label="Staff Count"
           value={data.totMembers.toString()}
-          subText={`Payout: Rs. ${data.totCommissionPayout._sum.commissionPayout?.toLocaleString()}`}
+          subText={`Payout: Rs. ${data.totCommissionPayout._sum.commissionPayout?.toLocaleString() || 0}`}
           icon={<Briefcase size={20} />}
           color="purple"
         />

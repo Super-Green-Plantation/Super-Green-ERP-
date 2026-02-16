@@ -27,7 +27,7 @@ import {
   TrendingUp,
   User,
 } from "lucide-react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -37,6 +37,7 @@ const ApplicationViewPage = () => {
   const [plan, setPlan] = useState<any>();
   const [showUpdateModel, setShowUpdateModel] = useState(false);
   const [showDocUpdateModel, setDocShowUpdateModel] = useState(false);
+  const router = useRouter()
 
   const { data: formData, isLoading, isError } = useClient(Number(id));
 
@@ -96,6 +97,7 @@ const ApplicationViewPage = () => {
       queryKey: ["client", Number(id)],
     });
 
+    router.push("/features/clients")
     if (!res) {
       toast.error("Failed to delete client");
     }

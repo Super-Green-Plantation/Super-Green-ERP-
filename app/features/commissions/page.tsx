@@ -1,9 +1,8 @@
 "use client";
 
 import InvestmentTable from "@/app/components/Commission/InvestmentTable";
-import { Pen, Plus, Wallet, Trash2, User, MapPin, Eye } from "lucide-react";
+import { Plus, Wallet } from "lucide-react";
 import Link from "next/link";
-import React from "react";
 
 const Commission = () => {
  
