@@ -65,3 +65,25 @@ export async function PUT(
 }
 
 //delete
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params; 
+
+  try {
+    const res = await prisma.investment.delete({
+      where: { id: Number(id) },
+    });
+
+    return NextResponse.json(
+      { message: "Investment deleted successfully", data: res },
+      { status: 200 },
+    );
+  } catch (error) {
+    return NextResponse.json(
+      { message: "Failed to delete investment" },
+      { status: 500 },
+    );
+  }
+}
