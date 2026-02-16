@@ -42,7 +42,7 @@ export const DocPreview = ({
       queryClient.invalidateQueries({
         queryKey: ["client"],
       });
-      alert("Document deleted successfully."); // optional success message
+      alert("Document deleted successfully.");
     } catch (error) {
       console.error("Error deleting document:", error);
       alert("Failed to delete document. Please try again.");

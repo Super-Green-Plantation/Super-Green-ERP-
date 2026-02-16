@@ -1,5 +1,6 @@
 "use client";
 
+import { generateAgreementPDF } from "@/app/api/src/utils/jspdf";
 import Back from "@/app/components/Back";
 import UpdateDocsModal from "@/app/components/Client/UpdateDocsModal";
 import UpdateClientModal from "@/app/components/Client/UpdateModel";
@@ -15,6 +16,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   Briefcase,
   Calendar,
+  Download,
   HeartHandshake,
   Mail,
   MapPin,
@@ -37,6 +39,8 @@ const ApplicationViewPage = () => {
   const [showDocUpdateModel, setDocShowUpdateModel] = useState(false);
 
   const { data: formData, isLoading, isError } = useClient(Number(id));
+
+  console.log(formData);
 
   useEffect(() => {
     if (!formData?.investment.planId) return;
@@ -122,12 +126,11 @@ const ApplicationViewPage = () => {
               {/* Update Button */}
               <button
                 onClick={() => setShowUpdateModel(true)}
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-blue-200 active:scale-95"
+                className="cursor-pointer flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-blue-200 active:scale-95"
               >
                 <Pen className="w-4 h-4" />
                 Update Details
               </button>
-
               {/* Delete Button */}
               <button
                 onClick={() => {
@@ -139,11 +142,17 @@ const ApplicationViewPage = () => {
                     handelDelete(formData?.applicant.nic);
                   }
                 }}
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-sm font-bold transition-all active:scale-95"
+                className="cursor-pointer flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-sm font-bold transition-all active:scale-95"
               >
                 <Trash2 className="w-4 h-4" />
                 Delete
               </button>
+              <button 
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-green-600 hover:bg-green-700 cursor-pointer text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-blue-200 active:scale-95"
+              onClick={() => generateAgreementPDF(formData, plan)}>
+                Download PDF <Download/>
+              </button>
+              
             </div>
           </section>
         </div>
