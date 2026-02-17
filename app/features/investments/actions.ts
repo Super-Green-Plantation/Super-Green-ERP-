@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { serializeData } from "@/app/utils/serializers";
 
 // Generate investment reference number
 function generateInvestmentNumber() {
@@ -21,7 +22,7 @@ export async function getInvestments() {
       advisor: true,
     },
     orderBy: { createdAt: "desc" },
-  });
+  }).then(serializeData);
 }
 
 export async function createInvestment(data: {
@@ -50,7 +51,7 @@ export async function createInvestment(data: {
     });
 
     revalidatePath("/features/investments");
-    return { success: true, investment };
+    return { success: true, investment: serializeData(investment) };
   } catch (error) {
     console.error("Error creating investment:", error);
     return { success: false, error: "Failed to create investment" };
@@ -64,12 +65,167 @@ export async function getInvestmentById(id: number) {
       include: {
         client: true,
         plan: true,
-        advisor: true,
+        advisor: {
+          include: {
+            branch: true,
+          },
+        },
       },
     });
     return investment;
   } catch (error) {
     console.error("Error fetching investment:", error);
     return null;
+  }
+}
+
+// Get investment details (summary view)
+export async function getInvestmentDetails() {
+  try {
+    const investments = await prisma.investment.findMany({
+      select: {
+        id: true,
+        amount: true,
+        investmentDate: true,
+
+        client: {
+          select: {
+            fullName: true,
+          },
+        },
+
+        plan: {
+          select: {
+            name: true,
+          },
+        },
+
+        advisor: {
+          select: {
+            name: true,
+            branch: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return serializeData(investments);
+  } catch (error) {
+    console.error("Error fetching investment details:", error);
+    throw new Error("Failed to fetch investment details");
+  }
+}
+
+// Get single investment detail by ID
+export async function getInvestmentDetailById(id: number) {
+  try {
+    const investment = await prisma.investment.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        amount: true,
+        investmentDate: true,
+        refNumber: true,
+        commissionsProcessed: true,
+
+        client: {
+          select: {
+            fullName: true,
+            nic: true,
+            email: true,
+            phoneMobile: true,
+          },
+        },
+
+        plan: {
+          select: {
+            name: true,
+            rate: true,
+            duration: true,
+          },
+        },
+
+        advisor: {
+          select: {
+            name: true,
+            empNo: true,
+            branch: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!investment) {
+      throw new Error("Investment not found");
+    }
+
+    return investment;
+  } catch (error) {
+    console.error("Error fetching investment detail:", error);
+    throw error;
+  }
+}
+
+// Update the advisor for a specific investment
+export async function updateAdvisorId(investmentId: number, advisorEmpNo: string) {
+  try {
+    const updated = await prisma.investment.update({
+      where: { id: investmentId },
+      data: {
+        advisor: {
+          connect: { empNo: advisorEmpNo },
+        },
+      },
+    });
+
+    revalidatePath("/features/commissions");
+    return { success: true, investment: serializeData(updated) };
+  } catch (error) {
+    console.error("Error updating advisor:", error);
+    return { success: false, error: "Failed to update advisor" };
+  }
+}
+
+// Get all plans associated with a client's investments
+export async function getPlansByClient(clientId: number) {
+  try {
+    const investments = await prisma.investment.findMany({
+      where: { clientId },
+      include: {
+        plan: true,
+      },
+    });
+
+    const plans = investments.map((inv) => inv.plan);
+    // Remove duplicates
+    const uniquePlans = Array.from(new Set(plans.filter(p => p !== null).map((p) => p!.id))).map((id) =>
+      plans.find((p) => p?.id === id)
+    );
+
+    return serializeData(uniquePlans);
+  } catch (error) {
+    console.error("Error fetching plans by client:", error);
+    throw new Error("Failed to fetch plans by client");
+  }
+}
+
+export async function deleteInvestment(id: number) {
+  try {
+    await prisma.investment.delete({
+      where: { id },
+    });
+    revalidatePath("/features/commissions");
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting investment:", error);
+    throw new Error("Failed to delete investment");
   }
 }

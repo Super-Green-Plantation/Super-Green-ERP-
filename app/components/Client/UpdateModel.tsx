@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { getPlans } from "@/app/services/plans.service";
+import { getFinancialPlans } from "@/app/features/financial_plans/actions";
 import { FinancialPlan } from "@/app/types/FinancialPlan";
 import { X, Save, User, Briefcase, Landmark, Users } from "lucide-react";
-import { updateClient } from "@/app/services/clients.service";
+import { updateClient } from "@/app/features/clients/actions";
 
 interface UpdateClientModalProps {
   isOpen: boolean;
@@ -31,13 +31,16 @@ const UpdateClientModal = ({
       occupation: "",
       address: "",
       // investmentAmount: "", // default empty
+      drivingLicense: "",
+      passportNo: "",
+      phoneLand: "",
       ...initialData.applicant,
       investmentAmount: initialData?.applicant?.investmentAmount
         ? initialData.applicant.investmentAmount.toString().trim()
         : "",
     },
     investment: {
-      planId: "",
+      planId: initialData?.investment?.planId || "",
       ...initialData.investment,
     },
     beneficiary: {
@@ -63,7 +66,7 @@ const UpdateClientModal = ({
   // Fetch all plans
   useEffect(() => {
     const fetchPlans = async () => {
-      const res = await getPlans();
+      const res = await getFinancialPlans();
       setPlans(res);
     };
     fetchPlans();
@@ -83,7 +86,7 @@ const UpdateClientModal = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Convert investmentAmount to number before sending
+    // Convert investmentAmount to number and clean phone numbers before sending
     const payload = {
       ...formData,
       applicant: {
@@ -91,9 +94,12 @@ const UpdateClientModal = ({
         investmentAmount: Number(
           formData.applicant.investmentAmount?.toString().trim() || 0,
         ),
+        // Ensure we only store the numeric part of the phone numbers
+        phoneMobile: formData.applicant.phoneMobile?.toString().replace(/\D/g, "").slice(-9),
+        phoneLand: formData.applicant.phoneLand?.toString().replace(/\D/g, "").slice(-9),
       },
     };
-    const res = await updateClient(formData, id);
+
     onUpdate(payload);
     onClose();
   };
@@ -159,6 +165,26 @@ const UpdateClientModal = ({
                 />
               </div>
               <div>
+                <label className={labelClass}>Driving License</label>
+                <input
+                  value={formData.applicant.drivingLicense}
+                  onChange={(e) =>
+                    handleChange("applicant", "drivingLicense", e.target.value)
+                  }
+                  className={inputClass}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Passport No</label>
+                <input
+                  value={formData.applicant.passportNo}
+                  onChange={(e) =>
+                    handleChange("applicant", "passportNo", e.target.value)
+                  }
+                  className={inputClass}
+                />
+              </div>
+              <div>
                 <label className={labelClass}>Email Address</label>
                 <input
                   type="email"
@@ -171,13 +197,35 @@ const UpdateClientModal = ({
               </div>
               <div>
                 <label className={labelClass}>Mobile Phone</label>
-                <input
-                  value={formData.applicant.phoneMobile}
-                  onChange={(e) =>
-                    handleChange("applicant", "phoneMobile", e.target.value)
-                  }
-                  className={inputClass}
-                />
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-bold border-r pr-2">
+                    +94
+                  </span>
+                  <input
+                    value={formData.applicant.phoneMobile}
+                    onChange={(e) =>
+                      handleChange("applicant", "phoneMobile", e.target.value)
+                    }
+                    className={`${inputClass} pl-14`}
+                    placeholder="7XXXXXXXX"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className={labelClass}>Land Phone</label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-bold border-r pr-2">
+                    +94
+                  </span>
+                  <input
+                    value={formData.applicant.phoneLand}
+                    onChange={(e) =>
+                      handleChange("applicant", "phoneLand", e.target.value)
+                    }
+                    className={`${inputClass} pl-14`}
+                    placeholder="1XXXXXXXX"
+                  />
+                </div>
               </div>
               <div>
                 <label className={labelClass}>Occupation</label>

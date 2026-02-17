@@ -19,9 +19,9 @@ import { useParams, useRouter } from "next/navigation";
 import {
   deleteInvestment,
   getInvestmentById,
-} from "@/app/services/investments.service";
+} from "@/app/features/investments/actions";
 import { DetailItem } from "@/app/components/DetailItem";
-import { generateInvestmentPDF } from "@/app/api/src/utils/commissionPdf";
+import { generateInvestmentPDF } from "@/app/utils/pdfGenerator";
 import Loading from "@/app/components/Loading";
 import Error from "@/app/components/Error";
 import { toast } from "sonner";
@@ -69,7 +69,7 @@ const InvestmentDetails = () => {
   if (loading) return <Loading />;
   if (!data) return <Error />;
 
-  const { client, member, plan } = data;
+  const { client, advisor: member, plan } = data;
   const activeInvestment = client?.investments?.[0];
 
   const cardBase =
@@ -104,7 +104,7 @@ const InvestmentDetails = () => {
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1.5 text-[10px] md:text-xs text-slate-400 font-black uppercase tracking-widest">
                 <Calendar size={14} className="text-blue-500" />
-                Issued: {new Date(client?.createdAt).toLocaleDateString()}
+                Issued: {client?.createdAt ? new Date(client.createdAt).toLocaleDateString() : "N/A"}
               </div>
               <div className="h-1 w-1 rounded-full bg-slate-300 hidden md:block" />
               <div className="hidden md:flex items-center gap-1.5 text-[10px] text-slate-400 font-black uppercase tracking-widest">
@@ -151,7 +151,7 @@ const InvestmentDetails = () => {
                   <span className="text-xl md:text-2xl text-slate-500 font-bold uppercase">
                     Rs.
                   </span>
-                  {client.investmentAmount?.toLocaleString()}
+                  {client?.investmentAmount?.toLocaleString() || "0"}
                 </h2>
               </div>
 
@@ -191,7 +191,7 @@ const InvestmentDetails = () => {
                   className={`h-3 w-3 rounded-full animate-pulse ${client.status === "Active" ? "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.5)]" : "bg-rose-500"}`}
                 />
                 <span className="text-xl font-black text-slate-800 uppercase tracking-tighter">
-                  {client.status}
+                  {client?.status || "Unknown"}
                 </span>
               </div>
             </div>
@@ -209,10 +209,9 @@ const InvestmentDetails = () => {
                   <span className="text-xs font-bold text-slate-400 mr-1 uppercase">
                     Rs.
                   </span>
-                  {(
-                    ((client.investmentAmount * plan.rate) / 100) *
-                    (plan.duration / 12)
-                  ).toLocaleString()}
+                  {(client?.investmentAmount && plan?.rate && plan?.duration) 
+                    ? (((client.investmentAmount * plan.rate) / 100) * (plan.duration / 12)).toLocaleString() 
+                    : "0"}
                 </p>
               </div>
             </div>
@@ -231,12 +230,12 @@ const InvestmentDetails = () => {
             </h2>
           </div>
           <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
-            <DetailItem label="Legal Name" value={client.fullName} />
-            <DetailItem label="Identification" value={client.nic} />
-            <DetailItem label="Primary Email" value={client.email || "N/A"} />
-            <DetailItem label="Contact Number" value={client.phoneMobile} />
+            <DetailItem label="Legal Name" value={client?.fullName || "N/A"} />
+            <DetailItem label="Identification" value={client?.nic || "N/A"} />
+            <DetailItem label="Primary Email" value={client?.email || "N/A"} />
+            <DetailItem label="Contact Number" value={client?.phoneMobile || "N/A"} />
             <div className="sm:col-span-2 pt-2 border-t border-slate-50">
-              <DetailItem label="Registered Address" value={client.address} />
+              <DetailItem label="Registered Address" value={client?.address || "N/A"} />
             </div>
           </div>
         </section>
@@ -252,23 +251,23 @@ const InvestmentDetails = () => {
           <div className="p-6">
             <div className="flex items-center gap-5 mb-8">
               <div className="w-16 h-16 rounded-4xl bg-slate-900 flex items-center justify-center text-white text-2xl font-black shadow-xl shadow-slate-200 uppercase">
-                {member.name.charAt(0)}
+                {member?.name ? member.name.charAt(0) : "N"}
               </div>
               <div>
                 <h3 className="text-xl font-black text-slate-900 tracking-tight">
-                  {member.name}
+                  {member?.name || "No Advisor Assigned"}
                 </h3>
                 <div className="inline-block px-2 py-0.5 bg-purple-50 text-purple-600 text-[10px] font-black rounded uppercase tracking-tighter border border-purple-100">
-                  Ref: {member.empNo}
+                  Ref: {member?.empNo || "UNASSIGNED"}
                 </div>
               </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 border-t border-slate-100 pt-6">
-              <DetailItem label="Operating Branch" value={member.branch.name} />
+              <DetailItem label="Operating Branch" value={member?.branch?.name || "N/A"} />
               <DetailItem
                 label="Base Location"
-                value={member.branch.location}
+                value={member?.branch?.location || "N/A"}
               />
             </div>
           </div>

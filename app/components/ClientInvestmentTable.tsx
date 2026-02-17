@@ -23,7 +23,7 @@ const ClientInvestmentTable = ({ investments }: { investments: any }) => {
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-50 bg-white">
-          {/* {investments.map((item: any) => (
+          {(investments || []).map((item: any) => (
             <tr key={item.id} className="hover:bg-blue-50/20 transition-all">
               <td className="px-6 py-5">
                 <div className="flex items-center gap-3">
@@ -32,7 +32,7 @@ const ClientInvestmentTable = ({ investments }: { investments: any }) => {
                   </div>
                   <div>
                     <p className="text-sm font-bold text-gray-900">
-                      Client ID: {item.clientId}
+                      ID: {item.refNumber || item.id}
                     </p>
                     <p className="text-[10px] text-gray-400 font-medium flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
@@ -54,17 +54,17 @@ const ClientInvestmentTable = ({ investments }: { investments: any }) => {
                   {item.commissionsProcessed ? "Processed" : "Pending"}
                 </span>
               </td>
-              <td className="px-6 py-5 text-right font-medium text-gray-400 text-xs">
+              <td className="px-6 py-5 text-right font-medium text-gray-400 text-xs text-nowrap">
                 {item.refNumber || "N/A"}
               </td>
               <td className="px-6 py-5 text-right">
                 <p className="text-base font-black text-gray-900">
-                  <span className="text-[10px] mr-1 text-gray-400 font-normal">Rs.</span>
+                  <span className="text-[10px] mr-1 text-gray-400 font-normal text-nowrap">Rs.</span>
                   {item.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </p>
               </td>
             </tr>
-          ))} */}
+          ))}
         </tbody>
         <tfoot>
           <tr className="bg-gray-900 text-white">
@@ -79,6 +79,7 @@ const ClientInvestmentTable = ({ investments }: { investments: any }) => {
                 <span className="text-xs mr-1 font-medium text-gray-400">
                   Rs.
                 </span>
+                {(investments || []).reduce((sum: number, inv: any) => sum + (Number(inv.amount) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </p>
             </td>
           </tr>

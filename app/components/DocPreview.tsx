@@ -7,7 +7,7 @@ import {
   Trash,
   Trash2,
 } from "lucide-react";
-import { deleteClientDocument } from "../services/documents.service";
+
 import { useDeleteDoc } from "../hooks/useDoc";
 import { useQueries, useQueryClient } from "@tanstack/react-query";
 

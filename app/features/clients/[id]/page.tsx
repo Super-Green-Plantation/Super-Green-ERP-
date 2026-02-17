@@ -1,19 +1,19 @@
 "use client";
 
-import { generateAgreementPDF } from "@/app/api/src/utils/client";
 import Back from "@/app/components/Back";
 import UpdateDocsModal from "@/app/components/Client/UpdateDocsModal";
 import UpdateClientModal from "@/app/components/Client/UpdateModel";
 import ClientInvestmentTable from "@/app/components/ClientInvestmentTable";
 import { DetailItem } from "@/app/components/DetailItem";
 import { DocPreview } from "@/app/components/DocPreview";
-import Error from "@/app/components/Error";
+import ErrorMessage from "@/app/components/Error";
 import Loading from "@/app/components/Loading";
 import { useClient } from "@/app/hooks/useClient";
-import { deleteClient } from "@/app/services/clients.service";
-import { updateClientDocuments } from "@/app/services/documents.service";
-import { getPlanDetails } from "@/app/services/plans.service";
+import { deleteClient, updateClient, updateClientDocuments } from "@/app/features/clients/actions";
+
+import { getFinancialPlanById } from "@/app/features/financial_plans/actions";
 import { useQueryClient } from "@tanstack/react-query";
+import { generateClientApplicationPDF } from "@/app/utils/pdfGenerator";
 import {
   Briefcase,
   Calendar,
@@ -32,7 +32,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-const ApplicationViewPage = () => {
+export default function ApplicationViewPage() {
   const queryClient = useQueryClient();
   const { id } = useParams();
   const [plan, setPlan] = useState<any>();
@@ -48,16 +48,16 @@ const ApplicationViewPage = () => {
     if (!formData?.investment.planId) return;
     const fetchPlan = async () => {
       const planId = Number(formData.investment.planId);
-      const res = await getPlanDetails(planId);
+      const res = await getFinancialPlanById(planId);
       console.log(res);
 
-      setPlan(res.res[0]); // API returns array
+      setPlan(res);
     };
 
     fetchPlan();
   }, [formData]);
 
-  const handleUpdate = async (updatedFiles: Record<string, string | null>) => {
+  const handleDocsUpdate = async (updatedFiles: Record<string, string | null>) => {
     if (!updatedFiles) return;
 
     // Merge the uploaded URLs into your existing applicant data
@@ -73,22 +73,31 @@ const ApplicationViewPage = () => {
     };
 
     try {
-      const res = await fetch(`/api/src/clients/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ formData: finalFormData }),
-      });
+      const res = await updateClientDocuments(Number(id), updatedFiles);
 
-      if (!res.ok) alert("Failed to upload");
-
-      const data = await res.json();
-      console.log("Updated client:", data);
+      if (!res.success) throw new Error(res.error || "Failed to update");
 
       // Invalidate cache
       queryClient.invalidateQueries({ queryKey: ["client", Number(id)] });
+      toast.success("Documents updated successfully");
+      setDocShowUpdateModel(false);
     } catch (err) {
       console.error(err);
-      alert("Failed to update documents");
+      toast.error("Failed to update documents");
+    }
+  };
+
+  const handleDetailsUpdate = async (updatedPayload: any) => {
+    try {
+      const res = await updateClient(Number(id), updatedPayload);
+
+      if (!res.success) throw new Error(res.error || "Failed to update");
+
+      toast.success("Client details updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["client", Number(id)] });
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to update client details");
     }
   };
 
@@ -105,7 +114,7 @@ const ApplicationViewPage = () => {
   };
 
   if (isLoading) return <Loading />;
-  if (isError) return <Error />;
+  if (isError) return <ErrorMessage />;
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-8 min-h-screen">
@@ -152,7 +161,7 @@ const ApplicationViewPage = () => {
               </button>
               <button
                 className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-green-600 hover:bg-green-700 cursor-pointer text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-blue-200 active:scale-95"
-                onClick={() => generateAgreementPDF(formData, plan)}
+                onClick={() => generateClientApplicationPDF(formData, plan)}
               >
                 Download PDF <Download />
               </button>
@@ -178,7 +187,11 @@ const ApplicationViewPage = () => {
               <DetailItem label="NIC Number" value={formData?.applicant.nic} />
               <DetailItem
                 label="Mobile"
-                value={formData?.applicant.phoneMobile}
+                value={
+                  formData?.applicant.phoneMobile
+                    ? `+94 ${formData.applicant.phoneMobile}`
+                    : "—"
+                }
                 icon={<Phone className="w-3 h-3" />}
               />
               <DetailItem
@@ -196,6 +209,17 @@ const ApplicationViewPage = () => {
                 value={formData?.applicant.occupation}
                 icon={<Briefcase className="w-3 h-3" />}
               />
+              <div className="md:col-span-1">
+                <DetailItem
+                  label="Land Phone"
+                  value={
+                    formData?.applicant.phoneLand
+                      ? `+94 ${formData.applicant.phoneLand}`
+                      : "—"
+                  }
+                  icon={<Phone className="w-3 h-3" />}
+                />
+              </div>
               <div className="md:col-span-2">
                 <DetailItem
                   label="Residential Address"
@@ -255,88 +279,93 @@ const ApplicationViewPage = () => {
               />
             </div>
           </section>
+          
+          {/* Investment Table */}
+          <ClientInvestmentTable investments={formData?.investments} />
         </div>
-        {/* Section : Documents */}
-        <section className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="px-6 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-white rounded-lg border border-slate-200 shadow-sm">
-                <ShieldCheck className="w-5 h-5 text-blue-600" />
+
+        {/* Right Column: Documents & Investment Plan */}
+        <div className="space-y-8">
+          {/* Compliance & KYC Documents */}
+          <section className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <div className="px-6 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white rounded-lg border border-slate-200 shadow-sm">
+                  <ShieldCheck className="w-5 h-5 text-blue-600" />
+                </div>
+                <h2 className="text-[11px] font-black uppercase tracking-widest text-slate-700">
+                  Compliance & KYC Documents
+                </h2>
               </div>
-              <h2 className="text-[11px] font-black uppercase tracking-widest text-slate-700">
-                Compliance & KYC Documents
-              </h2>
+              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 border border-emerald-100 rounded-full">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[10px] font-black text-emerald-700 uppercase tracking-tight">
+                  Verified
+                </span>
+              </div>
             </div>
-            <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 border border-emerald-100 rounded-full">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[10px] font-black text-emerald-700 uppercase tracking-tight">
-                Verified
-              </span>
-            </div>
-          </div>
 
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* ID Documents Grid */}
-              <DocPreview
-                label="ID Card Front"
-                url={formData?.applicant.idFront}
-                id={formData?.applicant.nic}
-                docKey="idFront"
-              />
-              <DocPreview
-                label="ID Card Back"
-                url={formData?.applicant.idBack}
-                id={formData?.applicant.nic}
-                docKey="idBack"
-              />
+            <div className="p-6">
+              <div className="grid grid-cols-1 gap-6">
+                {/* ID Documents Grid */}
+                <DocPreview
+                  label="ID Card Front"
+                  url={formData?.applicant.idFront}
+                  id={formData?.applicant.nic}
+                  docKey="idFront"
+                />
+                <DocPreview
+                  label="ID Card Back"
+                  url={formData?.applicant.idBack}
+                  id={formData?.applicant.nic}
+                  docKey="idBack"
+                />
 
-              {/* Paperwork Grid */}
-              <DocPreview
-                label="Proposal Form"
-                url={formData?.applicant.proposal}
-                id={formData?.applicant.nic}
-                docKey="proposal"
-              />
-              <DocPreview
-                label="Agreement"
-                url={formData?.applicant.agreement}
-                id={formData?.applicant.nic}
-                docKey="agreement"
-              />
+                {/* Paperwork Grid */}
+                <DocPreview
+                  label="Proposal Form"
+                  url={formData?.applicant.proposal}
+                  id={formData?.applicant.nic}
+                  docKey="proposal"
+                />
+                <DocPreview
+                  label="Agreement"
+                  url={formData?.applicant.agreement}
+                  id={formData?.applicant.nic}
+                  docKey="agreement"
+                />
 
-              {/* Signature (Full width) */}
-              <div className="md:col-span-2 pt-4 border-t border-slate-100">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
-                  Verified Digital Signature
-                </p>
-                <div className="bg-slate-50 rounded-2xl p-6 border border-dashed border-slate-200 flex items-center justify-center group hover:bg-white hover:border-blue-300 transition-all cursor-crosshair">
-                  <img
-                    src={formData?.applicant.signature || null}
-                    alt="Signature"
-                    className="max-h-20 object-contain mix-blend-multiply opacity-80 group-hover:opacity-100 transition-opacity"
-                  />
+                {/* Signature */}
+                <div className="pt-4 border-t border-slate-100">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
+                    Verified Digital Signature
+                  </p>
+                  <div className="bg-slate-50 rounded-2xl p-6 border border-dashed border-slate-200 flex items-center justify-center group hover:bg-white hover:border-blue-300 transition-all cursor-crosshair">
+                    <img
+                      src={formData?.applicant.signature || null}
+                      alt="Signature"
+                      className="max-h-20 object-contain mix-blend-multiply opacity-80 group-hover:opacity-100 transition-opacity"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Refined Action Footer */}
-          <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100">
-            <button
-              onClick={() => setDocShowUpdateModel(true)}
-              className="group relative flex items-center justify-center gap-3 w-full px-6 py-3.5 
-        bg-slate-900 hover:bg-slate-800 text-white rounded-xl
-        text-[11px] font-black uppercase tracking-[0.15em] 
-        transition-all shadow-xl shadow-slate-200 active:scale-[0.98] active:shadow-none"
-            >
-              Update Regulatory Documents
-            </button>
-          </div>
-        </section>
+            {/* Refined Action Footer */}
+            <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100">
+              <button
+                onClick={() => setDocShowUpdateModel(true)}
+                className="group relative flex items-center justify-center gap-3 w-full px-6 py-3.5 
+          bg-slate-900 hover:bg-slate-800 text-white rounded-xl
+          text-[11px] font-black uppercase tracking-[0.15em] 
+          transition-all shadow-xl shadow-slate-200 active:scale-[0.98] active:shadow-none"
+              >
+                Update Regulatory Documents
+              </button>
+            </div>
+          </section>
 
-        <div className="space-y-3">
-          {/* Section: Investment Plan */}
+          {/* Investment Plan Card */}
           <section className="bg-linear-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl shadow-xl p-6 text-white relative overflow-hidden border border-white/10">
             {/* Background Decoration */}
             <TrendingUp className="absolute -right-4 -top-4 w-32 h-32 text-white/5 rotate-12" />
@@ -382,7 +411,7 @@ const ApplicationViewPage = () => {
 
               <div className="flex flex-col items-center p-3 rounded-xl bg-white/5 border border-white/5">
                 <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">
-                  Investment
+                  Amount
                 </p>
                 <p className="text-white font-bold text-base">
                   <span className="text-[10px] text-gray-400 mr-0.5">Rs.</span>
@@ -402,7 +431,6 @@ const ApplicationViewPage = () => {
             </div>
           </section>
         </div>
-        <ClientInvestmentTable investments={formData?.investment} />
       </div>
       {showUpdateModel ? (
         <UpdateClientModal
@@ -410,7 +438,7 @@ const ApplicationViewPage = () => {
           isOpen={showUpdateModel}
           onClose={() => setShowUpdateModel(false)}
           initialData={formData}
-          onUpdate={(updatedData) => handleUpdate(updatedData)}
+          onUpdate={(updatedData) => handleDetailsUpdate(updatedData)}
         />
       ) : null}
 
@@ -418,17 +446,9 @@ const ApplicationViewPage = () => {
         <UpdateDocsModal
           isOpen={showDocUpdateModel}
           onClose={() => setDocShowUpdateModel(false)}
-          onSave={async (uploadedUrls) => {
-            console.log("Uploaded URLs:", uploadedUrls);
-
-            await updateClientDocuments(Number(id), uploadedUrls);
-            queryClient.invalidateQueries({ queryKey: ["client", Number(id)] });
-            setDocShowUpdateModel(false);
-          }}
+          onSave={handleDocsUpdate}
         />
       ) : null}
     </div>
   );
-};
-
-export default ApplicationViewPage;
+}

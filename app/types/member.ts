@@ -1,9 +1,9 @@
 export interface Member {
   id: number;
   name: string;
-  email: string;
+  email: string | null;
   empNo: string;
-  phone: string;
+  phone: string | null;
   totalCommission: number;
   position: Position;
 }
@@ -13,9 +13,9 @@ export interface Position {
   id: number;
   title: string;
   baseSalary: number;
-  createdAt: string;
-  updatedAt: string;
-  commissionRate:CommissionRate;
+  createdAt: string | Date;
+  updatedAt: string | Date;
+  commissionRate?: CommissionRate;
    personalCommissionTiers:PersonalCommissionTiers[]
 }
 
@@ -23,12 +23,12 @@ export interface PersonalCommissionTiers{
   id: number;
   positionId:number;
   minAmount:number;
-  rate:number
+  rate: any;
 }
 
 export interface CommissionRate {
   id: number;
-  rate: number;
+  rate: any;
   positionId: number;
   position?: Position;
 

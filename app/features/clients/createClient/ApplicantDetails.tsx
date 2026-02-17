@@ -2,8 +2,8 @@
 
 import SignaturePad from "@/app/components/SignaturePad";
 import { useFormContext } from "@/app/context/FormContext";
-import { getBranchDetails, getBranches } from "@/app/services/branches.service";
-import { getPlans } from "@/app/services/plans.service";
+import { getBranches, getBranchById } from "@/app/features/branches/actions";
+import { getFinancialPlans } from "@/app/features/financial_plans/actions";
 import { Branch } from "@/app/types/branch";
 import { FinancialPlan } from "@/app/types/FinancialPlan";
 import { useEffect, useState } from "react";
@@ -19,14 +19,14 @@ const ApplicantDetails = () => {
   const [plans, setPlans] = useState<FinancialPlan[] | null>([]);
 
   const fetchBranch = async () => {
-    const braches = await getBranches();
-    setBranch(braches.res);
+    const branches = await getBranches();
+    setBranch(branches);
   };
 
   useEffect(() => {
     const fetchPlans = async () => {
       try {
-        const plans = await getPlans();
+        const plans = await getFinancialPlans();
         setPlans(plans);
       } catch (err) {
         console.error(err);
@@ -38,7 +38,7 @@ const ApplicantDetails = () => {
   useEffect(() => {
     if (!selectedBranchId) return;
     const fetchBranchDetails = async () => {
-      const data = await getBranchDetails(selectedBranchId);
+      const data = await getBranchById(selectedBranchId);
       setBranchDetails(data);
     };
     fetchBranchDetails();

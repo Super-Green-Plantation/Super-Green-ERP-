@@ -4,6 +4,7 @@ import SignatureCanvas from "react-signature-canvas";
 import { useRef } from "react";
 import { Eraser, CheckCircle2 } from "lucide-react";
 import { useFormContext } from "../context/FormContext";
+import { uploadClientSignature } from "../features/uploads/actions";
 
 export default function SignaturePad() {
   const { form } = useFormContext();
@@ -17,13 +18,8 @@ export default function SignaturePad() {
     const dataUrl = sigRef.current.toDataURL("image/png");
     console.log("Signature captured:", dataUrl);
 
-    const res = await fetch("/api/src/client-signature", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ dataUrl }),
-    });
-
-    const data = await res.json();
+    const data = await uploadClientSignature(dataUrl);
+    setValue("applicant.signature", data.url);
     setValue("applicant.signature", data.url);
     console.log("Cloudinary URL:", data.url);
   };

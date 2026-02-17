@@ -1,7 +1,7 @@
 "use client";
 
 import { useEmployee } from "@/app/hooks/useEmployee";
-import { deletMember } from "@/app/services/member.service";
+import { deleteEmployee } from "@/app/features/employees/actions";
 import { Member } from "@/app/types/member";
 import { Spinner } from "@/components/ui/spinner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -28,7 +28,7 @@ const EmpTable = ({ onEdit, onRefresh, branchId }: EmpTableProps) => {
   const { data, isLoading, isError } = useEmployee(branchId);
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => deletMember(id),
+    mutationFn: (id: number) => deleteEmployee(id),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["employees", branchId],
@@ -54,7 +54,7 @@ const EmpTable = ({ onEdit, onRefresh, branchId }: EmpTableProps) => {
     );
   if (isError) return <div>Error loading employees</div>;
 
-  const employees = data?.employees ?? [];
+  const employees = data?.emp ?? [];
 
   return (
     <div className="w-full bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">

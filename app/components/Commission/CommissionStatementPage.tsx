@@ -14,8 +14,8 @@ import {
 } from "lucide-react";
 
 const CommissionStatementPage = ({ data }: { data: any }) => {
-  // Ensure we are hitting the 'res' array from your JSON
-  const commissions = data?.res || [];
+  // Ensure we handle both direct array and wrapped response
+  const commissions = Array.isArray(data) ? data : (data?.res || data?.commissions || []);
   console.log("from receipt", data);
 
   // Aggregated Totals
@@ -73,7 +73,7 @@ const CommissionStatementPage = ({ data }: { data: any }) => {
             </span>
           </div>
           <p className="text-[10px] text-gray-400 font-medium">
-            Ref: STAT-2026-00{commissions[0]?.id}
+            Ref: {commissions[0]?.refNumber || `STAT-2026-00${commissions[0]?.id}`}
           </p>
         </div>
       </div>

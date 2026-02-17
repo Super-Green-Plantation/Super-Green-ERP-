@@ -4,6 +4,6 @@ export interface Branch {
   id: number;
   name: string;
   location: string;
-  status: boolean;
+  status: string;
   members: Member[];
 }

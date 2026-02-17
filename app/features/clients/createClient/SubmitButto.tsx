@@ -4,6 +4,7 @@ import { useFormContext } from "@/app/context/FormContext";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Loader2, Rocket } from "lucide-react"; // Matching our icon set
+import { createClient } from "../actions";
 
 type Status = "success" | "error" | null;
 
@@ -18,14 +19,10 @@ export const SubmitButton = () => {
     console.log(data);
 
     try {
-      const res = await fetch("/api/src/clients", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data }),
-      });
+      const res = await createClient(data);
 
-      if (!res.ok) {
-        toast.error("Something went wrong, please try again");
+      if (!res.success) {
+        toast.error(res.error || "Something went wrong, please try again");
         return;
       }
 

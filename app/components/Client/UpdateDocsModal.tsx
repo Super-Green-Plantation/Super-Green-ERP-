@@ -9,8 +9,9 @@ import {
   CloudLightning,
   Loader2,
 } from "lucide-react";
-import { updateClient } from "@/app/services/clients.service";
+import { uploadDocument } from "@/app/features/uploads/actions";
 import { useFormContext } from "@/app/context/FormContext";
+import { toast } from "sonner";
 
 interface UpdateDocsModalProps {
   isOpen: boolean;
@@ -35,11 +36,7 @@ const UpdateDocsModal = ({ isOpen, onClose, onSave }: UpdateDocsModalProps) => {
     const formData = new FormData();
     formData.append("file", file);
 
-    const res = await fetch("/api/src/uploadDocuments", {
-      method: "POST",
-      body: formData,
-    });
-    const uploaded = await res.json();
+    const uploaded = await uploadDocument(formData);
     console.log("from model --- ", uploaded.secure_url);
 
     return uploaded.secure_url; // URL from Cloudinary
@@ -57,7 +54,8 @@ const UpdateDocsModal = ({ isOpen, onClose, onSave }: UpdateDocsModalProps) => {
         }
       }
 
-      onSave(uploadedUrls); // send URLs to parent
+      await onSave(uploadedUrls); // send URLs to parent
+      onClose();
     } catch (err) {
       console.error(err);
       alert("Failed to upload documents");
@@ -134,12 +132,23 @@ const UpdateDocsModal = ({ isOpen, onClose, onSave }: UpdateDocsModalProps) => {
                     type="file"
                     accept="image/*"
                     className="absolute inset-0 opacity-0 cursor-pointer"
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        if (file.size > 10 * 1024 * 1024) {
+                          toast.error(`${doc.label} is way too large. Max hard limit is 10MB.`);
+                          e.target.value = ""; // Clear input
+                          return;
+                        }
+                        if (file.size > 1 * 1024 * 1024) {
+                          toast.warning(`${doc.label} is slightly large (>1MB).A smaller file is recommended.`);
+                        }
+                      }
                       setFiles((prev) => ({
                         ...prev,
-                        [doc.id]: e.target.files?.[0] || null,
-                      }))
-                    }
+                        [doc.id]: file || null,
+                      }));
+                    }}
                   />
 
                   <div className="w-10 h-10 rounded-xl bg-white shadow-sm border border-slate-100 flex items-center justify-center text-slate-400 group-hover:text-blue-600 transition-colors mb-2">
@@ -149,7 +158,7 @@ const UpdateDocsModal = ({ isOpen, onClose, onSave }: UpdateDocsModalProps) => {
                     Click to upload
                   </p>
                   <p className="text-[9px] text-slate-400 mt-1">
-                    {doc.description}
+                    {doc.description} (Max 1MB)
                   </p>
 
                   {/* Preview with Remove Button */}

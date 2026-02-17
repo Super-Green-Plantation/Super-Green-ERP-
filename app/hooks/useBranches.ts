@@ -1,19 +1,15 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-
-export const fetchBranches = async () => {
-  const res = await fetch("/api/src/branches");
-
-  if (!res.ok) throw new Error("Failed to fetch branches");
-  const data = await res.json();
-  return data.res || [];
-};
+import { getBranches } from "../features/branches/actions";
 
 export const useBranches = () => {
   return useQuery({
     queryKey: ["branches"],
-    queryFn: fetchBranches,
+    queryFn: async () => {
+      const branches = await getBranches();
+      return branches || [];
+    },
     staleTime: 1000 * 60 * 3, // 3 minutes cache
     retry: 1,
     refetchOnWindowFocus: false,

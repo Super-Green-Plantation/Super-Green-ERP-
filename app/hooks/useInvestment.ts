@@ -1,12 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { getAllInvestments } from "../services/investments.service";
+import { getInvestmentDetails } from "../features/investments/actions";
 
 export const useInvestments = () => {
   return useQuery({
     queryKey: ["investments"],
     //create new function for queryFn and map data matching frontend
     queryFn: async () => {
-      const data = await getAllInvestments();
+      const data = await getInvestmentDetails();
       return data.map((inv: any) => ({
         id: inv.id,
         amount: inv.amount,

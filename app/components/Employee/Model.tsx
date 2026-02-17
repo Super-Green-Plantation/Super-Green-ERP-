@@ -13,10 +13,10 @@ import {
   Briefcase,
 } from "lucide-react";
 import { Member } from "@/app/types/member";
-import { getBranchDetails } from "@/app/services/branches.service";
+import { getBranchById } from "@/app/features/branches/actions";
 import { useParams } from "next/navigation";
 import { Branch } from "@/app/types/branch";
-import { saveMember, UpdateMembers } from "@/app/services/member.service";
+import { createEmployee, updateEmployee } from "@/app/features/employees/actions";
 import { toast } from "sonner";
 
 interface EmpModalProps {
@@ -44,7 +44,7 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
 
   useEffect(() => {
     if (!branchId) return;
-    getBranchDetails(Number(branchId)).then(setBranch);
+    getBranchById(Number(branchId)).then(setBranch);
   }, [branchId]);
 
   useEffect(() => {
@@ -67,7 +67,10 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
 
     try {
       if (mode === "add") {
-        const res = saveMember({ formData });
+        const res = await createEmployee({
+          ...formData,
+          positionId: Number(formData.positionId),
+        });
         if (!res) {
           toast.error("Failed to add employee");
           throw new Error("Failed to save emp");
@@ -77,7 +80,10 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
         onSuccess?.();
         onClose();
       } else {
-        const res = await UpdateMembers(branchId, initialData?.id, formData);
+        const res = await updateEmployee(initialData!.id, {
+          ...formData, // spread other fields
+          positionId: Number(formData.positionId),
+        });
         if (!res) {
           toast.error("Failed to update employee");
           throw new Error("Failed to update emp");

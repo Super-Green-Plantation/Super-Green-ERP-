@@ -1,5 +1,5 @@
 "use client";
-import { getBranchDetails, getBranches } from "@/app/services/branches.service";
+import { getBranchById, getBranches } from "@/app/features/branches/actions";
 import { Branch } from "@/app/types/branch";
 import React, { useEffect, useState } from "react";
 
@@ -10,14 +10,14 @@ const BranchDetails = () => {
 
   const fetchBranch = async () => {
     const braches = await getBranches();
-    setBranch(braches.res);
+    setBranch(braches as any);
   };
 
   useEffect(() => {
     if (!selectedBranchId) return;
 
     const fetchBranchDetails = async () => {
-      const data = await getBranchDetails(selectedBranchId);
+      const data = await getBranchById(selectedBranchId);
       setBranchDetails(data);
     };
 

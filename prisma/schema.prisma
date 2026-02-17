@@ -213,6 +213,7 @@ model Investment {
 
 model Commission {
   id           Int            @id @default(autoincrement())
+  refNumber    String?        @unique // Optional for now to support existing data
   investmentId Int
   memberEmpNo  String
   amount       Float

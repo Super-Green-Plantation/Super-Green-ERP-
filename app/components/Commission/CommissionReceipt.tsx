@@ -1,6 +1,6 @@
 "use client";
 
-import { setEarning } from "@/app/services/earning.service";
+
 import {
   ArrowUpRight,
   Fingerprint,

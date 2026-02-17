@@ -2,90 +2,161 @@
 
 import BranchTable from "@/app/components/Branch/BranchTable";
 import BranchModal from "@/app/components/Branch/Model";
-import { getBranches } from "@/app/services/branches.service";
-import { ChevronDown, Search } from "lucide-react";
-import { useEffect, useState } from "react";
+import { getBranches } from "@/app/features/branches/actions";
+import { generateBranchNetworkPDF } from "@/app/utils/pdfGenerator";
+import ExportButton from "@/app/components/ExportStatement";
+import { 
+  Building2, 
+  Loader2, 
+  MapPin, 
+  Plus, 
+  Search, 
+  TrendingUp 
+} from "lucide-react";
+import React, { useEffect, useState } from "react";
 
-const page = () => {
+const Page = () => {
   const [showAddModal, setShowAddModal] = useState(false);
-  const [count, setCount] = useState(0);
+  const [branches, setBranches] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const getcount = async () => {
-    const data = await getBranches();
-    setCount(data.len);
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const data = await getBranches();
+      setBranches(data);
+    } catch (error) {
+      console.error("Failed to fetch branches", error);
+    } finally {
+      setLoading(false);
+    }
   };
+
   useEffect(() => {
-    getcount();
+    fetchData();
   }, []);
 
+  const totalBranches = branches.length;
+  const activeBranches = branches.filter((b) => b.status === "Active").length;
+  // Calculate total staff across all branches
+  const totalStaff = branches.reduce((acc, b) => acc + (b.members?.length || 0), 0);
+
   return (
-    <div className="space-y-4 max-w-7xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold">Branches</h2>
-          <p className="text-sm text-gray-500">
-            Manage branches and reporting hierarchy
-          </p>
-        </div>
-
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="px-4 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-lg"
-        >
-          + Add Branch
-        </button>
-      </div>
-
-      {/* Main Panel */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-4">
-        {/* Stats + Filters Row */}
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          {/* Stats */}
-          <div className="flex gap-3">
-            <div className="min-w-30 rounded-lg border border-gray-300 px-4 py-3">
-              <p className="text-xs text-gray-500">Total</p>
-              <p className="text-lg font-semibold">{count}</p>
-            </div>
-
-            <div className="min-w-30 rounded-lg border border-gray-300 px-4 py-3">
-              <p className="text-xs text-gray-500">Active</p>
-              <p className="text-lg font-semibold text-green-600">{count}</p>
-            </div>
-
-            <div className="min-w-30 rounded-lg border border-gray-300 px-4 py-3">
-              <p className="text-xs text-gray-500">Inactive</p>
-              <p className="text-lg font-semibold text-red-500">0</p>
-            </div>
+    <div className="max-w-7xl mx-auto space-y-8 p-4 md:p-8 min-h-screen">
+      {/* --- PREMIUM HEADER --- */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-b border-slate-100 pb-8">
+        <div className="flex items-center gap-5">
+          <div className="h-16 w-16 bg-slate-900 rounded-2xl flex items-center justify-center shadow-xl shadow-slate-200">
+            <Building2 className="w-8 h-8 text-white" />
           </div>
-
-          {/* Filters */}
-          <div className="flex gap-3 w-full lg:w-auto">
-            {/* Search */}
-            <div className="relative w-full lg:w-64">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search branches..."
-                className="h-9 w-full rounded-lg border border-gray-200 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
+          <div>
+            <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tighter flex items-center gap-3">
+              Branch Network
+              <span className="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-widest rounded-full">
+                Island Wide
+              </span>
+            </h1>
+            <p className="text-xs text-slate-500 font-bold mt-2 uppercase tracking-wide flex items-center gap-2">
+              <MapPin className="w-3.5 h-3.5" />
+              Manage Operations & Reporting Hierarchy
+            </p>
           </div>
         </div>
 
-        {/* Divider */}
-        <div className="border-t border-gray-100" />
+        <div className="flex items-center gap-3">
+          <ExportButton
+            data={branches}
+            exportFn={generateBranchNetworkPDF}
+            label="Network Report"
+          />
 
-        {/* Table Placeholder */}
-        <div className="text-sm text-gray-500 py-6 text-center">
-          <BranchTable />
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 hover:bg-blue-600 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-xl shadow-slate-200 active:scale-95"
+          >
+            <Plus className="w-4 h-4" />
+            Add Branch
+          </button>
         </div>
       </div>
+
+      {/* --- STATS & SEARCH BAR --- */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Stat 1 */}
+        <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm flex items-center gap-5 relative overflow-hidden">
+          <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center z-10">
+            <Building2 className="w-6 h-6 text-blue-600" />
+          </div>
+          <div className="z-10">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              Total Branches
+            </p>
+            <p className="text-2xl font-black text-slate-900">
+              {loading ? "-" : totalBranches}
+            </p>
+          </div>
+        </div>
+
+        {/* Stat 2 */}
+        <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm flex items-center gap-5">
+           <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center">
+            <TrendingUp className="w-6 h-6 text-emerald-600" />
+          </div>
+          <div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              Active Operations
+            </p>
+            <p className="text-2xl font-black text-slate-900">
+              {loading ? "-" : activeBranches}
+            </p>
+          </div>
+        </div>
+
+        {/* Search */}
+        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 p-3 shadow-sm flex items-center">
+          <div className="relative w-full">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search branches by name or location..."
+              className="w-full bg-slate-50/50 border-none rounded-xl pl-11 pr-4 py-3 text-sm font-bold text-slate-700 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/10 transition-all outline-none"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* --- TABLE SECTION --- */}
+      <div className="">
+        {loading ? (
+             <div className="flex flex-col items-center justify-center h-64 gap-4">
+             <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
+             <p className="text-xs font-black text-slate-400 uppercase tracking-widest animate-pulse">
+               Loading Branch Network...
+             </p>
+           </div>
+        ) : (
+          <BranchTable 
+            data={branches.filter((b) => 
+              b.name?.toLowerCase().includes(searchQuery.toLowerCase()) || 
+              b.location?.toLowerCase().includes(searchQuery.toLowerCase())
+            )}
+            isLoading={loading}
+            onRefresh={fetchData}
+          />
+        )}
+      </div>
+
       {showAddModal && (
-        <BranchModal mode="add" onClose={() => setShowAddModal(false)} />
+        <BranchModal mode="add" onClose={() => {
+            setShowAddModal(false);
+            fetchData(); 
+        }} />
       )}
     </div>
   );
 };
 
-export default page;
+export default Page;

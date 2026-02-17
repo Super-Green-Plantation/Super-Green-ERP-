@@ -8,9 +8,9 @@ import Loading from "@/app/components/Loading";
 import Error from "@/app/components/Error";
 
 interface Branch {
-  id: string;
+  id: number;
   name: string;
-  members: Array<string>;
+  members: Array<any>;
 }
 
 const Page = () => {
@@ -38,7 +38,7 @@ const Page = () => {
 
       {/* Branch Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {branches.map((branch: Branch) => (
+        {branches?.map((branch: Branch) => (
           <Link
             key={branch.id}
             href={`/features/branches/employees/${branch.id}`}

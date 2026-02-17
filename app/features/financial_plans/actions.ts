@@ -56,3 +56,15 @@ export async function deleteFinancialPlan(id: number) {
     return { success: false };
   }
 }
+
+export async function getFinancialPlanById(id: number) {
+  try {
+    const plan = await prisma.financialPlan.findUnique({
+      where: { id },
+    });
+    return plan;
+  } catch (error) {
+    console.error("Error fetching plan:", error);
+    return null;
+  }
+}

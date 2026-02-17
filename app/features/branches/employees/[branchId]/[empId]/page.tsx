@@ -2,8 +2,8 @@
 
 import Back from "@/app/components/Back";
 import { DetailItem } from "@/app/components/DetailItem";
-import { getAllMemberCommission } from "@/app/services/commission.service";
-import { getMemberDetails } from "@/app/services/member.service";
+import { getMemberDetails } from "@/app/features/employees/actions";
+import { getEmployeeCommissions } from "@/app/features/commissions/actions";
 import {
   BadgeInfo,
   Briefcase,
@@ -22,18 +22,18 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import CommissionStatementPage from "@/app/components/Commission/CommissionStatementPage";
-import { generateEmployeeCommissionPDF } from "@/app/api/src/utils/memberPdf";
+import { generateEmployeeCommissionPDF } from "@/app/utils/pdfGenerator";
 import ExportButton from "@/app/components/ExportStatement";
 
 interface PersonalCommissionTiers {
   id: number;
   minAmount: number;
-  maxAmount: number;
-  rate: number;
+  maxAmount: number | null;
+  rate: any;
 }
 interface Orc {
   id: number;
-  rate: number;
+  rate: any;
 }
 
 interface Position {
@@ -41,7 +41,7 @@ interface Position {
   title: string;
   baseSalary: number;
   rank: number;
-  orc: Orc;
+  orc: Orc | null;
   personalCommissionTiers: PersonalCommissionTiers[];
 }
 interface Branch {
@@ -53,15 +53,15 @@ interface Branch {
 interface Employee {
   id: number;
   name: string;
-  email: string;
-  phone: string;
+  email: string | null;
+  phone: string | null;
   empNo: string;
   totalCommission: number;
   branchId: number;
   positionId: number;
-  managerId: number | null;
-  createdAt: string;
-  updatedAt: string;
+
+  createdAt: string | Date;
+  updatedAt: string | Date;
   position: Position | null;
   branch: Branch | null;
 }
@@ -84,7 +84,7 @@ const EmployeeDetailsPage = () => {
     const fetchMember = async () => {
       setLoading(true);
       try {
-        const data = await getMemberDetails(Number(empId), Number(branchId));
+        const data = await getMemberDetails(Number(empId));
         setEmployee(data.res);
       } catch (err) {
         console.error("Failed to fetch employee", err);
@@ -97,8 +97,8 @@ const EmployeeDetailsPage = () => {
 
   useEffect(() => {
     const fetchAllCommission = async () => {
-      const res = await getAllMemberCommission(Number(empId));
-      setAllCommission(res);
+      const res = await getEmployeeCommissions(Number(empId));
+      setAllCommission(res.commissions as any);
     };
     fetchAllCommission();
   }, [empId]);
@@ -268,7 +268,7 @@ const EmployeeDetailsPage = () => {
                     Personal Comm.
                   </span>
                   <span className="font-black">
-                    {employee.position?.personalCommissionTiers[0]?.rate}%
+                    {Number(employee.position?.personalCommissionTiers[0]?.rate)}%
                   </span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
@@ -276,7 +276,7 @@ const EmployeeDetailsPage = () => {
                     ORC Overriding
                   </span>
                   <span className="font-black">
-                    {employee.position?.orc?.rate}%
+                    {Number(employee.position?.orc?.rate)}%
                   </span>
                 </div>
               </div>

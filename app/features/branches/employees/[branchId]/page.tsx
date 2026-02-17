@@ -13,10 +13,10 @@ import {
 import Back from "@/app/components/Back";
 import EmpTable from "@/app/components/Employee/EmpTable";
 import EmpModal from "@/app/components/Employee/Model";
-import { getBranchDetails } from "@/app/services/branches.service";
-import { getMembers } from "@/app/services/member.service";
+import { getBranchById } from "@/app/features/branches/actions";
+import { getEmployeesByBranch } from "@/app/features/employees/actions";
 import { Member } from "@/app/types/member";
-import { generateBranchEmployeePDF } from "@/app/api/src/utils/allMembersPdf"; // Adjust path
+import { generateBranchEmployeePDF } from "@/app/utils/pdfGenerator";
 import ExportButton from "@/app/components/ExportStatement";
 
 const Page = () => {
@@ -33,11 +33,11 @@ const Page = () => {
     if (!branchId) return;
     setLoading(true);
     try {
-      const branchRes = await getBranchDetails(Number(branchId));
-      const memberRes = await getMembers(Number(branchId));
+      const branchRes = await getBranchById(Number(branchId));
+      const memberRes = await getEmployeesByBranch(Number(branchId));
 
       setBranchData(branchRes);
-      setEmployees(memberRes.employees);
+      setEmployees(memberRes.emp);
     } catch (error) {
       console.error("Failed to fetch data", error);
     } finally {

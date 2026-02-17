@@ -12,6 +12,7 @@ import {
   Eye,
 } from "lucide-react";
 import { useFormContext } from "@/app/context/FormContext";
+import { getCloudinarySignature } from "../../uploads/actions";
 
 interface FileUploadState {
   [key: string]: File | null;
@@ -160,21 +161,20 @@ const DocumentUploadSection = () => {
   };
 
   const uploadToCloudinary = async (file: File) => {
-    const sigRes = await fetch("/api/src/cloudinary", { method: "POST" });
-    const sig = await sigRes.json();
+    const sig = await getCloudinarySignature();
 
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("api_key", sig.apiKey);
-    formData.append("timestamp", String(sig.timestamp));
-    formData.append("signature", sig.signature);
+    formData.append("api_key", String(sig.apiKey || ""));
+    formData.append("timestamp", String(sig.timestamp || ""));
+    formData.append("signature", String(sig.signature || ""));
     formData.append("folder", "compliance-docs");
 
     const isPDF = file.type === "application/pdf";
 
-    const url = `https://api.cloudinary.com/v1_1/${sig.cloudName}/${
-      isPDF ? "raw" : "image"
-    }/upload`;
+    const url = `https://api.cloudinary.com/v1_1/${String(
+      sig.cloudName || ""
+    )}/${isPDF ? "raw" : "image"}/upload`;
 
     const res = await fetch(url, { method: "POST", body: formData });
     if (!res.ok) throw new Error("Upload failed");

@@ -1,29 +1,28 @@
 "use client";
 
-import { ExternalLink, Link, MapPin, Pen, Trash2 } from "lucide-react";
-import { useState } from "react";
-import { useBranches } from "../../hooks/useBranches";
-import BranchModal from "./Model";
+import { deleteBranch } from "@/app/features/branches/actions";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { deleteBranch } from "@/app/api/src/utils/mutation";
+import { MapPin, Pen, Trash2 } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
-import ExportButton from "../ExportStatement";
-import { generateBranchNetworkPDF } from "@/app/api/src/utils/branchNetworkPdf";
+import BranchModal from "./Model";
 
 interface Branch {
   id: number;
   name: string;
   location: string;
-  members: string[];
+  members: any[];
 }
 
-const BranchTable = () => {
+interface BranchTableProps {
+  data: Branch[];
+  isLoading?: boolean;
+  onRefresh?: () => void;
+}
+
+const BranchTable = ({ data, isLoading, onRefresh }: BranchTableProps) => {
   const [updateModel, setUpdateModel] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
-
-  const { data: branches, isLoading, error } = useBranches();
-
-  console.log(branches);
 
   const queryClient = useQueryClient();
 
@@ -32,6 +31,7 @@ const BranchTable = () => {
     onSuccess: () => {
       toast.success("Branch Deleted");
       queryClient.invalidateQueries({ queryKey: ["branches"] });
+      if (onRefresh) onRefresh();
     },
     onError: () => {
       toast.error("Something went wrong, try again!");
@@ -51,21 +51,13 @@ const BranchTable = () => {
   // Styled Loading State
   if (isLoading) {
     return (
-      <div className="flex h-40 items-center justify-center rounded-xl border border-gray-200 bg-white">
+      <div className="flex h-40 items-center justify-center rounded-xl border border-blue-100 bg-blue-50/50">
         <div className="flex flex-col items-center gap-2">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
-          <p className="text-sm font-medium text-gray-500">
+          <p className="text-sm font-black text-blue-400 uppercase tracking-widest animate-pulse">
             Loading branches...
           </p>
         </div>
-      </div>
-    );
-  }
-  // Styled Error State
-  if (error) {
-    return (
-      <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-center">
-        <p className="font-semibold text-red-600">Error loading data</p>
       </div>
     );
   }
@@ -75,12 +67,7 @@ const BranchTable = () => {
       <div className="flex justify-end m-3 items-center mb-6">
       
 
-        <ExportButton
-          label="Download Network Report"
-          variant="white"
-          data={branches}
-          exportFn={generateBranchNetworkPDF}
-        />
+
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
@@ -104,7 +91,7 @@ const BranchTable = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {branches?.map((branch: Branch) => (
+            {data?.map((branch: Branch) => (
               <tr
                 key={branch.id}
                 className="hover:bg-slate-50/80 transition-colors group"
@@ -179,7 +166,7 @@ const BranchTable = () => {
           </tbody>
         </table>
 
-        {(!branches || branches.length === 0) && (
+        {(!data || data.length === 0) && (
           <div className="py-20 flex flex-col items-center justify-center">
             <div className="p-4 bg-slate-50 rounded-full text-slate-200 mb-4">
               <MapPin size={32} />
@@ -192,7 +179,7 @@ const BranchTable = () => {
       </div>
 
       {/* Empty State Handling */}
-      {branches?.length === 0 && (
+      {data?.length === 0 && (
         <div className="p-8 text-center text-gray-500">No branches found.</div>
       )}
 

@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { addBranch, updateBranch } from "@/app/api/src/utils/mutation";
+import { createBranch, updateBranch } from "@/app/features/branches/actions";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "sonner";
 
@@ -39,7 +39,7 @@ const BranchModal = ({
   const mutation = useMutation({
     mutationFn: (data: BranchData) =>
       mode === "add"
-        ? addBranch({ name: data.name, location: data.location })
+        ? createBranch({ name: data.name, location: data.location })
         : updateBranch(data.id!, { name: data.name, location: data.location }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["branches"] });

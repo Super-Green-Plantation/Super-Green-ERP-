@@ -1,34 +1,33 @@
 "use client";
 
-import { getBranchDetails, getBranches } from "@/app/services/branches.service";
+import { getBranchById, getBranches } from "@/app/features/branches/actions";
 import {
-  getClientDetails,
+  getClientById,
   getClientsByBranch,
-} from "@/app/services/clients.service";
+} from "@/app/features/clients/actions";
 import {
-  getAllUpperMembers,
-  getEligibleMembers,
-  handleOrcCommission
-} from "@/app/services/member.service";
-import { getPlansByClient } from "@/app/services/plans.service";
-
+  getEmployeesByBranch,
+} from "@/app/features/employees/actions";
+import { getEligibleCommissions, processCommissions } from "@/app/features/commissions/actions";
+import { getPlansByClient, updateAdvisorId } from "@/app/features/investments/actions";
+import { createProfit } from "@/app/features/profit/actions";
 import { Branch } from "@/app/types/branch";
 import { Client } from "@/app/types/client";
 import { FinancialPlan } from "@/app/types/FinancialPlan";
 import { Member } from "@/app/types/member";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 import CommissionReceipt from "@/app/components/Commission/CommissionReceipt";
-import { updateAdvisorId } from "@/app/services/investments.service";
 import { ArrowLeft } from "lucide-react";
-import { useRouter } from "next/navigation";
 import BranchStaffPanel from "./components/BranchStaffPanel";
 import ClientDetailsCard from "./components/ClientDetailsCard";
 import ClientSelector from "./components/ClientSelector";
 import MemberList from "./components/MemberList";
 import PlanCard from "./components/PlanCard";
-import { setEarning } from "@/app/services/earning.service";
+import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 import Back from "@/app/components/Back";
 
 type CommissionReceipt = {
@@ -78,7 +77,8 @@ const Page = () => {
   useEffect(() => {
     const loadBranches = async () => {
       const data = await getBranches();
-      setBranches(data.res);
+      // Adjust if the action returns { branches } or just branches
+      setBranches(data as any);
     };
     loadBranches();
   }, []);
@@ -92,8 +92,8 @@ const Page = () => {
     }
 
     const loadBranch = async () => {
-      const data = await getBranchDetails(selectedBranchId);
-      setBranch(data);
+      const data = await getBranchById(selectedBranchId);
+      setBranch(data as any);
     };
 
     loadBranch();
@@ -108,7 +108,7 @@ const Page = () => {
 
     const loadClients = async () => {
       const data = await getClientsByBranch(selectedBranchId);
-      setClients(data.clients);
+      setClients(data.clients as any);
     };
 
     loadClients();
@@ -123,8 +123,8 @@ const Page = () => {
     }
 
     const loadClient = async () => {
-      const data = await getClientDetails(selectedClientId);
-      setClient(data);
+      const data = await getClientById(selectedClientId);
+      setClient(data as any);
     };
 
     loadClient();
@@ -136,7 +136,7 @@ const Page = () => {
 
     const loadPlans = async () => {
       const data = await getPlansByClient(selectedClientId);
-      setPlans(data);
+      setPlans(data as any);
     };
 
     loadPlans();
@@ -152,9 +152,8 @@ const Page = () => {
 
       try {
         setLoadingEligible(true);
-        if (!selectedEmpNo || !selectedBranchId) return;
-        const data = await getEligibleMembers(selectedEmpNo, selectedBranchId);
-        setEligibleMembers(data.upperMember);
+        const data = await getEligibleCommissions(selectedEmpNo, selectedBranchId);
+        setEligibleMembers(data.upperMember as any);
       } catch (error) {
         console.error(error);
         setEligibleMembers([]);
@@ -169,28 +168,44 @@ const Page = () => {
   /* ---------------- Decide members to display ---------------- */
   const displayedMembers: Member[] | undefined = selectedEmpNo
     ? eligibleMembers
-    : branch?.members;
+    : branch?.members as any;
 
   const uniquePlans = plans.filter(
-    (plan, index, self) => index === self.findIndex((p) => p.id === plan.id),
+    (plan, index, self) => plan && index === self.findIndex((p) => p?.id === plan.id),
   );
 
+  const [processing, setProcessing] = useState(false);
+
   const handleProcess = async () => {
-    if (!selectedEmpNo || !selectedInvestmentId || !selectedBranchId) return;
+    if (!selectedEmpNo || !selectedInvestmentId || !selectedBranchId) {
+      toast.error("Please select all required fields (Branch, Staff, Investment)");
+      return;
+    }
 
+    setProcessing(true);
     try {
-      const result = await handleOrcCommission(
-        selectedInvestmentId,
-        selectedEmpNo,
-        selectedBranchId,
-      );
+      const result = await processCommissions({
+        investmentId: selectedInvestmentId,
+        empNo: selectedEmpNo,
+        branchId: selectedBranchId,
+      });
 
-      setCommissionDetails(result);
-      setEarning(commissionDetails)
-
-      console.log("Commission processed:", result);
+      if (result.success) {
+        setCommissionDetails(result.receipt as any);
+        await createProfit(result.receipt as any);
+        if (result.receipt.alreadyProcessed) {
+          toast.warning("Commission already processed.");
+        } else {
+          toast.success("Commission processed successfully!");
+        }
+      } else {
+        toast.error(result.error?.message || "Failed to process commission");
+      }
     } catch (err) {
       console.error(err);
+      toast.error("An unexpected error occurred");
+    } finally {
+      setProcessing(false);
     }
   };
 
@@ -198,7 +213,7 @@ const Page = () => {
     const fetchUpperMembers = async () => {
       if (!selectedEmpNo || !selectedBranchId) return;
 
-      const members = await getAllUpperMembers(
+      const members = await getEligibleCommissions(
         selectedEmpNo,
         Number(selectedBranchId),
       );
@@ -295,23 +310,32 @@ const Page = () => {
                   <button
                     className="group relative w-full overflow-hidden rounded-2xl bg-blue-600 px-8 py-4 text-white transition-all hover:bg-blue-700 hover:shadow-xl active:scale-[0.98] disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
                     onClick={handleProcess}
-                    disabled={!selectedEmpNo || !selectedInvestmentId}
+                    disabled={!selectedEmpNo || !selectedInvestmentId || processing}
                   >
                     <div className="relative z-10 flex items-center justify-center gap-3 font-black uppercase tracking-widest">
-                      <svg
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={3}
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
-                      Process Commission
+                      {processing ? (
+                        <>
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={3}
+                              d="M9 5l7 7-7 7"
+                            />
+                          </svg>
+                          Process Commission
+                        </>
+                      )}
                     </div>
                     {/* Glossy Overlay */}
                     <div className="absolute inset-0 z-0 bg-linear-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
