@@ -93,9 +93,11 @@ const InvestmentTable = ({ investments }: any) => {
                         <div className="text-xs font-bold text-slate-700">
                           {item.advisor.name}
                         </div>
-                        <div className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded font-bold inline-block">
-                          {item.advisor.position.title}
-                        </div>
+                        {item.advisor.position?.title && (
+                          <div className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded font-bold inline-block">
+                            {item.advisor.position.title}
+                          </div>
+                        )}
                       </div>
                     </div>
                   ) : (
