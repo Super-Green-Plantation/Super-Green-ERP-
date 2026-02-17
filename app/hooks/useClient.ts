@@ -1,8 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { getClientDetails } from "../services/clients.service";
 
-
-
 const mapClientToFormData = (client: any) => ({
   applicant: {
     fullName: client.fullName || "",
@@ -29,6 +27,7 @@ const mapClientToFormData = (client: any) => ({
   },
   investment: {
     planId: client.investments?.[0]?.planId?.toString() || "N/A",
+    refNumber:client.investments?.[0]?.refNumber
   },
   beneficiary: client.beneficiary
     ? {
@@ -50,7 +49,6 @@ const mapClientToFormData = (client: any) => ({
     : {},
 });
 
-
 export const useClient = (clientId: number) => {
   return useQuery({
     queryKey: ["client", clientId],
@@ -59,6 +57,8 @@ export const useClient = (clientId: number) => {
     staleTime: 1000 * 60,
     gcTime: 1000 * 60 * 5,
     enabled: !!clientId,
+    retry: 1,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
   });
 };
-

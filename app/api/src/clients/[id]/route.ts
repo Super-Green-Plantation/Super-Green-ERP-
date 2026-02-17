@@ -50,9 +50,13 @@ export async function PUT(
       drivingLicense: data.formData.applicant.drivingLicense || null,
       passportNo: data.formData.applicant.passportNo || null,
       phoneLand: data.formData.applicant.phoneLand || null,
+      idFront: data.formData.applicant.idFront || null,
+      idBack: data.formData.applicant.idBack || null,
+      proposal: data.formData.applicant.proposal || null,
+      agreement: data.formData.applicant.agreement || null,
       investmentAmount:
         Number(data.formData.applicant.investmentAmount) || undefined,
-      dateOfBirth: data.formData.applicant.dateOfBirth || null,
+      dateOfBirth: new Date(data.formData.applicant.dateOfBirth) || undefined,
       branchId: Number(data.formData.applicant.branchId) || undefined,
     },
   });

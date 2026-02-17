@@ -46,7 +46,12 @@ const EmpTable = ({ onEdit, onRefresh, branchId }: EmpTableProps) => {
     deleteMutation.mutate(id);
   };
 
-  if (isLoading) return <Spinner />;
+  if (isLoading)
+    return (
+      <div className="flex justify-center items-center my-20">
+        <Spinner />
+      </div>
+    );
   if (isError) return <div>Error loading employees</div>;
 
   const employees = data?.employees ?? [];

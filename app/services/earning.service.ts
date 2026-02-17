@@ -1,7 +1,6 @@
 type Commission = { amount: number };
 
 export const setEarning = async (commissions: any) => {
-  console.log("servicde ", commissions.investment);
   const total = commissions.commissions.reduce(
     (acc: number, curr: Commission) => acc + curr.amount,
     0,

@@ -19,5 +19,8 @@ export const useInvestments = () => {
     },
 
     staleTime: 1000 * 60 * 3,
+    retry: 1,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
   });
 };

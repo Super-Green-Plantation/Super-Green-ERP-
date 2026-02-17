@@ -35,7 +35,7 @@ export async function GET(
       include: { branch: true },
     });
 
-    return NextResponse.json({ client, member, plan });
+    return NextResponse.json({ client, member, plan, investment });
   } catch (error) {
     console.log(error);
     return NextResponse.json(error);

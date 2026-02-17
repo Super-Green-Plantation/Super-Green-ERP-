@@ -11,8 +11,9 @@ export const getClients = async () => {
 
 export const getClientDetails = async (id: number) => {
   const res = await fetch(`/api/src/clients/${id}`);
+
   if (!res.ok) {
-    throw new Error("Failed to fetch client details");
+    throw new Error("Network error");
   }
 
   return res.json();
@@ -26,26 +27,22 @@ export const getClientsByBranch = async (branchId: number) => {
   return res.json();
 };
 
-export const deleteClient = async (nic: any) => {
-  //client/[id]
-  console.log(nic);
+export const deleteClient = async (nic: string) => {
   const res = await fetch(`/api/src/clients/${nic}`, {
     method: "DELETE",
   });
+
   if (!res.ok) {
-    toast.error("Something went wrong, try again !");
-    return null;
-  } else {
-    toast.success("Client deleted");
+    throw new Error("Failed to delete client");
   }
 
   return res.json();
 };
 
-export const updateClient = async (formData: any, id:number) => {
+export const updateClient = async (formData: any, id: number) => {
   console.log("from service --- ", formData);
   console.log("id from service", id);
-  
+
   // const nic = formData.applicant.nic;
   const res = await fetch(`/api/src/clients/${id}`, {
     method: "PUT",

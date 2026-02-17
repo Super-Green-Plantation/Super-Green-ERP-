@@ -16,16 +16,25 @@ import {
   Mail,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { getInvestmentById } from "@/app/services/investments.service";
+import {
+  deleteInvestment,
+  getInvestmentById,
+} from "@/app/services/investments.service";
 import { DetailItem } from "@/app/components/DetailItem";
+import { generateInvestmentPDF } from "@/app/api/src/utils/commissionPdf";
+import Loading from "@/app/components/Loading";
+import Error from "@/app/components/Error";
+import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 const InvestmentDetails = () => {
   const router = useRouter();
   const params = useParams();
-  const { id } = params;
+  const id = Number(params?.id);
 
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const fetchInvestment = async () => {
@@ -43,62 +52,86 @@ const InvestmentDetails = () => {
     if (id) fetchInvestment();
   }, [id]);
 
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[80vh] gap-4">
-        <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
-        <p className="text-slate-500 font-bold tracking-tighter">
-          Syncing Financial Data...
-        </p>
-      </div>
-    );
-  }
+  const handleDelete = async () => {
+    try {
+      await deleteInvestment(id);
+      toast.success("Investment deleted successfully");
+      await queryClient.invalidateQueries({ queryKey: ["investments"] });
 
-  if (!data)
-    return (
-      <div className="p-10 text-center text-red-500 font-bold">
-        Investment record not found.
-      </div>
-    );
+      router.push("/features/commissions");
+    } catch (error: any) {
+      console.error("Error:", error.message);
+
+      toast.error(error.message || "Something went wrong!");
+    }
+  };
+
+  if (loading) return <Loading />;
+  if (!data) return <Error />;
 
   const { client, member, plan } = data;
   const activeInvestment = client?.investments?.[0];
 
-  const cardBase = "bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden";
-  const labelStyle = "text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1";
+  const cardBase =
+    "bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden";
+  const labelStyle =
+    "text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1";
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 min-h-screen p-4 md:p-8">
       {/* Header Actions */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-6">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-b border-slate-100 pb-8 mb-4">
+        {/* Left Side: Back Button & Title */}
+        <div className="flex items-center gap-5">
           <button
             onClick={() => router.back()}
-            className="p-2.5 bg-white hover:bg-slate-50 rounded-xl border border-slate-200 transition-all active:scale-95 shadow-sm"
+            className="p-3 bg-white hover:bg-slate-50 rounded-2xl border border-slate-200 transition-all active:scale-95 shadow-sm group"
+            title="Go Back"
           >
-            <ArrowLeft className="w-5 h-5 text-slate-600" />
+            <ArrowLeft className="w-5 h-5 text-slate-500 group-hover:text-slate-900 transition-colors" />
           </button>
-          <div>
-            <h1 className="text-xl md:text-2xl font-black text-slate-900 flex items-center gap-2">
-              Investment Receipt 
-              <span className="text-slate-400 font-bold text-lg md:text-xl">
+
+          <div className="space-y-1">
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tighter">
+                Investment Receipt
+              </h1>
+              <span className="px-3 py-1 bg-slate-100 text-slate-500 font-bold text-sm md:text-base rounded-full border border-slate-200/50">
                 #{activeInvestment?.id || id}
               </span>
-            </h1>
-            <div className="flex items-center gap-2 text-xs text-slate-500 font-bold uppercase tracking-tight">
-               <Calendar size={12} />
-               Issued: {new Date(client?.createdAt).toLocaleDateString()}
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-1.5 text-[10px] md:text-xs text-slate-400 font-black uppercase tracking-widest">
+                <Calendar size={14} className="text-blue-500" />
+                Issued: {new Date(client?.createdAt).toLocaleDateString()}
+              </div>
+              <div className="h-1 w-1 rounded-full bg-slate-300 hidden md:block" />
+              <div className="hidden md:flex items-center gap-1.5 text-[10px] text-slate-400 font-black uppercase tracking-widest">
+                <ShieldCheck size={14} className="text-emerald-500" />
+                Verified Record
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
+        {/* Right Side: Action Button */}
+        <div className="flex items-center">
+          <button
+            onClick={() => generateInvestmentPDF(data)}
+            className="w-full sm:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-slate-900 hover:bg-blue-600 text-white text-[11px] font-black uppercase tracking-[0.15em] rounded-2xl transition-all shadow-xl shadow-slate-200 hover:shadow-blue-200 active:scale-[0.98] group"
+          >
+            <Mail className="w-4 h-4 text-blue-400 group-hover:text-white transition-colors" />
+            <span>Download Statement</span>
+          </button>
+        </div>
+      </div>
       {/* Main Stats Row */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* The Plan Card */}
         <section className="xl:col-span-2 bg-slate-900 rounded-[2rem] p-6 md:p-10 text-white relative overflow-hidden shadow-2xl border border-white/5">
           <TrendingUp className="absolute -right-6 -top-6 w-48 h-48 text-white/5 rotate-12 pointer-events-none" />
-          
+
           <div className="relative z-10">
             <div className="flex items-center gap-2 mb-8 md:mb-12">
               <div className="p-2 bg-blue-500/20 rounded-lg border border-blue-500/30">
@@ -115,7 +148,9 @@ const InvestmentDetails = () => {
                   Total Investment Principal
                 </p>
                 <h2 className="text-4xl md:text-6xl font-black tracking-tighter flex items-baseline gap-2">
-                  <span className="text-xl md:text-2xl text-slate-500 font-bold uppercase">Rs.</span>
+                  <span className="text-xl md:text-2xl text-slate-500 font-bold uppercase">
+                    Rs.
+                  </span>
                   {client.investmentAmount?.toLocaleString()}
                 </h2>
               </div>
@@ -136,7 +171,9 @@ const InvestmentDetails = () => {
                   </p>
                   <p className="text-2xl md:text-3xl font-black">
                     {plan?.duration}
-                    <span className="text-xs font-bold text-slate-400 ml-1 uppercase">Mo</span>
+                    <span className="text-xs font-bold text-slate-400 ml-1 uppercase">
+                      Mo
+                    </span>
                   </p>
                 </div>
               </div>
@@ -150,37 +187,36 @@ const InvestmentDetails = () => {
             <div>
               <p className={labelStyle}>Maturity Status</p>
               <div className="mt-2 flex items-center gap-3">
-                <div className={`h-3 w-3 rounded-full animate-pulse ${client.status === "Active" ? "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.5)]" : "bg-rose-500"}`} />
+                <div
+                  className={`h-3 w-3 rounded-full animate-pulse ${client.status === "Active" ? "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.5)]" : "bg-rose-500"}`}
+                />
                 <span className="text-xl font-black text-slate-800 uppercase tracking-tighter">
                   {client.status}
                 </span>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-2 lg:grid-cols-1 gap-6">
-                <div>
-                  <p className={labelStyle}>Frequency</p>
-                  <p className="text-lg font-black text-slate-900 uppercase">
-                    {activeInvestment?.returnFrequency || "Monthly"}
-                  </p>
-                </div>
-                <div>
-                  <p className={labelStyle}>Est. Interest</p>
-                  <p className="text-2xl font-black text-slate-900 tracking-tight">
-                    <span className="text-xs font-bold text-slate-400 mr-1 uppercase">Rs.</span>
-                    {(
-                      ((client.investmentAmount * plan.rate) / 100) *
-                      (plan.duration / 12)
-                    ).toLocaleString()}
-                  </p>
-                </div>
+              <div>
+                <p className={labelStyle}>Frequency</p>
+                <p className="text-lg font-black text-slate-900 uppercase">
+                  {activeInvestment?.returnFrequency || "Monthly"}
+                </p>
+              </div>
+              <div>
+                <p className={labelStyle}>Est. Interest</p>
+                <p className="text-2xl font-black text-slate-900 tracking-tight">
+                  <span className="text-xs font-bold text-slate-400 mr-1 uppercase">
+                    Rs.
+                  </span>
+                  {(
+                    ((client.investmentAmount * plan.rate) / 100) *
+                    (plan.duration / 12)
+                  ).toLocaleString()}
+                </p>
+              </div>
             </div>
           </div>
-          
-          <button className="w-full mt-8 py-4 bg-slate-50 hover:bg-slate-900 hover:text-white rounded-2xl text-[11px] font-black uppercase tracking-widest transition-all border border-slate-100 flex items-center justify-center gap-2 group">
-            Transaction Logs 
-            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </button>
         </section>
       </div>
 
@@ -200,10 +236,7 @@ const InvestmentDetails = () => {
             <DetailItem label="Primary Email" value={client.email || "N/A"} />
             <DetailItem label="Contact Number" value={client.phoneMobile} />
             <div className="sm:col-span-2 pt-2 border-t border-slate-50">
-              <DetailItem
-                label="Registered Address"
-                value={client.address}
-              />
+              <DetailItem label="Registered Address" value={client.address} />
             </div>
           </div>
         </section>
@@ -218,7 +251,7 @@ const InvestmentDetails = () => {
           </div>
           <div className="p-6">
             <div className="flex items-center gap-5 mb-8">
-              <div className="w-16 h-16 rounded-[1.25rem] bg-slate-900 flex items-center justify-center text-white text-2xl font-black shadow-xl shadow-slate-200 uppercase">
+              <div className="w-16 h-16 rounded-4xl bg-slate-900 flex items-center justify-center text-white text-2xl font-black shadow-xl shadow-slate-200 uppercase">
                 {member.name.charAt(0)}
               </div>
               <div>
@@ -230,12 +263,9 @@ const InvestmentDetails = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 border-t border-slate-100 pt-6">
-              <DetailItem
-                label="Operating Branch"
-                value={member.branch.name}
-              />
+              <DetailItem label="Operating Branch" value={member.branch.name} />
               <DetailItem
                 label="Base Location"
                 value={member.branch.location}
@@ -252,10 +282,14 @@ const InvestmentDetails = () => {
             Account Termination
           </h4>
           <p className="text-xs text-rose-600 font-bold mt-1">
-            Deactivating this investment will stop all recurring commission cycles. This action is logged.
+            Deactivating this investment will stop all recurring commission
+            cycles. This action is logged.
           </p>
         </div>
-        <button className="w-full md:w-auto px-8 py-3 bg-rose-600 text-white rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-200 flex items-center justify-center gap-2 active:scale-95">
+        <button
+          onClick={handleDelete}
+          className="w-full md:w-auto px-8 py-3 bg-rose-600 text-white rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-200 flex items-center justify-center gap-2 active:scale-95"
+        >
           <Trash2 className="w-4 h-4" /> Void Investment
         </button>
       </div>

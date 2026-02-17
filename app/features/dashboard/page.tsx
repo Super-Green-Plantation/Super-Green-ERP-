@@ -4,27 +4,17 @@ import InvestmentTable from "@/app/components/InvestmentTable";
 import Loading from "@/app/components/Loading";
 import { StatCard } from "@/app/components/StatCard";
 import { useDashboard } from "@/app/hooks/useDashboard";
-import { getStats } from "@/app/services/dashboard.service";
 import { Briefcase, MapPin, TrendingUp, Users } from "lucide-react";
-import React, { useEffect, useState } from "react";
-
-// Define an interface for the incoming data structure
-interface DashboardStats {
-  totProfit: { _sum: { totalProfit: number } };
-  totCommissionPayout: { _sum: { commissionPayout: number } };
-  investmentSum: { _sum: { amount: number } };
-  totClients: number;
-  totMembers: number;
-  totBranchs: number;
-}
 
 const DashboardPage = () => {
-  const {data, isLoading, isError}= useDashboard()
-  
-  if (isLoading) return <Loading/>
-   
-  if (isError) return <Error/>
+  const { data, isLoading, isError } = useDashboard();
 
+  if (isLoading) return <Loading />;
+
+  if (isError) return <Error />;
+  if (!data) {
+    return null;
+  }
   return (
     <div className="max-w-7xl mx-auto pb-20">
       {/* 1. Main Page Header */}
@@ -45,8 +35,8 @@ const DashboardPage = () => {
         {/* Investment Card */}
         <StatCard
           label="Investment Sum"
-          value={`Rs. ${data.investmentSum._sum.amount?.toLocaleString()}`}
-          subText={`Profit: Rs. ${data.totProfit._sum.totalProfit?.toLocaleString()}`}
+          value={`Rs. ${data.investmentSum._sum.amount?.toLocaleString() || 0}`}
+          subText={`Profit: Rs. ${data.totProfit._sum.totalProfit?.toLocaleString() || 0}`}
           icon={<TrendingUp size={20} />}
           color="emerald"
         />
@@ -64,7 +54,7 @@ const DashboardPage = () => {
         <StatCard
           label="Staff Count"
           value={data.totMembers.toString()}
-          subText={`Payout: Rs. ${data.totCommissionPayout._sum.commissionPayout?.toLocaleString()}`}
+          subText={`Payout: Rs. ${data.totCommissionPayout._sum.commissionPayout?.toLocaleString() || 0}`}
           icon={<Briefcase size={20} />}
           color="purple"
         />
@@ -112,7 +102,5 @@ const DashboardPage = () => {
     </div>
   );
 };
-
-
 
 export default DashboardPage;

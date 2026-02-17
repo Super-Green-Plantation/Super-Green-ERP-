@@ -1,20 +1,23 @@
 "use client";
 
+import { generateAgreementPDF } from "@/app/api/src/utils/client";
 import Back from "@/app/components/Back";
 import UpdateDocsModal from "@/app/components/Client/UpdateDocsModal";
 import UpdateClientModal from "@/app/components/Client/UpdateModel";
+import ClientInvestmentTable from "@/app/components/ClientInvestmentTable";
 import { DetailItem } from "@/app/components/DetailItem";
 import { DocPreview } from "@/app/components/DocPreview";
 import Error from "@/app/components/Error";
 import Loading from "@/app/components/Loading";
 import { useClient } from "@/app/hooks/useClient";
-import { deleteClient, getClientDetails } from "@/app/services/clients.service";
+import { deleteClient } from "@/app/services/clients.service";
+import { updateClientDocuments } from "@/app/services/documents.service";
 import { getPlanDetails } from "@/app/services/plans.service";
-import { FormData } from "@/app/types/fromData";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Briefcase,
   Calendar,
+  Download,
   HeartHandshake,
   Mail,
   MapPin,
@@ -25,11 +28,9 @@ import {
   TrendingUp,
   User,
 } from "lucide-react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-
-
 
 const ApplicationViewPage = () => {
   const queryClient = useQueryClient();
@@ -37,8 +38,11 @@ const ApplicationViewPage = () => {
   const [plan, setPlan] = useState<any>();
   const [showUpdateModel, setShowUpdateModel] = useState(false);
   const [showDocUpdateModel, setDocShowUpdateModel] = useState(false);
+  const router = useRouter();
 
   const { data: formData, isLoading, isError } = useClient(Number(id));
+
+  console.log(formData);
 
   useEffect(() => {
     if (!formData?.investment.planId) return;
@@ -53,13 +57,39 @@ const ApplicationViewPage = () => {
     fetchPlan();
   }, [formData]);
 
-  if (!formData) return <p className="text-center mt-8"><Loading/></p>;
+  const handleUpdate = async (updatedFiles: Record<string, string | null>) => {
+    if (!updatedFiles) return;
 
-  const handleUpdate = async (updatedData: any) => {
-    console.log(updatedData);
-    queryClient.invalidateQueries({
-      queryKey: ["client", Number(id)],
-    });
+    // Merge the uploaded URLs into your existing applicant data
+    const finalFormData = {
+      ...formData, // whatever your main form data is
+      applicant: {
+        ...formData?.applicant,
+        idFront: updatedFiles.idFront ?? formData?.applicant.idFront,
+        idBack: updatedFiles.idBack ?? formData?.applicant.idBack,
+        proposal: updatedFiles.proposal ?? formData?.applicant.proposal,
+        agreement: updatedFiles.agreement ?? formData?.applicant.agreement,
+      },
+    };
+
+    try {
+      const res = await fetch(`/api/src/clients/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ formData: finalFormData }),
+      });
+
+      if (!res.ok) alert("Failed to upload");
+
+      const data = await res.json();
+      console.log("Updated client:", data);
+
+      // Invalidate cache
+      queryClient.invalidateQueries({ queryKey: ["client", Number(id)] });
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update documents");
+    }
   };
 
   const handelDelete = async (nic: any) => {
@@ -68,13 +98,14 @@ const ApplicationViewPage = () => {
       queryKey: ["client", Number(id)],
     });
 
+    router.push("/features/clients");
     if (!res) {
-      toast.error("Failed to delete client")
+      toast.error("Failed to delete client");
     }
   };
 
-  if(isLoading) return <Loading/>
-  if(isError) return <Error/>
+  if (isLoading) return <Loading />;
+  if (isError) return <Error />;
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-8 min-h-screen">
@@ -87,7 +118,7 @@ const ApplicationViewPage = () => {
               Application Details
             </h1>
             <p className="text-sm text-gray-500 font-medium">
-              Ref ID: APP-{formData.applicant.nic}
+              Ref ID: {formData?.investment.refNumber}
             </p>
           </div>
         </div>
@@ -98,12 +129,11 @@ const ApplicationViewPage = () => {
               {/* Update Button */}
               <button
                 onClick={() => setShowUpdateModel(true)}
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-blue-200 active:scale-95"
+                className="cursor-pointer flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-blue-200 active:scale-95"
               >
                 <Pen className="w-4 h-4" />
                 Update Details
               </button>
-
               {/* Delete Button */}
               <button
                 onClick={() => {
@@ -112,13 +142,19 @@ const ApplicationViewPage = () => {
                       "Are you sure you want to delete this application? This action cannot be undone.",
                     )
                   ) {
-                    handelDelete(formData.applicant.nic);
+                    handelDelete(formData?.applicant.nic);
                   }
                 }}
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-sm font-bold transition-all active:scale-95"
+                className="cursor-pointer flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-sm font-bold transition-all active:scale-95"
               >
                 <Trash2 className="w-4 h-4" />
                 Delete
+              </button>
+              <button
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-green-600 hover:bg-green-700 cursor-pointer text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-blue-200 active:scale-95"
+                onClick={() => generateAgreementPDF(formData, plan)}
+              >
+                Download PDF <Download />
               </button>
             </div>
           </section>
@@ -137,33 +173,33 @@ const ApplicationViewPage = () => {
             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
               <DetailItem
                 label="Full Name"
-                value={formData.applicant.fullName}
+                value={formData?.applicant.fullName}
               />
-              <DetailItem label="NIC Number" value={formData.applicant.nic} />
+              <DetailItem label="NIC Number" value={formData?.applicant.nic} />
               <DetailItem
                 label="Mobile"
-                value={formData.applicant.phoneMobile}
+                value={formData?.applicant.phoneMobile}
                 icon={<Phone className="w-3 h-3" />}
               />
               <DetailItem
                 label="Email"
-                value={formData.applicant.email}
+                value={formData?.applicant.email}
                 icon={<Mail className="w-3 h-3" />}
               />
               <DetailItem
                 label="Date of Birth"
-                value={formData.applicant.dateOfBirth}
+                value={formData?.applicant.dateOfBirth}
                 icon={<Calendar className="w-3 h-3" />}
               />
               <DetailItem
                 label="Occupation"
-                value={formData.applicant.occupation}
+                value={formData?.applicant.occupation}
                 icon={<Briefcase className="w-3 h-3" />}
               />
               <div className="md:col-span-2">
                 <DetailItem
                   label="Residential Address"
-                  value={formData.applicant.address}
+                  value={formData?.applicant.address}
                   icon={<MapPin className="w-3 h-3" />}
                 />
               </div>
@@ -179,25 +215,25 @@ const ApplicationViewPage = () => {
               </h2>
             </div>
             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
-              <DetailItem label="Name" value={formData.beneficiary.fullName} />
+              <DetailItem label="Name" value={formData?.beneficiary.fullName} />
               <DetailItem
                 label="Relationship"
-                value={formData.beneficiary.relationship}
+                value={formData?.beneficiary.relationship}
               />
               <DetailItem
                 label="Bank Name"
-                value={formData.beneficiary.bankName}
+                value={formData?.beneficiary.bankName}
               />
               <DetailItem
                 label="Account Number"
-                value={formData.beneficiary.accountNo}
+                value={formData?.beneficiary.accountNo}
                 isCode
               />
               <DetailItem
                 label="Bank Branch"
-                value={formData.beneficiary.bankBranch}
+                value={formData?.beneficiary.bankBranch}
               />
-              <DetailItem label="Phone" value={formData.beneficiary.phone} />
+              <DetailItem label="Phone" value={formData?.beneficiary.phone} />
             </div>
           </section>
 
@@ -208,14 +244,14 @@ const ApplicationViewPage = () => {
               <h2 className="font-bold text-gray-800">Nominee Info</h2>
             </div>
             <div className="p-6 space-y-4">
-              <DetailItem label="Name" value={formData.nominee.fullName} />
+              <DetailItem label="Name" value={formData?.nominee.fullName} />
               <DetailItem
                 label="Permanent Address"
-                value={formData.nominee.permanentAddress}
+                value={formData?.nominee.permanentAddress}
               />
               <DetailItem
                 label="Postal Address"
-                value={formData.nominee.postalAddress}
+                value={formData?.nominee.postalAddress}
               />
             </div>
           </section>
@@ -242,12 +278,32 @@ const ApplicationViewPage = () => {
           <div className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* ID Documents Grid */}
-              <DocPreview label="ID Card Front" url={formData.applicant.idFront} />
-              <DocPreview label="ID Card Back" url={formData.applicant.idBack} />
+              <DocPreview
+                label="ID Card Front"
+                url={formData?.applicant.idFront}
+                id={formData?.applicant.nic}
+                docKey="idFront"
+              />
+              <DocPreview
+                label="ID Card Back"
+                url={formData?.applicant.idBack}
+                id={formData?.applicant.nic}
+                docKey="idBack"
+              />
 
               {/* Paperwork Grid */}
-              <DocPreview label="Proposal Form" url={formData.applicant.proposal} />
-              <DocPreview label="Agreement" url={formData.applicant.agreement} />
+              <DocPreview
+                label="Proposal Form"
+                url={formData?.applicant.proposal}
+                id={formData?.applicant.nic}
+                docKey="proposal"
+              />
+              <DocPreview
+                label="Agreement"
+                url={formData?.applicant.agreement}
+                id={formData?.applicant.nic}
+                docKey="agreement"
+              />
 
               {/* Signature (Full width) */}
               <div className="md:col-span-2 pt-4 border-t border-slate-100">
@@ -256,7 +312,7 @@ const ApplicationViewPage = () => {
                 </p>
                 <div className="bg-slate-50 rounded-2xl p-6 border border-dashed border-slate-200 flex items-center justify-center group hover:bg-white hover:border-blue-300 transition-all cursor-crosshair">
                   <img
-                    src={formData.applicant.signature}
+                    src={formData?.applicant.signature || null}
                     alt="Signature"
                     className="max-h-20 object-contain mix-blend-multiply opacity-80 group-hover:opacity-100 transition-opacity"
                   />
@@ -330,7 +386,7 @@ const ApplicationViewPage = () => {
                 </p>
                 <p className="text-white font-bold text-base">
                   <span className="text-[10px] text-gray-400 mr-0.5">Rs.</span>
-                  {plan?.investment?.toLocaleString() || "N/A"}
+                  {formData?.applicant.investmentAmount || "N/A"}
                 </p>
               </div>
 
@@ -346,6 +402,7 @@ const ApplicationViewPage = () => {
             </div>
           </section>
         </div>
+        <ClientInvestmentTable investments={formData?.investment} />
       </div>
       {showUpdateModel ? (
         <UpdateClientModal
@@ -361,9 +418,11 @@ const ApplicationViewPage = () => {
         <UpdateDocsModal
           isOpen={showDocUpdateModel}
           onClose={() => setDocShowUpdateModel(false)}
-          onSave={(files) => {
-            console.log("Files received:", files);
-            // Logic to update the database/API goes here
+          onSave={async (uploadedUrls) => {
+            console.log("Uploaded URLs:", uploadedUrls);
+
+            await updateClientDocuments(Number(id), uploadedUrls);
+            queryClient.invalidateQueries({ queryKey: ["client", Number(id)] });
             setDocShowUpdateModel(false);
           }}
         />

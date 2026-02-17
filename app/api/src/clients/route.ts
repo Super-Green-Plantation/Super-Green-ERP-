@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { connect } from "http2";
 import { NextResponse } from "next/server";
+import { generateInvestmentNumber } from "../utils/investmentNumber";
 
 // Create client with investment, beneficiary, and nominee
 export async function POST(req: Request) {
@@ -16,6 +17,7 @@ export async function POST(req: Request) {
     );
   }
 
+  const investmentNumber = generateInvestmentNumber();
   try {
     const client = await prisma.$transaction(async (prisma:any) => {
       const createdClient = await prisma.client.create({
@@ -36,13 +38,14 @@ export async function POST(req: Request) {
           idFront: applicant.idFront,
           idBack: applicant.idBack,
           proposal: applicant.proposal,
-          agreement: applicant.agreement,
-          // Nested create for investments, beneficiary, and nominee
+          agreement: applicant.agreement,          
           
           
           investments: {
             create: [
-              {plan:{
+              {
+                refNumber:investmentNumber,
+                plan:{
                 connect:{
                   id:Number(investment.planId)
                 },

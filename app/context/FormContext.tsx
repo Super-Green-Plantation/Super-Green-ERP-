@@ -5,6 +5,7 @@ import { useForm, UseFormReturn } from "react-hook-form";
 
 export interface FormData {
   applicant: {
+    id?:number;
     fullName?: string;
     nic?: string;
     drivingLicense?: string;
