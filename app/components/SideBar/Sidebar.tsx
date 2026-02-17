@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  BanknoteArrowUp,
   ChevronLeft,
   GitBranch,
   IdCardLanyard,
@@ -30,6 +31,7 @@ const links = [
     icon: Landmark,
   },
   { name: "Commissions", href: "/features/commissions", icon: Percent },
+  { name: "Investments", href: "/features/investments", icon: BanknoteArrowUp },
   { name: "Clients", href: "/features/clients", icon: Users },
   { name: "Profile", href: "/features/profile", icon: User },
 ];

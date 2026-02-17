@@ -1,9 +1,10 @@
 "use client";
 
-import { generateAgreementPDF } from "@/app/api/src/utils/jspdf";
+import { generateAgreementPDF } from "@/app/api/src/utils/client";
 import Back from "@/app/components/Back";
 import UpdateDocsModal from "@/app/components/Client/UpdateDocsModal";
 import UpdateClientModal from "@/app/components/Client/UpdateModel";
+import ClientInvestmentTable from "@/app/components/ClientInvestmentTable";
 import { DetailItem } from "@/app/components/DetailItem";
 import { DocPreview } from "@/app/components/DocPreview";
 import Error from "@/app/components/Error";
@@ -37,7 +38,7 @@ const ApplicationViewPage = () => {
   const [plan, setPlan] = useState<any>();
   const [showUpdateModel, setShowUpdateModel] = useState(false);
   const [showDocUpdateModel, setDocShowUpdateModel] = useState(false);
-  const router = useRouter()
+  const router = useRouter();
 
   const { data: formData, isLoading, isError } = useClient(Number(id));
 
@@ -97,7 +98,7 @@ const ApplicationViewPage = () => {
       queryKey: ["client", Number(id)],
     });
 
-    router.push("/features/clients")
+    router.push("/features/clients");
     if (!res) {
       toast.error("Failed to delete client");
     }
@@ -117,7 +118,7 @@ const ApplicationViewPage = () => {
               Application Details
             </h1>
             <p className="text-sm text-gray-500 font-medium">
-              Ref ID: APP-{formData?.applicant.nic}
+              Ref ID: {formData?.investment.refNumber}
             </p>
           </div>
         </div>
@@ -149,12 +150,12 @@ const ApplicationViewPage = () => {
                 <Trash2 className="w-4 h-4" />
                 Delete
               </button>
-              <button 
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-green-600 hover:bg-green-700 cursor-pointer text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-blue-200 active:scale-95"
-              onClick={() => generateAgreementPDF(formData, plan)}>
-                Download PDF <Download/>
+              <button
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-green-600 hover:bg-green-700 cursor-pointer text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-blue-200 active:scale-95"
+                onClick={() => generateAgreementPDF(formData, plan)}
+              >
+                Download PDF <Download />
               </button>
-              
             </div>
           </section>
         </div>
@@ -385,7 +386,7 @@ const ApplicationViewPage = () => {
                 </p>
                 <p className="text-white font-bold text-base">
                   <span className="text-[10px] text-gray-400 mr-0.5">Rs.</span>
-                  {plan?.investment?.toLocaleString() || "N/A"}
+                  {formData?.applicant.investmentAmount || "N/A"}
                 </p>
               </div>
 
@@ -401,6 +402,7 @@ const ApplicationViewPage = () => {
             </div>
           </section>
         </div>
+        <ClientInvestmentTable investments={formData?.investment} />
       </div>
       {showUpdateModel ? (
         <UpdateClientModal

@@ -12,10 +12,10 @@ export function generateAgreementPDF(client: any, plan: any) {
 
   // --- Theme Colors (Strictly Typed) ---
   const colors: Record<string, RGB> = {
-    primary: [41, 128, 185], 
+    primary: [41, 128, 185],
     text: [44, 62, 80],
     lightGrey: [245, 245, 245],
-    border: [200, 200, 200]
+    border: [200, 200, 200],
   };
 
   // --- Helper Functions ---
@@ -32,8 +32,8 @@ export function generateAgreementPDF(client: any, plan: any) {
     checkPageBreak(15);
     // Use spread safely now that types are Tuples
     doc.setFillColor(...colors.lightGrey);
-    doc.rect(margin, y, pageWidth - (margin * 2), 8, "F");
-    
+    doc.rect(margin, y, pageWidth - margin * 2, 8, "F");
+
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
     doc.setTextColor(...colors.primary);
@@ -47,7 +47,7 @@ export function generateAgreementPDF(client: any, plan: any) {
     doc.setFontSize(9);
     doc.setTextColor(100, 100, 100);
     doc.text(`${label}:`, margin + 2, y);
-    
+
     doc.setFont("helvetica", "normal");
     doc.setTextColor(...colors.text);
     doc.text(value?.toString() || "-", margin + 55, y);
@@ -73,52 +73,82 @@ export function generateAgreementPDF(client: any, plan: any) {
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...colors.primary);
   doc.text("INVESTMENT AGREEMENT", margin, y);
-  
+
   doc.setFontSize(9);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(150, 150, 150);
-  doc.text(`Ref: INV-${Date.now().toString().slice(-6)}`, pageWidth - margin, y, { align: "right" });
-  doc.text(`Date: ${new Date().toLocaleDateString()}`, pageWidth - margin, y + 5, { align: "right" });
-  
+  doc.text(
+    `Ref: INV-${client.investments?.[0]?.refNumber}`,
+    pageWidth - margin,
+    y,
+    { align: "right" },
+  );
+  doc.text(
+    `Date: ${new Date().toLocaleDateString()}`,
+    pageWidth - margin,
+    y + 5,
+    { align: "right" },
+  );
+
   y += 15;
 
   // ===== 2. DATA SECTIONS =====
   drawSectionHeader("1. Applicant Information");
   addRow("Full Name", client.applicant.fullName);
-  addRow("NIC / Passport", client.applicant.nic || client.applicant.passportNo);
+  addRow(
+    "NIC / Passport / Driving Lic",
+    client.applicant.nic ||
+      client.applicant.passportNo ||
+      client.applicant.drivingLicense,
+  );
   addRow("Contact", client.applicant.phoneMobile);
   addRow("Email", client.applicant.email);
   addRow("Address", client.applicant.address);
+  addRow("Date of birth", client.applicant.dateOfBirth);
+  addRow("Occupation", client.applicant.occupation);
   y += 5;
 
   drawSectionHeader("2. Investment Details");
   addRow("Plan Name", plan.name);
   addRow("Term", `${plan.duration} Months`);
   addRow("Rate", `${plan.rate}% p.a.`);
-  addRow("Amount", `LKR ${Number(client.applicant.investmentAmount).toLocaleString()}`);
+  addRow(
+    "Amount",
+    `LKR ${Number(client.applicant.investmentAmount).toLocaleString()}`,
+  );
   y += 5;
 
   drawSectionHeader("3. Beneficiary & Settlement");
   addRow("Name", client.beneficiary.fullName);
+  addRow(
+    "NIC / Passport",
+    client.beneficiary.nic || client.beneficiary.passportNo,
+  );
   addRow("Bank", client.beneficiary.bankName);
+  addRow("Bank Branch", client.beneficiary.bankBranch);
   addRow("Account No", client.beneficiary.accountNo);
-  
+  addRow("Relationship", client.beneficiary.relationship);
+
+  drawSectionHeader("4. Nominee Details");
   if (client.nominee?.fullName) {
     y += 5;
-    addRow("Nominee", client.nominee.fullName);
+    addRow("Name", client.nominee.fullName);
+    addRow("Permanent Address", client.nominee.permanentAddress);
+    addRow("Postal Nominee", client.nominee.postalAddress);
   }
-  y += 10;
+  y += 20;
 
-  drawSectionHeader("4. Declarations");
+  drawSectionHeader("5. Declarations");
+  y += 3;
   addParagraph(
-    `The Applicant confirms that the funds invested are from legitimate sources. The Company reserves the right to verify all information provided. Early termination of this agreement is subject to the terms outlined in the company's general investment policy.`
+    `The Applicant confirms that the funds invested are from legitimate sources. The Company reserves the right to verify all information provided. Early termination of this agreement is subject to the terms outlined in the company's general investment policy.`,
   );
 
   // ===== 3. SIGNATURE SECTION =====
   checkPageBreak(50);
-  y += 10;
+  y += 5;
   const sigLineLength = 60;
-  
+
   // Applicant Signature
   doc.setDrawColor(...colors.border);
   doc.line(margin, y + 20, margin + sigLineLength, y + 20);
@@ -128,9 +158,9 @@ export function generateAgreementPDF(client: any, plan: any) {
 
   if (client.applicant.signature) {
     try {
-        doc.addImage(client.applicant.signature, "PNG", margin, y - 5, 50, 20);
+      doc.addImage(client.applicant.signature, "PNG", margin, y - 5, 50, 20);
     } catch (e) {
-        console.error("Signature image failed to load", e);
+      console.error("Signature image failed to load", e);
     }
   }
 
@@ -146,12 +176,14 @@ export function generateAgreementPDF(client: any, plan: any) {
     doc.setDrawColor(...colors.primary);
     doc.setLineWidth(0.5);
     doc.line(margin, 282, pageWidth - margin, 282);
-    
+
     doc.setFontSize(8);
     doc.setTextColor(150, 150, 150);
     doc.text(`Investment Agreement | Generated via System`, margin, 287);
-    doc.text(`Page ${i} of ${pageCount}`, pageWidth - margin, 287, { align: "right" });
+    doc.text(`Page ${i} of ${pageCount}`, pageWidth - margin, 287, {
+      align: "right",
+    });
   }
 
-  doc.save(`Agreement_${client.applicant.fullName.replace(/\s+/g, '_')}.pdf`);
+  doc.save(`Agreement_${client.applicant.fullName.replace(/\s+/g, "_")}.pdf`);
 }

@@ -4,19 +4,7 @@ import InvestmentTable from "@/app/components/InvestmentTable";
 import Loading from "@/app/components/Loading";
 import { StatCard } from "@/app/components/StatCard";
 import { useDashboard } from "@/app/hooks/useDashboard";
-import { getStats } from "@/app/services/dashboard.service";
 import { Briefcase, MapPin, TrendingUp, Users } from "lucide-react";
-import React, { useEffect, useState } from "react";
-
-// Define an interface for the incoming data structure
-interface DashboardStats {
-  totProfit: { _sum: { totalProfit: number } };
-  totCommissionPayout: { _sum: { commissionPayout: number } };
-  investmentSum: { _sum: { amount: number } };
-  totClients: number;
-  totMembers: number;
-  totBranchs: number;
-}
 
 const DashboardPage = () => {
   const { data, isLoading, isError } = useDashboard();

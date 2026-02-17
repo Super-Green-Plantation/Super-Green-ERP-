@@ -93,12 +93,7 @@ model Member {
   // /job title
   position   Position @relation(fields: [positionId], references: [id])
 
-  //higher member
-  // managerId Int? // 👈 REPORTING TO
-
-  // manager      Member?  @relation("MemberHierarchy", fields: [managerId], references: [id])
-  // subordinates Member[] @relation("MemberHierarchy")
-
+  
   commissions Commission[]
 
   createdAt   DateTime     @default(now())
@@ -192,9 +187,9 @@ model Nominee {
 }
 
 model Investment {
-  id Int @id @default(autoincrement())
-
-  investmentDate DateTime 
+  id             Int      @id @default(autoincrement())
+  refNumber      String ?
+  investmentDate DateTime
   amount         Float
 
   clientId Int
@@ -208,7 +203,7 @@ model Investment {
 
   commission Commission[]
 
-  profit Profit? // optional is safer (see below)
+  profit Profit? // optional is safer 
 
   commissionsProcessed Boolean @default(false)
 
@@ -239,8 +234,8 @@ enum CommissionType {
 model Profit {
   id Int @id @default(autoincrement())
 
-  investmentId Int     @unique
-  investment       Investment @relation(fields: [investmentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  investmentId Int        @unique
+  investment   Investment @relation(fields: [investmentId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   investmentAmount Float @default(0)
   commissionPayout Float @default(0)

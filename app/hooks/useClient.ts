@@ -27,6 +27,7 @@ const mapClientToFormData = (client: any) => ({
   },
   investment: {
     planId: client.investments?.[0]?.planId?.toString() || "N/A",
+    refNumber:client.investments?.[0]?.refNumber
   },
   beneficiary: client.beneficiary
     ? {
