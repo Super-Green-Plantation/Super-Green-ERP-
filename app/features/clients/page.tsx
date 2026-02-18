@@ -3,15 +3,26 @@
 import Error from "@/app/components/Error";
 import Loading from "@/app/components/Loading";
 import { useClients } from "@/app/hooks/useClients";
-import { Spinner } from "@/components/ui/spinner";
+import Pagination from "@/app/components/Pagination";
 import { ExternalLink, Phone, User } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
+
+const PAGE_SIZE = 10;
 
 const Page = () => {
   const { data: c, isLoading, isError } = useClients();
+  const [currentPage, setCurrentPage] = useState(1);
 
   if (isLoading) return <Loading/>;
   if (isError) return <Error/>;
+
+  const allClients = c?.clients ?? [];
+  const totalPages = Math.ceil(allClients.length / PAGE_SIZE);
+  const paginatedClients = allClients.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
 
   return (
     <div className=" max-w-7xl mx-auto">
@@ -53,7 +64,7 @@ const Page = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {c?.clients.length === 0 ? (
+              {paginatedClients.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center gap-2">
@@ -67,7 +78,7 @@ const Page = () => {
                   </td>
                 </tr>
               ) : (
-                c?.clients.map((client: any) => (
+                paginatedClients.map((client: any) => (
                   <tr
                     key={client.id}
                     className="hover:bg-slate-50/80 transition-colors group"
@@ -149,6 +160,12 @@ const Page = () => {
           </table>
         </div>
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={(page) => setCurrentPage(page)}
+      />
     </div>
   );
 };

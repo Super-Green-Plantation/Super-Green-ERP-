@@ -14,30 +14,25 @@ import Back from "@/app/components/Back";
 import EmpTable from "@/app/components/Employee/EmpTable";
 import EmpModal from "@/app/components/Employee/Model";
 import { getBranchById } from "@/app/features/branches/actions";
-import { getEmployeesByBranch } from "@/app/features/employees/actions";
 import { Member } from "@/app/types/member";
 import { generateBranchEmployeePDF } from "@/app/utils/pdfGenerator";
 import ExportButton from "@/app/components/ExportStatement";
 
 const Page = () => {
   const params = useParams();
-  const branchId = params.branchId;
+  const branchId = parseInt(params.branchId as string, 10);
 
   const [branchData, setBranchData] = useState<any>(null);
-  const [employees, setEmployees] = useState<Member[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEmp, setSelectedEmp] = useState<Member | null>(null);
 
   const fetchData = async () => {
-    if (!branchId) return;
+    if (!branchId || isNaN(branchId)) return;
     setLoading(true);
     try {
-      const branchRes = await getBranchById(Number(branchId));
-      const memberRes = await getEmployeesByBranch(Number(branchId));
-
+      const branchRes = await getBranchById(branchId);
       setBranchData(branchRes);
-      setEmployees(memberRes.emp);
     } catch (error) {
       console.error("Failed to fetch data", error);
     } finally {
@@ -49,7 +44,7 @@ const Page = () => {
     fetchData();
   }, [branchId]);
 
-  if (!branchId)
+  if (!branchId || isNaN(branchId))
     return <div className="p-10 text-red-500 font-bold">Branch ID missing</div>;
 
   return (
@@ -80,7 +75,7 @@ const Page = () => {
 
         <div className="flex items-center gap-3">
           <ExportButton
-            data={{ ...branchData, members: employees }}
+            data={{ ...branchData, members: branchData?.members }}
             exportFn={generateBranchEmployeePDF}
           />
 
@@ -108,7 +103,7 @@ const Page = () => {
               Total Staff
             </p>
             <p className="text-2xl font-black text-slate-900">
-              {employees?.length || 0}
+              {loading ? "-" : (branchData?.members?.length ?? 0)}
             </p>
           </div>
         </div>

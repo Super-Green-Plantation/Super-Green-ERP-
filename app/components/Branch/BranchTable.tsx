@@ -6,6 +6,7 @@ import { MapPin, Pen, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import BranchModal from "./Model";
+import Pagination from "@/app/components/Pagination";
 
 interface Branch {
   id: number;
@@ -20,9 +21,15 @@ interface BranchTableProps {
   onRefresh?: () => void;
 }
 
+const PAGE_SIZE = 10;
+
 const BranchTable = ({ data, isLoading, onRefresh }: BranchTableProps) => {
   const [updateModel, setUpdateModel] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.ceil((data?.length ?? 0) / PAGE_SIZE);
+  const paginatedData = data?.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   const queryClient = useQueryClient();
 
@@ -31,6 +38,7 @@ const BranchTable = ({ data, isLoading, onRefresh }: BranchTableProps) => {
     onSuccess: () => {
       toast.success("Branch Deleted");
       queryClient.invalidateQueries({ queryKey: ["branches"] });
+      setCurrentPage(1);
       if (onRefresh) onRefresh();
     },
     onError: () => {
@@ -91,7 +99,7 @@ const BranchTable = ({ data, isLoading, onRefresh }: BranchTableProps) => {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {data?.map((branch: Branch) => (
+            {paginatedData?.map((branch: Branch) => (
               <tr
                 key={branch.id}
                 className="hover:bg-slate-50/80 transition-colors group"
@@ -178,10 +186,11 @@ const BranchTable = ({ data, isLoading, onRefresh }: BranchTableProps) => {
         )}
       </div>
 
-      {/* Empty State Handling */}
-      {data?.length === 0 && (
-        <div className="p-8 text-center text-gray-500">No branches found.</div>
-      )}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
 
       {/* Update Modal */}
       {updateModel && selectedBranch && (

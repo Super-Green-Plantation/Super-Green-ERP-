@@ -7,8 +7,21 @@ import {
     MapPin,
     User
 } from "lucide-react";
+import { useState } from "react";
+import Pagination from "@/app/components/Pagination";
+
+const PAGE_SIZE = 10;
 
 const InvestmentTable = ({ investments }: any) => {
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const allInvestments: any[] = investments?.getAllInvestment ?? [];
+  const totalPages = Math.ceil(allInvestments.length / PAGE_SIZE);
+  const paginatedInvestments = allInvestments.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+
   return (
     <div className="w-full bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
@@ -39,7 +52,17 @@ const InvestmentTable = ({ investments }: any) => {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {investments.getAllInvestment.map((item: any) => (
+            {paginatedInvestments.length === 0 && (
+              <tr>
+                <td colSpan={7} className="px-6 py-16 text-center">
+                  <div className="flex flex-col items-center gap-2 text-slate-300">
+                    <User size={32} strokeWidth={1} />
+                    <p className="text-sm font-bold">No investments found</p>
+                  </div>
+                </td>
+              </tr>
+            )}
+            {paginatedInvestments.map((item: any) => (
               <tr
                 key={item.id}
                 className="hover:bg-slate-50/80 transition-colors group"
@@ -106,15 +129,14 @@ const InvestmentTable = ({ investments }: any) => {
                     </span>
                   )}
                 </td>
+
                 {/* Branch */}
                 <td className="px-6 py-4">
                   {item.advisor?.branch ? (
                     <div className="flex items-center gap-2.5">
-                      {/* Icon Container */}
                       <div className="flex items-center justify-center w-7 h-7 bg-orange-50 text-orange-600 rounded-lg">
-                                                <MapPin />
+                        <MapPin size={14} />
                       </div>
-
                       <div className="flex flex-col">
                         <span className="text-xs font-black uppercase tracking-tight text-slate-700">
                           {item.advisor.branch.name}
@@ -171,6 +193,12 @@ const InvestmentTable = ({ investments }: any) => {
           </tbody>
         </table>
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 };

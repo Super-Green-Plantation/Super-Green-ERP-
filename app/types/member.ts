@@ -35,3 +35,8 @@ export interface CommissionRate {
   createdAt: string | Date;
   updatedAt: string | Date;
 }
+
+export interface EmployeesPage {
+  emp: Member[];
+  nextCursor: number | null;
+}

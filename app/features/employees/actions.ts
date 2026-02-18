@@ -38,26 +38,38 @@ export async function createEmployee(data: {
 }
 
 // Get employees by branch
-export async function getEmployeesByBranch(branchId: number) {
-  try {
-    const employees = await prisma.member.findMany({
-      where: { branchId: Number(branchId) },
-      include: {
-        position: {
-          include: {
-            orc: true,
-            personalCommissionTiers: true,
-          },
+export async function getEmployeesByBranch(
+  branchId: number,
+  cursor?: number,
+  limit = 10
+) {
+  const employees = await prisma.member.findMany({
+    where: { branchId },
+    orderBy: { id: "asc" }, // REQUIRED for cursor pagination
+
+    take: limit + 1,       // fetch extra record
+    cursor: cursor ? { id: cursor } : undefined,
+    skip: cursor ? 1 : 0,
+
+    include: {
+      position: {
+        include: {
+          orc: true,
+          personalCommissionTiers: true,
         },
       },
-    });
+    },
+  });
 
-    return { emp: serializeData(employees) };
-  } catch (err) {
-    console.error("Error fetching employees by branch:", err);
-    throw new Error("Failed to get employees by branch");
-  }
+  const hasNextPage = employees.length > limit;
+  const data = hasNextPage ? employees.slice(0, -1) : employees;
+
+  return {
+    emp: serializeData(data),
+    nextCursor: hasNextPage ? data[data.length - 1].id : null,
+  };
 }
+
 
 // Get employee by code
 export async function getEmployeeByCode(empCode: string) {

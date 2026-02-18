@@ -1,18 +1,24 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, InfiniteData } from "@tanstack/react-query";
 import { getEmployeesByBranch } from "../features/employees/actions";
+import { EmployeesPage } from "@/app/types/member";
 
-export const useEmployee = (branchId: number) => {
-  return useQuery({
+export const useEmployees = (branchId: number) => {
+  return useInfiniteQuery<
+  EmployeesPage,
+  Error,
+  InfiniteData<EmployeesPage>,
+  (string | number)[],
+  number | undefined
+>({
     queryKey: ["employees", branchId],
-    queryFn: ({ queryKey }) => {
-      const [, id] = queryKey;
-      return getEmployeesByBranch(id as number);
-    },
+    queryFn: ({ pageParam }) =>
+      getEmployeesByBranch(branchId, pageParam),
+    initialPageParam: undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
     staleTime: 1000 * 60 * 3,
     retry: 1,
     refetchOnWindowFocus: false,
-    refetchOnReconnect: true,
   });
 };

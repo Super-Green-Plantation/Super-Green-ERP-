@@ -4,12 +4,25 @@ import { Eye, Inbox, MapPin, User } from "lucide-react";
 import Link from "next/link";
 import Error from "../Error";
 import Loading from "../Loading";
+import { useState } from "react";
+import Pagination from "@/app/components/Pagination";
+
+const PAGE_SIZE = 10;
 
 const InvestmentTable = () => {
   const { data: investments, isLoading, isError } = useInvestments();
+  const [currentPage, setCurrentPage] = useState(1);
 
-  if (isLoading) return <Loading/>
-  if(isError) return <Error/>
+  if (isLoading) return <Loading/>;
+  if (isError) return <Error/>;
+
+  const allInvestments: any[] = investments ?? [];
+  const totalPages = Math.ceil(allInvestments.length / PAGE_SIZE);
+  const paginatedInvestments = allInvestments.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+
   return (
     <div className="w-full bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
@@ -27,7 +40,7 @@ const InvestmentTable = () => {
           <tbody className="divide-y divide-slate-100 relative min-h-[200px]">
 
             {/* --- EMPTY STATE --- */}
-            {!isLoading && !isError && investments?.length === 0 && (
+            {allInvestments.length === 0 && (
               <tr>
                 <td colSpan={6} className="px-6 py-20">
                   <div className="flex flex-col items-center justify-center gap-2 text-slate-300">
@@ -39,7 +52,7 @@ const InvestmentTable = () => {
             )}
 
             {/* --- DATA STATE --- */}
-            {!isLoading && !isError && investments?.map((item: any) => (
+            {paginatedInvestments.map((item: any) => (
               <tr key={item.id} className="hover:bg-slate-50/80 transition-colors group">
                 <td className="px-6 py-4">
                   <span className="text-xs font-bold text-slate-400 tabular-nums">#{item.id}</span>
@@ -91,6 +104,12 @@ const InvestmentTable = () => {
           </tbody>
         </table>
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 };
