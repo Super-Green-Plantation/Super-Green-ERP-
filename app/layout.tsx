@@ -17,13 +17,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        {/* <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /> */}
-
-       
-          {/* <Providers> */}
-            <Analytics/>
-            <Toast>{children}</Toast>
-          {/* </Providers> */}
+        <Analytics />
+        <Toast>{children}</Toast>
       </body>
     </html>
   );

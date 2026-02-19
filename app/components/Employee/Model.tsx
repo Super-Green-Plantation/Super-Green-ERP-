@@ -71,26 +71,23 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
           ...formData,
           positionId: Number(formData.positionId),
         });
-        if (!res) {
-          toast.error("Failed to add employee");
-          throw new Error("Failed to save emp");
+        if (!res.success) {
+          toast.error(res.error ?? "Failed to add employee");
+          return;
         }
-        toast.success("Successfully Added Employee ");
-        console.log("Submitting Employee Data:", formData);
+        toast.success("Successfully Added Employee");
         onSuccess?.();
         onClose();
       } else {
         const res = await updateEmployee(initialData!.id, {
-          ...formData, // spread other fields
+          ...formData,
           positionId: Number(formData.positionId),
         });
-        if (!res) {
-          toast.error("Failed to update employee");
-          throw new Error("Failed to update emp");
+        if (!res.success) {
+          toast.error(res.error ?? "Failed to update employee");
+          return;
         }
-        console.log(res);
-
-        toast.success("Successfully Updated Employee ");
+        toast.success("Successfully Updated Employee");
         onSuccess?.();
         onClose();
       }
