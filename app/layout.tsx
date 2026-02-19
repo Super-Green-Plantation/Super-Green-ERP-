@@ -17,20 +17,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+        {/* <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} /> */}
 
-        <main
-          className={`
-            min-h-screen bg-gray-100 p-6 pt-20 md:pt-6
-            transition-all duration-300
-            ${isCollapsed ? "md:ml-20" : "md:ml-64"}
-          `}
-        >
-          <Providers>
+       
+          {/* <Providers> */}
             <Analytics/>
             <Toast>{children}</Toast>
-          </Providers>
-        </main>
+          {/* </Providers> */}
       </body>
     </html>
   );

@@ -1,13 +1,13 @@
 'use client'
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
   const router = useRouter();
-  router.push("/features/dashboard");
-  return (
-    <div>
-      Welcome to Super Green ERP!
-      
-    </div>
-  );
+
+  useEffect(() => {
+    router.push("/auth/signin");
+  }, [router]);
+
+  return <div></div>;
 }
