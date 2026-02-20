@@ -12,6 +12,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const supabase = await supabaseServer();
+    // Exchange the code for a session (access_token + refresh_token)
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (error) {

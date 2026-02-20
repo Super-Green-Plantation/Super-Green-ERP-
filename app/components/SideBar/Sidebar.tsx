@@ -2,6 +2,7 @@
 
 import {
   BanknoteArrowUp,
+  Calculator,
   ChevronLeft,
   GitBranch,
   IdCardLanyard,
@@ -32,6 +33,7 @@ const links = [
   },
   { name: "Commissions", href: "/features/commissions", icon: Percent },
   { name: "Investments", href: "/features/investments", icon: BanknoteArrowUp },
+  { name: "Calculations", href: "/features/calculations", icon: Calculator },
   { name: "Clients", href: "/features/clients", icon: Users },
   { name: "Profile", href: "/features/profile", icon: User },
 ];
