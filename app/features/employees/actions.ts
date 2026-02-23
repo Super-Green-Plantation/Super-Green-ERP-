@@ -4,8 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { getUpperMembers } from "@/lib/member";
 import { serializeData } from "@/app/utils/serializers";
-import { supabaseAdmin } from "@/lib/supabase/admin";
 import { generateTempPassword, sendWelcomeEmail } from "@/lib/email";
+import { supabaseAdmin } from "@/prisma/seed";
 
 // Create new employee/member
 export async function createEmployee(data: {
@@ -20,33 +20,35 @@ export async function createEmployee(data: {
   // Step 1: Generate a temporary password
   const tempPassword = generateTempPassword();
 
-  // Step 2: Create Supabase auth user WITH the temp password already set.
-  // email_confirm: true → account is active immediately, no confirmation step.
   const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
     email: data.email,
     password: tempPassword,
     email_confirm: true,
   });
 
-  if (authError || !authData.user) {
-    console.error("Supabase auth user creation failed:", authError);
-    return { success: false, error: authError?.message ?? "Failed to create auth account" };
-  }
+  if (authError || !authData.user) throw new Error(authError?.message);
 
-  const authUserId = authData.user.id;
+  // Step 2: Create Prisma User row
+  const user = await prisma.user.create({
+    data: {
+      id: authData.user.id, // Must match Supabase ID
+      role: "EMPLOYEE",
+      branchId: data.branchId,
+    },
+  });
 
   // Step 3: Create the Prisma Member record.
   try {
     const member = await prisma.member.create({
       data: {
-        authUserId,
+        userId: user.id, // foreign key now exists
         name: data.name,
         email: data.email,
         phone: data.phone,
         empNo: data.empNo,
-        totalCommission: Number(data.totalCommission),
-        branchId: Number(data.branchId),
-        positionId: Number(data.positionId),
+        totalCommission: data.totalCommission,
+        branchId: data.branchId,
+        positionId: data.positionId,
       },
     });
 
@@ -67,12 +69,10 @@ export async function createEmployee(data: {
     return { success: true, member };
   } catch (err) {
     console.error("Error creating employee — rolling back Supabase auth user:", err);
-    await supabaseAdmin.auth.admin.deleteUser(authUserId);
+    await supabaseAdmin.auth.admin.deleteUser(String(authData.user.id));
     return { success: false, error: "Server error — employee creation failed" };
   }
 }
-
-
 
 // Get employees by branch
 export async function getEmployeesByBranch(
@@ -106,7 +106,6 @@ export async function getEmployeesByBranch(
     nextCursor: hasNextPage ? data[data.length - 1].id : null,
   };
 }
-
 
 // Get employee by code
 export async function getEmployeeByCode(empCode: string) {
@@ -221,11 +220,19 @@ export async function getMemberDetails(id: number) {
     throw error;
   }
 }
-export async function deleteEmployee(id: number) {
+
+export async function deleteEmployee(id: string) {
+  console.log(id);
   try {
     const deleted = await prisma.member.delete({
+      where: { userId:id },
+    });
+
+    await prisma.user.delete({
       where: { id },
     });
+
+    await supabaseAdmin.auth.admin.deleteUser(String(id));
 
     revalidatePath("/features/employees");
     revalidatePath(`/features/branches/employees/${deleted.branchId}`);

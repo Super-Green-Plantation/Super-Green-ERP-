@@ -64,7 +64,7 @@ const EmpTable = ({ onEdit, onRefresh, branchId }: EmpTableProps) => {
   };
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => deleteEmployee(id),
+    mutationFn: (id: string) => deleteEmployee(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["employees", branchId] });
       toast.success("Employee deleted successfully");
@@ -76,7 +76,7 @@ const EmpTable = ({ onEdit, onRefresh, branchId }: EmpTableProps) => {
     },
   });
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     if (!confirm("Delete this employee?")) return;
     deleteMutation.mutate(id);
   };
@@ -157,7 +157,7 @@ const EmpTable = ({ onEdit, onRefresh, branchId }: EmpTableProps) => {
                       <Pen size={16} />
                     </button>
                     <button
-                      onClick={() => handleDelete(e.id)}
+                      onClick={() => handleDelete(e.userId)}
                       className="p-2 text-slate-400 hover:text-rose-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-xl transition-all"
                       title="Delete"
                     >

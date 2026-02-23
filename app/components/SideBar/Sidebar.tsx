@@ -35,6 +35,7 @@ const links = [
   { name: "Investments", href: "/features/investments", icon: BanknoteArrowUp },
   { name: "Calculations", href: "/features/calculations", icon: Calculator },
   { name: "Clients", href: "/features/clients", icon: Users },
+  { name: "Users", href: "/features/users", icon: User },
   { name: "Profile", href: "/features/profile", icon: User },
 ];
 

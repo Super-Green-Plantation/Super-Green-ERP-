@@ -2,18 +2,18 @@
 
 import BranchTable from "@/app/components/Branch/BranchTable";
 import BranchModal from "@/app/components/Branch/Model";
+import ExportButton from "@/app/components/ExportStatement";
 import { getBranches } from "@/app/features/branches/actions";
 import { generateBranchNetworkPDF } from "@/app/utils/pdfGenerator";
-import ExportButton from "@/app/components/ExportStatement";
-import { 
-  Building2, 
-  Loader2, 
-  MapPin, 
-  Plus, 
-  Search, 
-  TrendingUp 
+import {
+  Building2,
+  Loader2,
+  MapPin,
+  Plus,
+  Search,
+  TrendingUp
 } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 const Page = () => {
   const [showAddModal, setShowAddModal] = useState(false);
@@ -53,14 +53,9 @@ const Page = () => {
           <div>
             <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tighter flex items-center gap-3">
               Branch Network
-              <span className="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black uppercase tracking-widest rounded-full">
-                Island Wide
-              </span>
+              
             </h1>
-            <p className="text-xs text-slate-500 font-bold mt-2 uppercase tracking-wide flex items-center gap-2">
-              <MapPin className="w-3.5 h-3.5" />
-              Manage Operations & Reporting Hierarchy
-            </p>
+            
           </div>
         </div>
 
@@ -94,21 +89,6 @@ const Page = () => {
             </p>
             <p className="text-2xl font-black text-slate-900">
               {loading ? "-" : totalBranches}
-            </p>
-          </div>
-        </div>
-
-        {/* Stat 2 */}
-        <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm flex items-center gap-5">
-           <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center">
-            <TrendingUp className="w-6 h-6 text-emerald-600" />
-          </div>
-          <div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-              Active Operations
-            </p>
-            <p className="text-2xl font-black text-slate-900">
-              {loading ? "-" : activeBranches}
             </p>
           </div>
         </div>
