@@ -62,8 +62,8 @@ export default function Page() {
   if (isLoading) return <Loading />;
   if (isError) return <Error />;
   return (
-    <div className="font-sans p-6 min-h-screen max-w-7xl mx-auto">
-      <div className="flex justify-between items-center mb-8">
+    <div className="font-sans min-h-screen max-w-7xl mx-auto">
+      <div className="sm:flex justify-between items-center space-y-4 sm:space-y-0 mb-8">
         <div>
           <h1 className="text-2xl font-semibold text-gray-800 tracking-tight">
             Financial Plans
@@ -87,7 +87,7 @@ export default function Page() {
               key={plan.id}
               className="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 overflow-hidden group"
             >
-              <div className="p-6">
+              <div className="p-2  sm:p-6">
                 <div className="flex justify-between items-start mb-4">
                   <div className="bg-blue-50 p-2 rounded-lg text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                     <Calendar size={24} />
@@ -113,7 +113,7 @@ export default function Page() {
                       </span>
                     </div>
                     <span className="text-sm font-bold text-gray-800">
-                      {formatDuration(plan.duration)}
+                      {plan.duration}
                     </span>
                   </div>
 

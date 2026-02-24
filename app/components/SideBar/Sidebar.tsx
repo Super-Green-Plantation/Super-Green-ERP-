@@ -45,11 +45,9 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }: any) => {
 
   return (
     <aside
-      className={`
-        fixed left-0 top-0 h-screen
-        bg-gray-900 text-gray-100
-        border-r border-gray-800
-        transition-all duration-300
+      className={`overflow-scroll
+        fixed left-0 top-0 h-screen bg-gray-900 text-gray-100
+        border-r border-gray-800 transition-all duration-300
         z-50
         ${isCollapsed ? "w-20" : "w-64"}
       `}

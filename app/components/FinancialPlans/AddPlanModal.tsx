@@ -27,17 +27,22 @@ const AddPlanModal = ({ isOpen, onClose }: AddPlanModalProps) => {
   });
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  const formData = new FormData(e.currentTarget);
-  addPlanMutation.mutate(formData);
-};
+    const formData = new FormData(e.currentTarget);
+    addPlanMutation.mutate(formData);
+  };
 
 
   return (
-    <div className="fixed inset-0 bg-gray-900/60  flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
-        <div className="p-6 border-b bg-gray-50 flex justify-between items-center">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6 overflow-y-auto"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden relative animate-in fade-in zoom-in duration-200 my-auto"
+        onClick={(e) => e.stopPropagation()}
+      >  <div className="p-6 border-b bg-gray-50 flex justify-between items-center">
           <div>
             <h2 className="text-xl font-bold text-gray-800">
               New Financial Plan

@@ -75,7 +75,7 @@ const BranchModal = ({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md bg-white rounded-lg p-6 relative"
+        className="w-[90%] max-w-md bg-white rounded-lg p-6 relative"
         onClick={(e) => e.stopPropagation()}
       >
         <button

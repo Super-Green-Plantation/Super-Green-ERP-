@@ -6,10 +6,11 @@ import { usePlans } from "@/app/hooks/usePlans";
 import { createInvestment } from "../actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, DollarSign, User, Building2, FileText, UserCircle } from "lucide-react";
+import { ArrowLeft, DollarSign, User, Building2, FileText, UserCircle, Loader2, Plus } from "lucide-react";
 import Link from "next/link";
 import Loading from "@/app/components/Loading";
 import Error from "@/app/components/Error";
+import Back from "@/app/components/Back";
 
 export default function CreateInvestmentPage() {
   const router = useRouter();
@@ -68,18 +69,14 @@ export default function CreateInvestmentPage() {
   if (clientsError || plansError) return <Error />;
 
   return (
-    <div className="min-h-screen bg-gray-50/30 py-8 px-4 md:px-8">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen">
+      <div className="max-w-7xl mx-auto">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 pb-6 mb-8">
           <div className="flex items-center gap-4">
-            <Link href="/features/investments">
-              <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
-              </button>
-            </Link>
+            <Back />
             <div>
-              <h1 className="text-3xl font-black text-gray-900 tracking-tight">
+              <h1 className="sm:text-3xl text-xl font-black text-gray-900 tracking-tight">
                 Create Investment
               </h1>
               <p className="text-sm text-gray-500 font-medium mt-1">
@@ -90,7 +87,7 @@ export default function CreateInvestmentPage() {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+        <form onSubmit={handleSubmit} className="p-2 sm:p-6 lg:p-8 sm:bg-white sm:rounded-xl sm:shadow-md ">
           <div className="space-y-6">
             {/* Client Selection */}
             <div className="flex flex-col gap-2">
@@ -191,27 +188,34 @@ export default function CreateInvestmentPage() {
           </div>
 
           {/* Submit Button */}
-          <div className="flex justify-end gap-4 mt-8 pt-6 border-t border-gray-200">
-            <Link href="/features/investments">
+          <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col-reverse sm:flex-row items-center justify-end gap-3">
+
+            {/* Secondary Action: Cancel */}
+            <Link href="/features/investments" className="w-full sm:w-auto">
               <button
                 type="button"
-                className="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-semibold transition-all"
+                className="bg-gray-300 w-full px-8 py-3.5 text-[11px] font-black uppercase tracking-widest text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-2xl transition-all active:scale-95"
               >
-                Cancel
+                Discard Changes
               </button>
             </Link>
+
+            {/* Primary Action: Create */}
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-lg active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="relative w-full sm:w-auto px-10 py-3.5 bg-slate-900 hover:bg-blue-600 disabled:bg-slate-300 text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] transition-all shadow-xl shadow-slate-200 active:scale-95 flex items-center justify-center gap-3 overflow-hidden"
             >
               {isSubmitting ? (
                 <>
-                  <span className="animate-spin">⏳</span>
-                  Creating...
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-400" />
+                  <span className="opacity-70">Synchronizing...</span>
                 </>
               ) : (
-                "Create Investment"
+                <>
+                  <Plus size={14} strokeWidth={3} className="text-blue-400" />
+                  Create
+                </>
               )}
             </button>
           </div>

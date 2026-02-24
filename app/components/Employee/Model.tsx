@@ -110,13 +110,13 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
-      onClick={onClose}
-    >
-      <div
-        className="w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden relative animate-in fade-in zoom-in duration-200"
-        onClick={(e) => e.stopPropagation()}
-      >
+  className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6 overflow-y-auto"
+  onClick={onClose}
+>
+  <div
+    className="w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden relative animate-in fade-in zoom-in duration-200 my-auto"
+    onClick={(e) => e.stopPropagation()}
+  >
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
           <h2 className="text-xl font-bold text-gray-800">
@@ -267,14 +267,8 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
           </div>
 
           {/* Footer Actions */}
-          <div className="pt-4 flex items-center gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 font-medium transition-colors"
-            >
-              Cancel
-            </button>
+          <div className="pt-5 flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3 sm:items-center">
+
             <button
               type="submit"
               disabled={loading}
@@ -287,6 +281,14 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
               ) : (
                 "Save Changes"
               )}
+            </button>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+            >
+              Cancel
             </button>
           </div>
         </form>

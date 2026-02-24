@@ -18,7 +18,7 @@ const DashboardPage = () => {
   return (
     <div className="max-w-7xl mx-auto pb-20">
       {/* 1. Main Page Header */}
-      <header className="mb-10 px-2 pt-6">
+      <header className="mb-10 px-2 ">
         <div className="flex items-center gap-2 mb-2">
           <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600">
             Executive Overview

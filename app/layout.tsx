@@ -16,7 +16,7 @@ export default function RootLayout({
 
   return (
     <html lang="en">
-      <body className="antialiased ml-20 bg-gray-100">
+      <body className="antialiased ">
         <Analytics />
         <Toast>{children}</Toast>
       </body>

@@ -54,8 +54,14 @@ export default function EditPlanModal({
   const { isPending } = updatePlanMutation;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-100 ">
-      <div className="bg-white p-8 rounded-3xl w-112.5 shadow-2xl">
+    <div
+  className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6 overflow-y-auto"
+  onClick={onClose}
+>
+  <div
+    className=" p-6 w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden relative animate-in fade-in zoom-in duration-200 my-auto"
+    onClick={(e) => e.stopPropagation()}
+  >
         <h2 className="text-2xl font-bold mb-6 text-gray-800">
           Edit Financial Plan
         </h2>

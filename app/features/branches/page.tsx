@@ -43,23 +43,21 @@ const Page = () => {
   const totalStaff = branches.reduce((acc, b) => acc + (b.members?.length || 0), 0);
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 p-4 md:p-8 min-h-screen">
+    <div className="max-w-7xl mx-auto sm:space-y-8 space-y-2 sm:p-4 md:p-8 min-h-screen">
       {/* --- PREMIUM HEADER --- */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-b border-slate-100 pb-8">
         <div className="flex items-center gap-5">
-          <div className="h-16 w-16 bg-slate-900 rounded-2xl flex items-center justify-center shadow-xl shadow-slate-200">
-            <Building2 className="w-8 h-8 text-white" />
+          <div className="sm:h-16 sm:w-16 h-8 w-8 bg-slate-900 sm:rounded-2xl rounded-lg flex items-center justify-center shadow-xl shadow-slate-200">
+            <Building2 className=" w-4 h-4 sm:w-8 sm:h-8 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tighter flex items-center gap-3">
+            <h1 className="sm:text-2xl text-xl md:text-3xl font-black text-slate-900 tracking-tighter flex items-center gap-3">
               Branch Network
-              
             </h1>
-            
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3 sm:items-center">
           <ExportButton
             data={branches}
             exportFn={generateBranchNetworkPDF}

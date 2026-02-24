@@ -229,14 +229,14 @@ const Page = () => {
 
   return (
     <>
-    <div className="min-h-screen  px-4 ">
+    <div className="min-h-screen">
       <div className="max-w-7xl mx-auto">
         {/* Header Section */}
         <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex gap-2 items-center">
               <Back/>
-              <h1 className="text-2xl font-semibold ">Commissions Portal</h1>
+              <h1 className="text-2xl font-semibold ">Commissions</h1>
             </div>
             <p className="text-sm font-medium text-gray-500">
               Manage branch staff allocations and investment performance.

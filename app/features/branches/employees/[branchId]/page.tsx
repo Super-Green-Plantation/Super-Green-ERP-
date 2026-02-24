@@ -48,7 +48,7 @@ const Page = () => {
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 p-4 md:p-8 min-h-screen">
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-b border-slate-100 pb-8">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-b border-slate-100 ">
         <div className="flex items-center gap-5">
           <Back />
           <div className="h-12 w-px bg-slate-200 hidden md:block" />
@@ -69,7 +69,7 @@ const Page = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3 sm:items-center">
           <ExportButton
             data={{ ...branchData, members: branchData?.members }}
             exportFn={generateBranchEmployeePDF}
@@ -129,7 +129,6 @@ const Page = () => {
           />
         </div>
       </div>
-
       {isModalOpen && (
         <EmpModal
           mode={selectedEmp ? "edit" : "add"}
@@ -141,6 +140,7 @@ const Page = () => {
           onSuccess={fetchData}
         />
       )}
+
     </div>
   );
 };

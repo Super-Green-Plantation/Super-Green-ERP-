@@ -36,7 +36,7 @@ const page = () => {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
+      <div className="sm:flex justify-between items-center mb-6 space-y-6">
         <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
           <Wallet className="w-6 h-6 text-blue-600" />
           Investments
@@ -68,9 +68,9 @@ const page = () => {
           <p className="text-sm text-slate-500 mb-6">Get started by creating your first investment</p>
           <Link
             href="/features/investments/create"
-            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-all shadow-md active:scale-95"
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all shadow-md active:scale-95 flex items-center justify-center gap-2"
           >
-            <Plus className="w-4 h-4" /> Create Investment
+            <Plus className="w-4 h-4" /> Create
           </Link>
         </div>
       ) : (
