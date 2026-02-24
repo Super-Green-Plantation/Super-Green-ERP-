@@ -1,5 +1,5 @@
+import { supabase } from "@/lib/supabase/supabaseClient";
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseServer } from "@/lib/supabase/server";
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
@@ -11,7 +11,6 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const supabase = await supabaseServer();
     // Exchange the code for a session (access_token + refresh_token)
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
