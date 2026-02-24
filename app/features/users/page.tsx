@@ -152,7 +152,7 @@ const UserListPage = () => {
                   {/* Action Column */}
                   <td className="px-6 py-4">
                     <div className="flex justify-center">
-                     <ActionMenu userId={user.id} currentRole={user.role} />
+                     <ActionMenu userId={user.id} currentRole={user.role} email={user.email} />
                     </div>
                   </td>
                 </tr>

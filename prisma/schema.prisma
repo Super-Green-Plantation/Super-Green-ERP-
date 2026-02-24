@@ -80,11 +80,11 @@ model PersonalCommissionTier {
 //many side ekata foreign key eka / Parent has an array
 model Member {
   id       Int    @id @default(autoincrement())
-  userId   String    @unique
-  user     User   @relation(fields: [userId], references: [id])
+  userId   String?    @unique
+  user     User?   @relation(fields: [userId], references: [id])
 
   name     String
-  phone     String
+  phone     String?
   email     String?
   empNo    String @unique
 
@@ -303,6 +303,8 @@ enum Role {
 model User {
   id         String     @id @default(uuid())
   role       Role    @default(EMPLOYEE)
+  name       String?
+  email     String?   @unique
   branchId   Int?
   status     Boolean  @default(true)
   member     Member?

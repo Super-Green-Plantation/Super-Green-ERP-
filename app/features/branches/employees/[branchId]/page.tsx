@@ -29,7 +29,6 @@ const Page = () => {
 
   const fetchData = async () => {
     if (!branchId || isNaN(branchId)) return;
-    setLoading(true);
     try {
       const branchRes = await getBranchById(branchId);
       setBranchData(branchRes);
@@ -42,14 +41,13 @@ const Page = () => {
 
   useEffect(() => {
     fetchData();
-  }, [branchId]);
+  }, []);
 
   if (!branchId || isNaN(branchId))
     return <div className="p-10 text-red-500 font-bold">Branch ID missing</div>;
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 p-4 md:p-8 min-h-screen">
-      {/* --- PREMIUM HEADER --- */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-b border-slate-100 pb-8">
         <div className="flex items-center gap-5">
           <Back />

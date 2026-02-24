@@ -1,14 +1,17 @@
 "use client";
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, use } from 'react';
 import { createPortal } from 'react-dom';
 import { MoreVertical, Loader2, ChevronRight, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import { sendPasswordReset, updateUserRole } from './action';
+import { Role } from '@/app/types/role';
+import { useQueryClient } from '@tanstack/react-query';
 
-const ROLES = ['ADMIN', 'HR', 'IT_DEV', 'IT_US', 'BRANCH_MANAGER', 'EMPLOYEE'] as const;
-type Role = typeof ROLES[number];
+// const ROLES = ['ADMIN', 'HR', 'IT_DEV', 'IT_US', 'BRANCH_MANAGER', 'EMPLOYEE'] as const;
+// type Role = typeof ROLES[number];
 
-export const ActionMenu = ({ userId, currentRole }: { userId: string; currentRole: Role }) => {
+export const ActionMenu = ({ userId, currentRole,email }: { userId: string; currentRole: Role; email: string }) => {
     const [open, setOpen] = useState(false);
     const [showRoles, setShowRoles] = useState(false);
     const [loadingAction, setLoadingAction] = useState<string | null>(null);
@@ -16,6 +19,7 @@ export const ActionMenu = ({ userId, currentRole }: { userId: string; currentRol
     const buttonRef = useRef<HTMLButtonElement>(null);
     const menuRef = useRef<HTMLDivElement>(null);
 
+    const queryClient = useQueryClient();
     useEffect(() => {
         if (open && buttonRef.current) {
             const rect = buttonRef.current.getBoundingClientRect();
@@ -50,7 +54,8 @@ export const ActionMenu = ({ userId, currentRole }: { userId: string; currentRol
         }
         setLoadingAction('role');
         try {
-            // await updateUserRole(userId, role); // your API call
+            await updateUserRole(userId, role); // your API call
+            queryClient.invalidateQueries({ queryKey: ['users'] }); // invalidate users list to refresh data
             toast.success(`Role updated to ${role}`);
         } catch {
             toast.error('Failed to update role');
@@ -63,9 +68,13 @@ export const ActionMenu = ({ userId, currentRole }: { userId: string; currentRol
     const handleResetPassword = async () => {
         setLoadingAction('reset');
         try {
-            // await sendPasswordResetEmail(userId);
-            toast.success('Password reset email sent');
-        } catch {
+            const result = await sendPasswordReset(email);
+            if (result.success) {
+                toast.success('Password reset email sent');
+            } else {
+                toast.error('Failed to send reset email');
+            }
+        } catch (error) {
             toast.error('Failed to send reset email');
         } finally {
             setLoadingAction(null);
@@ -98,7 +107,7 @@ export const ActionMenu = ({ userId, currentRole }: { userId: string; currentRol
             {/* Inline role list */}
             {showRoles && (
                 <div className="border-t border-slate-100 bg-slate-50">
-                    {ROLES.map((role) => (
+                    {Object.values(Role).map((role) => (
                         <button
                             key={role}
                             onClick={() => handleRoleChange(role)}

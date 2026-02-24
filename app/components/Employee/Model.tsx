@@ -18,6 +18,7 @@ import { useParams } from "next/navigation";
 import { Branch } from "@/app/types/branch";
 import { createEmployee, updateEmployee } from "@/app/features/employees/actions";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface EmpModalProps {
   mode: "add" | "edit";
@@ -29,6 +30,7 @@ interface EmpModalProps {
 const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
   const { branchId } = useParams<{ branchId: string }>();
 
+  const queryClient = useQueryClient()
   const [branch, setBranch] = useState<Branch | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -75,6 +77,7 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
           toast.error(res.error ?? "Failed to add employee");
           return;
         }
+        queryClient.invalidateQueries({ queryKey: ["employees"] });
         toast.success("Successfully Added Employee");
         onSuccess?.();
         onClose();
@@ -87,11 +90,12 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
           toast.error(res.error ?? "Failed to update employee");
           return;
         }
+        queryClient.invalidateQueries({ queryKey: ["employees"] });
         toast.success("Successfully Updated Employee");
         onSuccess?.();
         onClose();
       }
-    } catch {
+    } catch (err) {
       alert("Error saving employee details");
     } finally {
       setLoading(false);
@@ -157,7 +161,7 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                   onChange={(e) =>
                     setFormData({ ...formData, email: e.target.value })
                   }
-                  required
+
                   className={inputStyles}
                 />
               </div>

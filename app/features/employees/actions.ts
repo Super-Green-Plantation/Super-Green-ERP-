@@ -7,44 +7,54 @@ import { serializeData } from "@/app/utils/serializers";
 import { generateTempPassword, sendWelcomeEmail } from "@/lib/email";
 import { supabaseAdmin } from "@/prisma/seed";
 
-// Create new employee/member
-export async function createEmployee(data: {
+interface EmpData {
   name: string;
-  email: string;
-  phone: string;
+  email?: string;
+  phone?: string;
   empNo: string;
   totalCommission: number;
   branchId: number;
   positionId: number;
-}) {
-  // Step 1: Generate a temporary password
+}
+export async function createEmployee(data: EmpData) {
   const tempPassword = generateTempPassword();
+  let supabaseUserId: string | null = null;
 
-  const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-    email: data.email,
-    password: tempPassword,
-    email_confirm: true,
-  });
-
-  if (authError || !authData.user) throw new Error(authError?.message);
-
-  // Step 2: Create Prisma User row
-  const user = await prisma.user.create({
-    data: {
-      id: authData.user.id, // Must match Supabase ID
-      role: "EMPLOYEE",
-      branchId: data.branchId,
-    },
-  });
-
-  // Step 3: Create the Prisma Member record.
   try {
+    let userId: string | undefined = undefined;
+
+    // Only create auth user + prisma user if email provided
+    if (data.email) {
+      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+        email: data.email,
+        password: tempPassword,
+        email_confirm: true,
+      });
+
+      if (authError || !authData.user) throw new Error(authError?.message ?? 'Auth user creation failed');
+
+      supabaseUserId = authData.user.id; // store for rollback
+
+      await prisma.user.create({
+        data: {
+          id: authData.user.id,
+          name: data.name,
+          email: data.email,
+          role: 'EMPLOYEE',
+          branchId: data.branchId,
+        },
+      });
+
+      userId = authData.user.id;
+    }
+
+    // Create member — userId is optional (nullable foreign key)
     const member = await prisma.member.create({
       data: {
-        userId: user.id, // foreign key now exists
+        ...(userId && { userId }),         // only set if exists
         name: data.name,
-        email: data.email,
-        phone: data.phone,
+        email: data.email || null,
+        phone: data.phone || null,
         empNo: data.empNo,
         totalCommission: data.totalCommission,
         branchId: data.branchId,
@@ -52,25 +62,30 @@ export async function createEmployee(data: {
       },
     });
 
-    // Step 4: Send welcome email with credentials (non-fatal — member is created either way)
-    try {
-      await sendWelcomeEmail({
-        to: data.email,
-        name: data.name,
-        empNo: data.empNo,
-        tempPassword,
-      });
-    } catch (emailErr) {
-      console.warn("Welcome email failed to send (employee still created):", emailErr);
+    // Send welcome email (non-fatal)
+    if (data.email) {
+      try {
+        await sendWelcomeEmail({ to: data.email, name: data.name, empNo: data.empNo, tempPassword });
+      } catch (emailErr) {
+        console.warn('Welcome email failed (employee still created):', emailErr);
+      }
     }
 
-    revalidatePath("/features/employees");
+    revalidatePath('/features/employees');
     revalidatePath(`/features/branches/employees/${data.branchId}`);
     return { success: true, member };
+
   } catch (err) {
-    console.error("Error creating employee — rolling back Supabase auth user:", err);
-    await supabaseAdmin.auth.admin.deleteUser(String(authData.user.id));
-    return { success: false, error: "Server error — employee creation failed" };
+    console.error('Error creating employee:', err);
+
+    // Rollback Supabase auth user if it was created
+    if (supabaseUserId) {
+      await supabaseAdmin.auth.admin.deleteUser(supabaseUserId).catch((e) =>
+        console.error('Rollback failed:', e)
+      );
+    }
+
+    return { success: false, error: 'Server error — employee creation failed' };
   }
 }
 
@@ -164,8 +179,8 @@ export async function updateEmployeeCommission(empNo: string, commission: number
 }
 
 // Update employee details
-export async function updateEmployee(id: number, data: {
-  name: string;
+export async function updateEmployee(memberId: number, data: {
+  name: string | undefined;
   email: string;
   phone: string;
   empNo: string;
@@ -173,13 +188,81 @@ export async function updateEmployee(id: number, data: {
   branchId: number;
   positionId: number;
 }) {
+  let supabaseUserId: string | null = null;
+
   try {
+    // Fetch current member to compare email and check if user exists
+    const existing = await prisma.member.findUnique({
+      where: { id: memberId },
+      include: { user: true },
+    });
+
+    if (!existing) return { success: false, error: 'Member not found' };
+
+    const emailChanged = data.email && data.email !== existing.email;
+    const hadNoEmail = !existing.userId; // member had no linked user before
+
+    let userId = existing.userId;
+
+    if (data.email) {
+      if (hadNoEmail) {
+        // No user existed — create one now
+        const tempPassword = generateTempPassword();
+
+        const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+          email: data.email,
+          password: tempPassword,
+          email_confirm: true,
+        });
+
+        if (authError || !authData.user) throw new Error(authError?.message ?? 'Auth user creation failed');
+
+        supabaseUserId = authData.user.id;
+
+        await prisma.user.create({
+          data: {
+            id: authData.user.id,
+            name: data.name,
+            email: data.email,
+            role: 'EMPLOYEE',
+            branchId: data.branchId,
+          },
+        });
+
+        userId = authData.user.id;
+
+        // Send welcome email (non-fatal)
+        try {
+          await sendWelcomeEmail({ to: data.email, name: data.name ?? '', empNo: data.empNo, tempPassword });
+        } catch (e) {
+          console.warn('Welcome email failed:', e);
+        }
+
+      } else if (emailChanged && existing.user?.id) {
+        // User exists — update email in both Supabase and Prisma
+        const { error } = await supabaseAdmin.auth.admin.updateUserById(existing.user.id, {
+          email: data.email,
+        });
+
+        if (error) throw new Error(`Supabase email update failed: ${error.message}`);
+
+        await prisma.user.update({
+          where: { id: existing.user.id },
+          data: { email: data.email,
+              name: data.name,
+           },
+        });
+      }
+    }
+
+    // Update member
     const updated = await prisma.member.update({
-      where: { id },
+      where: { id: memberId },
       data: {
+        ...(userId && !existing.userId && { userId }), // link user if newly created
         name: data.name,
-        email: data.email,
-        phone: data.phone,
+        email: data.email || null,
+        phone: data.phone || null,
         empNo: data.empNo,
         totalCommission: Number(data.totalCommission),
         branchId: Number(data.branchId),
@@ -187,11 +270,20 @@ export async function updateEmployee(id: number, data: {
       },
     });
 
-    revalidatePath("/features/employees");
+    revalidatePath('/features/employees');
     return { success: true, member: updated };
+
   } catch (error) {
-    console.error("Error updating employee:", error);
-    return { success: false, error: "Failed to update employee" };
+    console.error('Error updating employee:', error);
+
+    // Rollback newly created Supabase user if member update failed
+    if (supabaseUserId) {
+      await supabaseAdmin.auth.admin.deleteUser(supabaseUserId).catch((e) =>
+        console.error('Rollback failed:', e)
+      );
+    }
+
+    return { success: false, error: 'Failed to update employee' };
   }
 }
 // Get member details for profile page
@@ -225,7 +317,7 @@ export async function deleteEmployee(id: string) {
   console.log(id);
   try {
     const deleted = await prisma.member.delete({
-      where: { userId:id },
+      where: { userId: id },
     });
 
     await prisma.user.delete({
