@@ -26,6 +26,7 @@ async function main() {
     create: {
       id: data.user.id,
       role: Role.ADMIN,
+      email: data.user.email!,
       branchId: null,
     },
   });

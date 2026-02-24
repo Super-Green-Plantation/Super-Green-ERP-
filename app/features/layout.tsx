@@ -18,7 +18,7 @@ export default function FeaturesLayout({
 
       <main
         className={`
-    min-h-screen bg-gray-100 sm:pt-20  pt-10 sm:p-4 p-4
+    min-h-screen bg-gray-100 sm:pt-10 pt-8 p-4
     transition-all duration-300
     ml-20 ${isCollapsed ? "md:ml-20" : "md:ml-72"}
   `}

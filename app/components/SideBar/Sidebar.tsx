@@ -45,12 +45,15 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }: any) => {
 
   return (
     <aside
-      className={`overflow-scroll
-        fixed left-0 top-0 h-screen bg-gray-900 text-gray-100
-        border-r border-gray-800 transition-all duration-300
-        z-50
-        ${isCollapsed ? "w-20" : "w-64"}
-      `}
+      style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+      className={`flex-1 overflow-y-auto
+    fixed left-0 top-0 h-screen
+    bg-gray-900 text-gray-100
+    border-r border-gray-800
+    transition-all duration-300
+    z-50
+    ${isCollapsed ? "w-20" : "w-64"}
+  `}
     >
       {/* Header Area */}
       <div className="flex items-center justify-between px-6 py-6 overflow-hidden">
@@ -93,10 +96,9 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }: any) => {
                 text-sm font-bold
                 transition-all duration-200
                 group
-                ${
-                  isActive
-                    ? "bg-gray-600 text-white shadow-lg shadow-blue-900/20"
-                    : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                ${isActive
+                  ? "bg-gray-600 text-white shadow-lg shadow-blue-900/20"
+                  : "text-gray-400 hover:bg-gray-800 hover:text-white"
                 }
               `}
             >

@@ -79,14 +79,15 @@ model PersonalCommissionTier {
 
 //many side ekata foreign key eka / Parent has an array
 model Member {
-  id       Int    @id @default(autoincrement())
-  userId   String?    @unique
-  user     User?   @relation(fields: [userId], references: [id])
+  id Int @id @default(autoincrement())
 
-  name     String
-  phone     String?
-  email     String?
-  empNo    String @unique
+  userId String? @unique @db.Uuid
+  user   User?   @relation(fields: [userId], references: [id])
+
+  name  String
+  phone String?
+  email String?
+  empNo String  @unique
 
   branchId Int
   branch   Branch @relation(fields: [branchId], references: [id])
@@ -96,9 +97,9 @@ model Member {
 
   totalCommission Float @default(0)
 
-  commissions  Commission[]
-  investments  Investment[]
-  activityLog  ActivityLog[]
+  commissions Commission[]
+  investments Investment[]
+  activityLog ActivityLog[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -136,11 +137,11 @@ model Client {
   address          String
   investmentAmount Int
 
-  signature String?
-  idFront   String?
-  idBack    String?
-  proposal  String?
-  agreement String?
+  signature   String?
+  idFront     String?
+  idBack      String?
+  proposal    String?
+  agreement   String?
   paymentSlip String?
 
   branchId Int
@@ -289,7 +290,6 @@ model ActivityLog {
   @@index([branchId])
 }
 
-
 //auth
 enum Role {
   ADMIN
@@ -301,11 +301,11 @@ enum Role {
 }
 
 model User {
-  id         String     @id @default(uuid())
-  role       Role    @default(EMPLOYEE)
-  name       String?
-  email     String?   @unique
-  branchId   Int?
-  status     Boolean  @default(true)
-  member     Member?
+  id       String  @id @default(uuid()) @db.Uuid
+  role     Role    @default(EMPLOYEE)
+  name     String?
+  email    String? @unique
+  branchId Int?
+  status   Boolean @default(true)
+  member   Member?
 }

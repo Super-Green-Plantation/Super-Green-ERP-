@@ -1,7 +1,7 @@
 'use server'
 import { Role } from "@/app/types/role";
 import { prisma } from "@/lib/prisma";
-import { supabase } from "@/lib/supabase/supabaseClient";
+import { supabase } from "@/lib/supabase/admin";
 
 export const getUsers = async () => {
     const users = await prisma.user.findMany({ 

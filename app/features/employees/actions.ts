@@ -27,8 +27,10 @@ export async function createEmployee(data: EmpData) {
     if (data.email) {
       const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
         email: data.email,
+        phone: data.phone,
         password: tempPassword,
         email_confirm: true,
+        
       });
 
       if (authError || !authData.user) throw new Error(authError?.message ?? 'Auth user creation failed');
