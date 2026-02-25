@@ -25,6 +25,7 @@ async function main() {
     update: {},
     create: {
       id: data.user.id,
+      name: "Admin User",
       role: Role.ADMIN,
       email: data.user.email!,
       branchId: null,

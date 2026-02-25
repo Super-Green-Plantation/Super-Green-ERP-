@@ -2,26 +2,28 @@
 
 import { ArrowRight, Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
 import Image from "next/image";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { toast } from "sonner";
 import * as z from "zod";
 import { login } from "./action";
+import { useRouter } from "next/navigation";
 
 export default function SignInPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [Loading, setLoading] = useState(false);
+  const router = useRouter()
 
   const initialState = { error: null }
 
   const [state, formAction] = useActionState(login, initialState)
 
-  const handleReset = () => { }
-
-  // if (state.error) {
-  //   return toast.error(state.error)
-  // }
+  useEffect(() => {
+    if (state.error) {
+      toast.error(state.error);
+    }
+  }, [state.error]);
 
 
   return (
@@ -80,7 +82,7 @@ export default function SignInPage() {
                   Password
                 </label>
                 <button
-                  onClick={handleReset}
+                  onClick={()=> router.push("/auth/resetPassword")}
                   type="button" className="text-[10px] font-bold text-blue-400 uppercase tracking-tight hover:text-blue-300 transition-colors">
                   Forgot Password ?
                 </button>

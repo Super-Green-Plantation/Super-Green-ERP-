@@ -9,7 +9,7 @@ export default async function Profile() {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) redirect("/auth/signin")
+  if (!user) redirect("/auth/signinlogin")
 
   return (
     <div>

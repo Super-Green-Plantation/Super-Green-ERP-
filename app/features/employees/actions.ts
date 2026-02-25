@@ -22,42 +22,40 @@ export async function createEmployee(data: EmpData) {
   const tempPassword = generateTempPassword();
   let supabaseUserId: string | null = null;
 
+  console.log(data);
+  
   try {
-    let userId: string | undefined = undefined;
+    if (!data.email) throw new Error('Email is required');
 
-    // Only create auth user + prisma user if email provided
-    if (data.email) {
-      const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+    // 1️⃣ Create Supabase user first
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      email: data.email,
+      phone: data.phone || "",
+      password: tempPassword,
+      email_confirm: true,
+    });
+
+    if (authError || !authData.user) throw new Error(authError?.message ?? 'Auth user creation failed');
+
+    supabaseUserId = authData.user.id;
+
+    // 2️⃣ Create Prisma user
+    await prisma.user.create({
+      data: {
+        id: supabaseUserId,
+        name: data.name,
         email: data.email,
-        phone: data.phone,
-        password: tempPassword,
-        email_confirm: true,
-        
-      });
+        role: 'EMPLOYEE',
+        branchId: data.branchId,
+      },
+    });
 
-      if (authError || !authData.user) throw new Error(authError?.message ?? 'Auth user creation failed');
-
-      supabaseUserId = authData.user.id; // store for rollback
-
-      await prisma.user.create({
-        data: {
-          id: authData.user.id,
-          name: data.name,
-          email: data.email,
-          role: 'EMPLOYEE',
-          branchId: data.branchId,
-        },
-      });
-
-      userId = authData.user.id;
-    }
-
-    // Create member — userId is optional (nullable foreign key)
+    // 3️⃣ Create member
     const member = await prisma.member.create({
       data: {
-        ...(userId && { userId }),         // only set if exists
+        userId: supabaseUserId,
         name: data.name,
-        email: data.email || null,
+        email: data.email,
         phone: data.phone || null,
         empNo: data.empNo,
         totalCommission: data.totalCommission,
@@ -66,13 +64,11 @@ export async function createEmployee(data: EmpData) {
       },
     });
 
-    // Send welcome email (non-fatal)
-    if (data.email) {
-      try {
-        await sendWelcomeEmail({ to: data.email, name: data.name, empNo: data.empNo, tempPassword });
-      } catch (emailErr) {
-        console.warn('Welcome email failed (employee still created):', emailErr);
-      }
+    // 4️⃣ Send welcome email (non-fatal)
+    try {
+      await sendWelcomeEmail({ to: data.email, name: data.name, empNo: data.empNo, tempPassword });
+    } catch (emailErr) {
+      console.warn('Welcome email failed:', emailErr);
     }
 
     revalidatePath('/features/employees');
@@ -82,11 +78,9 @@ export async function createEmployee(data: EmpData) {
   } catch (err) {
     console.error('Error creating employee:', err);
 
-    // Rollback Supabase auth user if it was created
+    // Rollback Supabase user if created
     if (supabaseUserId) {
-      await supabaseAdmin.auth.admin.deleteUser(supabaseUserId).catch((e) =>
-        console.error('Rollback failed:', e)
-      );
+      await supabaseAdmin.auth.admin.deleteUser(supabaseUserId).catch(e => console.error('Rollback failed:', e));
     }
 
     return { success: false, error: 'Server error — employee creation failed' };

@@ -54,9 +54,9 @@ export async function login(
 
   const dbUser = await getAuthUser(data.user)
 
-  // if (!dbUser?.status) {
-  //   return { error: "Your account is suspended. Please contact support." }
-  // }
+  if (!dbUser?.status) {
+    return { error: "Your account is suspended. Please contact support." }
+  }
 
   redirect('/features/dashboard')
 }

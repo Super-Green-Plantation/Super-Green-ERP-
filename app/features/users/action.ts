@@ -1,19 +1,20 @@
 'use server'
 import { Role } from "@/app/types/role";
 import { prisma } from "@/lib/prisma";
-import { supabase } from "@/lib/supabase/publicClient";
+import { createClient } from "@/lib/supabase/client";
 
 export const getUsers = async () => {
-    const users = await prisma.user.findMany({ 
-        include: { 
+    const users = await prisma.user.findMany({
+        include: {
             member: {
-                include:{
+                include: {
                     branch: true
                 }
             }
-         } }
+        }
+    }
 
-         
+
     );
     return users;
 }
@@ -35,13 +36,15 @@ export const updateUserRole = async (userId: string, newRole: Role) => {
 }
 
 export const sendPasswordReset = async (email: string) => {
-  const { data, error } = await supabase.auth.resetPasswordForEmail(email);
+    const supabase = await createClient()
 
-  if (error) {
-    console.error("Failed to send password reset email:", error.message);
-    return { success: false, error: error.message };
-  }
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email);
 
-  console.log("Password reset email sent:", data);
-  return { success: true };
+    if (error) {
+        console.error("Failed to send password reset email:", error.message);
+        return { success: false, error: error.message };
+    }
+
+    console.log("Password reset email sent:", data);
+    return { success: true };
 }

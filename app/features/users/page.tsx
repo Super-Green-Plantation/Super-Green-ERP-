@@ -23,6 +23,8 @@ const UserListPage = () => {
   const { data: usersData, isLoading, isError } = useUsers();
   const [users, setUsers] = useState<any[]>([]);
 
+  
+
   // Initialize local state when hook finishes loading
   useEffect(() => {
     if (usersData) {

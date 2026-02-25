@@ -7,11 +7,12 @@ import { toast } from 'sonner';
 import { sendPasswordReset, updateUserRole } from './action';
 import { Role } from '@/app/types/role';
 import { useQueryClient } from '@tanstack/react-query';
+import { createClient } from '@/lib/supabase/client';
 
 // const ROLES = ['ADMIN', 'HR', 'IT_DEV', 'IT_US', 'BRANCH_MANAGER', 'EMPLOYEE'] as const;
 // type Role = typeof ROLES[number];
 
-export const ActionMenu = ({ userId, currentRole,email }: { userId: string; currentRole: Role; email: string }) => {
+export const ActionMenu = ({ userId, currentRole, email }: { userId: string; currentRole: Role; email: string }) => {
     const [open, setOpen] = useState(false);
     const [showRoles, setShowRoles] = useState(false);
     const [loadingAction, setLoadingAction] = useState<string | null>(null);
@@ -68,8 +69,10 @@ export const ActionMenu = ({ userId, currentRole,email }: { userId: string; curr
     const handleResetPassword = async () => {
         setLoadingAction('reset');
         try {
-            const result = await sendPasswordReset(email);
-            if (result.success) {
+            const supabase = await createClient()
+            const { data, error } = await supabase.auth.resetPasswordForEmail(email);
+
+            if (data && !error) {
                 toast.success('Password reset email sent');
             } else {
                 toast.error('Failed to send reset email');
