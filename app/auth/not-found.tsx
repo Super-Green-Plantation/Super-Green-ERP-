@@ -32,7 +32,7 @@ export default function NotFound() {
                 {/* Visual Element */}
                 <div className="relative inline-block">
                     <div className="bg-white p-8 rounded-[2.5rem] inline-block shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-gray-100">
-                        <FileQuestion className="w-16 h-16 text-indigo-600 animate-bounce [animation-duration:3s]" />
+                        <FileQuestion className="w-16 h-16 text-indigo-600 animate-bounce animation-duration-[3s]" />
                     </div>
                     <div className="absolute -bottom-2 -right-4 bg-indigo-600 px-4 py-1.5 rounded-full text-[10px] font-bold text-white uppercase tracking-widest shadow-lg">
                         Error 404

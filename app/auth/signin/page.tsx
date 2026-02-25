@@ -129,7 +129,7 @@ export default function SignInPage() {
         </div>
 
         {/* Footer */}
-        <p className="text-center mt-8 text-[10px] font-bold text-slate-600 uppercase tracking-[0.1em]">
+        <p className="text-center mt-8 text-[10px] font-bold text-slate-600 uppercase tracking-widest">
           Internal Use Only &bull; Secured by SSL encryption
         </p>
       </div>

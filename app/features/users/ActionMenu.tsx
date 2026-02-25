@@ -89,7 +89,7 @@ export const ActionMenu = ({ userId, currentRole, email }: { userId: string; cur
         <div
             ref={menuRef}   // ← add this
             style={{ top: menuPos.top, left: menuPos.left }}
-            className="fixed w-48 bg-white shadow-xl rounded-xl border border-slate-200 z-[9999] overflow-hidden"
+            className="fixed w-48 bg-white shadow-xl rounded-xl border border-slate-200 z-9999 overflow-hidden"
         >
             {/* Update Role — expands inline */}
             <button

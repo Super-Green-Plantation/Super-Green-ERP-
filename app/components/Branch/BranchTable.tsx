@@ -72,7 +72,7 @@ const BranchTable = ({ data, isLoading, onRefresh }: BranchTableProps) => {
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-      <div className="flex justify-end m-3 items-center mb-6">
+      <div className="flex justify-end  items-center">
       
 
 
@@ -132,8 +132,7 @@ const BranchTable = ({ data, isLoading, onRefresh }: BranchTableProps) => {
 
                 {/* Team Size Column */}
                 <td className="px-6 py-4">
-                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  <div className="flex items-center text-center justify-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
                     <span className="text-[11px] font-black uppercase tracking-tight">
                       {branch.members?.length || 0} Staff Members
                     </span>

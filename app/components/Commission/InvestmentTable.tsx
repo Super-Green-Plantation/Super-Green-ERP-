@@ -37,7 +37,7 @@ const InvestmentTable = () => {
               <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500 text-right">View</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 relative min-h-[200px]">
+          <tbody className="divide-y divide-slate-100 relative min-h-50">
 
             {/* --- EMPTY STATE --- */}
             {allInvestments.length === 0 && (

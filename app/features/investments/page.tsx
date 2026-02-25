@@ -38,12 +38,10 @@ const page = () => {
   return (
     <div className="max-w-7xl mx-auto sm:space-y-8 space-y-2 sm:p-4 md:p-8 min-h-screen">
       <div className="sm:flex justify-between items-center mb-6 space-y-6">
-        <h1 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
           <Heading>
 
             Investments
           </Heading>
-        </h1>
         <div className="flex gap-3">
 
           <Link

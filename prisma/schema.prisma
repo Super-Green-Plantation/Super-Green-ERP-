@@ -22,7 +22,7 @@ enum ReturnFrequency {
 model Branch {
   id          Int           @id @default(autoincrement())
   name        String
-  location    String
+  location    String?
   members     Member[]
   status      Status        @default(Active)
   client      Client[]

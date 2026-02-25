@@ -55,7 +55,7 @@ const BranchModal = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!name || !location) {
+    if (!name) {
       alert("Please fill in all fields!");
       return;
     }
