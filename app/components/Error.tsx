@@ -10,15 +10,15 @@ const Error = () => {
       <h3 className="text-sm font-black text-rose-900 uppercase tracking-widest">
         Connection Interrupted
       </h3>
-      <p className="mt-1 text-xs font-bold text-rose-600/70">
-        We couldn't fetch the branch records. Please check your network.
+      <p className="text-center mt-1 text-xs font-bold text-rose-600/70">
+        We couldn't get the records. Please check your network.
       </p>
 
       <button
         onClick={() => window.location.reload()}
         className="mt-6 px-6 py-2 bg-white text-rose-600 border border-rose-200 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 hover:text-white hover:border-rose-600 transition-all shadow-sm active:scale-95"
       >
-        Retry Synchronization
+        Retry
       </button>
     </div>
   );

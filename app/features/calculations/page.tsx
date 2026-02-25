@@ -4,6 +4,7 @@ import { getFinancialPlanById, getFinancialPlans } from "../financial_plans/acti
 import { FinancialPlan } from "@/app/types/FinancialPlan";
 import FinancialPlanCard from "./FinancialPlanCard";
 import { Calculator, Cross, RemoveFormatting, X } from "lucide-react";
+import Heading from "@/app/components/Heading";
 
 const Page = () => {
   const [plans, setPlans] = useState<FinancialPlan[]>([]);
@@ -56,9 +57,10 @@ const Page = () => {
     /* 1. Main Container: Fixed height, no scroll, flex layout */
     <div className="flex flex-col h-screen max-w-7xl mx-auto overflow-hidden bg-slate-50/30">
       <header className="mb-8">
-        <h1 className="sm:text-3xl text-xl font-black text-slate-900 tracking-tight">
+        <Heading>
+
           Available Financial Plans
-        </h1>
+        </Heading>
         <p className="text-slate-500 mt-1 font-medium">
           Select a plan to initialize the projection engine.
         </p>
@@ -81,16 +83,13 @@ const Page = () => {
       </div>
 
       {/* 3. Fixed Calculation Section */}
-      <div className="bg-white border-t border-slate-200 shadow-[0_-10px_40px_rgba(0,0,0,0.04)] p-6 z-20">
+      <div className="bg-white border-t border-slate-200 rounded-2xl p-6 z-20">
         <div className="max-w-5xl mx-auto">
           {selectedPlan ? (
             <div className="flex flex-col lg:flex-row items-center gap-8 animate-in slide-in-from-bottom-4 duration-500">
               <div className="w-full lg:w-1/3">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-600 rounded-lg text-white">
-                      <Calculator size={16} />
-                    </div>
                     <h2 className="text-sm font-black uppercase tracking-widest text-slate-700">
                       {selectedPlan.name}
                     </h2>
@@ -108,7 +107,7 @@ const Page = () => {
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">Rs.</span>
                   <input
                     type="number"
-                    className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all outline-none text-lg font-black text-slate-900"
+                    className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all outline-none text-md font-semibold text-slate-900"
                     placeholder="Enter Amount"
                     value={investmentAmount || ""}
                     onChange={(e) => setInvestmentAmount(Number(e.target.value))}
@@ -120,14 +119,14 @@ const Page = () => {
               <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
                 <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 flex flex-col justify-center">
                   <p className="text-[10px] text-emerald-600 font-black uppercase tracking-widest mb-1">Monthly Yield</p>
-                  <p className="text-xl font-black text-emerald-700 tabular-nums">
+                  <p className="text-md font-semibold text-emerald-700 tabular-nums">
                     {formatLKR(monthlyReturn)}
                   </p>
                 </div>
 
                 <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 flex flex-col justify-center">
                   <p className="text-[10px] text-blue-600 font-black uppercase tracking-widest mb-1">Yearly Yield</p>
-                  <p className="text-xl font-black text-blue-700 tabular-nums">
+                  <p className="text-md font-semibold text-blue-700 tabular-nums">
                     {formatLKR(yearlyReturn)}
                   </p>
                 </div>

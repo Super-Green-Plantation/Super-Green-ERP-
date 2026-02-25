@@ -7,6 +7,7 @@ import Pagination from "@/app/components/Pagination";
 import { ExternalLink, Phone, User } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import Heading from "@/app/components/Heading";
 
 const PAGE_SIZE = 10;
 
@@ -14,8 +15,8 @@ const Page = () => {
   const { data: c, isLoading, isError } = useClients();
   const [currentPage, setCurrentPage] = useState(1);
 
-  if (isLoading) return <Loading/>;
-  if (isError) return <Error/>;
+  if (isLoading) return <Loading />;
+  if (isError) return <Error />;
 
   const allClients = c?.clients ?? [];
   const totalPages = Math.ceil(allClients.length / PAGE_SIZE);
@@ -25,13 +26,15 @@ const Page = () => {
   );
 
   return (
-    <div className=" max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold">Clients</h1>
+      <div className="sm:flex sm:justify-between sm:items-center mb-6">
+        <Heading className="mb-3">
+          Clients
+        </Heading>
         <Link
           href="/features/clients/createClient"
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          className="flex-1 sm:flex-none flex items-center justify-center uppercase gap-2 px-4 py-3 bg-slate-900 hover:bg-blue-600 text-white text-xs sm:font-black font-bold tracking-widest rounded-xl transition-all shadow-xl shadow-slate-200 active:scale-95"
         >
           + Add Client
         </Link>
@@ -129,11 +132,10 @@ const Page = () => {
                       <div
                         className={`
                   inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tight
-                  ${
-                    client.status === "Active"
-                      ? "bg-emerald-100 text-emerald-700"
-                      : "bg-rose-100 text-rose-700"
-                  }
+                  ${client.status === "Active"
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-rose-100 text-rose-700"
+                          }
                 `}
                       >
                         <div

@@ -17,6 +17,7 @@ import { getBranchById } from "@/app/features/branches/actions";
 import { Member } from "@/app/types/member";
 import { generateBranchEmployeePDF } from "@/app/utils/pdfGenerator";
 import ExportButton from "@/app/components/ExportStatement";
+import Heading from "@/app/components/Heading";
 
 const Page = () => {
   const params = useParams();
@@ -44,28 +45,29 @@ const Page = () => {
   }, []);
 
   if (!branchId || isNaN(branchId))
-    return <div className="p-10 text-red-500 font-bold">Branch ID missing</div>;
+    return <div className="p-10 text-red-500 text-lg font-semibold">Branch ID missing</div>;
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 p-4 md:p-8 min-h-screen">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-b border-slate-100 ">
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-3">
           <Back />
           <div className="h-12 w-px bg-slate-200 hidden md:block" />
           <div className="flex gap-4 items-center">
-            <h1 className="text-2xl md:text-4xl font-black text-slate-900 tracking-tighter flex items-center gap-3">
-              {loading ? (
-                <Loader2 className="animate-spin w-6 h-6 text-slate-300" />
-              ) : (
-                branchData?.name
-              )}
-            </h1>
-            <div className="flex items-center gap-4 mt-2">
+              <Heading>
+                {loading ? (
+                  <Loader2 className="animate-spin w-6 h-6 text-slate-300" />
+                ) : (
+                  branchData?.name
+                )}
+              </Heading>
+
+            {/* <div className="flex items-center gap-4 mt-2">
               <p className="text-xs text-slate-500 font-bold flex items-center gap-1.5">
                 <MapPin size={14} className="text-slate-400" />
                 {branchData?.location || "Loading location..."}
               </p>
-            </div>
+            </div> */}
           </div>
         </div>
 
@@ -90,7 +92,7 @@ const Page = () => {
 
       {/* --- STATS & SEARCH BAR --- */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        <div className="lg:col-span-1 bg-white rounded-2xl border border-slate-100 p-6 shadow-sm flex items-center gap-5">
+        <div className="lg:col-span-1 bg-white rounded-2xl border border-slate-100 p-4 shadow-sm flex items-center gap-5">
           <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
             <Users className="w-6 h-6 text-blue-600" />
           </div>

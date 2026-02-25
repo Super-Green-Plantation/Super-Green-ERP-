@@ -6,6 +6,7 @@ import { AlertCircle, Loader2, Users } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 import Loading from "@/app/components/Loading";
 import Error from "@/app/components/Error";
+import Heading from "@/app/components/Heading";
 
 interface Branch {
   id: number;
@@ -18,19 +19,21 @@ const Page = () => {
 
   if (isLoading) {
     return (
-     <Loading/>
+      <Loading />
     );
   }
   if (error) {
+    return (
+      <Error />
+    );
+  }
   return (
-    <Error />
-  );
-}
-  return (
-    <div className="space-y-8 max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto sm:space-y-8 space-y-2 sm:p-4 md:p-8 min-h-screen">
       {/* Header */}
       <div>
-        <h2 className="text-2xl font-semibold">Manage Employees</h2>
+        <Heading>
+          Manage Employees
+        </Heading>
         <p className="text-sm text-gray-500 mt-1">
           Select a branch to view and manage employees
         </p>

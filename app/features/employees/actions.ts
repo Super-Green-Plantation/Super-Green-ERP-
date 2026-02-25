@@ -6,6 +6,8 @@ import { getUpperMembers } from "@/lib/member";
 import { serializeData } from "@/app/utils/serializers";
 import { generateTempPassword, sendWelcomeEmail } from "@/lib/email";
 import { supabaseAdmin } from "@/prisma/seed";
+import { createClient } from "@/lib/supabase/client";
+import { redirect } from "next/navigation";
 
 interface EmpData {
   name: string;
@@ -336,3 +338,5 @@ export async function deleteEmployee(id: string) {
     return { success: false, error: "Failed to delete employee" };
   }
 }
+
+

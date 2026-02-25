@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
 import Loading from "@/app/components/Loading";
 import Error from "@/app/components/Error";
+import Heading from "@/app/components/Heading";
 
 export default function Page() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -62,19 +63,20 @@ export default function Page() {
   if (isLoading) return <Loading />;
   if (isError) return <Error />;
   return (
-    <div className="font-sans min-h-screen max-w-7xl mx-auto">
-      <div className="sm:flex justify-between items-center space-y-4 sm:space-y-0 mb-8">
+    <div className="max-w-7xl mx-auto sm:space-y-8 space-y-2 sm:p-4 md:p-8 min-h-screen">
+      <div className="sm:flex justify-between items-start space-y-4 sm:space-y-0 mb-8">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-800 tracking-tight">
+          <Heading>
             Financial Plans
-          </h1>
+          </Heading>
+
           <p className="text-gray-500 mt-1">
             Manage company financial products and terms
           </p>
         </div>
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="h-9 flex items-center gap-1 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg active:scale-95"
+           className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 hover:bg-blue-600 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-xl shadow-slate-200 active:scale-95"
         >
           <Plus size={17} /> Add Financial Plan
         </button>
@@ -87,22 +89,20 @@ export default function Page() {
               key={plan.id}
               className="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 overflow-hidden group"
             >
-              <div className="p-2  sm:p-6">
+              <div className="p-3  sm:p-6">
                 <div className="flex justify-between items-start mb-4">
-                  <div className="bg-blue-50 p-2 rounded-lg text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                    <Calendar size={24} />
-                  </div>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">
+                    {plan.name}
+                  </h3>
                   <span className="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full uppercase">
                     {plan.status}
                   </span>
                 </div>
 
-                <h3 className="text-xl font-bold text-gray-800 mb-2">
-                  {plan.name}
-                </h3>
-                <p className="text-gray-500 text-sm mb-6 line-clamp-3 leading-relaxed">
+
+                {/* <p className="text-gray-500 text-sm mb-6 line-clamp-3 leading-relaxed">
                   {plan.description}
-                </p>
+                </p> */}
 
                 <div className="flex flex-col gap-3 mb-6 bg-gray-50 p-4 rounded-xl">
                   <div className="flex items-center justify-between">

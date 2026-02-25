@@ -207,7 +207,7 @@ const DocumentUploadSection = () => {
 
   return (
     <div className="space-y-8 py-4">
-      <div className="flex items-center gap-3 pb-4 border-b border-gray-100">
+      <div className="flex items-center gap-3 border-b border-gray-100">
         <div className="p-2 bg-blue-600 rounded-lg">
           <ShieldCheck className="w-5 h-5 text-white" />
         </div>
@@ -219,6 +219,14 @@ const DocumentUploadSection = () => {
             Verify your identification and review supporting documents.
           </p>
         </div>
+      </div>
+
+      <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 flex items-start gap-3">
+        <FileUp className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+        <p className="text-[11px] leading-relaxed text-amber-800 font-medium italic">
+          Files must be under 5MB. Images will show a live preview; PDFs will
+          show a file icon. Ensure all details are sharp and clearly visible.
+        </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -261,17 +269,11 @@ const DocumentUploadSection = () => {
         </div>
       </div>
 
-      <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 flex items-start gap-3">
-        <FileUp className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-        <p className="text-[11px] leading-relaxed text-amber-800 font-medium italic">
-          Files must be under 5MB. Images will show a live preview; PDFs will
-          show a file icon. Ensure all details are sharp and clearly visible.
-        </p>
-      </div>
+      
 
       <button
         onClick={handleFile}
-        className="w-full py-3 rounded-xl bg-blue-600 text-white text-sm font-bold tracking-wide hover:bg-blue-700 disabled:opacity-50"
+        className="flex-1 sm:flex-none flex items-center justify-center uppercase gap-2 px-4 py-3 bg-slate-900 hover:bg-blue-600 text-white text-xs sm:font-black font-bold tracking-widest rounded-xl transition-all shadow-xl shadow-slate-200 active:scale-95"
       >
         {uploading ? "Uploading documents..." : "Upload Documents"}
       </button>

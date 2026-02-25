@@ -6,7 +6,7 @@ import { StatCard } from "@/app/components/StatCard";
 import { useDashboard } from "@/app/hooks/useDashboard";
 import { Briefcase, MapPin, TrendingUp, Users } from "lucide-react";
 
-const DashboardPage = () => {
+const DashboardPage =  () => {
   const { data, isLoading, isError } = useDashboard();
 
   if (isLoading) return <Loading />;
@@ -15,16 +15,14 @@ const DashboardPage = () => {
   if (!data) {
     return null;
   }
+
+  
+
+
   return (
-    <div className="max-w-7xl mx-auto pb-20">
+    <div className="max-w-7xl mx-auto sm:space-y-8 space-y-2 sm:p-4 md:p-8 min-h-screen">
       {/* 1. Main Page Header */}
       <header className="mb-10 px-2 ">
-        <div className="flex items-center gap-2 mb-2">
-          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600">
-            Executive Overview
-          </span>
-          <div className="h-px flex-1 bg-slate-100" />
-        </div>
         <h1 className="text-4xl font-semibold text-slate-900 tracking-tighter">
           Dashboard<span className="text-blue-600">.</span>
         </h1>

@@ -44,7 +44,7 @@ const AddPlanModal = ({ isOpen, onClose }: AddPlanModalProps) => {
         onClick={(e) => e.stopPropagation()}
       >  <div className="p-6 border-b bg-gray-50 flex justify-between items-center">
           <div>
-            <h2 className="text-xl font-bold text-gray-800">
+            <h2 className="text-lg font-semibold text-gray-800">
               New Financial Plan
             </h2>
             <p className="text-sm text-gray-500">
@@ -65,7 +65,7 @@ const AddPlanModal = ({ isOpen, onClose }: AddPlanModalProps) => {
           onSubmit={handleSubmit}
         >
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">
+            <label className="block text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wide">
               Plan Name
             </label>
             <input
@@ -79,7 +79,7 @@ const AddPlanModal = ({ isOpen, onClose }: AddPlanModalProps) => {
 
           <div className="grid grid-cols-2 gap-5">
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">
+              <label className="block text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wide">
                 Duration (Months)
               </label>
               <input
@@ -91,7 +91,7 @@ const AddPlanModal = ({ isOpen, onClose }: AddPlanModalProps) => {
               />
             </div>
             <div>
-              <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">
+              <label className="block text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wide">
                 Interest Rate (%)
               </label>
               <input
@@ -107,7 +107,7 @@ const AddPlanModal = ({ isOpen, onClose }: AddPlanModalProps) => {
 
           {/* Duration සහ Rate ඇති තැනට යටින් මෙය එක් කරන්න */}
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">
+            <label className="block text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wide">
               Initial Investment (Optional)
             </label>
             <input
@@ -118,7 +118,7 @@ const AddPlanModal = ({ isOpen, onClose }: AddPlanModalProps) => {
             />
           </div>
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">
+            <label className="block text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wide">
               Description
             </label>
             <textarea
@@ -133,13 +133,13 @@ const AddPlanModal = ({ isOpen, onClose }: AddPlanModalProps) => {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-6 py-3 border border-gray-200 rounded-xl font-bold text-gray-600 hover:bg-gray-50"
+              className="flex-1 px-6 py-3 border border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50"
             >
               Discard
             </button>
             <button
               type="submit"
-              className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg active:scale-95"
+              className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 shadow-lg active:scale-95"
             >
               Save Plan
             </button>

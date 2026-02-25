@@ -59,13 +59,13 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }: any) => {
       <div className="flex items-center justify-between px-6 py-6 overflow-hidden">
         {!isCollapsed && (
           <span className="flex text-xl font-black tracking-tighter text-white whitespace-nowrap animate-in fade-in duration-500">
-            <div className="mr-3 h-8 w-8 overflow-hidden rounded-full bg-white flex items-center justify-center">
+            <div className="mr-3  overflow-hidden rounded-full bg-white flex items-center justify-center">
               <Image
                 src="/logo.jpeg"
                 alt="logo"
                 width={32}
                 height={32}
-                className="object-cover"
+                className="object-cover h-8 w-8"
               />
             </div>
             <span className="text-green-500 mr-2">SGP</span> ERP

@@ -44,7 +44,7 @@ export default function SignaturePad() {
         </div>
 
         {/* Floating Instruction */}
-        <div className="absolute top-2 right-4 pointer-events-none">
+        <div className="absolute top-2 sm:right-4 right-6 pointer-events-none">
           <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 opacity-50">
             Sign inside the box
           </span>
@@ -67,14 +67,9 @@ export default function SignaturePad() {
             onClick={saveSignature}
             className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
           >
-            <CheckCircle2 className="w-3 h-3" />
             Confirm Signature
           </button>
         </div>
-
-        <p className="text-[10px] text-gray-400 font-medium italic">
-          Digital ID Verified
-        </p>
       </div>
     </div>
   );

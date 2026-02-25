@@ -8,16 +8,15 @@ const Commission = () => {
  
 
   return (
-    <div className="max-w-7xl min-h-screen mx-auto">
+    <div className="max-w-7xl mx-auto sm:space-y-8 space-y-2 sm:p-4 md:p-8 min-h-screen">
       {/* Header Container */}
-      <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3 sm:items-center">
-        <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-          <Wallet className="w-6 h-6 text-blue-600" />
+      <div className="flex flex-col sm:justify-between space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3 sm:items-center">
+        <h1 className="sm:text-2xl text-lg font-semibold md:text-3xl text-slate-900 tracking-tighter flex items-center">
           Commission
         </h1>
         <Link 
           href="/features/commissions/create"
-          className="mb-6 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all shadow-md active:scale-95 flex items-center gap-2"
+           className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 hover:bg-blue-600 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-xl shadow-slate-200 active:scale-95 mb-5"
         >
           <Plus className="w-4 h-4" /> Create Commission
         </Link>

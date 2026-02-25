@@ -52,13 +52,12 @@ const ApplicantDetails = () => {
   const labelClass = "text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1 ml-1";
 
   return (
-    <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
+    <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
       <div className="px-8 py-5 bg-gray-50/50 border-b border-gray-100 flex items-center gap-2">
-        <User className="w-4 h-4 text-blue-600" />
         <h2 className="text-xs font-black uppercase tracking-widest text-gray-800">Primary Applicant Information</h2>
       </div>
 
-      <div className="p-8">
+      <div className="sm:p-8 p-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="md:col-span-2">
             <label className={labelClass}>Full Name</label>
@@ -103,7 +102,7 @@ const ApplicantDetails = () => {
             <input type="text" {...register("applicant.address")} className={inputClass} />
           </div>
 
-          <div className="md:col-span-2 p-6 bg-blue-50/50 rounded-2xl border border-blue-100 space-y-4">
+          <div className="md:col-span-2 p-4 bg-blue-50/50 rounded-2xl border border-blue-100 space-y-4">
             <h3 className="text-[10px] font-black uppercase tracking-widest text-blue-600">Financial Selection</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
