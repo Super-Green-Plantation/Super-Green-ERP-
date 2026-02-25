@@ -1,6 +1,8 @@
 "use server"
 
 import { prisma } from "@/lib/prisma";
+import { createClient } from "@/lib/supabase/client";
+import { redirect } from "next/navigation";
 
 
 export async function getDashboardStats() {
@@ -59,4 +61,13 @@ export async function getDashboardStats() {
     console.error("Error fetching dashboard stats:", error);
     throw new Error("Failed to fetch dashboard statistics");
   }
+}
+
+export default async function Dashboard() {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) redirect("/auth/signin")
+
 }

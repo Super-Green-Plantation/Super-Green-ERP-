@@ -1,5 +1,6 @@
 "use client";
 
+import { logout } from "@/app/auth/logout/action";
 import {
   BanknoteArrowUp,
   Calculator,
@@ -17,6 +18,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import LogoutButton from "../LogoutButton";
 
 const links = [
   { name: "Dashboard", href: "/features/dashboard", icon: LayoutDashboard },
@@ -122,27 +124,33 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }: any) => {
 
       {/* Logout */}
       <div className="p-4 border-t border-gray-800 bg-gray-900/50">
-        <Link
-          href="/logout"
-          title={isCollapsed ? "Logout" : ""}
-          className="
+        <form action={logout}>
+          <button
+            type="submit"
+            title={isCollapsed ? "Logout" : ""}
+            className="
             flex items-center gap-4
             px-4 py-3 rounded-xl
             text-sm font-bold
             text-gray-400
             hover:bg-red-500/10 hover:text-red-500
             transition-all group
+            w-full text-left
           "
-        >
-          <div className="shrink-0">
-            <LogOut
-              size={22}
-              className="group-hover:rotate-12 transition-transform"
-            />
-          </div>
-          {!isCollapsed && <span className="whitespace-nowrap">Logout</span>}
-        </Link>
+          >
+            <div className="shrink-0">
+              <LogOut
+                size={22}
+                className="group-hover:rotate-12 transition-transform"
+              />
+            </div>
+            {!isCollapsed && <span className="whitespace-nowrap">Logout</span>}
+          </button>
+        </form>
       </div>
+
+
+
     </aside>
   );
 };

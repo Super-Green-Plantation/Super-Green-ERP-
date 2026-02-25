@@ -2,16 +2,10 @@
 
 import { ArrowRight, Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
 import Image from "next/image";
-import { useState } from "react";
-import { useFormState } from "react-dom";
+import { useActionState, useState } from "react";
+import { toast } from "sonner";
 import * as z from "zod";
 import { login } from "./action";
-import { toast } from "sonner";
-
-const SignInSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(8),
-});
 
 export default function SignInPage() {
   const [email, setEmail] = useState("");
@@ -21,13 +15,13 @@ export default function SignInPage() {
 
   const initialState = { error: null }
 
-  const [state, formAction] = useFormState(login, initialState)
+  const [state, formAction] = useActionState(login, initialState)
 
   const handleReset = () => { }
 
-  if (state.error) {
-    return toast.error(state.error)
-  }
+  // if (state.error) {
+  //   return toast.error(state.error)
+  // }
 
 
   return (
@@ -69,6 +63,7 @@ export default function SignInPage() {
                 <input
                   id="email"
                   type="email"
+                  name="email"
                   required
                   placeholder="you@supergreen.com"
                   value={email}
@@ -97,6 +92,7 @@ export default function SignInPage() {
                 <input
                   id="password"
                   type={showPassword ? "text" : "password"}
+                  name="password"
                   required
                   placeholder="••••••••"
                   value={password}
@@ -116,7 +112,7 @@ export default function SignInPage() {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={Loading}
+              disabled={email === "" || password === ""}
               className="group relative w-full bg-white hover:bg-slate-100 disabled:bg-slate-700 text-slate-950 rounded-2xl py-4 text-[11px] font-black uppercase tracking-[0.2em] transition-all shadow-xl shadow-white/5 active:scale-[0.98] flex items-center justify-center gap-2 overflow-hidden"
             >
               {Loading ? (

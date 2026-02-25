@@ -5,6 +5,8 @@ import Loading from "@/app/components/Loading";
 import { StatCard } from "@/app/components/StatCard";
 import { useDashboard } from "@/app/hooks/useDashboard";
 import { Briefcase, MapPin, TrendingUp, Users } from "lucide-react";
+import { createClient } from "../clients/actions";
+
 
 const DashboardPage =  () => {
   const { data, isLoading, isError } = useDashboard();
@@ -15,8 +17,6 @@ const DashboardPage =  () => {
   if (!data) {
     return null;
   }
-
-  
 
 
   return (

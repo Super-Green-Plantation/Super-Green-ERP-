@@ -47,14 +47,16 @@ export async function login(
   })
 
   if (error) {
+    console.log(error);
+    
     return { error: error.message }
   }
 
   const dbUser = await getAuthUser(data.user)
 
-  if (!dbUser?.status) {
-    return { error: "Your account is suspended. Please contact support." }
-  }
+  // if (!dbUser?.status) {
+  //   return { error: "Your account is suspended. Please contact support." }
+  // }
 
   redirect('/features/dashboard')
 }
