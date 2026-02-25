@@ -18,32 +18,51 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import LogoutButton from "../LogoutButton";
+import { SidebarSkeleton } from "../SidebarSkeleton";
+
+type SidebarProps = {
+  role: string | null;
+  loading: boolean;
+  isCollapsed: boolean;
+  setIsCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
+};
+
 
 const links = [
-  { name: "Dashboard", href: "/features/dashboard", icon: LayoutDashboard },
-  { name: "Branches", href: "/features/branches", icon: GitBranch },
+  { name: "Dashboard", href: "/features/dashboard", icon: LayoutDashboard, role: ["ADMIN", "EMPLOYEE", "HR", "IT_DEV", "BRANCH_MANAGER"] },
+  { name: "Branches", href: "/features/branches", icon: GitBranch, role: ["ADMIN", "HR", "IT_DEV", "BRANCH_MANAGER"] },
   {
     name: "Employee",
     href: "/features/branches/employees",
     icon: IdCardLanyard,
+    role: ["ADMIN", "HR", "IT_DEV", "BRANCH_MANAGER"]
   },
   {
     name: "Financial Plans",
     href: "/features/financial_plans",
     icon: Landmark,
+    role: ["ADMIN", "EMPLOYEE", "HR", "IT_DEV", "BRANCH_MANAGER"]
   },
-  { name: "Commissions", href: "/features/commissions", icon: Percent },
-  { name: "Investments", href: "/features/investments", icon: BanknoteArrowUp },
-  { name: "Calculations", href: "/features/calculations", icon: Calculator },
-  { name: "Clients", href: "/features/clients", icon: Users },
-  { name: "Users", href: "/features/users", icon: User },
-  { name: "Profile", href: "/features/profile", icon: User },
+  { name: "Commissions", href: "/features/commissions", icon: Percent, role: ["ADMIN", "EMPLOYEE", "HR", "IT_DEV", "BRANCH_MANAGER"] },
+  { name: "Investments", href: "/features/investments", icon: BanknoteArrowUp, role: ["ADMIN", "EMPLOYEE", "HR", "IT_DEV", "BRANCH_MANAGER"] },
+  { name: "Calculations", href: "/features/calculations", icon: Calculator, role: ["ADMIN", "EMPLOYEE", "HR", "IT_DEV", "BRANCH_MANAGER"] },
+  { name: "Clients", href: "/features/clients", icon: Users, role: ["ADMIN", "EMPLOYEE", "HR", "IT_DEV", "BRANCH_MANAGER"] },
+  { name: "Users", href: "/features/users", icon: User, role: ["ADMIN", "HR", "IT_DEV"] },
+  { name: "Profile", href: "/features/profile", icon: User, role: ["ADMIN", "EMPLOYEE", "HR", "IT_DEV", "BRANCH_MANAGER"] },
 ];
 
-const Sidebar = ({ isCollapsed, setIsCollapsed }: any) => {
+
+const Sidebar = ({ role, loading, isCollapsed, setIsCollapsed }: SidebarProps) => {
+
+  if (loading) {
+    return <SidebarSkeleton isCollapsed={isCollapsed} />
+  }
   const pathname = usePathname();
   const toggleSidebar = () => setIsCollapsed(!isCollapsed);
+
+  const filteredLinks = links.filter(link =>
+    role ? link.role.includes(role) : false
+  );
 
   return (
     <aside
@@ -83,7 +102,7 @@ const Sidebar = ({ isCollapsed, setIsCollapsed }: any) => {
 
       {/* Navigation */}
       <nav className="flex-1 px-3 space-y-2 overflow-y-auto mt-4">
-        {links.map((link) => {
+        {filteredLinks.map((link) => {
           const Icon = link.icon;
           const isActive = pathname === link.href;
 

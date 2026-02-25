@@ -3,6 +3,8 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { serializeData } from "@/app/utils/serializers";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 // Generate investment reference number
 function generateInvestmentNumber() {
@@ -15,14 +17,56 @@ function generateInvestmentNumber() {
 }
 
 export async function getInvestments() {
-  return await prisma.investment.findMany({
+  const cookieStore = await cookies();
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll: () => cookieStore.getAll(),
+        setAll: () => { },
+      },
+    }
+  );
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("Unauthorized");
+  }
+
+  // Get internal user (Prisma user)
+  const dbUser = await prisma.user.findUnique({
+    where: { email: user.email! },
+  });
+
+  if (!dbUser) {
+    throw new Error("User not found");
+  }
+
+  let whereClause = {};
+
+  // 🔥 Role-based filtering
+  if (dbUser.role !== "ADMIN") {
+    whereClause = {
+      branchId: dbUser.branchId,
+    };
+  }
+
+  const investments = await prisma.investment.findMany({
+    where: whereClause,
     include: {
       client: true,
       plan: true,
       advisor: true,
     },
     orderBy: { createdAt: "desc" },
-  }).then(serializeData);
+  });
+
+  return serializeData(investments);
 }
 
 export async function createInvestment(data: {
