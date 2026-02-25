@@ -1,10 +1,11 @@
-import { supabase } from "@/lib/supabase/publicClient";
+import { createClient } from "@/lib/supabase/client";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
 
+  const supabase = createClient();
   if (!code) {
     // No code — redirect to sign-in with a generic error flag
     return NextResponse.redirect(`${origin}/auth/signin?error=missing-code`);
