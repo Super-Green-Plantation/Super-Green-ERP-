@@ -55,7 +55,7 @@ const Page = () => {
   };
   return (
     /* 1. Main Container: Fixed height, no scroll, flex layout */
-    <div className="flex flex-col h-screen max-w-7xl mx-auto overflow-hidden bg-slate-50/30">
+    <div className="max-w-7xl mx-auto sm:space-y-8 space-y-2 sm:p-4 md:p-8 min-h-screen">
       <header className="mb-8">
         <Heading>
 

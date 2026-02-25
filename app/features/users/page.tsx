@@ -17,13 +17,14 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { updateUserStatus } from './action';
 import { ActionMenu } from './ActionMenu';
+import Heading from '@/app/components/Heading';
 
 const UserListPage = () => {
 
   const { data: usersData, isLoading, isError } = useUsers();
   const [users, setUsers] = useState<any[]>([]);
 
-  
+
 
   // Initialize local state when hook finishes loading
   useEffect(() => {
@@ -67,9 +68,11 @@ const UserListPage = () => {
     }
   };
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto sm:space-y-8 space-y-2 sm:p-4 md:p-8 min-h-screen">
       <div className="mb-8">
-        <h1 className="text-2xl font-black text-slate-900 tracking-tighter">Access Control</h1>
+        <Heading>
+          Access Control
+        </Heading>
         <p className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">Manage employee accounts and permissions</p>
       </div>
 
@@ -154,7 +157,7 @@ const UserListPage = () => {
                   {/* Action Column */}
                   <td className="px-6 py-4">
                     <div className="flex justify-center">
-                     <ActionMenu userId={user.id} currentRole={user.role} email={user.email} />
+                      <ActionMenu userId={user.id} currentRole={user.role} email={user.email} />
                     </div>
                   </td>
                 </tr>

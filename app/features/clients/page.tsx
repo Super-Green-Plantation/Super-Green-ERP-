@@ -26,7 +26,7 @@ const Page = () => {
   );
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto sm:space-y-8 space-y-2 sm:p-4 md:p-8 min-h-screen">
       {/* Header */}
       <div className="sm:flex sm:justify-between sm:items-center mb-6">
         <Heading className="mb-3">

@@ -12,22 +12,21 @@ import Heading from "@/app/components/Heading";
 const Page = () => {
   return (
     <FormProvider>
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto sm:space-y-8 space-y-2 sm:p-4 md:p-8 min-h-screen">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 pb-6">
-          <div className="flex items-center gap-4">
-            <Back />
-
-            <div>
+          <div className="sm:flex-col items-center gap-4">
+            <div className="flex gap-3">
+              <Back />
               <Heading>
                 Create New Client
               </Heading>
-
             </div>
+            <p className="text-sm text-gray-500 font-medium">
+              Complete all sections to finalize client investment onboarding.
+            </p>
           </div>
-          <p className="text-sm text-gray-500 font-medium">
-            Complete all sections to finalize client investment onboarding.
-          </p>
+
         </div>
 
         {/* Main Layout Grid */}
