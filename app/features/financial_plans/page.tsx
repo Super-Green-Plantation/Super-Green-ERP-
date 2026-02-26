@@ -25,7 +25,8 @@ export default function Page() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
-
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [allowed, setAllowed] = useState(false);
   const queryClient = useQueryClient();
   const { data: plans = [], isLoading, isError } = usePlans();
 
@@ -52,13 +53,20 @@ export default function Page() {
     setIsEditModalOpen(true);
   };
 
-  const formatDuration = (months: number) => {
-    if (months >= 12) {
-      const years = months / 12;
-      return `${years} ${years === 1 ? "Year" : "Years"}`;
+  const getLoggedUserRole = async () => {
+    const user = await fetch("/api/me").then((res) => res.json());
+    setUserRole(user.role);
+    // return user.role;
+  }
+  useEffect(() => {
+    getLoggedUserRole();
+    const eligibleRoles = ["ADMIN", "HR", "IT_DEV", "BRANCH_MANAGER"];
+    if (eligibleRoles.includes(userRole!)) {
+      setAllowed(true);
+    } else {
+      setAllowed(false);
     }
-    return `${months} Months`;
-  };
+  }, []);
 
   if (isLoading) return <Loading />;
   if (isError) return <Error />;
@@ -74,12 +82,15 @@ export default function Page() {
             Manage company financial products and terms
           </p>
         </div>
-        <button
-          onClick={() => setIsAddModalOpen(true)}
-           className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 hover:bg-blue-600 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-xl shadow-slate-200 active:scale-95"
-        >
-          <Plus size={17} /> Add Financial Plan
-        </button>
+        {allowed && (
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 hover:bg-blue-600 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-xl shadow-slate-200 active:scale-95"
+          >
+            <Plus size={17} /> Add Financial Plan
+          </button>
+        )}
+
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -147,20 +158,24 @@ export default function Page() {
                   )}
                 </div>
 
-                <div className="flex gap-3 border-t pt-5">
-                  <button
-                    onClick={() => handleEditClick(plan)}
-                    className="flex-1 flex items-center justify-center gap-2 text-sm font-bold text-gray-600 hover:text-blue-600 hover:bg-blue-50 py-2.5 rounded-lg transition-all border border-transparent hover:border-blue-100"
-                  >
-                    <Edit2 size={16} /> Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(plan.id)}
-                    className="flex-1 flex items-center justify-center gap-2 text-sm font-bold text-red-500 hover:bg-red-50 py-2.5 rounded-lg transition-all border border-transparent hover:border-red-100"
-                  >
-                    <Trash2 size={16} /> Delete
-                  </button>
-                </div>
+                {allowed && (
+                  <div className="flex gap-3 border-t pt-5">
+                    <button
+                      onClick={() => handleEditClick(plan)}
+                      className="flex-1 flex items-center justify-center gap-2 text-sm font-bold text-gray-600 hover:text-blue-600 hover:bg-blue-50 py-2.5 rounded-lg transition-all border border-transparent hover:border-blue-100"
+                    >
+                      <Edit2 size={16} /> Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(plan.id)}
+                      className="flex-1 flex items-center justify-center gap-2 text-sm font-bold text-red-500 hover:bg-red-50 py-2.5 rounded-lg transition-all border border-transparent hover:border-red-100"
+                    >
+                      <Trash2 size={16} /> Delete
+                    </button>
+                  </div>
+                )}
+
+
               </div>
             </div>
           ))

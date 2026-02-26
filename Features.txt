@@ -3,3 +3,6 @@ personal,orc commission
 
 =========updated 02/19
 bm send link to client to upload id, signing pad
+
+=====================
+can all employee from branch view all clients or clients from employee

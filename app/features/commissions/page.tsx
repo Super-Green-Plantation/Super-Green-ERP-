@@ -25,7 +25,6 @@ const Commission = () => {
       {/* Table Container */}
       <div className="">
         <InvestmentTable/>
-        
       </div>
     </div>
   );

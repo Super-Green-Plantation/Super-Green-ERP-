@@ -1,3 +1,4 @@
+import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -13,15 +14,15 @@ const COLORS: Record<string, [number, number, number]> = {
 
 const drawHeader = (doc: jsPDF, title: string, subtitle?: string) => {
   const pageWidth = doc.internal.pageSize.getWidth();
-  
+
   doc.setFillColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
   doc.rect(0, 0, pageWidth, 40, "F");
-  
+
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(22);
   doc.setFont("helvetica", "bold");
   doc.text(title.toUpperCase(), 15, 20);
-  
+
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   doc.text(`Generated on: ${new Date().toLocaleDateString()} ${subtitle ? `| ${subtitle}` : ""}`, 15, 28);
@@ -30,7 +31,7 @@ const drawHeader = (doc: jsPDF, title: string, subtitle?: string) => {
 const drawFooter = (doc: jsPDF) => {
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  
+
   doc.setFontSize(8);
   doc.setTextColor(COLORS.textLight[0], COLORS.textLight[1], COLORS.textLight[2]);
   doc.text("Super Green Plantation ERP - Confidential Report", pageWidth / 2, pageHeight - 10, { align: "center" });
@@ -79,7 +80,7 @@ export function generateBranchNetworkPDF(branches: any[]) {
     doc.setFontSize(12);
     doc.setFont("helvetica", "bold");
     doc.text(`${index + 1}. ${branch.name.toUpperCase()}`, 15, currentY);
-    
+
     doc.setFontSize(8);
     doc.setTextColor(COLORS.textLight[0], COLORS.textLight[1], COLORS.textLight[2]);
     doc.text(`${branch.location} | Status: ${branch.status}`, 15, currentY + 5);
@@ -191,7 +192,7 @@ export const generateEmployeeCommissionPDF = (data: any) => {
   doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
   doc.text(`LKR ${totalCommission.toLocaleString()}`, 25, currentY + 18);
-  
+
   doc.setTextColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
   doc.text(`${totalTransactions}`, pageWidth / 2 + 5, currentY + 18);
 
@@ -221,187 +222,245 @@ export const generateEmployeeCommissionPDF = (data: any) => {
 
 // --- 4. Investment Receipt ---
 export const generateInvestmentPDF = (data: any) => {
-    const doc = new jsPDF();
-    // Support both 'member' (from some contexts) and 'advisor' (from DB)
-    const { client, member, advisor, plan, refNumber, id } = data;
-    const agent = member || advisor || {}; 
-    const activeInvestment = data; // The data itself IS the investment
-    const pageWidth = doc.internal.pageSize.getWidth();
-  
-    drawHeader(doc, "Investment Receipt", `Ref: #${refNumber || id || "N/A"}`);
-    
-    let currentY = 55;
-
-    // Two Column Layout
-    const leftColX = 15;
-    const rightColX = pageWidth / 2 + 10;
-    
-    // Investor Details
-    doc.setTextColor(COLORS.accent[0], COLORS.accent[1], COLORS.accent[2]);
-    doc.setFontSize(12); 
-    doc.setFont("helvetica", "bold");
-    doc.text("INVESTOR DETAILS", leftColX, currentY);
-    
-
-
-    currentY += 10;
-    doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    
-    const investorDetails = [
-      `Name: ${client.fullName}`,
-      `NIC/Passport: ${client.nic || client.passportNo || "N/A"}`,
-      `Address: ${client.address}`,
-      `Email: ${client.email || "N/A"}`,
-      `Phone: ${client.phoneMobile || "N/A"}`,
-    ];
-
-    investorDetails.forEach((line) => {
-        doc.text(line, leftColX, currentY);
-        currentY += 7;
-    });
-
-    // Advisor Details (Right Column)
-    currentY = 55; // Reset Y for right column
-    doc.setTextColor(COLORS.accent[0], COLORS.accent[1], COLORS.accent[2]);
-    doc.setFontSize(12); 
-    doc.setFont("helvetica", "bold");
-    doc.text("ADVISOR DETAILS", rightColX, currentY);
-
-    currentY += 10;
-    doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-
-    const advisorDetails = [
-       `Name: ${agent.name}`,
-       `Emp No: ${agent.empNo}`,
-       `Branch: ${agent.branch?.name || "N/A"}`,
-    ];
-
-    advisorDetails.forEach((line) => {
-        doc.text(line, rightColX, currentY);
-        currentY += 7;
-    });
-
-    // Plan Details Section
-    currentY = 110;
-    doc.setDrawColor(230, 230, 230);
-    doc.line(15, currentY, pageWidth - 15, currentY);
-    currentY += 15;
-
-    doc.setTextColor(COLORS.accent[0], COLORS.accent[1], COLORS.accent[2]);
-    doc.setFontSize(12);
-    doc.setFont("helvetica", "bold");
-    doc.text("INVESTMENT PLAN DETAILS", 15, currentY);
-    currentY += 10;
-
-    const amount = Number(client.investmentAmount);
-    const rate = Number(plan?.rate || 0);
-    const duration = Number(plan?.duration || 0);
-    const monthlyRate = rate / 12 / 100;
-    const monthlyInterest = amount * monthlyRate;
-
-    const planData = [
-       ["Plan Name", plan?.name || "Standard"],
-       ["Principal Amount", amount.toLocaleString("en-LK", { style: "currency", currency: "LKR" })],
-       ["Annual Rate", `${rate}%`],
-       ["Duration", `${duration} Months`],
-       ["Est. Monthly Return", monthlyInterest.toLocaleString("en-LK", { style: "currency", currency: "LKR" })]
-    ];
-
-    autoTable(doc, {
-        startY: currentY,
-        body: planData,
-        theme: 'grid',
-        headStyles: { fillColor: COLORS.primary },
-        styles: { fontSize: 10, cellPadding: 5 },
-        columnStyles: {
-            0: { fontStyle: 'bold', cellWidth: 60, fillColor: COLORS.light },
-            1: { fontStyle: 'normal' }
-        },
-        margin: { left: 15, right: 15 },
-    });
-  
-    drawFooter(doc);
-    doc.save(`Investment_${client.fullName.replace(/\s+/g, "_")}.pdf`);
-};
-
-// --- 5. Client Application Report ---
-export const generateClientApplicationPDF = (data: any, plan: any) => {
   const doc = new jsPDF();
-  const { applicant, beneficiary, nominee, investment } = data;
+  // Support both 'member' (from some contexts) and 'advisor' (from DB)
+  const { client, member, advisor, plan, refNumber, id } = data;
+  const agent = member || advisor || {};
+  const activeInvestment = data; // The data itself IS the investment
   const pageWidth = doc.internal.pageSize.getWidth();
 
-  drawHeader(doc, "Client Application", `Ref: ${investment?.refNumber || investment?.id || "N/A"}`);
+  drawHeader(doc, "Investment Receipt", `Ref: #${refNumber || id || "N/A"}`);
 
   let currentY = 55;
 
-  const renderSection = (title: string, details: [string, string][]) => {
-      doc.setFillColor(COLORS.light[0], COLORS.light[1], COLORS.light[2]);
-      doc.rect(15, currentY, pageWidth - 30, 8, "F");
-      
-      doc.setTextColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
-      doc.setFontSize(11);
-      doc.setFont("helvetica", "bold");
-      doc.text(title.toUpperCase(), 18, currentY + 5.5);
-      
-      currentY += 12;
+  // Two Column Layout
+  const leftColX = 15;
+  const rightColX = pageWidth / 2 + 10;
 
-      doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
-      doc.setFontSize(10);
-      doc.setFont("helvetica", "normal");
+  // Investor Details
+  doc.setTextColor(COLORS.accent[0], COLORS.accent[1], COLORS.accent[2]);
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text("INVESTOR DETAILS", leftColX, currentY);
 
-      details.forEach(([label, value]) => {
-          doc.setFont("helvetica", "bold");
-          doc.text(`${label}:`, 18, currentY);
-          
-          doc.setFont("helvetica", "normal");
-          doc.text(value || "N/A", 60, currentY);
-          
-          currentY += 6;
-      });
-      currentY += 8;
-  };
 
-  renderSection("Applicant Information", [
-      ["Full Name", applicant.fullName],
-      ["NIC/Passport", applicant.nic || applicant.passportNo],
-      ["Address", applicant.address],
-      ["Email", applicant.email],
-      ["Phone", applicant.phoneMobile],
-      ["Occupation", applicant.occupation]
-  ]);
 
-  if (beneficiary) {
-    renderSection("Beneficiary Information", [
-        ["Name", beneficiary.fullName],
-        ["Relationship", beneficiary.relationship],
-        ["NIC", beneficiary.nic],
-        ["Bank", `${beneficiary.bankName} (${beneficiary.bankBranch})`],
-        ["Account No", beneficiary.accountNo]
-    ]);
-  }
+  currentY += 10;
+  doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
 
-  if (nominee) {
-    renderSection("Nominee Information", [
-        ["Name", nominee.fullName],
-        ["Address", nominee.permanentAddress]
-    ]);
-  }
+  const investorDetails = [
+    `Name: ${client.fullName}`,
+    `NIC/Passport: ${client.nic || client.passportNo || "N/A"}`,
+    `Address: ${client.address}`,
+    `Email: ${client.email || "N/A"}`,
+    `Phone: ${client.phoneMobile || "N/A"}`,
+  ];
 
-  if (plan) {
-    renderSection("Investment Plan", [
-        ["Plan Name", plan.name],
-        ["Duration", `${plan.duration} Months`],
-        ["Annual Rate", `${plan.rate}%`],
-        ["Amount", Number(applicant.investmentAmount).toLocaleString("en-LK", { style: "currency", currency: "LKR" })]
-    ]);
-  }
+  investorDetails.forEach((line) => {
+    doc.text(line, leftColX, currentY);
+    currentY += 7;
+  });
+
+  // Advisor Details (Right Column)
+  currentY = 55; // Reset Y for right column
+  doc.setTextColor(COLORS.accent[0], COLORS.accent[1], COLORS.accent[2]);
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text("ADVISOR DETAILS", rightColX, currentY);
+
+  currentY += 10;
+  doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+
+  const advisorDetails = [
+    `Name: ${agent.name}`,
+    `Emp No: ${agent.empNo}`,
+    `Branch: ${agent.branch?.name || "N/A"}`,
+  ];
+
+  advisorDetails.forEach((line) => {
+    doc.text(line, rightColX, currentY);
+    currentY += 7;
+  });
+
+  // Plan Details Section
+  currentY = 110;
+  doc.setDrawColor(230, 230, 230);
+  doc.line(15, currentY, pageWidth - 15, currentY);
+  currentY += 15;
+
+  doc.setTextColor(COLORS.accent[0], COLORS.accent[1], COLORS.accent[2]);
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text("INVESTMENT PLAN DETAILS", 15, currentY);
+  currentY += 10;
+
+  const amount = Number(client.investmentAmount);
+  const rate = Number(plan?.rate || 0);
+  const duration = Number(plan?.duration || 0);
+  const monthlyRate = rate / 12 / 100;
+  const monthlyInterest = amount * monthlyRate;
+
+  const planData = [
+    ["Plan Name", plan?.name || "Standard"],
+    ["Principal Amount", amount.toLocaleString("en-LK", { style: "currency", currency: "LKR" })],
+    ["Annual Rate", `${rate}%`],
+    ["Duration", `${duration} Months`],
+    ["Est. Monthly Return", monthlyInterest.toLocaleString("en-LK", { style: "currency", currency: "LKR" })]
+  ];
+
+  autoTable(doc, {
+    startY: currentY,
+    body: planData,
+    theme: 'grid',
+    headStyles: { fillColor: COLORS.primary },
+    styles: { fontSize: 10, cellPadding: 5 },
+    columnStyles: {
+      0: { fontStyle: 'bold', cellWidth: 60, fillColor: COLORS.light },
+      1: { fontStyle: 'normal' }
+    },
+    margin: { left: 15, right: 15 },
+  });
 
   drawFooter(doc);
-  doc.save(`Application_${applicant.fullName.replace(/\s+/g, "_")}.pdf`);
+  doc.save(`Investment_${client.fullName.replace(/\s+/g, "_")}.pdf`);
+};
+
+// --- 5. Client Application Report ---
+
+
+const cleanClonedDoc = (clonedDoc: Document) => {
+  // Strip oklch/lab color functions (Tailwind v3.3+ issue)
+  Array.from(clonedDoc.querySelectorAll("style")).forEach((el: any) => {
+    if (/oklch|oklab|\blab\(|\blch\(/.test(el.innerHTML)) {
+      el.innerHTML = el.innerHTML
+        .replace(/oklch\([^)]+\)/g, "inherit")
+        .replace(/oklab\([^)]+\)/g, "inherit")
+        .replace(/\blab\([^)]+\)/g, "inherit")
+        .replace(/\blch\([^)]+\)/g, "inherit");
+    }
+  });
+  // Disable external stylesheets
+  Array.from(clonedDoc.querySelectorAll("link[rel='stylesheet']")).forEach((el: any) => {
+    el.disabled = true;
+  });
+  // Safe overrides
+  const override = clonedDoc.createElement("style");
+  override.innerHTML = `
+    *, *::before, *::after {
+      --background: #ffffff !important;
+      --foreground: #000000 !important;
+      --primary: #166534 !important;
+      --border: #e5e7eb !important;
+    }
+  `;
+  clonedDoc.head.appendChild(override);
+};
+
+export const generateClientApplicationPDF = async (
+  element: HTMLElement | null,
+  fileName: string = "Proposal_Form"
+) => {
+  if (!element) return;
+
+  // Select all direct children marked as pages
+  const pages = Array.from(
+    element.querySelectorAll<HTMLElement>("[data-pdf-page]")
+  );
+
+  // Fallback: use direct children if no data-pdf-page markers found
+  const pageEls: HTMLElement[] =
+    pages.length > 0
+      ? pages
+      : (Array.from(element.children) as HTMLElement[]);
+
+  if (pageEls.length === 0) {
+    console.error("No pages found");
+    return;
+  }
+
+  const pdf = new jsPDF("p", "mm", "a4");
+  const pdfW = pdf.internal.pageSize.getWidth();  // 210mm
+  const pdfH = pdf.internal.pageSize.getHeight(); // 297mm
+
+  try {
+    for (let i = 0; i < pageEls.length; i++) {
+      const pageEl = pageEls[i];
+
+      // ── Mount page into an isolated offscreen container ──────────────────
+      // This ensures html2canvas sees ONLY this page, not the sibling pages.
+      const wrapper = document.createElement("div");
+      wrapper.style.cssText = [
+        "position: fixed",
+        "top: 0",
+        "left: -9999px",
+        "width: 210mm",
+        "background: white",
+        "overflow: visible",
+        "z-index: -1",
+      ].join(";");
+
+      // Deep-clone so we don't disturb the live DOM
+      const clone = pageEl.cloneNode(true) as HTMLElement;
+      clone.style.pageBreakAfter = "unset";
+      clone.style.overflow = "visible";
+      clone.style.height = "auto";
+      clone.style.minHeight = "297mm";
+
+      wrapper.appendChild(clone);
+      document.body.appendChild(wrapper);
+
+      // Small delay to let images render inside the clone
+      await new Promise((r) => setTimeout(r, 80));
+
+      const canvas = await html2canvas(clone, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: false,
+        logging: false,
+        backgroundColor: "#ffffff",
+        width: clone.scrollWidth,
+        height: clone.scrollHeight,
+        onclone: (clonedDoc) => {
+          cleanClonedDoc(clonedDoc);
+          // Make all cloned elements overflow visible
+          clonedDoc.querySelectorAll("*").forEach((el: any) => {
+            const s = el.style;
+            if (s && s.overflow === "hidden") s.overflow = "visible";
+          });
+        },
+      });
+
+      document.body.removeChild(wrapper);
+
+      const imgData = canvas.toDataURL("image/png");
+
+      // Always fill full A4 width; scale height proportionally
+      const ratio  = canvas.height / canvas.width;
+      const imgH   = pdfW * ratio;
+
+      if (i > 0) pdf.addPage();
+
+      // If the rendered height fits within A4 — center it, otherwise scale to fit
+      if (imgH <= pdfH) {
+        pdf.addImage(imgData, "PNG", 0, 0, pdfW, imgH);
+      } else {
+        const scale  = pdfH / imgH;
+        const finalW = pdfW * scale;
+        const finalH = pdfH;
+        const xOff   = (pdfW - finalW) / 2;
+        pdf.addImage(imgData, "PNG", xOff, 0, finalW, finalH);
+      }
+    }
+
+    pdf.save(`${fileName}.pdf`);
+  } catch (err) {
+    console.error("PDF generation failed:", err);
+    throw err;
+  }
 };
 // --- 6. Investment List Report ---
 export const generateInvestmentsReportPDF = (investments: any[]) => {
@@ -429,30 +488,30 @@ export const generateInvestmentsReportPDF = (investments: any[]) => {
   doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
   doc.text(`LKR ${totalInvested.toLocaleString()}`, 25, currentY + 18);
-  
+
   doc.setTextColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
   doc.text(`${activeCount}`, pageWidth / 2 + 5, currentY + 18);
 
   currentY += 40;
 
   const tableData = investments.map((inv) => [
-      inv.refNumber || inv.id,
-      new Date(inv.investmentDate).toLocaleDateString(),
-      inv.client?.fullName || "N/A",
-      inv.plan?.name || "Standard",
-      inv.advisor?.name || "N/A",
-      Number(inv.amount).toLocaleString("en-LK", { style: "currency", currency: "LKR" })
+    inv.refNumber || inv.id,
+    new Date(inv.investmentDate).toLocaleDateString(),
+    inv.client?.fullName || "N/A",
+    inv.plan?.name || "Standard",
+    inv.advisor?.name || "N/A",
+    Number(inv.amount).toLocaleString("en-LK", { style: "currency", currency: "LKR" })
   ]);
 
   autoTable(doc, {
-      head: [["Ref No", "Date", "Client", "Plan", "Advisor", "Amount"]],
-      body: tableData,
-      startY: currentY,
-      theme: "striped",
-      headStyles: { fillColor: COLORS.primary, fontSize: 8, fontStyle: "bold" },
-      styles: { fontSize: 8, cellPadding: 3 },
-      columnStyles: { 5: { halign: 'right' } },
-      margin: { left: 15, right: 15 },
+    head: [["Ref No", "Date", "Client", "Plan", "Advisor", "Amount"]],
+    body: tableData,
+    startY: currentY,
+    theme: "striped",
+    headStyles: { fillColor: COLORS.primary, fontSize: 8, fontStyle: "bold" },
+    styles: { fontSize: 8, cellPadding: 3 },
+    columnStyles: { 5: { halign: 'right' } },
+    margin: { left: 15, right: 15 },
   });
 
   drawFooter(doc);

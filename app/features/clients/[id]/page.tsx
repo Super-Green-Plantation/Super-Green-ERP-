@@ -29,9 +29,10 @@ import {
   User,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import Heading from "@/app/components/Heading";
+import { ProposalTemplate } from "@/app/components/ProposalTemplate";
 
 export default function ApplicationViewPage() {
   const queryClient = useQueryClient();
@@ -41,6 +42,8 @@ export default function ApplicationViewPage() {
   const [showDocUpdateModel, setDocShowUpdateModel] = useState(false);
   const router = useRouter();
 
+  const proposalRef = useRef<HTMLDivElement>(null);
+  
   const { data: formData, isLoading, isError } = useClient(Number(id));
 
   console.log("formData", formData);
@@ -120,6 +123,12 @@ export default function ApplicationViewPage() {
 
   return (
     <div className="max-w-7xl mx-auto  space-y-8 min-h-screen">
+      <div style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}>
+        <div ref={proposalRef}>
+           {/* Pass your actual data to your Template component */}
+           <ProposalTemplate data={formData} plan={plan} />
+        </div>
+      </div>
       {/* Header Actions */}
       <div className="sm:flex space-y-3 items-center justify-between border-b pb-4">
         <div className="flex items-center gap-4">
@@ -149,10 +158,12 @@ export default function ApplicationViewPage() {
               </button>
 
               {/* Download PDF Button */}
-              {/* Moved this next to Update for better visual grouping of 'Actions' */}
               <button
-                onClick={() => generateClientApplicationPDF(formData, plan)}
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 hover:bg-emerald-600 text-white text-[11px] font-black uppercase tracking-[0.15em] rounded-xl transition-all shadow-lg shadow-slate-900/20 active:scale-95 border border-white/5"
+                onClick={() => generateClientApplicationPDF(
+                  proposalRef.current, 
+                  `Proposal_${formData?.applicant?.fullName?.replace(/\s+/g, '_')}`
+                )}
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 hover:bg-emerald-600 text-white text-[11px] font-black uppercase tracking-[0.15em] rounded-xl transition-all shadow-lg active:scale-95 border border-white/5"
               >
                 <Download className="w-4 h-4 text-emerald-400" />
                 <span>Download PDF</span>

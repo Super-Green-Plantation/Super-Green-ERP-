@@ -41,18 +41,16 @@ export default async function Profile() {
             <div className="flex-1 text-center md:text-left space-y-4">
               <div className="flex flex-col md:flex-row md:items-center gap-3">
                 <h1 className="text-3xl md:text-4xl font-black text-white tracking-tighter uppercase drop-shadow-sm">
-                  {member?.name || "Unregistered Member"}
+                  {user?.name || "Unregistered Member"}
                 </h1>
-                {/* <span className="px-4 py-1 rounded-full bg-blue-600 text-white text-[10px] font-black uppercase tracking-[0.2em] w-fit mx-auto md:mx-0 shadow-lg shadow-blue-900/40">
-                  {user.role}
-                </span> */}
+                
               </div>
               
               {/* Brightened text from slate-400 to slate-200 for legibility */}
               <div className="flex flex-wrap justify-center md:justify-start gap-4 md:gap-6 text-slate-200 text-sm font-bold">
                 <div className="flex items-center gap-2 bg-slate-800/50 px-3 py-1.5 rounded-xl border border-white/5">
                   <Briefcase size={18} className="text-blue-400" />
-                  <span className="truncate">{member?.position?.title || "No Position Assigned"}</span>
+                  <span className="truncate">{user?.role || "No Position Assigned"}</span>
                 </div>
                 <div className="flex items-center gap-2 bg-slate-800/50 px-3 py-1.5 rounded-xl border border-white/5">
                   <MapPin size={18} className="text-emerald-400" />
@@ -70,7 +68,7 @@ export default async function Profile() {
                 Total Commission
               </p>
               <div className="flex items-center justify-center gap-2">
-                <span className="text-2xl md:text-5xl font-black text-white tracking-tight">
+                <span className="text-xl md:text-3xl font-black text-white tracking-tight">
                   <span className="text-blue-500 mr-1">LKR</span>
                   {member?.totalCommission?.toLocaleString() || "0"}
                 </span>
