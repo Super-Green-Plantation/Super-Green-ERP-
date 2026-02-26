@@ -29,6 +29,7 @@ model Branch {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   ActivityLog ActivityLog[]
+  investments Investment[]
 }
 
 enum Title {
@@ -200,8 +201,11 @@ model Investment {
   clientId Int
   client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
-  planId Int?
-  plan   FinancialPlan? @relation(fields: [planId], references: [id])
+  branchId Int
+  branch   Branch         @relation(fields: [branchId], references: [id])
+  
+  planId   Int?
+  plan     FinancialPlan? @relation(fields: [planId], references: [id])
 
   advisorId Int?
   advisor   Member? @relation(fields: [advisorId], references: [id])

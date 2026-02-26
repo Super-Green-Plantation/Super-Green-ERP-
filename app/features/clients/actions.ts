@@ -1,9 +1,44 @@
 "use server"
 
-import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
-import { generateInvestmentNumber } from "@/lib/investment";
 import { serializeData } from "@/app/utils/serializers";
+import { getCurrentUserWithRole } from "@/lib/getCurrentUserWithRole";
+import { generateInvestmentNumber } from "@/lib/investment";
+import { prisma } from "@/lib/prisma";
+import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
+
+
+
+
+export async function getAccessibleClients() {
+  const dbUser = await getCurrentUserWithRole();
+  console.log("current user" , dbUser);
+  
+
+  if (!dbUser) throw new Error("User not found");
+
+  const privilegedRoles = ["ADMIN", "HR", "DEV"];
+
+  const whereCondition =
+    privilegedRoles.includes(dbUser.role)
+      ? {}
+      : { branchId: Number(dbUser.branchId) };
+
+  const clients = await prisma.client.findMany({
+    where: whereCondition,
+    include: {
+      investments: true,
+      branch: true,
+      beneficiary: true,
+      nominee: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
+  return serializeData(clients);
+}
 
 // Get all clients with full details
 export async function getClients() {
@@ -33,28 +68,41 @@ export async function getClients() {
 
 // Get single client by ID
 export async function getClientById(id: number) {
-  try {
-    const client = await prisma.client.findUnique({
-      where: { id },
-      include: {
-        investments: { include: { plan: true } },
-        branch: true,
-        nominee: true,
-        beneficiary: true,
-      },
-    });
+  const supabase = await createClient();
 
-    if (!client) {
-      throw new Error("Client not found");
-    }
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-    return serializeData(client);
-  } catch (error) {
-    console.error("Error fetching client:", error);
-    throw error;
+  if (!user) throw new Error("Unauthorized");
+
+  const dbUser = await prisma.user.findUnique({
+    where: { email: user.email! },
+  });
+
+  const privilegedRoles = ["ADMIN", "HR", "DEV"];
+
+  const client = await prisma.client.findFirst({
+    where: {
+      id,
+      ...(privilegedRoles.includes(dbUser!.role)
+        ? {}
+        : { branchId: Number(dbUser!.branchId) }),
+    },
+    include: {
+      investments: { include: { plan: true } },
+      branch: true,
+      nominee: true,
+      beneficiary: true,
+    },
+  });
+
+  if (!client) {
+    throw new Error("Client not accessible");
   }
-}
 
+  return serializeData(client);
+}
 // Get clients by branch
 export async function getClientsByBranch(branchId: number) {
   try {
@@ -63,6 +111,8 @@ export async function getClientsByBranch(branchId: number) {
       include: {
         investments: true,
         branch: true,
+        beneficiary: true,
+        nominee: true,
       },
       orderBy: {
         createdAt: "desc",
@@ -77,7 +127,7 @@ export async function getClientsByBranch(branchId: number) {
 }
 
 // Create client with investment, beneficiary, and nominee
-export async function createClient(data: {
+export async function saveClient(data: {
   applicant: any;
   investment: any;
   beneficiary?: any;
@@ -118,11 +168,8 @@ export async function createClient(data: {
             create: [
               {
                 refNumber: investmentNumber,
-                plan: {
-                  connect: {
-                    id: Number(investment.planId),
-                  },
-                },
+                branchId: applicant.branchId,
+                planId: Number(investment.planId),
                 investmentDate: new Date(),
                 amount: Number(applicant.investmentAmount),
               },
@@ -130,25 +177,25 @@ export async function createClient(data: {
           },
           beneficiary: beneficiary
             ? {
-                create: {
-                  fullName: beneficiary.fullName,
-                  nic: beneficiary.nic || null,
-                  phone: beneficiary.phone || "",
-                  bankName: beneficiary.bankName || "",
-                  bankBranch: beneficiary.bankBranch || "",
-                  accountNo: beneficiary.accountNo || "",
-                  relationship: beneficiary.relationship || "",
-                },
-              }
+              create: {
+                fullName: beneficiary.fullName,
+                nic: beneficiary.nic || null,
+                phone: beneficiary.phone || "",
+                bankName: beneficiary.bankName || "",
+                bankBranch: beneficiary.bankBranch || "",
+                accountNo: beneficiary.accountNo || "",
+                relationship: beneficiary.relationship || "",
+              },
+            }
             : undefined,
           nominee: nominee
             ? {
-                create: {
-                  fullName: nominee.fullName,
-                  permanentAddress: nominee.permanentAddress || "",
-                  postalAddress: nominee.postalAddress || null,
-                },
-              }
+              create: {
+                fullName: nominee.fullName,
+                permanentAddress: nominee.permanentAddress || "",
+                postalAddress: nominee.postalAddress || null,
+              },
+            }
             : undefined,
         },
         include: {
@@ -217,6 +264,7 @@ export async function updateClient(id: number, formData: any) {
       await prisma.investment.create({
         data: {
           clientId,
+          branchId: formData.applicant.branchId,
           planId: Number(formData.investment.planId),
           investmentDate: new Date(),
           amount: formData.applicant.investmentAmount,

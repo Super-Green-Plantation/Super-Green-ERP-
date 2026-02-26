@@ -27,9 +27,9 @@ export async function sendWelcomeEmail({
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
   await transporter.sendMail({
-    from: `"Super Green ERP" <${process.env.EMAIL_USER}>`,
+    from: `"Super Green" <${process.env.EMAIL_USER}>`,
     to,
-    subject: "Welcome to Super Green ERP — Your Account Details",
+    subject: "Welcome to Super Green — Your Account Details",
     html: `
       <!DOCTYPE html>
       <html>

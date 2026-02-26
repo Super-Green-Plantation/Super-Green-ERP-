@@ -121,3 +121,5 @@
     @apply bg-background text-foreground;
   }
 }
+
+.grid-pattern { background-image: radial-gradient(#e2e8f0 0.5px, transparent 0.5px); background-size: 12px 12px; }

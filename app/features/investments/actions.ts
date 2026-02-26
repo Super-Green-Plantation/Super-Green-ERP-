@@ -49,12 +49,15 @@ export async function getInvestments() {
 
   let whereClause = {};
 
-  // 🔥 Role-based filtering
-  if (dbUser.role !== "ADMIN") {
-    whereClause = {
+const privilegedRoles = ["ADMIN", "HR", "IT_DEV"];
+
+if (!privilegedRoles.includes(dbUser.role)) {
+  whereClause = {
+    client: {
       branchId: dbUser.branchId,
-    };
-  }
+    },
+  };
+}
 
   const investments = await prisma.investment.findMany({
     where: whereClause,
@@ -62,6 +65,7 @@ export async function getInvestments() {
       client: true,
       plan: true,
       advisor: true,
+      branch: true,
     },
     orderBy: { createdAt: "desc" },
   });
@@ -71,6 +75,7 @@ export async function getInvestments() {
 
 export async function createInvestment(data: {
   clientId: number;
+  branchId?: number;
   planId?: number;
   advisorId?: number;
   amount: number;
@@ -81,6 +86,7 @@ export async function createInvestment(data: {
     const investment = await prisma.investment.create({
       data: {
         refNumber,
+        branchId: Number(data.branchId), // Will be set by a trigger based on the advisor's branch
         clientId: data.clientId,
         planId: data.planId || null,
         advisorId: data.advisorId || null,

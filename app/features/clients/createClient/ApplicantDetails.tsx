@@ -2,12 +2,11 @@
 
 import SignaturePad from "@/app/components/SignaturePad";
 import { useFormContext } from "@/app/context/FormContext";
-import { getBranches, getBranchById } from "@/app/features/branches/actions";
+import { getBranchById, getBranches } from "@/app/features/branches/actions";
 import { getFinancialPlans } from "@/app/features/financial_plans/actions";
 import { Branch } from "@/app/types/branch";
 import { FinancialPlan } from "@/app/types/FinancialPlan";
 import { useEffect, useState } from "react";
-import { User } from "lucide-react";
 
 const ApplicantDetails = () => {
   const { form } = useFormContext();

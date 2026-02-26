@@ -37,30 +37,36 @@ const page = () => {
 
   return (
     <div className="max-w-7xl mx-auto sm:space-y-8 space-y-2 sm:p-4 md:p-8 min-h-screen">
-      <div className="sm:flex justify-between items-center mb-6 space-y-6">
-          <Heading>
+  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
+  {/* Heading Area */}
+  <Heading className=" drop-shadow-sm">
+    Investments
+  </Heading>
 
-            Investments
-          </Heading>
-        <div className="flex gap-3">
+  {/* Actions Area */}
+  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+    
+    {/* Create Button: High Contrast Slate/Blue */}
+    <Link
+      href="/features/investments/create"
+      className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 hover:bg-blue-600 border border-white/10 text-white text-[11px] font-black uppercase tracking-[0.15em] rounded-xl transition-all shadow-lg shadow-slate-900/40 active:scale-95"
+    >
+      <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse md:block hidden" />
+      Investment with existing client
+    </Link>
 
-          <Link
-            href="/features/investments/create"
-             className="flex-1 sm:flex-none flex items-center justify-center uppercase gap-2 px-4 py-3 bg-slate-900 hover:bg-blue-600 text-white text-xs sm:font-black font-bold tracking-widest rounded-xl transition-all shadow-xl shadow-slate-200 active:scale-95"
-          >
-           Investment with existing client
-          </Link>
-          {investments.length > 0 && (
-            <button
-              onClick={() => generateInvestmentsReportPDF(investments)}
-              className="group flex flex-col md:flex-row items-center justify-center gap-2 px-6 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-sm font-semibold transition-all active:scale-95 ml-2"
-            >
-              <Download className="w-4 h-4 group-hover:text-blue-600 transition-colors" />
-              <span>Export List</span>
-            </button>
-          )}
-        </div>
-      </div>
+    {/* Export Button: High Contrast Slate/Emerald */}
+    {investments.length > 0 && (
+      <button
+        onClick={() => generateInvestmentsReportPDF(investments)}
+        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 hover:bg-emerald-600 border border-white/10 text-white text-[11px] font-black uppercase tracking-[0.15em] rounded-xl transition-all shadow-lg shadow-slate-900/40 active:scale-95"
+      >
+        <Download className="w-4 h-4 text-emerald-400" />
+        <span>Export List</span>
+      </button>
+    )}
+  </div>
+</div>
 
       {investments.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-12 text-center">

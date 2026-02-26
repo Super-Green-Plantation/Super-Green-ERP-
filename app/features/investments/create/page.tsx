@@ -46,6 +46,7 @@ export default function CreateInvestmentPage() {
     try {
       const result = await createInvestment({
         clientId: selectedClientId,
+        branchId: selectedClient?.branchId || undefined,
         planId: selectedPlanId || undefined,
         advisorId: selectedAdvisorId || undefined,
         amount: investmentAmount,

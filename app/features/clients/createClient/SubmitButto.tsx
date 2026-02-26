@@ -4,7 +4,7 @@ import { useFormContext } from "@/app/context/FormContext";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Loader2, Rocket } from "lucide-react"; // Matching our icon set
-import { createClient } from "../actions";
+import { saveClient } from "../actions";
 
 type Status = "success" | "error" | null;
 
@@ -19,7 +19,7 @@ export const SubmitButton = () => {
     console.log(data);
 
     try {
-      const res = await createClient(data);
+      const res = await saveClient(data);
 
       if (!res.success) {
         toast.error(res.error || "Something went wrong, please try again");

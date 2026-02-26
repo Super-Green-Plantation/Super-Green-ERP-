@@ -31,6 +31,7 @@ import {
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import Heading from "@/app/components/Heading";
 
 export default function ApplicationViewPage() {
   const queryClient = useQueryClient();
@@ -42,7 +43,8 @@ export default function ApplicationViewPage() {
 
   const { data: formData, isLoading, isError } = useClient(Number(id));
 
-  console.log(formData);
+  console.log("formData", formData);
+  
 
   useEffect(() => {
     if (!formData?.investment.planId) return;
@@ -117,15 +119,16 @@ export default function ApplicationViewPage() {
   if (isError) return <ErrorMessage />;
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-8 min-h-screen">
+    <div className="max-w-7xl mx-auto  space-y-8 min-h-screen">
       {/* Header Actions */}
-      <div className="flex items-center justify-between border-b pb-4">
+      <div className="sm:flex space-y-3 items-center justify-between border-b pb-4">
         <div className="flex items-center gap-4">
           <Back />
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">
+
+            <Heading>
               Application Details
-            </h1>
+            </Heading>
             <p className="text-sm text-gray-500 font-medium">
               Ref ID: {formData?.investment.refNumber}
             </p>
@@ -133,16 +136,28 @@ export default function ApplicationViewPage() {
         </div>
         <div className="flex gap-3">
           {/* Section: Manage Application */}
-          <section className="overflow-hidden">
-            <div className="flex items-center gap-3 w-full sm:w-auto">
+          <section className="overflow-hidden w-full">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+
               {/* Update Button */}
               <button
                 onClick={() => setShowUpdateModel(true)}
-                className="cursor-pointer flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-blue-200 active:scale-95"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 hover:bg-blue-600 text-white text-[11px] font-black uppercase tracking-[0.15em] rounded-xl transition-all shadow-lg shadow-slate-900/20 active:scale-95 border border-white/5"
               >
-                <Pen className="w-4 h-4" />
-                Update Details
+                <Pen className="w-4 h-4 text-blue-400" />
+                <span>Update Details</span>
               </button>
+
+              {/* Download PDF Button */}
+              {/* Moved this next to Update for better visual grouping of 'Actions' */}
+              <button
+                onClick={() => generateClientApplicationPDF(formData, plan)}
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 hover:bg-emerald-600 text-white text-[11px] font-black uppercase tracking-[0.15em] rounded-xl transition-all shadow-lg shadow-slate-900/20 active:scale-95 border border-white/5"
+              >
+                <Download className="w-4 h-4 text-emerald-400" />
+                <span>Download PDF</span>
+              </button>
+
               {/* Delete Button */}
               <button
                 onClick={() => {
@@ -154,17 +169,12 @@ export default function ApplicationViewPage() {
                     handelDelete(formData?.applicant.nic);
                   }
                 }}
-                className="cursor-pointer flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 border border-red-200 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-sm font-bold transition-all active:scale-95"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 border-2 border-red-500/20 bg-red-500/10 hover:bg-red-600 hover:text-white text-red-500 rounded-xl text-[11px] font-black uppercase tracking-[0.15em] transition-all active:scale-95"
               >
                 <Trash2 className="w-4 h-4" />
-                Delete
+                <span>Delete</span>
               </button>
-              <button
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 bg-green-600 hover:bg-green-700 cursor-pointer text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-blue-200 active:scale-95"
-                onClick={() => generateClientApplicationPDF(formData, plan)}
-              >
-                Download PDF <Download />
-              </button>
+
             </div>
           </section>
         </div>
@@ -279,7 +289,7 @@ export default function ApplicationViewPage() {
               />
             </div>
           </section>
-          
+
           {/* Investment Table */}
           <ClientInvestmentTable investments={formData?.investments} />
         </div>
@@ -294,15 +304,10 @@ export default function ApplicationViewPage() {
                   <ShieldCheck className="w-5 h-5 text-blue-600" />
                 </div>
                 <h2 className="text-[11px] font-black uppercase tracking-widest text-slate-700">
-                  Compliance & KYC Documents
+                  Documents
                 </h2>
               </div>
-              <div className="flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 border border-emerald-100 rounded-full">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[10px] font-black text-emerald-700 uppercase tracking-tight">
-                  Verified
-                </span>
-              </div>
+            
             </div>
 
             <div className="p-6">
@@ -360,7 +365,7 @@ export default function ApplicationViewPage() {
           text-[11px] font-black uppercase tracking-[0.15em] 
           transition-all shadow-xl shadow-slate-200 active:scale-[0.98] active:shadow-none"
               >
-                Update Regulatory Documents
+                Update Documents
               </button>
             </div>
           </section>

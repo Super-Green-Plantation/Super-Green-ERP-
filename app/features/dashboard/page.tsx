@@ -18,6 +18,10 @@ const DashboardPage = () => {
     return null;
   }
 
+  const target = 500000000;
+  const achieved = data.investmentSum._sum.amount || 0;
+  const percentage = Math.min(Math.round((achieved / target) * 100), 100);
+
 
   return (
     <div className="max-w-7xl mx-auto sm:space-y-8 space-y-2 sm:p-4 md:p-8 min-h-screen">
@@ -31,13 +35,41 @@ const DashboardPage = () => {
       {/* 2. Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
         {/* Investment Card */}
-        <StatCard
+        {/* <StatCard
           label="Investment Sum"
           value={`Rs. ${data.investmentSum._sum.amount?.toLocaleString() || 0}`}
           subText={`Profit: Rs. ${data.totProfit._sum.totalProfit?.toLocaleString() || 0}`}
           icon={<TrendingUp size={20} />}
           color="emerald"
-        />
+        /> */}
+
+        <StatCard
+          label="Investment Sum"
+          value={`Rs. ${achieved.toLocaleString()}`}
+          subText={`Profit: Rs. ${data.totProfit._sum.totalProfit?.toLocaleString() || 0}`}
+          icon={<TrendingUp size={20} />}
+          color="emerald"
+        >
+          {/* Achievement Progress Bar */}
+          <div className="space-y-2">
+            <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
+              <span className="text-slate-400">Target Achievement</span>
+              <span className="text-emerald-400">{percentage}%</span>
+            </div>
+
+            <div className="relative h-2 w-full bg-slate-950 rounded-full overflow-hidden border border-white/5">
+              {/* The Actual Progress Fill */}
+              <div
+                className="absolute top-0 left-0 h-full bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)] transition-all duration-1000 ease-out"
+                style={{ width: `${percentage}%` }}
+              />
+            </div>
+
+            <p className="text-[9px] font-bold text-slate-500 text-right uppercase tracking-tighter">
+              Goal: Rs. {target.toLocaleString()}
+            </p>
+          </div>
+        </StatCard>
 
         {/* Clients Card */}
         <StatCard
@@ -68,7 +100,7 @@ const DashboardPage = () => {
       </div>
 
       {/* 3. Table Header Section */}
-      <section className="mt-16 mb-8 px-2">
+      {/* <section className="mt-16 mb-8 px-2">
         <div className="flex items-end justify-between border-b border-slate-100 pb-6">
           <div>
             <h2 className="text-2xl text-slate-900 tracking-tight uppercase">
@@ -91,12 +123,12 @@ const DashboardPage = () => {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* 4. Table Component */}
-      <div className="px-1">
+      {/* <div className="px-1">
         <InvestmentTable investments={data} />
-      </div>
+      </div> */}
     </div>
   );
 };

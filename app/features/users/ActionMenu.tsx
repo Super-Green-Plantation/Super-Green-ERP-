@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useRef, useEffect, use } from 'react';
-import { createPortal } from 'react-dom';
-import { MoreVertical, Loader2, ChevronRight, Check } from 'lucide-react';
-import { toast } from 'sonner';
-import { sendPasswordReset, updateUserRole } from './action';
 import { Role } from '@/app/types/role';
-import { useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
+import { Check, ChevronRight, Loader2, MoreVertical } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { toast } from 'sonner';
+import { updateUserRole } from './action';
 
 // const ROLES = ['ADMIN', 'HR', 'IT_DEV', 'IT_US', 'BRANCH_MANAGER', 'EMPLOYEE'] as const;
 // type Role = typeof ROLES[number];

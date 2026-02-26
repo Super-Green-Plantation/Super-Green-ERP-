@@ -1,17 +1,16 @@
 import { prisma } from "./prisma";
 import { createClient } from "./supabase/server";
 
-export async function getCurrentUser() {
+export async function getCurrentUserWithRole() {
   const supabase = await createClient();
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return null;
+  if (!user) throw new Error("Unauthorized");
 
-  return {
-    id: user.id,
-    email: user.email,
-  };
+  return prisma.user.findUnique({
+    where: { email: user.email! },
+  });
 }

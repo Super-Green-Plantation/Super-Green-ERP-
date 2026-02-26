@@ -1,29 +1,31 @@
 "use client";
 
 import Error from "@/app/components/Error";
+import Heading from "@/app/components/Heading";
 import Loading from "@/app/components/Loading";
-import { useClients } from "@/app/hooks/useClients";
 import Pagination from "@/app/components/Pagination";
+import { useClients } from "@/app/hooks/useClients";
 import { ExternalLink, Phone, User } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import Heading from "@/app/components/Heading";
 
 const PAGE_SIZE = 10;
 
 const Page = () => {
   const { data: c, isLoading, isError } = useClients();
+  console.log("clientsss",c);
+  
   const [currentPage, setCurrentPage] = useState(1);
 
   if (isLoading) return <Loading />;
   if (isError) return <Error />;
 
-  const allClients = c?.clients ?? [];
-  const totalPages = Math.ceil(allClients.length / PAGE_SIZE);
-  const paginatedClients = allClients.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE
-  );
+  // const allClients = c?.clients ?? [];
+  // const totalPages = Math.ceil(allClients.length / PAGE_SIZE);
+  // const paginatedClients = allClients.slice(
+  //   (currentPage - 1) * PAGE_SIZE,
+  //   currentPage * PAGE_SIZE
+  // );
 
   return (
     <div className="max-w-7xl mx-auto sm:space-y-8 space-y-2 sm:p-4 md:p-8 min-h-screen">
@@ -67,7 +69,7 @@ const Page = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {paginatedClients.length === 0 ? (
+              {c.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center gap-2">
@@ -81,7 +83,7 @@ const Page = () => {
                   </td>
                 </tr>
               ) : (
-                paginatedClients.map((client: any) => (
+                c.map((client: any) => (
                   <tr
                     key={client.id}
                     className="hover:bg-slate-50/80 transition-colors group"
@@ -163,11 +165,11 @@ const Page = () => {
         </div>
       </div>
 
-      <Pagination
+      {/* <Pagination
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={(page) => setCurrentPage(page)}
-      />
+      /> */}
     </div>
   );
 };

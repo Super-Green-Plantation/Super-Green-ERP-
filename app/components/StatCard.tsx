@@ -1,4 +1,4 @@
-export const StatCard = ({ label, value, subText, icon, color }: any) => {
+export const StatCard = ({ label, value, subText, icon, color,children }: any) => {
   const colors: any = {
     emerald: "bg-emerald-50 text-emerald-600 border-emerald-100",
     blue: "bg-blue-50 text-blue-600 border-blue-100",
@@ -24,6 +24,11 @@ export const StatCard = ({ label, value, subText, icon, color }: any) => {
           {subText}
         </p>
       </div>
+      {children && (
+        <div className="mt-4 pt-4 border-t border-white/5">
+          {children}
+        </div>
+      )}
     </div>
   );
 };

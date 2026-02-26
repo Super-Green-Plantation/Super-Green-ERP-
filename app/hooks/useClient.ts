@@ -54,7 +54,7 @@ export const useClient = (clientId: number) => {
   return useQuery({
     queryKey: ["client", clientId],
     queryFn: () => getClientById(clientId),
-    select: (client) => mapClientToFormData(client),
+    select: mapClientToFormData,
     staleTime: 1000 * 60,
     gcTime: 1000 * 60 * 5,
     enabled: !!clientId,
