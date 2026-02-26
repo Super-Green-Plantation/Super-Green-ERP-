@@ -54,8 +54,10 @@ export default function Page() {
   };
 
   const getLoggedUserRole = async () => {
-    const user = await fetch("/api/me").then((res) => res.json());
-    setUserRole(user.role);
+    const role = await fetch("/api/me").then((res) => res.json());
+    setUserRole(role.role);
+    console.log("user", role.role);
+    
     // return user.role;
   }
   useEffect(() => {
@@ -82,14 +84,14 @@ export default function Page() {
             Manage company financial products and terms
           </p>
         </div>
-        {allowed && (
+        {/* {allowed && ( */}
           <button
             onClick={() => setIsAddModalOpen(true)}
             className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 hover:bg-blue-600 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-xl shadow-slate-200 active:scale-95"
           >
             <Plus size={17} /> Add Financial Plan
           </button>
-        )}
+        {/* )} */}
 
       </div>
 

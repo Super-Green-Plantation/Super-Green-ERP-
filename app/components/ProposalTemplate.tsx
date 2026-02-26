@@ -281,7 +281,7 @@ export const ProposalTemplate = React.forwardRef(({ data, plan }: any, ref: any)
               <Row en="Name with initials" si="මුලකුරු සමග නම" value={n.nameWithInitials} />
               <Row en="NIC Number"         si="ජා.හැ.අංකය"      value={n.nic} />
               <Row en="Postal address"     si="ලිපිනය"          value={n.permanentAddress} />
-              <Row en="Relationship"       si="දෙගොත්‍රය"       value={n.relationship} />
+              <Row en="Relationship"       si="සම්බන්දය"       value={n.relationship} />
               <Row en="Phone"              si="දුරකථනය"         value={n.phone} />
             </div>
 

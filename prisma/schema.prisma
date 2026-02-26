@@ -154,8 +154,9 @@ model Client {
   beneficiary Beneficiary?
   nominee     Nominee?
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  ClientDocumentRequest ClientDocumentRequest[]
 }
 
 model Beneficiary {
@@ -202,10 +203,10 @@ model Investment {
   client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   branchId Int
-  branch   Branch         @relation(fields: [branchId], references: [id])
-  
-  planId   Int?
-  plan     FinancialPlan? @relation(fields: [planId], references: [id])
+  branch   Branch @relation(fields: [branchId], references: [id])
+
+  planId Int?
+  plan   FinancialPlan? @relation(fields: [planId], references: [id])
 
   advisorId Int?
   advisor   Member? @relation(fields: [advisorId], references: [id])
@@ -305,11 +306,43 @@ enum Role {
 }
 
 model User {
-  id       String  @id @default(uuid()) @db.Uuid
-  role     Role    @default(EMPLOYEE)
-  name     String?
-  email    String? @unique
-  branchId Int?
-  status   Boolean @default(true)
-  member   Member?
+  id                    String                  @id @default(uuid()) @db.Uuid
+  role                  Role                    @default(EMPLOYEE)
+  name                  String?
+  email                 String?                 @unique
+  branchId              Int?
+  status                Boolean                 @default(true)
+  member                Member?
+  ClientDocumentRequest ClientDocumentRequest[]
+}
+
+model ClientDocumentRequest {
+  id Int @id @default(autoincrement())
+
+  clientId Int
+  client   Client @relation(fields: [clientId], references: [id])
+
+  token       String @unique
+  createdById String @db.Uuid
+  createdBy   User   @relation(fields: [createdById], references: [id])
+
+  expiresAt DateTime
+  used      Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+
+  documents ClientDocument[]
+}
+
+model ClientDocument {
+  id Int @id @default(autoincrement())
+
+  requestId Int
+  request   ClientDocumentRequest @relation(fields: [requestId], references: [id])
+
+  idFront String?
+  idBack  String?
+  paySlip String?
+
+  uploadedAt DateTime @default(now())
 }

@@ -9,7 +9,7 @@ import { DocPreview } from "@/app/components/DocPreview";
 import ErrorMessage from "@/app/components/Error";
 import Loading from "@/app/components/Loading";
 import { useClient } from "@/app/hooks/useClient";
-import { deleteClient, updateClient, updateClientDocuments } from "@/app/features/clients/actions";
+import { deleteClient, generateUploadUrl, updateClient, updateClientDocuments } from "@/app/features/clients/actions";
 
 import { getFinancialPlanById } from "@/app/features/financial_plans/actions";
 import { useQueryClient } from "@tanstack/react-query";
@@ -33,6 +33,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import Heading from "@/app/components/Heading";
 import { ProposalTemplate } from "@/app/components/ProposalTemplate";
+import CopyButton from "@/app/components/CopyButton";
 
 export default function ApplicationViewPage() {
   const queryClient = useQueryClient();
@@ -91,6 +92,20 @@ export default function ApplicationViewPage() {
       toast.error("Failed to update documents");
     }
   };
+
+  const getUrl = async()=>{
+    try {
+      const res = await generateUploadUrl(Number(id));
+      console.log(res);
+    } catch (error) {
+      console.log(error);
+      
+    }
+  }
+
+useEffect(() => {
+  getUrl();
+}, [])
 
   const handleDetailsUpdate = async (updatedPayload: any) => {
     try {
@@ -309,6 +324,9 @@ export default function ApplicationViewPage() {
         <div className="space-y-8">
           {/* Compliance & KYC Documents */}
           <section className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+           
+           <CopyButton text=""/> 
+           
             <div className="px-6 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-white rounded-lg border border-slate-200 shadow-sm">

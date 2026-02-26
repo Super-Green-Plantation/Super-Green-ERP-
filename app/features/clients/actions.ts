@@ -6,14 +6,15 @@ import { generateInvestmentNumber } from "@/lib/investment";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import crypto from "crypto"
 
 
 
 
 export async function getAccessibleClients() {
   const dbUser = await getCurrentUserWithRole();
-  console.log("current user" , dbUser);
-  
+  console.log("current user", dbUser);
+
 
   if (!dbUser) throw new Error("User not found");
 
@@ -394,4 +395,30 @@ export async function deleteClientDocument(nic: string, field: string) {
     console.error("Error deleting document:", error);
     return { success: false, error: "Failed to delete document" };
   }
+}
+
+
+export async function generateUploadUrl(clientId: number) {
+  const token = crypto.randomBytes(32).toString("hex")
+
+  console.log(token);
+  
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("Unauthorized");
+
+  await prisma.clientDocumentRequest.create({
+    data: {
+      clientId,
+      token,
+      createdById: user.id,
+      expiresAt: new Date(
+        Date.now() + 1000 * 60 * 60 * 24 * 2 // 2 days
+      ),
+    },
+  })
 }
