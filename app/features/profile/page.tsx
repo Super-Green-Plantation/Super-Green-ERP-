@@ -60,7 +60,7 @@ export default async function Profile() {
             </div>
 
             {/* Earnings Stat */}
-            <div className="w-full md:w-auto bg-slate-950 border border-blue-500/30 rounded-2xl md:rounded-3xl p-6 min-w-[200px] text-center shadow-2xl relative group">
+            <div className="w-full md:w-auto bg-slate-950 border border-blue-500/30 rounded-2xl md:rounded-3xl p-6 min-w-50 text-center shadow-2xl relative group">
               {/* Inner glow effect for the stat box */}
               <div className="absolute inset-0 bg-blue-500/5 rounded-2xl md:rounded-3xl pointer-events-none" />
               

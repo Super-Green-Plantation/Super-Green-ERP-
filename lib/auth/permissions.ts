@@ -1,0 +1,95 @@
+export const PERMISSIONS = {
+    VIEW_BRANCHES: "VIEW_BRANCHES",
+    CREATE_BRANCHES: "CREATE_BRANCHES",
+    UPDATE_BRANCHES: "UPDATE_BRANCHES",
+    DELETE_BRANCHES: "DELETE_BRANCHES",
+
+    VIEW_EMPLOYEES: "VIEW_EMPLOYEES",
+    CREATE_EMPLOYEES: "CREATE_EMPLOYEES",
+    UPDATE_EMPLOYEES: "UPDATE_EMPLOYEES",
+    DELETE_EMPLOYEES: "DELETE_EMPLOYEES",
+
+    VIEW_FINANCIAL_PLAN: "VIEW_FINANCIAL_PLAN",
+    CREATE_FINANCIAL_PLAN: "CREATE_FINANCIAL_PLAN",
+    UPDATE_FINANCIAL_PLAN: "UPDATE_FINANCIAL_PLAN",
+    DELETE_FINANCIAL_PLAN: "DELETE_FINANCIAL_PLAN",
+
+    VIEW_COMMISSIONS: "VIEW_COMMISSIONS",
+    CREATE_COMMISSIONS: "CREATE_COMMISSIONS",
+    UPDATE_COMMISSIONS: "UPDATE_COMMISSIONS",
+    DELETE_COMMISSIONS: "DELETE_COMMISSIONS",
+
+    VIEW_INVESTMENTS: "VIEW_INVESTMENTS",
+    CREATE_INVESTMENTS: "CREATE_INVESTMENTS",
+    UPDATE_INVESTMENTS: "UPDATE_INVESTMENTS",
+    DELETE_INVESTMENTS: "DELETE_INVESTMENTS",
+
+    VIEW_CLIENTS: "VIEW_CLIENTS",
+    CREATE_CLIENTS: "CREATE_CLIENTS",
+    UPDATE_CLIENTS: "UPDATE_CLIENTS",
+    DELETE_CLIENTS: "DELETE_CLIENTS",
+
+    VIEW_USERS: "VIEW_USERS",
+    CREATE_USERS: "CREATE_USERS",
+    UPDATE_USERS: "UPDATE_USERS",
+    DELETE_USERS: "DELETE_USERS",
+} as const;
+
+export type Permission =
+    typeof PERMISSIONS[keyof typeof PERMISSIONS];
+
+export const rolePermissions: Record<string, Permission[]> = {
+    ADMIN: Object.values(PERMISSIONS),
+
+    HR: Object.values(PERMISSIONS),
+    DEV: Object.values(PERMISSIONS),
+
+    BRANCH_MANAGER: [
+        PERMISSIONS.VIEW_BRANCHES,
+
+        PERMISSIONS.VIEW_EMPLOYEES,
+        PERMISSIONS.CREATE_EMPLOYEES,
+        PERMISSIONS.UPDATE_EMPLOYEES,
+        PERMISSIONS.DELETE_EMPLOYEES,
+
+        PERMISSIONS.VIEW_FINANCIAL_PLAN,
+
+        PERMISSIONS.VIEW_COMMISSIONS,
+
+        PERMISSIONS.VIEW_INVESTMENTS,
+        PERMISSIONS.CREATE_INVESTMENTS,
+        PERMISSIONS.UPDATE_INVESTMENTS,
+        PERMISSIONS.DELETE_INVESTMENTS,
+
+        PERMISSIONS.VIEW_CLIENTS,
+        PERMISSIONS.CREATE_CLIENTS,
+        PERMISSIONS.UPDATE_CLIENTS,
+        PERMISSIONS.DELETE_CLIENTS,
+    ],
+
+    EMPLOYEE: [
+        PERMISSIONS.VIEW_FINANCIAL_PLAN,
+        PERMISSIONS.VIEW_COMMISSIONS,
+        PERMISSIONS.VIEW_CLIENTS,
+        PERMISSIONS.UPDATE_CLIENTS,
+    ],
+};
+
+// lib/auth/permissions.ts
+export function hasPermission(role: string, permission: Permission) {
+  return rolePermissions[role]?.includes(permission) ?? false;
+}
+
+/**
+ * Check if user has at least one of the permissions (OR)
+ */
+export function hasAnyPermission(role: string, permissions: Permission[]) {
+  return permissions.some(p => hasPermission(role, p));
+}
+
+/**
+ * Check if user has all permissions (AND)
+ */
+export function hasAllPermissions(role: string, permissions: Permission[]) {
+  return permissions.every(p => hasPermission(role, p));
+}

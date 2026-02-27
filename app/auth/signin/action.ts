@@ -11,7 +11,8 @@ type State = {
 export const getAuthUser = async (user: any) => {
     const dbUser = await prisma.user.findUnique({
         where: { id: user.id },
-        select: { role: true, status: true }
+        select: { role: true, status: true,branchId:true },
+        
     })
 
     return dbUser;

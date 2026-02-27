@@ -29,5 +29,6 @@ export async function GET() {
 
   return NextResponse.json({
     role: dbUser?.role,
+    dbUser
   });
 }

@@ -175,6 +175,7 @@ export async function processCommissions(data: {
         data: {
           investmentId,
           memberEmpNo: empNo,
+          branchId:branchId,
           amount: personalCommissionAmount,
           type: "PERSONAL",
           refNumber: generateCommissionRef(),

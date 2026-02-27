@@ -20,13 +20,14 @@ import { Spinner } from "@/components/ui/spinner";
 import Loading from "@/app/components/Loading";
 import Error from "@/app/components/Error";
 import Heading from "@/app/components/Heading";
+import { usePermission } from "@/lib/auth/usePermission";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 
 export default function Page() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
-  const [allowed, setAllowed] = useState(false);
   const queryClient = useQueryClient();
   const { data: plans = [], isLoading, isError } = usePlans();
 
@@ -57,18 +58,22 @@ export default function Page() {
     const role = await fetch("/api/me").then((res) => res.json());
     setUserRole(role.role);
     console.log("user", role.role);
-    
+
     // return user.role;
   }
   useEffect(() => {
     getLoggedUserRole();
-    const eligibleRoles = ["ADMIN", "HR", "IT_DEV", "BRANCH_MANAGER"];
-    if (eligibleRoles.includes(userRole!)) {
-      setAllowed(true);
-    } else {
-      setAllowed(false);
-    }
+
   }, []);
+
+  const canAdd = usePermission(
+    userRole,
+    PERMISSIONS.CREATE_FINANCIAL_PLAN
+  );
+  const canEdit = usePermission(userRole, PERMISSIONS.UPDATE_FINANCIAL_PLAN);
+  const canDelete = usePermission(userRole, [PERMISSIONS.DELETE_FINANCIAL_PLAN, PERMISSIONS.UPDATE_FINANCIAL_PLAN]);
+
+
 
   if (isLoading) return <Loading />;
   if (isError) return <Error />;
@@ -84,14 +89,14 @@ export default function Page() {
             Manage company financial products and terms
           </p>
         </div>
-        {/* {allowed && ( */}
+        {canAdd && (
           <button
             onClick={() => setIsAddModalOpen(true)}
             className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 hover:bg-blue-600 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-xl shadow-slate-200 active:scale-95"
           >
             <Plus size={17} /> Add Financial Plan
           </button>
-        {/* )} */}
+        )}
 
       </div>
 
@@ -138,7 +143,7 @@ export default function Page() {
                       </span>
                     </div>
                     <span className="text-sm font-bold text-gray-800">
-                      {plan.rate}% p.a.
+                      {plan.rate}%
                     </span>
                   </div>
 
@@ -160,22 +165,26 @@ export default function Page() {
                   )}
                 </div>
 
-                {allowed && (
-                  <div className="flex gap-3 border-t pt-5">
+                <div className="flex gap-3 ">
+                  {canEdit && (
                     <button
                       onClick={() => handleEditClick(plan)}
                       className="flex-1 flex items-center justify-center gap-2 text-sm font-bold text-gray-600 hover:text-blue-600 hover:bg-blue-50 py-2.5 rounded-lg transition-all border border-transparent hover:border-blue-100"
                     >
                       <Edit2 size={16} /> Edit
                     </button>
+                  )}
+
+                  {canDelete && (
                     <button
                       onClick={() => handleDelete(plan.id)}
                       className="flex-1 flex items-center justify-center gap-2 text-sm font-bold text-red-500 hover:bg-red-50 py-2.5 rounded-lg transition-all border border-transparent hover:border-red-100"
                     >
                       <Trash2 size={16} /> Delete
                     </button>
-                  </div>
-                )}
+                  )}
+                </div>
+
 
 
               </div>

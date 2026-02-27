@@ -9,11 +9,8 @@ import { getBranches } from "@/app/features/branches/actions";
 import { generateBranchNetworkPDF } from "@/app/utils/pdfGenerator";
 import {
   Building2,
-  Loader2,
-  MapPin,
   Plus,
-  Search,
-  TrendingUp
+  Search
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -40,9 +37,7 @@ const Page = () => {
   }, []);
 
   const totalBranches = branches.length;
-  const activeBranches = branches.filter((b) => b.status === "Active").length;
   // Calculate total staff across all branches
-  const totalStaff = branches.reduce((acc, b) => acc + (b.members?.length || 0), 0);
 
   return (
     <div className="max-w-7xl mx-auto sm:space-y-8 space-y-2 sm:p-4 md:p-8 min-h-screen">
