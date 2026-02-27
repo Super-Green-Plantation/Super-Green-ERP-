@@ -44,7 +44,7 @@ const links = [
     role: ["ADMIN", "EMPLOYEE", "HR", "IT_DEV", "BRANCH_MANAGER"]
   },
   { name: "Commissions", href: "/features/commissions", icon: Percent, role: ["ADMIN", "HR", "IT_DEV", "BRANCH_MANAGER"] },
-  { name: "Investments", href: "/features/investments", icon: BanknoteArrowUp, role: ["ADMIN", "EMPLOYEE", "HR", "IT_DEV", "BRANCH_MANAGER"] },
+  { name: "Investments", href: "/features/investments", icon: BanknoteArrowUp, role: ["ADMIN", "HR", "IT_DEV", "BRANCH_MANAGER"] },
   { name: "Calculations", href: "/features/calculations", icon: Calculator, role: ["ADMIN", "EMPLOYEE", "HR", "IT_DEV", "BRANCH_MANAGER"] },
   { name: "Clients", href: "/features/clients", icon: Users, role: ["ADMIN", "EMPLOYEE", "HR", "IT_DEV", "BRANCH_MANAGER"] },
   { name: "Users", href: "/features/users", icon: User, role: ["ADMIN", "HR", "IT_DEV"] },

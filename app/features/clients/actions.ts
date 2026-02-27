@@ -13,17 +13,36 @@ import crypto from "crypto"
 
 export async function getAccessibleClients() {
   const dbUser = await getCurrentUserWithRole();
-  console.log("current user", dbUser);
-
 
   if (!dbUser) throw new Error("User not found");
 
-  const privilegedRoles = ["ADMIN", "HR", "DEV"];
+  let whereCondition: any = {};
 
-  const whereCondition =
-    privilegedRoles.includes(dbUser.role)
-      ? {}
-      : { branchId: Number(dbUser.branchId) };
+  switch (dbUser.role) {
+    case "ADMIN":
+    case "HR":
+    case "IT_DEV":
+      // see all clients
+      whereCondition = {};
+      break;
+
+    case "BRANCH_MANAGER":
+      // branch clients
+      whereCondition = {
+        branchId: Number(dbUser.branchId),
+      };
+      break;
+
+    case "EMPLOYEE":
+      // own clients only
+      whereCondition = {
+        memberId: Number(dbUser?.member?.id),
+      };
+      break;
+
+    default:
+      throw new Error("Unauthorized role");
+  }
 
   const clients = await prisma.client.findMany({
     where: whereCondition,
@@ -127,13 +146,32 @@ export async function getClientsByBranch(branchId: number) {
   }
 }
 
+export async function getClientsByMember(memberId: number) {
+  try {
+    const clients = await prisma.client.findMany({
+      where: {
+        memberId: memberId,
+      },
+      include: {
+        investments: true,
+        branch: true,
+        beneficiary: true,
+        nominee: true,
+      },
+    });
+    return { clients };
+  } catch (error) {
+    console.error("Error fetching clients by member:", error);
+    throw new Error("Failed to fetch clients by member");
+  }
+}
 // Create client with investment, beneficiary, and nominee
 export async function saveClient(data: {
   applicant: any;
   investment: any;
   beneficiary?: any;
   nominee?: any;
-}) {
+}, email: any) {
   const { applicant, investment, beneficiary, nominee } = data;
 
   // Validate required fields
@@ -145,6 +183,14 @@ export async function saveClient(data: {
 
   try {
     const client = await prisma.$transaction(async (prisma: any) => {
+      
+      const member = await prisma.member.findFirst({
+        where: {
+          email,
+          branchId: Number(applicant.branchId),
+        },
+      });
+      
       const createdClient = await prisma.client.create({
         data: {
           fullName: applicant.fullName,
@@ -164,6 +210,7 @@ export async function saveClient(data: {
           idBack: applicant.idBack,
           proposal: applicant.proposal,
           agreement: applicant.agreement,
+          memberId: member ? member.id : null,
 
           investments: {
             create: [

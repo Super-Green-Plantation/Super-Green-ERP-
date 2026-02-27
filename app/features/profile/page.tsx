@@ -68,7 +68,7 @@ export default async function Profile() {
                 Total Commission
               </p>
               <div className="flex items-center justify-center gap-2">
-                <span className="text-xl md:text-3xl font-black text-white tracking-tight">
+                <span className="text-xl md:text-xl font-black text-white tracking-tight">
                   <span className="text-blue-500 mr-1">LKR</span>
                   {member?.totalCommission?.toLocaleString() || "0"}
                 </span>

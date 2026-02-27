@@ -49,19 +49,19 @@ const Page = () => {
             <thead>
               <tr className="bg-slate-50/50 border-b border-slate-200">
                 <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
-                  Client ID
+                  ID
                 </th>
                 <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
-                  Basic Details
+                   Name
                 </th>
                 <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
                   Contact Info
                 </th>
                 <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
-                  Identification
+                  NIC 
                 </th>
                 <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
-                  Account Status
+                  Status
                 </th>
                 <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500 text-center">
                   Actions

@@ -1,27 +1,50 @@
 "use client";
-import { useInvestments } from "@/app/hooks/useInvestment";
+import { useCommission } from "@/app/hooks/useCommission";
 import { Eye, Inbox, MapPin, User } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import Error from "../Error";
 import Loading from "../Loading";
-import { useState } from "react";
-import Pagination from "@/app/components/Pagination";
+import { getCommissionByBranch } from "@/app/features/commissions/actions";
 
-const PAGE_SIZE = 10;
+
 
 const InvestmentTable = () => {
-  const { data: investments, isLoading, isError } = useInvestments();
-  const [currentPage, setCurrentPage] = useState(1);
+  const { data: investments, isLoading, isError } = useCommission();
+  const [dbUser, setDbUser] = useState<any>(null);
+  const [investmentData, setInvestmentData] = useState<any[]>([]);
 
-  if (isLoading) return <Loading/>;
-  if (isError) return <Error/>;
+  const getUser = async () => {
+    const { dbUser } = await fetch("/api/me").then((res) => res.json());
+    console.log("user", dbUser);
+    setDbUser(dbUser);
+  }
 
-  const allInvestments: any[] = investments ?? [];
-  const totalPages = Math.ceil(allInvestments.length / PAGE_SIZE);
-  const paginatedInvestments = allInvestments.slice(
-    (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE
-  );
+  useEffect(() => {
+    getUser();
+  }, []);
+
+useEffect(() => {
+  if (!dbUser) return;
+
+  const loadInvestments = async () => {
+    if (dbUser.role === "BRANCH_MANAGER") {
+      const branchData =
+        await getCommissionByBranch(dbUser.branchId || 0);
+
+      setInvestmentData(branchData || []);
+    } else {
+      setInvestmentData(investments || []);
+    }
+  };
+
+  loadInvestments();
+}, [dbUser, investments]);
+
+  console.log("commission", investmentData);
+
+  if (isLoading) return <Loading />;
+  if (isError) return <Error />;
 
   return (
     <div className="w-full bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -40,7 +63,7 @@ const InvestmentTable = () => {
           <tbody className="divide-y divide-slate-100 relative min-h-50">
 
             {/* --- EMPTY STATE --- */}
-            {allInvestments.length === 0 && (
+            {investments.length === 0 && (
               <tr>
                 <td colSpan={6} className="px-6 py-20">
                   <div className="flex flex-col items-center justify-center gap-2 text-slate-300">
@@ -52,7 +75,7 @@ const InvestmentTable = () => {
             )}
 
             {/* --- DATA STATE --- */}
-            {paginatedInvestments.map((item: any) => (
+            {investmentData.map((item: any) => (
               <tr key={item.id} className="hover:bg-slate-50/80 transition-colors group">
                 <td className="px-6 py-4">
                   <span className="text-xs font-bold text-slate-400 tabular-nums">#{item.id}</span>
@@ -62,14 +85,14 @@ const InvestmentTable = () => {
                     <div className="w-7 h-7 bg-orange-50 text-orange-600 rounded-lg flex items-center justify-center border border-orange-100">
                       <MapPin size={14} />
                     </div>
-                    <span className="text-sm font-bold text-slate-900 tracking-tight">{item.branchName || "N/A"}</span>
+                    <span className="text-sm font-bold text-slate-900 tracking-tight">{item.Branch.name || "N/A"}</span>
                   </div>
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex flex-col gap-0.5">
                     <div className="flex items-center gap-1.5 text-sm font-bold text-slate-700">
                       <User size={12} className="text-slate-300" />
-                      {item.advisorName || "System"}
+                      {item.member.name || "System"}
                     </div>
                     <div className="text-[10px] text-slate-400 font-bold uppercase tracking-tight pl-4">
                       <span className="text-slate-300">Client:</span> {item.clientName}
@@ -78,7 +101,7 @@ const InvestmentTable = () => {
                 </td>
                 <td className="px-6 py-4">
                   <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-black bg-blue-50 text-blue-600 border border-blue-100 uppercase tracking-tight">
-                    {item.planName}
+                    {item.investment.plan?.name || "N/A"}
                   </span>
                 </td>
                 <td className="px-6 py-4">
@@ -104,12 +127,6 @@ const InvestmentTable = () => {
           </tbody>
         </table>
       </div>
-
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
-      />
     </div>
   );
 };

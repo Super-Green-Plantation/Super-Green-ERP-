@@ -49,15 +49,15 @@ export async function getInvestments() {
 
   let whereClause = {};
 
-const privilegedRoles = ["ADMIN", "HR", "IT_DEV"];
+  const privilegedRoles = ["ADMIN", "HR", "IT_DEV"];
 
-if (!privilegedRoles.includes(dbUser.role)) {
-  whereClause = {
-    client: {
-      branchId: dbUser.branchId,
-    },
-  };
-}
+  if (!privilegedRoles.includes(dbUser.role)) {
+    whereClause = {
+      client: {
+        branchId: dbUser.branchId,
+      },
+    };
+  }
 
   const investments = await prisma.investment.findMany({
     where: whereClause,
@@ -126,47 +126,6 @@ export async function getInvestmentById(id: number) {
   } catch (error) {
     console.error("Error fetching investment:", error);
     return null;
-  }
-}
-
-// Get investment details (summary view)
-export async function getInvestmentDetails() {
-  try {
-    const investments = await prisma.investment.findMany({
-      select: {
-        id: true,
-        amount: true,
-        investmentDate: true,
-
-        client: {
-          select: {
-            fullName: true,
-          },
-        },
-
-        plan: {
-          select: {
-            name: true,
-          },
-        },
-
-        advisor: {
-          select: {
-            name: true,
-            branch: {
-              select: {
-                name: true,
-              },
-            },
-          },
-        },
-      },
-    });
-
-    return serializeData(investments);
-  } catch (error) {
-    console.error("Error fetching investment details:", error);
-    throw new Error("Failed to fetch investment details");
   }
 }
 

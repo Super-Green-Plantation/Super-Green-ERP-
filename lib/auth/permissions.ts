@@ -45,7 +45,7 @@ export const rolePermissions: Record<string, Permission[]> = {
     DEV: Object.values(PERMISSIONS),
 
     BRANCH_MANAGER: [
-        PERMISSIONS.VIEW_BRANCHES,
+       
 
         PERMISSIONS.VIEW_EMPLOYEES,
         PERMISSIONS.CREATE_EMPLOYEES,
@@ -69,8 +69,8 @@ export const rolePermissions: Record<string, Permission[]> = {
 
     EMPLOYEE: [
         PERMISSIONS.VIEW_FINANCIAL_PLAN,
-        PERMISSIONS.VIEW_COMMISSIONS,
         PERMISSIONS.VIEW_CLIENTS,
+        PERMISSIONS.CREATE_CLIENTS,
         PERMISSIONS.UPDATE_CLIENTS,
     ],
 };

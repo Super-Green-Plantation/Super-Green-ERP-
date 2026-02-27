@@ -1,16 +1,33 @@
 "use client";
 
 import { useFormContext } from "@/app/context/FormContext";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Loader2, Rocket } from "lucide-react"; // Matching our icon set
 import { saveClient } from "../actions";
 
 type Status = "success" | "error" | null;
+type DbUser = {
+  id: string;
+  email: string;
+  role: string;
+  branchId?: number;
+};
 
 export const SubmitButton = () => {
   const { form } = useFormContext();
   const [loading, setLoading] = useState(false);
+  const [dbUser, setDbUser] = useState<DbUser | null>(null);
+
+  const getUser = async () => {
+    const { dbUser } = await fetch("/api/me").then((res) => res.json());
+    console.log("user", dbUser);
+    setDbUser(dbUser);
+  }
+
+  useEffect(() => {
+    getUser();
+  }, []);
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -18,8 +35,9 @@ export const SubmitButton = () => {
     const data = form.getValues();
     console.log(data);
 
+
     try {
-      const res = await saveClient(data);
+      const res = await saveClient(data, dbUser?.email);
 
       if (!res.success) {
         toast.error(res.error || "Something went wrong, please try again");

@@ -102,6 +102,7 @@ model Member {
   commissions Commission[]
   investments Investment[]
   activityLog ActivityLog[]
+  clients Client[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -132,6 +133,9 @@ model Client {
   email       String? @unique
   phoneMobile String?
   phoneLand   String?
+
+  memberId Int? // optional for existing clients
+  member   Member? @relation(fields: [memberId], references: [id])
 
   dateOfBirth DateTime?
   occupation  String?
@@ -324,7 +328,7 @@ model ClientDocumentRequest {
   id Int @id @default(autoincrement())
 
   clientId Int
-  client   Client @relation(fields: [clientId], references: [id])
+  client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   token       String @unique
   createdById String @db.Uuid

@@ -11,6 +11,6 @@ export async function getCurrentUserWithRole() {
   if (!user) throw new Error("Unauthorized");
 
   return prisma.user.findUnique({
-    where: { email: user.email! },
+    where: { email: user.email! },include:{member:true}
   });
 }

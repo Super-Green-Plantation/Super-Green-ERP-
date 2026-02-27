@@ -175,7 +175,7 @@ export async function processCommissions(data: {
         data: {
           investmentId,
           memberEmpNo: empNo,
-          branchId:branchId,
+          branchId: branchId,
           amount: personalCommissionAmount,
           type: "PERSONAL",
           refNumber: generateCommissionRef(),
@@ -281,5 +281,45 @@ export async function processCommissions(data: {
         message: "Something went wrong",
       },
     };
+  }
+}
+
+
+export async function getCommissionByBranch(branchId: number) {
+  try {
+    const commissions = await prisma.commission.findMany({
+      where: { branchId },
+      include: {
+        member: true, investment: {include:{plan:true, }}, Branch: true
+      },
+      orderBy: { createdAt: "desc" },
+
+    });
+
+    return serializeData(commissions);
+  } catch (error) {
+    console.error("Error fetching commissions by branch:", error);
+    throw new Error("Failed to fetch commissions by branch");
+  }
+}
+
+export async function getCommissionDetails() {
+  try {
+    const investments = await prisma.commission.findMany({
+      select: {
+        id: true,
+        amount: true,
+        Branch: true,
+        investment: {include:{plan: true}},
+        member: true,
+        
+
+      },
+    });
+
+    return serializeData(investments);
+  } catch (error) {
+    console.error("Error fetching investment details:", error);
+    throw new Error("Failed to fetch investment details");
   }
 }
