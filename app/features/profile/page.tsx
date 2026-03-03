@@ -40,7 +40,7 @@ export default async function Profile() {
             {/* Main Member Info */}
             <div className="flex-1 text-center md:text-left space-y-4">
               <div className="flex flex-col md:flex-row md:items-center gap-3">
-                <h1 className="text-3xl md:text-4xl font-black text-white tracking-tighter uppercase drop-shadow-sm">
+                <h1 className="text-3xl md:text-4xl font-semibold text-white tracking-tighter uppercase drop-shadow-sm">
                   {user?.name || "Unregistered Member"}
                 </h1>
                 
@@ -54,7 +54,7 @@ export default async function Profile() {
                 </div>
                 <div className="flex items-center gap-2 bg-slate-800/50 px-3 py-1.5 rounded-xl border border-white/5">
                   <MapPin size={18} className="text-emerald-400" />
-                  <span>{member?.branch?.name || "Head Office"}</span>
+                  <span>{member?.branches[0]?.branch.name || "Head Office"}</span>
                 </div>
               </div>
             </div>

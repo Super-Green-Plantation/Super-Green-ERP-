@@ -29,26 +29,26 @@ type SidebarProps = {
 
 
 const links = [
-  { name: "Dashboard", href: "/features/dashboard", icon: LayoutDashboard, role: ["ADMIN", "EMPLOYEE", "HR", "IT_DEV", "BRANCH_MANAGER"] },
-  { name: "Branches", href: "/features/branches", icon: GitBranch, role: ["ADMIN", "HR", "IT_DEV"] },
+  { name: "Dashboard", href: "/features/dashboard", icon: LayoutDashboard, role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER","AGM"] },
+  { name: "Branches", href: "/features/branches", icon: GitBranch, role: ["ADMIN", "HR", "DEV","REGIONAL_MANAGER","AGM"] },
   {
     name: "Employee",
     href: "/features/branches/employees",
     icon: IdCardLanyard,
-    role: ["ADMIN", "HR", "IT_DEV", "BRANCH_MANAGER"]
+    role: ["ADMIN", "HR", "DEV", "BRANCH_MANAGER","REGIONAL_MANAGER"]
   },
   {
     name: "Financial Plans",
     href: "/features/financial_plans",
     icon: Landmark,
-    role: ["ADMIN", "EMPLOYEE", "HR", "IT_DEV", "BRANCH_MANAGER"]
+    role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER","REGIONAL_MANAGER","AGM"]
   },
-  { name: "Commissions", href: "/features/commissions", icon: Percent, role: ["ADMIN", "HR", "IT_DEV", "BRANCH_MANAGER"] },
-  { name: "Investments", href: "/features/investments", icon: BanknoteArrowUp, role: ["ADMIN", "HR", "IT_DEV", "BRANCH_MANAGER"] },
-  { name: "Calculations", href: "/features/calculations", icon: Calculator, role: ["ADMIN", "EMPLOYEE", "HR", "IT_DEV", "BRANCH_MANAGER"] },
-  { name: "Clients", href: "/features/clients", icon: Users, role: ["ADMIN", "EMPLOYEE", "HR", "IT_DEV", "BRANCH_MANAGER"] },
-  { name: "Users", href: "/features/users", icon: User, role: ["ADMIN", "HR", "IT_DEV"] },
-  { name: "Profile", href: "/features/profile", icon: User, role: ["ADMIN", "EMPLOYEE", "HR", "IT_DEV", "BRANCH_MANAGER"] },
+  { name: "Commissions", href: "/features/commissions", icon: Percent, role: ["ADMIN", "HR", "DEV", "BRANCH_MANAGER"] },
+  { name: "Investments", href: "/features/investments", icon: BanknoteArrowUp, role: ["ADMIN", "HR", "DEV", "BRANCH_MANAGER","REGIONAL_MANAGER","AGM"] },
+  { name: "Calculations", href: "/features/calculations", icon: Calculator, role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER","REGIONAL_MANAGER","AGM"] },
+  { name: "Clients", href: "/features/clients", icon: Users, role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER","REGIONAL_MANAGER","AGM"] },
+  { name: "Users", href: "/features/users", icon: User, role: ["ADMIN", "HR", "DEV"] },
+  { name: "Profile", href: "/features/profile", icon: User, role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER","REGIONAL_MANAGER","AGM"] },
 ];
 
 

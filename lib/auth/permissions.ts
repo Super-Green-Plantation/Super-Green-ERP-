@@ -45,7 +45,52 @@ export const rolePermissions: Record<string, Permission[]> = {
     DEV: Object.values(PERMISSIONS),
 
     BRANCH_MANAGER: [
-       
+
+
+        PERMISSIONS.VIEW_EMPLOYEES,
+        PERMISSIONS.CREATE_EMPLOYEES,
+        PERMISSIONS.UPDATE_EMPLOYEES,
+        PERMISSIONS.DELETE_EMPLOYEES,
+
+        PERMISSIONS.VIEW_FINANCIAL_PLAN,
+
+        PERMISSIONS.VIEW_COMMISSIONS,
+
+        PERMISSIONS.VIEW_INVESTMENTS,
+        PERMISSIONS.CREATE_INVESTMENTS,
+        PERMISSIONS.UPDATE_INVESTMENTS,
+        PERMISSIONS.DELETE_INVESTMENTS,
+
+        PERMISSIONS.VIEW_CLIENTS,
+        PERMISSIONS.CREATE_CLIENTS,
+        PERMISSIONS.UPDATE_CLIENTS,
+        PERMISSIONS.DELETE_CLIENTS,
+    ],
+    REGIONAL_MANAGER: [
+
+
+        PERMISSIONS.VIEW_EMPLOYEES,
+        PERMISSIONS.CREATE_EMPLOYEES,
+        PERMISSIONS.UPDATE_EMPLOYEES,
+        PERMISSIONS.DELETE_EMPLOYEES,
+
+        PERMISSIONS.VIEW_FINANCIAL_PLAN,
+
+        PERMISSIONS.VIEW_COMMISSIONS,
+
+        PERMISSIONS.VIEW_INVESTMENTS,
+        PERMISSIONS.CREATE_INVESTMENTS,
+        PERMISSIONS.UPDATE_INVESTMENTS,
+        PERMISSIONS.DELETE_INVESTMENTS,
+
+        PERMISSIONS.VIEW_CLIENTS,
+        PERMISSIONS.CREATE_CLIENTS,
+        PERMISSIONS.UPDATE_CLIENTS,
+        PERMISSIONS.DELETE_CLIENTS,
+    ],
+
+    AGM: [
+
 
         PERMISSIONS.VIEW_EMPLOYEES,
         PERMISSIONS.CREATE_EMPLOYEES,
@@ -77,19 +122,19 @@ export const rolePermissions: Record<string, Permission[]> = {
 
 // lib/auth/permissions.ts
 export function hasPermission(role: string, permission: Permission) {
-  return rolePermissions[role]?.includes(permission) ?? false;
+    return rolePermissions[role]?.includes(permission) ?? false;
 }
 
 /**
  * Check if user has at least one of the permissions (OR)
  */
 export function hasAnyPermission(role: string, permissions: Permission[]) {
-  return permissions.some(p => hasPermission(role, p));
+    return permissions.some(p => hasPermission(role, p));
 }
 
 /**
  * Check if user has all permissions (AND)
  */
 export function hasAllPermissions(role: string, permissions: Permission[]) {
-  return permissions.every(p => hasPermission(role, p));
+    return permissions.every(p => hasPermission(role, p));
 }

@@ -11,13 +11,19 @@ export async function getBranches() {
     const branches = await prisma.branch.findMany({
       include: {
         members: {
-          include: {
-            position: {
+          select: {
+            member: {
               include: {
-                personalCommissionTiers: true,
-                orc: true,
-              },
-            },
+                position: {
+                  include: {
+                    personalCommissionTiers: true,
+                    orc: true,
+                  },
+                },
+              }
+
+            }
+
           },
         },
       },
@@ -36,13 +42,18 @@ export async function getBranchById(id: number) {
       where: { id },
       include: {
         members: {
-          include: {
-            position: {
+          select: {
+            member: {
               include: {
-                personalCommissionTiers: true,
-                orc: true,
-              },
-            },
+                position: {
+                  include: {
+                    personalCommissionTiers: true,
+                    orc: true,
+                  },
+                },
+              }
+            }
+
           },
         },
       },
@@ -115,7 +126,13 @@ export async function deleteBranch(id: number) {
 export async function getBranchEmployees(branchId: number) {
   try {
     const employees = await prisma.member.findMany({
-      where: { branchId },
+      where: {
+        branches: {
+          some: {
+            branchId
+          }
+        }
+      },
       select: {
         id: true,
         empNo: true,

@@ -8,7 +8,7 @@ export const getUsers = async () => {
         include: {
             member: {
                 include: {
-                    branch: true
+                    branches: true
                 }
             }
         }

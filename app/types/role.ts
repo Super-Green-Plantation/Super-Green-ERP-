@@ -1,8 +1,9 @@
 export enum Role {
   ADMIN = "ADMIN",
   HR = "HR",
-  IT_DEV = "IT_DEV",
-  IT_US = "IT_US",
+  DEV = "DEV",
   BRANCH_MANAGER = "BRANCH_MANAGER",
+  REGIONAL_MANAGER = "REGIONAL_MANAGER",
+  AGM = "AGM",
   EMPLOYEE = "EMPLOYEE",
 }

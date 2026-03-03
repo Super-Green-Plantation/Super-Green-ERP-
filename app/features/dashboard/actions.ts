@@ -35,7 +35,7 @@ export async function getDashboardStats() {
         include: {
           advisor: {
             include: {
-              branch: true,
+              branches: true,
               position: true,
             },
           },

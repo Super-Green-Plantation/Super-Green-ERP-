@@ -8,7 +8,7 @@
 
 */
 -- CreateEnum
-CREATE TYPE "Role" AS ENUM ('ADMIN', 'HR', 'IT_DEV', 'IT_US', 'BRANCH_MANAGER', 'EMPLOYEE');
+CREATE TYPE "Role" AS ENUM ('ADMIN', 'HR', 'DEV', 'IT_US', 'BRANCH_MANAGER', 'EMPLOYEE');
 
 -- DropIndex
 DROP INDEX "Member_email_key";

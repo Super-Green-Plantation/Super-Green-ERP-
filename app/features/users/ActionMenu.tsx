@@ -9,7 +9,7 @@ import { createPortal } from 'react-dom';
 import { toast } from 'sonner';
 import { updateUserRole } from './action';
 
-// const ROLES = ['ADMIN', 'HR', 'IT_DEV', 'IT_US', 'BRANCH_MANAGER', 'EMPLOYEE'] as const;
+// const ROLES = ['ADMIN', 'HR', 'DEV', 'IT_US', 'BRANCH_MANAGER', 'EMPLOYEE'] as const;
 // type Role = typeof ROLES[number];
 
 export const ActionMenu = ({ userId, currentRole, email }: { userId: string; currentRole: Role; email: string }) => {

@@ -49,7 +49,7 @@ export async function getInvestments() {
 
   let whereClause = {};
 
-  const privilegedRoles = ["ADMIN", "HR", "IT_DEV"];
+  const privilegedRoles = ["ADMIN", "HR", "DEV"];
 
   if (!privilegedRoles.includes(dbUser.role)) {
     whereClause = {
@@ -117,7 +117,7 @@ export async function getInvestmentById(id: number) {
         plan: true,
         advisor: {
           include: {
-            branch: true,
+            branches: true,
           },
         },
       },
@@ -162,9 +162,10 @@ export async function getInvestmentDetailById(id: number) {
           select: {
             name: true,
             empNo: true,
-            branch: {
+            branches: {
               select: {
-                name: true,
+                branch: { select: { name: true } }
+
               },
             },
           },

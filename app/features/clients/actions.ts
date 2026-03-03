@@ -21,7 +21,7 @@ export async function getAccessibleClients() {
   switch (dbUser.role) {
     case "ADMIN":
     case "HR":
-    case "IT_DEV":
+    case "DEV":
       // see all clients
       whereCondition = {};
       break;
@@ -72,7 +72,8 @@ export async function getClients() {
           include: {
             members: {
               include: {
-                position: true,
+                member: { include: { position: true } }
+
               },
             },
           },
@@ -183,14 +184,14 @@ export async function saveClient(data: {
 
   try {
     const client = await prisma.$transaction(async (prisma: any) => {
-      
+
       const member = await prisma.member.findFirst({
         where: {
           email,
           branchId: Number(applicant.branchId),
         },
       });
-      
+
       const createdClient = await prisma.client.create({
         data: {
           fullName: applicant.fullName,
@@ -449,7 +450,7 @@ export async function generateUploadUrl(clientId: number) {
   const token = crypto.randomBytes(32).toString("hex")
 
   console.log(token);
-  
+
   const supabase = await createClient();
 
   const {

@@ -53,7 +53,7 @@ export async function getEligibleCommissions(empNo: string, branchId: number) {
 
     const uplines = await prisma.member.findMany({
       where: {
-        branchId,
+        branches: { some: { branchId } },
         position: {
           rank: {
             gt: advisor.position?.rank || 0,
@@ -194,7 +194,7 @@ export async function processCommissions(data: {
       // UPLINE commissions
       const uplines = await tx.member.findMany({
         where: {
-          branchId,
+          branches: { some: { branchId } },
           position: {
             rank: {
               gt: advisor.position.rank,
@@ -290,7 +290,7 @@ export async function getCommissionByBranch(branchId: number) {
     const commissions = await prisma.commission.findMany({
       where: { branchId },
       include: {
-        member: true, investment: {include:{plan:true, }}, Branch: true
+        member: true, investment: { include: { plan: true, } }, Branch: true
       },
       orderBy: { createdAt: "desc" },
 
@@ -310,9 +310,9 @@ export async function getCommissionDetails() {
         id: true,
         amount: true,
         Branch: true,
-        investment: {include:{plan: true}},
+        investment: { include: { plan: true } },
         member: true,
-        
+
 
       },
     });

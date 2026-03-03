@@ -18,7 +18,7 @@ export async function getCurrentUser() {
             member: {
                 include: {
                     position: true,
-                    branch: true,
+                    branches: { include: { branch: true } },
 
                 }
             }
@@ -28,8 +28,9 @@ export async function getCurrentUser() {
 
 
     if (!dbUser) {
-        throw new Error("User not found in DB")
+        redirect("/auth/signin")
+        // throw new Error("User not found in DB")
     }
 
-    return  dbUser 
+    return dbUser
 }

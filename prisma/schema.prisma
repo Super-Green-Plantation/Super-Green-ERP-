@@ -23,7 +23,8 @@ model Branch {
   id          Int           @id @default(autoincrement())
   name        String
   location    String?
-  members     Member[]
+  // members     Member[]
+  members MemberBranch[]
   status      Status        @default(Active)
   client      Client[]
   createdAt   DateTime      @default(now())
@@ -79,6 +80,19 @@ model PersonalCommissionTier {
   @@index([positionId])
 }
 
+//Junction Table
+model MemberBranch {
+  id        Int    @id @default(autoincrement())
+
+  memberId  Int
+  branchId  Int
+
+  member    Member @relation(fields: [memberId], references: [id])
+  branch    Branch @relation(fields: [branchId], references: [id])
+
+  @@unique([memberId, branchId])
+}
+
 //many side ekata foreign key eka / Parent has an array
 model Member {
   id Int @id @default(autoincrement())
@@ -91,9 +105,9 @@ model Member {
   email String?
   empNo String  @unique
 
-  branchId Int
-  branch   Branch @relation(fields: [branchId], references: [id])
-
+  // branchId Int
+  // branch   Branch @relation(fields: [branchId], references: [id])
+  branches MemberBranch[]
   positionId Int
   position   Position @relation(fields: [positionId], references: [id])
 
@@ -307,9 +321,10 @@ model ActivityLog {
 enum Role {
   ADMIN
   HR
-  IT_DEV
-  IT_US
+  DEV
   BRANCH_MANAGER
+  REGIONAL_MANAGER
+  AGM
   EMPLOYEE
 }
 
