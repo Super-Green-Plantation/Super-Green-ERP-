@@ -1,0 +1,17 @@
+-- AlterTable
+ALTER TABLE "Member" ADD COLUMN     "accNo" TEXT,
+ADD COLUMN     "address" TEXT,
+ADD COLUMN     "appointmentLetter" TEXT,
+ADD COLUMN     "bank" TEXT,
+ADD COLUMN     "bankBranch" TEXT,
+ADD COLUMN     "birthday" TIMESTAMP(3),
+ADD COLUMN     "civilStatus" TEXT,
+ADD COLUMN     "confirmation" TEXT,
+ADD COLUMN     "dateOfJoin" TIMESTAMP(3),
+ADD COLUMN     "dob" TIMESTAMP(3),
+ADD COLUMN     "gender" TEXT,
+ADD COLUMN     "nameWithInitials" TEXT,
+ADD COLUMN     "nic" TEXT,
+ADD COLUMN     "phone2" TEXT,
+ADD COLUMN     "remark" TEXT,
+ADD COLUMN     "reportingPerson" TEXT;

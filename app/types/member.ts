@@ -1,11 +1,61 @@
+
+export interface MemberBranch {
+  id: number;
+  memberId: number;
+  branchId: number;
+  branch?: {
+    id: number;
+    name: string;
+    location?: string | null;
+  };
+}
+
 export interface Member {
   id: number;
+
+  // --- Core (required) ---
   name: string;
-  email: string | null;
   empNo: string;
-  phone: string | null;
-  totalCommission: number;
   position: Position;
+
+  // --- Branch(es) ---
+  branches: MemberBranch[];
+
+  // --- Basic contact ---
+  email: string | null;
+  phone: string | null;
+  phone2: string | null;
+  totalCommission: number;
+
+  // --- Name variants ---
+  nameWithInitials: string | null;
+
+  // --- Personal ---
+  nic: string | null;
+  dob: string | Date | null;
+  birthday: string | Date | null;
+  gender: string | null;
+  civilStatus: string | null;
+  address: string | null;
+
+  // --- Employment ---
+  reportingPerson: string | null;
+  dateOfJoin: string | Date | null;
+  appointmentLetter: string | null;
+  confirmation: string | null;
+  remark: string | null;
+
+  // --- Banking ---
+  accNo: string | null;
+  bank: string | null;
+  bankBranch: string | null;
+
+  // --- Auth link ---
+  userId: string | null;
+
+  // --- Timestamps ---
+  createdAt: string | Date;
+  updatedAt: string | Date;
 }
 
 export interface Position {

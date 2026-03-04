@@ -35,7 +35,7 @@ const links = [
     name: "Employee",
     href: "/features/branches/employees",
     icon: IdCardLanyard,
-    role: ["ADMIN", "HR", "DEV", "BRANCH_MANAGER","REGIONAL_MANAGER"]
+    role: ["ADMIN", "HR", "DEV", "BRANCH_MANAGER","REGIONAL_MANAGER", "AGM"]
   },
   {
     name: "Financial Plans",

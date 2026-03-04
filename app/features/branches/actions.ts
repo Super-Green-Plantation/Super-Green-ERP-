@@ -70,6 +70,40 @@ export async function getBranchById(id: number) {
   }
 }
 
+//get branches by employee
+export async function getBranchesByMemberId(memberId: number) {
+  try {
+    const memberBranches = await prisma.memberBranch.findMany({
+      where: { memberId },
+      include: {
+        branch: {
+          include: {
+            members: {
+              select: {
+                member: {
+                  include: {
+                    position: {
+                      include: {
+                        personalCommissionTiers: true,
+                        orc: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return serializeData(memberBranches.map((mb) => mb.branch));
+  } catch (error) {
+    console.error("Error fetching branches by member:", error);
+    throw new Error("Failed to fetch member branches");
+  }
+}
+
 // Create new branch
 export async function createBranch(data: { name: string; location: string }) {
   try {

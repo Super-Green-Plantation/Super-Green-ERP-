@@ -1,11 +1,10 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
 }
 
 enum Status {
@@ -117,6 +116,23 @@ model Member {
   investments Investment[]
   activityLog ActivityLog[]
   clients Client[]
+
+  nameWithInitials  String?
+   phone2            String?
+   nic               String?
+   dob               DateTime?
+   birthday          DateTime?
+   gender            String?
+   civilStatus       String?
+   address           String?
+   reportingPerson   String?
+   dateOfJoin        DateTime?
+   appointmentLetter String?
+   confirmation      String?
+   remark            String?
+   accNo             String?
+   bank              String?
+   bankBranch        String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -324,6 +340,7 @@ enum Role {
   DEV
   BRANCH_MANAGER
   REGIONAL_MANAGER
+  ZONAL_MANAGER
   AGM
   EMPLOYEE
 }

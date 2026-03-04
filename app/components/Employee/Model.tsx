@@ -11,9 +11,16 @@ import {
   User,
   MapPin,
   Briefcase,
+  CreditCard,
+  Building2,
+  Calendar,
+  FileText,
+  Users,
+  ChevronDown,
+  Check,
 } from "lucide-react";
 import { Member } from "@/app/types/member";
-import { getBranchById } from "@/app/features/branches/actions";
+import { getBranchById, getBranches } from "@/app/features/branches/actions";
 import { useParams } from "next/navigation";
 import { Branch } from "@/app/types/branch";
 import { createEmployee, updateEmployee } from "@/app/features/employees/actions";
@@ -27,96 +34,195 @@ interface EmpModalProps {
   onSuccess?: () => void;
 }
 
+// Positions that can be assigned to multiple branches
+const MULTI_BRANCH_POSITION_IDS = [4, 5, 6]; // RM, ZM, AGM
+const POSITION_MAP: Record<string, string> = {
+  "6": "AGM",
+  "5": "ZM",
+  "4": "RM",
+  "3": "BM",
+  "2": "TL",
+  "1": "FA",
+};
+
 const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
   const { branchId } = useParams<{ branchId: string }>();
+  const queryClient = useQueryClient();
 
-  const queryClient = useQueryClient()
-  const [branch, setBranch] = useState<Branch | null>(null);
+  const [currentBranch, setCurrentBranch] = useState<Branch | null>(null);
+  const [allBranches, setAllBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(false);
+  const [branchDropdownOpen, setBranchDropdownOpen] = useState(false);
+
+  // Active section tab for grouping the many fields
+  const [activeTab, setActiveTab] = useState<"basic" | "personal" | "employment">("basic");
 
   const [formData, setFormData] = useState({
+    // --- Core (required) ---
     name: "",
-    branchId: Number(branchId),
+    empNo: "",
+    positionId: "",
+
+    // --- Branch(es) ---
+    branchIds: [Number(branchId)], // always starts with current branch
+
+    // --- Basic contact ---
     email: "",
     phone: "",
-    empNo: "",
+    phone2: "",
     totalCommission: 0,
-    positionId: "",
+
+    // --- Name variants ---
+    nameWithInitials: "",
+
+    // --- Personal ---
+    nic: "",
+    dob: "",
+    birthday: "",         // reminder date if different
+    gender: "",
+    civilStatus: "",
+    address: "",
+
+    // --- Employment ---
+    reportingPerson: "",  // name / empNo of supervisor
+    dateOfJoin: "",
+    appointmentLetter: "", // file URL or ref
+    confirmation: "",      // file URL or ref
+    remark: "",
+
+    // --- Banking ---
+    accNo: "",
+    bank: "",
+    bankBranch: "",
   });
 
+  // Fetch current branch info
   useEffect(() => {
     if (!branchId) return;
-    getBranchById(Number(branchId)).then(setBranch);
+    getBranchById(Number(branchId)).then(setCurrentBranch);
   }, [branchId]);
 
+  // Fetch all branches for multi-select
+  useEffect(() => {
+    getBranches().then((branches: Branch[]) => setAllBranches(branches));
+  }, []);
+
+  // Populate form in edit mode
   useEffect(() => {
     if (mode === "edit" && initialData) {
+      const existingBranchIds =
+        initialData.branches?.map((mb: { branchId: number }) => mb.branchId) ?? [Number(branchId)];
+
       setFormData({
         name: initialData.name ?? "",
-        branchId: Number(branchId),
+        empNo: initialData.empNo ?? "",
+        positionId: String(initialData.position?.id ?? ""),
+        branchIds: existingBranchIds,
         email: initialData.email ?? "",
         phone: initialData.phone ?? "",
-        empNo: initialData.empNo ?? "",
+        phone2: initialData.phone2 ?? "",
         totalCommission: initialData.totalCommission ?? 0,
-        positionId: String(initialData.position?.id ?? ""),
+        nameWithInitials: initialData.nameWithInitials ?? "",
+        nic: initialData.nic ?? "",
+        dob: initialData.dob ? initialData.dob.toString().slice(0, 10) : "",
+        birthday: initialData.birthday ? initialData.birthday.toString().slice(0, 10) : "",
+        gender: initialData.gender ?? "",
+        civilStatus: initialData.civilStatus ?? "",
+        address: initialData.address ?? "",
+        reportingPerson: initialData.reportingPerson ?? "",
+        dateOfJoin: initialData.dateOfJoin ? initialData.dateOfJoin.toString().slice(0, 10) : "",
+        appointmentLetter: initialData.appointmentLetter ?? "",
+        confirmation: initialData.confirmation ?? "",
+        remark: initialData.remark ?? "",
+        accNo: initialData.accNo ?? "",
+        bank: initialData.bank ?? "",
+        bankBranch: initialData.bankBranch ?? "",
       });
     }
   }, [mode, initialData, branchId]);
 
+  const isMultiBranch = MULTI_BRANCH_POSITION_IDS.includes(Number(formData.positionId));
+
+  // When position changes, reset to single branch if not multi-branch role
+  const handlePositionChange = (value: string) => {
+    const isMulti = MULTI_BRANCH_POSITION_IDS.includes(Number(value));
+    setFormData((prev) => ({
+      ...prev,
+      positionId: value,
+      branchIds: isMulti ? prev.branchIds : [Number(branchId)],
+    }));
+  };
+
+  const toggleBranch = (id: number) => {
+    setFormData((prev) => {
+      const currentBranchNum = Number(branchId);
+      // Current branch cannot be deselected
+      if (id === currentBranchNum) return prev;
+
+      const already = prev.branchIds.includes(id);
+      return {
+        ...prev,
+        branchIds: already
+          ? prev.branchIds.filter((b) => b !== id)
+          : [...prev.branchIds, id],
+      };
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
     try {
+      const payload = {
+        ...formData,
+        positionId: Number(formData.positionId),
+        // For non-multi-branch roles, branchIds is always [currentBranchId]
+        branchIds: isMultiBranch ? formData.branchIds : [Number(branchId)],
+      };
+
       if (mode === "add") {
-        const res = await createEmployee({
-          ...formData,
-          positionId: Number(formData.positionId),
-        });
-        if (!res.success) {
-          toast.error(res.error ?? "Failed to add employee");
-          return;
-        }
+        const res = await createEmployee(payload);
+        if (!res.success) { toast.error(res.error ?? "Failed to add employee"); return; }
         queryClient.invalidateQueries({ queryKey: ["employees"] });
         toast.success("Successfully Added Employee");
         onSuccess?.();
         onClose();
       } else {
-        const res = await updateEmployee(initialData!.id, {
-          ...formData,
-          positionId: Number(formData.positionId),
-        });
-        if (!res.success) {
-          toast.error(res.error ?? "Failed to update employee");
-          return;
-        }
+        const res = await updateEmployee(initialData!.id, payload);
+        if (!res.success) { toast.error(res.error ?? "Failed to update employee"); return; }
         queryClient.invalidateQueries({ queryKey: ["employees"] });
         toast.success("Successfully Updated Employee");
         onSuccess?.();
         onClose();
       }
-    } catch (err) {
-      alert("Error saving employee details");
+    } catch {
+      toast.error("Error saving employee details");
     } finally {
       setLoading(false);
     }
   };
 
-  // Reusable Input Style Class
+  // ─── Styles ────────────────────────────────────────────────
   const inputStyles =
     "w-full pl-10 pr-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm";
+  const inputStylesNoIcon =
+    "w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm";
   const labelStyles =
     "block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 ml-1";
+  const tabBtn = (active: boolean) =>
+    `px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+      active
+        ? "bg-blue-600 text-white shadow-sm"
+        : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+    }`;
 
+  // ─── Render ────────────────────────────────────────────────
   return (
-    <div
-  className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6 overflow-y-auto"
-  onClick={onClose}
->
-  <div
-    className="w-full max-w-lg bg-white rounded-2xl shadow-2xl overflow-hidden relative animate-in fade-in zoom-in duration-200 my-auto"
-    onClick={(e) => e.stopPropagation()}
-  >
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6 overflow-y-auto">
+      <div
+        className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden relative animate-in fade-in zoom-in duration-200 my-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
           <h2 className="text-xl font-bold text-gray-800">
@@ -130,145 +236,455 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Name */}
-            <div className="md:col-span-2">
-              <label className={labelStyles}>Full Name</label>
-              <div className="relative">
-                <User className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                <input
-                  placeholder="e.g. John Doe"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  required
-                  className={inputStyles}
-                />
-              </div>
-            </div>
+        {/* Tab Navigation */}
+        <div className="px-6 pt-4 flex gap-2 border-b border-gray-100 pb-3">
+          <button type="button" className={tabBtn(activeTab === "basic")} onClick={() => setActiveTab("basic")}>
+            Basic Info
+          </button>
+          <button type="button" className={tabBtn(activeTab === "personal")} onClick={() => setActiveTab("personal")}>
+            Personal
+          </button>
+          <button type="button" className={tabBtn(activeTab === "employment")} onClick={() => setActiveTab("employment")}>
+            Employment & Bank
+          </button>
+        </div>
 
-            {/* Email */}
-            <div className="md:col-span-2">
-              <label className={labelStyles}>Email Address</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                <input
-                  type="email"
-                  placeholder="email@example.com"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
+        <form onSubmit={handleSubmit}>
+          <div className="p-6 space-y-4 max-h-[65vh] overflow-y-auto">
 
-                  className={inputStyles}
-                />
-              </div>
-            </div>
+            {/* ── TAB: BASIC INFO ── */}
+            {activeTab === "basic" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-            {/* Branch (read-only) */}
-            <div>
-              <label className={labelStyles}>Assigned Branch</label>
-              <div className="relative">
-                <MapPin className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                <input
-                  value={branch?.name ?? "Loading..."}
-                  disabled
-                  className={
-                    inputStyles + " bg-gray-50 text-gray-500 cursor-not-allowed"
-                  }
-                />
-              </div>
-            </div>
+                {/* Full Name */}
+                <div className="md:col-span-2">
+                  <label className={labelStyles}>Full Name <span className="text-red-400">*</span></label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                    <input
+                      placeholder="e.g. John Michael Doe"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      required
+                      className={inputStyles}
+                    />
+                  </div>
+                </div>
 
-            {/* Emp No */}
-            <div>
-              <label className={labelStyles}>Employee ID</label>
-              <div className="relative">
-                <Hash className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                <input
-                  placeholder="EMP-000"
-                  value={formData.empNo}
-                  onChange={(e) =>
-                    setFormData({ ...formData, empNo: e.target.value })
-                  }
-                  required
-                  className={inputStyles}
-                />
-              </div>
-            </div>
+                {/* Name with Initials */}
+                <div>
+                  <label className={labelStyles}>Name with Initials</label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                    <input
+                      placeholder="e.g. J.M. Doe"
+                      value={formData.nameWithInitials}
+                      onChange={(e) => setFormData({ ...formData, nameWithInitials: e.target.value })}
+                      className={inputStyles}
+                    />
+                  </div>
+                </div>
 
-            {/* Phone */}
-            <div>
-              <label className={labelStyles}>Phone Number</label>
-              <div className="relative">
-                <PhoneIcon className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                <input
-                  placeholder="07XXXXXXXX"
-                  value={formData.phone}
-                  onChange={(e) =>
-                    setFormData({ ...formData, phone: e.target.value })
-                  }
-                  className={inputStyles}
-                />
-              </div>
-            </div>
+                {/* Emp No */}
+                <div>
+                  <label className={labelStyles}>Employee ID <span className="text-red-400">*</span></label>
+                  <div className="relative">
+                    <Hash className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                    <input
+                      placeholder="EMP-000"
+                      value={formData.empNo}
+                      onChange={(e) => setFormData({ ...formData, empNo: e.target.value })}
+                      required
+                      className={inputStyles}
+                    />
+                  </div>
+                </div>
 
-            {/* Commission */}
-            <div>
-              <label className={labelStyles}>Commission ($)</label>
-              <div className="relative">
-                <DollarSign className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                <input
-                  type="number"
-                  value={formData.totalCommission}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      totalCommission: Number(e.target.value),
-                    })
-                  }
-                  className={inputStyles}
-                />
-              </div>
-            </div>
+                {/* Email */}
+                <div className="md:col-span-2">
+                  <label className={labelStyles}>Email Address</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                    <input
+                      type="email"
+                      placeholder="email@example.com"
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      className={inputStyles}
+                    />
+                  </div>
+                </div>
 
-            {/* Position */}
-            <div className="md:col-span-2">
-              <label className={labelStyles}>Designation / Role</label>
-              <div className="relative">
-                <Briefcase className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                <select
-                  value={formData.positionId}
-                  onChange={(e) =>
-                    setFormData({ ...formData, positionId: e.target.value })
-                  }
-                  required
-                  className={inputStyles + " appearance-none pr-10"}
-                >
-                  <option value="" disabled>
-                    Select Position
-                  </option>
-                  <option value="6">AGM</option>
-                  <option value="5">ZM</option>
-                  <option value="4">RM</option>
-                  <option value="3">BM</option>
-                  <option value="2">TL</option>
-                  <option value="1">FA</option>
-                </select>
-                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-400">
-                  <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
-                    <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
-                  </svg>
+                {/* Phone 1 */}
+                <div>
+                  <label className={labelStyles}>Contact No. 1</label>
+                  <div className="relative">
+                    <PhoneIcon className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                    <input
+                      placeholder="07XXXXXXXX"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                      className={inputStyles}
+                    />
+                  </div>
+                </div>
+
+                {/* Phone 2 */}
+                <div>
+                  <label className={labelStyles}>Contact No. 2</label>
+                  <div className="relative">
+                    <PhoneIcon className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                    <input
+                      placeholder="07XXXXXXXX"
+                      value={formData.phone2}
+                      onChange={(e) => setFormData({ ...formData, phone2: e.target.value })}
+                      className={inputStyles}
+                    />
+                  </div>
+                </div>
+
+                {/* Commission */}
+                <div>
+                  <label className={labelStyles}>Commission ($)</label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                    <input
+                      type="number"
+                      value={formData.totalCommission}
+                      onChange={(e) => setFormData({ ...formData, totalCommission: Number(e.target.value) })}
+                      className={inputStyles}
+                    />
+                  </div>
+                </div>
+
+                {/* Designation */}
+                <div>
+                  <label className={labelStyles}>Designation / Role <span className="text-red-400">*</span></label>
+                  <div className="relative">
+                    <Briefcase className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                    <select
+                      value={formData.positionId}
+                      onChange={(e) => handlePositionChange(e.target.value)}
+                      required
+                      className={inputStyles + " appearance-none pr-10"}
+                    >
+                      <option value="" disabled>Select Position</option>
+                      <option value="6">AGM</option>
+                      <option value="5">ZM</option>
+                      <option value="4">RM</option>
+                      <option value="3">BM</option>
+                      <option value="2">TL</option>
+                      <option value="1">FA</option>
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-400">
+                      <ChevronDown className="w-4 h-4" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── BRANCH SECTION ── */}
+                <div className="md:col-span-2">
+                  <label className={labelStyles}>
+                    {isMultiBranch ? "Assigned Branches" : "Assigned Branch"}
+                    {isMultiBranch && (
+                      <span className="ml-2 text-blue-500 normal-case font-normal tracking-normal">
+                        — {POSITION_MAP[formData.positionId]} can manage multiple branches
+                      </span>
+                    )}
+                  </label>
+
+                  {!isMultiBranch ? (
+                    /* Single branch — read-only display */
+                    <div className="relative">
+                      <MapPin className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                      <input
+                        value={currentBranch?.name ?? "Loading..."}
+                        disabled
+                        className={inputStyles + " bg-gray-50 text-gray-500 cursor-not-allowed"}
+                      />
+                    </div>
+                  ) : (
+                    /* Multi-branch badge selector */
+                    <div className="border border-gray-200 rounded-lg p-3 bg-gray-50/50">
+                      {/* Current branch — always selected, locked */}
+                      <p className="text-xs text-gray-400 mb-2">
+                        Current branch is pre-selected. Click others to add or remove.
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {allBranches.map((b) => {
+                          const isCurrentBranch = b.id === Number(branchId);
+                          const isSelected = formData.branchIds.includes(b.id);
+                          return (
+                            <button
+                              key={b.id}
+                              type="button"
+                              onClick={() => toggleBranch(b.id)}
+                              disabled={isCurrentBranch}
+                              className={`
+                                inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all
+                                ${isSelected
+                                  ? "bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-200"
+                                  : "bg-white text-gray-600 border-gray-200 hover:border-blue-400 hover:text-blue-600"
+                                }
+                                ${isCurrentBranch ? "opacity-80 cursor-not-allowed ring-1 ring-blue-300" : "cursor-pointer"}
+                              `}
+                            >
+                              {isSelected && <Check className="w-3 h-3" />}
+                              <MapPin className="w-3 h-3" />
+                              {b.name}
+                              {isCurrentBranch && (
+                                <span className="text-[10px] opacity-70 ml-0.5">(current)</span>
+                              )}
+                            </button>
+                          );
+                        })}
+                        {allBranches.length === 0 && (
+                          <span className="text-xs text-gray-400">Loading branches...</span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-400 mt-2">
+                        {formData.branchIds.length} branch{formData.branchIds.length !== 1 ? "es" : ""} selected
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
+            )}
+
+            {/* ── TAB: PERSONAL ── */}
+            {activeTab === "personal" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                {/* NIC */}
+                <div>
+                  <label className={labelStyles}>NIC</label>
+                  <div className="relative">
+                    <CreditCard className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                    <input
+                      placeholder="XXXXXXXXXV / XXXXXXXXXXXX"
+                      value={formData.nic}
+                      onChange={(e) => setFormData({ ...formData, nic: e.target.value })}
+                      className={inputStyles}
+                    />
+                  </div>
+                </div>
+
+                {/* Gender */}
+                <div>
+                  <label className={labelStyles}>Gender</label>
+                  <div className="relative">
+                    <Users className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                    <select
+                      value={formData.gender}
+                      onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                      className={inputStyles + " appearance-none pr-10"}
+                    >
+                      <option value="">Select Gender</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-400">
+                      <ChevronDown className="w-4 h-4" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Civil Status */}
+                <div>
+                  <label className={labelStyles}>Civil Status</label>
+                  <div className="relative">
+                    <Users className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                    <select
+                      value={formData.civilStatus}
+                      onChange={(e) => setFormData({ ...formData, civilStatus: e.target.value })}
+                      className={inputStyles + " appearance-none pr-10"}
+                    >
+                      <option value="">Select Status</option>
+                      <option value="Single">Single</option>
+                      <option value="Married">Married</option>
+                      <option value="Divorced">Divorced</option>
+                      <option value="Widowed">Widowed</option>
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-400">
+                      <ChevronDown className="w-4 h-4" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* DOB */}
+                <div>
+                  <label className={labelStyles}>Date of Birth</label>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                    <input
+                      type="date"
+                      value={formData.dob}
+                      onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
+                      className={inputStyles}
+                    />
+                  </div>
+                </div>
+
+                {/* Birthday reminder */}
+                <div>
+                  <label className={labelStyles}>Birthday (Reminder Date)</label>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                    <input
+                      type="date"
+                      value={formData.birthday}
+                      onChange={(e) => setFormData({ ...formData, birthday: e.target.value })}
+                      className={inputStyles}
+                    />
+                  </div>
+                </div>
+
+                {/* Address */}
+                <div className="md:col-span-2">
+                  <label className={labelStyles}>Address</label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                    <textarea
+                      placeholder="No. XX, Street, City"
+                      value={formData.address}
+                      onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                      rows={2}
+                      className="w-full pl-10 pr-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm resize-none"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── TAB: EMPLOYMENT & BANK ── */}
+            {activeTab === "employment" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                {/* Reporting Person */}
+                <div className="md:col-span-2">
+                  <label className={labelStyles}>Reporting Person</label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                    <input
+                      placeholder="Name or Employee ID of supervisor"
+                      value={formData.reportingPerson}
+                      onChange={(e) => setFormData({ ...formData, reportingPerson: e.target.value })}
+                      className={inputStyles}
+                    />
+                  </div>
+                </div>
+
+                {/* Date of Join */}
+                <div>
+                  <label className={labelStyles}>Date of Join</label>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                    <input
+                      type="date"
+                      value={formData.dateOfJoin}
+                      onChange={(e) => setFormData({ ...formData, dateOfJoin: e.target.value })}
+                      className={inputStyles}
+                    />
+                  </div>
+                </div>
+
+                {/* Appointment Letter ref */}
+                <div>
+                  <label className={labelStyles}>Appointment Letter Ref</label>
+                  <div className="relative">
+                    <FileText className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                    <input
+                      placeholder="File ref or URL"
+                      value={formData.appointmentLetter}
+                      onChange={(e) => setFormData({ ...formData, appointmentLetter: e.target.value })}
+                      className={inputStyles}
+                    />
+                  </div>
+                </div>
+
+                {/* Confirmation */}
+                <div>
+                  <label className={labelStyles}>Confirmation Ref</label>
+                  <div className="relative">
+                    <FileText className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                    <input
+                      placeholder="File ref or URL"
+                      value={formData.confirmation}
+                      onChange={(e) => setFormData({ ...formData, confirmation: e.target.value })}
+                      className={inputStyles}
+                    />
+                  </div>
+                </div>
+
+                {/* Remark */}
+                <div className="md:col-span-2">
+                  <label className={labelStyles}>Remark</label>
+                  <textarea
+                    placeholder="Any additional notes..."
+                    value={formData.remark}
+                    onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
+                    rows={2}
+                    className={inputStylesNoIcon + " resize-none"}
+                  />
+                </div>
+
+                {/* Divider */}
+                <div className="md:col-span-2">
+                  <div className="flex items-center gap-3">
+                    <Building2 className="w-4 h-4 text-gray-400 shrink-0" />
+                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Banking Details</span>
+                    <div className="flex-1 h-px bg-gray-200" />
+                  </div>
+                </div>
+
+                {/* Account No */}
+                <div>
+                  <label className={labelStyles}>Account No.</label>
+                  <div className="relative">
+                    <Hash className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                    <input
+                      placeholder="XXXXXXXXXXXXXXXX"
+                      value={formData.accNo}
+                      onChange={(e) => setFormData({ ...formData, accNo: e.target.value })}
+                      className={inputStyles}
+                    />
+                  </div>
+                </div>
+
+                {/* Bank */}
+                <div>
+                  <label className={labelStyles}>Bank</label>
+                  <div className="relative">
+                    <Building2 className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                    <input
+                      placeholder="e.g. Commercial Bank"
+                      value={formData.bank}
+                      onChange={(e) => setFormData({ ...formData, bank: e.target.value })}
+                      className={inputStyles}
+                    />
+                  </div>
+                </div>
+
+                {/* Bank Branch */}
+                <div className="md:col-span-2">
+                  <label className={labelStyles}>Bank Branch</label>
+                  <div className="relative">
+                    <MapPin className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                    <input
+                      placeholder="e.g. Colombo 03"
+                      value={formData.bankBranch}
+                      onChange={(e) => setFormData({ ...formData, bankBranch: e.target.value })}
+                      className={inputStyles}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Footer Actions */}
-          <div className="pt-5 flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3 sm:items-center">
-
+          {/* Footer */}
+          <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3 sm:items-center">
             <button
               type="submit"
               disabled={loading}
@@ -282,7 +698,6 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                 "Save Changes"
               )}
             </button>
-
             <button
               type="button"
               onClick={onClose}

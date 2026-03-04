@@ -15,8 +15,10 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Pagination from "@/app/components/Pagination";
+import { usePermission } from "@/lib/auth/usePermission";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 
 interface EmpTableProps {
   onEdit: (emp: Member) => void;
@@ -29,6 +31,8 @@ const PAGE_SIZE = 10;
 const EmpTable = ({ onEdit, onRefresh, branchId }: EmpTableProps) => {
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const canEdit = usePermission(userRole, PERMISSIONS.UPDATE_FINANCIAL_PLAN);
 
   const {
     data,
@@ -81,6 +85,19 @@ const EmpTable = ({ onEdit, onRefresh, branchId }: EmpTableProps) => {
     deleteMutation.mutate(id);
   };
 
+
+  const getLoggedUserRole = async () => {
+    const role = await fetch("/api/me").then((res) => res.json());
+    setUserRole(role.role);
+    console.log("user", role.role);
+
+    // return user.role;
+  }
+  useEffect(() => {
+    getLoggedUserRole();
+
+  }, []);
+
   if (isLoading)
     return (
       <div className="flex justify-center items-center my-20">
@@ -88,6 +105,7 @@ const EmpTable = ({ onEdit, onRefresh, branchId }: EmpTableProps) => {
       </div>
     );
   if (isError) return <div>Error loading employees</div>;
+
 
   return (
     <div className="w-full bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -107,9 +125,12 @@ const EmpTable = ({ onEdit, onRefresh, branchId }: EmpTableProps) => {
               <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
                 Contact
               </th>
-              <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500 text-center">
-                Actions
-              </th>
+              {canEdit && (
+                <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500 text-center">
+                  Actions
+                </th>
+              )}
+
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -147,31 +168,34 @@ const EmpTable = ({ onEdit, onRefresh, branchId }: EmpTableProps) => {
                     {e.phone ?? "-"}
                   </div>
                 </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center justify-center gap-2">
-                    <button
-                      onClick={() => onEdit(e)}
-                      className="p-2 text-slate-400 hover:text-blue-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-xl transition-all"
-                      title="Edit"
-                    >
-                      <Pen size={16} />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(e.userId)}
-                      className="p-2 text-slate-400 hover:text-rose-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-xl transition-all"
-                      title="Delete"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                    <Link
-                      href={`/features/branches/employees/${branchId}/${e.id}`}
-                      className="ml-2 px-4 py-2 text-[10px] font-black uppercase tracking-tighter text-slate-600 bg-slate-50 border border-slate-200 rounded-xl hover:bg-white hover:shadow-md hover:text-blue-600 transition-all flex items-center gap-1.5 active:scale-95"
-                    >
-                      Profile
-                      <ExternalLink size={12} />
-                    </Link>
-                  </div>
-                </td>
+                {canEdit && (
+                  <td className="px-6 py-4">
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => onEdit(e)}
+                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-xl transition-all"
+                        title="Edit"
+                      >
+                        <Pen size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(e.userId)}
+                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-xl transition-all"
+                        title="Delete"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                      <Link
+                        href={`/features/branches/employees/${branchId}/${e.id}`}
+                        className="ml-2 px-4 py-2 text-[10px] font-black uppercase tracking-tighter text-slate-600 bg-slate-50 border border-slate-200 rounded-xl hover:bg-white hover:shadow-md hover:text-blue-600 transition-all flex items-center gap-1.5 active:scale-95"
+                      >
+                        Profile
+                        <ExternalLink size={12} />
+                      </Link>
+                    </div>
+                  </td>
+                )}
+
               </tr>
             ))}
           </tbody>

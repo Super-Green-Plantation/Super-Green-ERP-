@@ -9,14 +9,20 @@ type State = {
 }
 
 export const getAuthUser = async (user: any) => {
-    const dbUser = await prisma.user.findUnique({
-        where: { id: user.id },
-        select: { role: true, status: true,branchId:true },
-        
-    })
+  const dbUser = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: {
+      role: true,
+      status: true,
+      branchId: true,
+      member: {
+        select: { id: true },
+      },
+    },
+  });
 
-    return dbUser;
-}
+  return dbUser;
+};
 
 export async function login(
   prevState: State,
@@ -49,7 +55,7 @@ export async function login(
 
   if (error) {
     console.log(error);
-    
+
     return { error: error.message }
   }
 

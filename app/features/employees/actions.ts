@@ -11,12 +11,40 @@ import { redirect } from "next/navigation";
 
 interface EmpData {
   name: string;
+  empNo: string;
+  positionId: number;
+
+  // Replaces branchId — always at least one entry (the current branch)
+  branchIds: number[];
+
+  // Basic contact
   email?: string;
   phone?: string;
-  empNo: string;
+  phone2?: string;
   totalCommission: number;
-  branchId: number;
-  positionId: number;
+
+  // Name variants
+  nameWithInitials?: string;
+
+  // Personal
+  nic?: string;
+  dob?: string;
+  birthday?: string;
+  gender?: string;
+  civilStatus?: string;
+  address?: string;
+
+  // Employment
+  reportingPerson?: string;
+  dateOfJoin?: string;
+  appointmentLetter?: string;
+  confirmation?: string;
+  remark?: string;
+
+  // Banking
+  accNo?: string;
+  bank?: string;
+  bankBranch?: string;
 }
 export async function createEmployee(data: EmpData) {
   const tempPassword = generateTempPassword();
@@ -43,17 +71,18 @@ export async function createEmployee(data: EmpData) {
     // 2️⃣ Wrap ALL Prisma DB operations in ONE transaction
     const member = await prisma.$transaction(async (tx) => {
       // Create User
+      // Create User — branchId is a single Int, use the first branch (primary)
       await tx.user.create({
         data: {
           id: supabaseUserId!,
           name: data.name,
           email: data.email,
           role: "EMPLOYEE",
-          branchId: data.branchId,
+          branchId: data.branchIds[0], // primary branch only
         },
       });
 
-      // Create Member
+      // Create Member — map branchIds array into multiple MemberBranch records
       const member = await tx.member.create({
         data: {
           userId: supabaseUserId!,
@@ -62,8 +91,10 @@ export async function createEmployee(data: EmpData) {
           phone: data.phone || null,
           empNo: data.empNo,
           totalCommission: data.totalCommission,
-          branches: { create: { branchId: data.branchId } },
           positionId: data.positionId,
+          branches: {
+            create: data.branchIds.map((branchId) => ({ branchId })),
+          },
         },
       });
 
@@ -83,7 +114,7 @@ export async function createEmployee(data: EmpData) {
     }
 
     revalidatePath("/features/employees");
-    revalidatePath(`/features/branches/employees/${data.branchId}`);
+    revalidatePath(`/features/branches/employees/${data.branchIds}`);
 
     return { success: true, member };
 
@@ -200,15 +231,7 @@ export async function updateEmployeeCommission(empNo: string, commission: number
 }
 
 // Update employee details
-export async function updateEmployee(memberId: number, data: {
-  name: string | undefined;
-  email: string;
-  phone: string;
-  empNo: string;
-  totalCommission: number;
-  branchId: number;
-  positionId: number;
-}) {
+export async function updateEmployee(memberId: number, data: EmpData) {
   let supabaseUserId: string | null = null;
 
   try {
@@ -246,7 +269,7 @@ export async function updateEmployee(memberId: number, data: {
             name: data.name,
             email: data.email,
             role: 'EMPLOYEE',
-            branchId: data.branchId,
+             branchId: data.branchIds[0],
           },
         });
 
@@ -278,17 +301,23 @@ export async function updateEmployee(memberId: number, data: {
     }
 
     // Update member
+    await prisma.memberBranch.deleteMany({
+      where: { memberId },
+    });
+
     const updated = await prisma.member.update({
       where: { id: memberId },
       data: {
-        ...(userId && !existing.userId && { userId }), // link user if newly created
+        ...(userId && !existing.userId && { userId }),
         name: data.name,
         email: data.email || null,
         phone: data.phone || null,
         empNo: data.empNo,
         totalCommission: Number(data.totalCommission),
-        branches: { create: { branchId: data.branchId } },
         positionId: Number(data.positionId),
+        branches: {
+          create: data.branchIds.map((branchId) => ({ branchId })),
+        },
       },
     });
 

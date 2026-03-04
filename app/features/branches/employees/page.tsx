@@ -4,7 +4,7 @@ import Heading from "@/app/components/Heading";
 import { Users } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getBranchById } from "../actions";
+import { getBranchById, getBranchesByMemberId } from "../actions";
 import { useBranches } from "@/app/hooks/useBranches";
 import Loading from "@/app/components/Loading";
 import Error from "@/app/components/Error";
@@ -29,16 +29,21 @@ const Page = () => {
   useEffect(() => {
     getUser();
   }, []);
-
   useEffect(() => {
     if (!dbUser || !branches) return;
 
     const loadBranch = async () => {
-      if (dbUser.role === "BRANCH_MANAGER") {
-        const singleBranch = await getBranchById(dbUser.branchId || 0);
-        setBranch([singleBranch]); // <- wrap in array
-      } else if (["ADMIN", "HR", "DEV"].includes(dbUser.role)) {
-        setBranch(branches || []); // <- ensure branches is array
+      if (["ADMIN", "HR", "DEV"].includes(dbUser.role)) {
+        // Admin roles see all branches
+        setBranch(branches || []);
+      } else if (dbUser.member?.id) {
+        // BM, RM, AGM, ZM, TL, FA — fetch branches from MemberBranch junction
+        const memberBranches = await getBranchesByMemberId(dbUser.member.id);
+        setBranch(memberBranches);
+      } else if (dbUser.branchId) {
+        // Fallback: member record not linked yet, use User.branchId
+        const singleBranch = await getBranchById(dbUser.branchId);
+        setBranch([singleBranch]);
       }
     };
 
