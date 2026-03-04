@@ -34,6 +34,7 @@ import { toast } from "sonner";
 import Heading from "@/app/components/Heading";
 import { ProposalTemplate } from "@/app/components/ProposalTemplate";
 import CopyButton from "@/app/components/CopyButton";
+import SendDocumentLinkButton from "@/app/components/SendDocumentLinkButton";
 
 export default function ApplicationViewPage() {
   const queryClient = useQueryClient();
@@ -73,6 +74,7 @@ export default function ApplicationViewPage() {
         ...formData?.applicant,
         idFront: updatedFiles.idFront ?? formData?.applicant.idFront,
         idBack: updatedFiles.idBack ?? formData?.applicant.idBack,
+        paymentSlip: updatedFiles.paymentSlip ?? formData?.applicant.paymentSlip,
         proposal: updatedFiles.proposal ?? formData?.applicant.proposal,
         agreement: updatedFiles.agreement ?? formData?.applicant.agreement,
       },
@@ -325,7 +327,7 @@ useEffect(() => {
           {/* Compliance & KYC Documents */}
           <section className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
            
-           <CopyButton text=""/> 
+           <SendDocumentLinkButton clientId={Number(id)}/> 
            
             <div className="px-6 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -351,6 +353,12 @@ useEffect(() => {
                 <DocPreview
                   label="ID Card Back"
                   url={formData?.applicant.idBack}
+                  id={formData?.applicant.nic}
+                  docKey="idBack"
+                />
+                 <DocPreview
+                  label="Payment Slip"
+                  url={formData?.applicant.paymentSlip}
                   id={formData?.applicant.nic}
                   docKey="idBack"
                 />

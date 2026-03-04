@@ -21,6 +21,7 @@ const mapClientToFormData = (client: any) => ({
     branchId: client.branch?.id || "",
     idFront: client.idFront || "",
     idBack: client.idBack || "",
+    paymentSlip: client.paymentSlip || "",
     proposal: client.proposal || "",
     agreement: client.agreement || "",
     signature: client.signature || "",

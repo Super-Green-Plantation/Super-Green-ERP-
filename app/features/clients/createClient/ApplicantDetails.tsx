@@ -17,6 +17,9 @@ const ApplicantDetails = () => {
   const [branchDetails, setBranchDetails] = useState<Branch | null>(null);
   const [plans, setPlans] = useState<FinancialPlan[] | null>([]);
 
+  console.log(branch);
+  console.log(selectedBranchId);
+  
   const fetchBranch = async () => {
     const branches = await getBranches();
     setBranch(branches);

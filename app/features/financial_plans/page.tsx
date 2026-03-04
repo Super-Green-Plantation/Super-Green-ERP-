@@ -198,12 +198,15 @@ export default function Page() {
       </div>
 
       {/* Modals */}
-      <AddPlanModal
-        isOpen={isAddModalOpen}
-        onClose={() => {
-          setIsAddModalOpen(false);
-        }}
-      />
+      {isAddModalOpen && (
+        <AddPlanModal
+          isOpen={isAddModalOpen}
+          onClose={() => {
+            setIsAddModalOpen(false);
+          }}
+        />
+      )}
+
 
       {selectedPlan && (
         <EditPlanModal

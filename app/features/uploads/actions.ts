@@ -2,6 +2,7 @@
 
 import { v2 as cloudinary } from "cloudinary";
 import { serializeData } from "@/app/utils/serializers";
+import { createClient } from "@/lib/supabase/client";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -34,20 +35,31 @@ export async function getCloudinarySignature() {
 }
 
 export async function uploadClientSignature(dataUrl: string) {
-  if (!dataUrl) {
-    throw new Error("No image data provided");
-  }
+  if (!dataUrl) throw new Error("No image data provided");
 
   try {
-    const result = await cloudinary.uploader.upload(dataUrl, {
-      folder: "client-signatures",
-      resource_type: "image",
-    });
+    // Convert base64 data URL to a Buffer
+    const base64 = dataUrl.replace(/^data:image\/\w+;base64,/, "");
+    const buffer = Buffer.from(base64, "base64");
 
-    return serializeData({
-      url: result.secure_url,
-      public_id: result.public_id,
-    });
+    const supabase = await createClient(); // server client
+    const path = `signatures/${Date.now()}-${crypto.randomUUID()}.png`;
+
+    const { error } = await supabase.storage
+      .from("kyc-documents")
+      .upload(path, buffer, {
+        contentType: "image/png",
+        cacheControl: "3600",
+        upsert: false,
+      });
+
+    if (error) throw new Error(`Signature upload failed: ${error.message}`);
+
+    const { data } = supabase.storage
+      .from("kyc-documents")
+      .getPublicUrl(path);
+
+    return { url: data.publicUrl };
   } catch (err) {
     console.error("Signature upload failed:", err);
     throw new Error("Failed to upload signature");

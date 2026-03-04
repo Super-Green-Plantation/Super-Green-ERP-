@@ -67,6 +67,8 @@ const UserListPage = () => {
       setIsUpdating(null);
     }
   };
+
+  
   return (
     <div className="max-w-7xl mx-auto sm:space-y-8 space-y-2 sm:p-4 md:p-8 min-h-screen">
       <div className="mb-8">
@@ -121,10 +123,10 @@ const UserListPage = () => {
                     <div className="flex flex-col">
                       <div className="flex items-center gap-1 text-sm font-bold text-slate-600">
                         <MapPin size={12} className="text-slate-300" />
-                        {user.member?.branch?.name || "N/A"}
+                        {user.member?.branches[0]?.branch.name || "N/A"}
                       </div>
                       <span className="text-[10px] text-slate-400 font-bold ml-4 uppercase">
-                        {user.member?.branch?.location || "Head Office"}
+                        {user.member?.branches[0]?.branch.location || "Head Office"}
                       </span>
                     </div>
                   </td>

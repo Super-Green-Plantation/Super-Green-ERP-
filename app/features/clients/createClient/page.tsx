@@ -8,8 +8,12 @@ import { SubmitButton } from "./SubmitButto";
 import Back from "@/app/components/Back";
 import DocumentUploadSection from "./ClientDocuments";
 import Heading from "@/app/components/Heading";
+import { useRef } from "react";
 
 const Page = () => {
+  const pendingFilesRef = useRef<Record<string, File | null>>({
+    idFront: null, idBack: null, paymentSlip: null, proposal: null, agreement: null,
+  });
   return (
     <FormProvider>
       <div className="max-w-7xl mx-auto sm:space-y-8 space-y-2 sm:p-4 md:p-8 min-h-screen">
@@ -34,7 +38,7 @@ const Page = () => {
           {/* Left Column: Primary Details */}
           <div className="lg:col-span-2 space-y-8">
             <ApplicantDetails />
-            <DocumentUploadSection />
+            <DocumentUploadSection pendingFilesRef={pendingFilesRef} />
           </div>
 
           {/* Right Column: Supporting Details */}
@@ -45,7 +49,7 @@ const Page = () => {
         </div>
 
         <div className="flex justify-end pt-4">
-          <SubmitButton />
+          <SubmitButton pendingFilesRef={pendingFilesRef} />
         </div>
       </div>
     </FormProvider>

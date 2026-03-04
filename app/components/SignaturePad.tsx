@@ -1,53 +1,76 @@
+
 "use client";
 
+import { Eraser, Loader2 } from "lucide-react";
+import { useRef, useState } from "react";
 import SignatureCanvas from "react-signature-canvas";
-import { useRef } from "react";
-import { Eraser, CheckCircle2 } from "lucide-react";
 import { useFormContext } from "../context/FormContext";
 import { uploadClientSignature } from "../features/uploads/actions";
+import { toast } from "sonner";
 
 export default function SignaturePad() {
   const { form } = useFormContext();
   const { setValue } = form;
   const sigRef = useRef<SignatureCanvas>(null);
+  const [saving, setSaving] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
 
-  const saveSignature = async (e: any) => {
+  const saveSignature = async (e: React.MouseEvent) => {
     e.preventDefault();
-    if (!sigRef.current || sigRef.current.isEmpty()) return;
+    if (!sigRef.current || sigRef.current.isEmpty()) {
+      toast.error("Please draw your signature first.");
+      return;
+    }
 
-    const dataUrl = sigRef.current.toDataURL("image/png");
-    console.log("Signature captured:", dataUrl);
-
-    const data = await uploadClientSignature(dataUrl);
-    setValue("applicant.signature", data.url);
-    setValue("applicant.signature", data.url);
-    console.log("Cloudinary URL:", data.url);
+    setSaving(true);
+    try {
+      const dataUrl = sigRef.current.toDataURL("image/png");
+      const data = await uploadClientSignature(dataUrl);
+      setValue("applicant.signature", data.url, { shouldDirty: true });
+      setConfirmed(true);
+      toast.success("Signature saved.");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to upload signature. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const clear = (e: any) => {
+  const clear = (e: React.MouseEvent) => {
     e.preventDefault();
     sigRef.current?.clear();
+    setConfirmed(false);
+    setValue("applicant.signature", "");
   };
 
   return (
     <div className="space-y-3">
       <div className="relative group">
-        {/* Canvas Container */}
-        <div className="bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl overflow-hidden transition-all group-hover:border-blue-300">
+        <div
+          className={`bg-gray-50 border-2 border-dashed rounded-2xl overflow-hidden transition-all ${
+            confirmed
+              ? "border-green-400 bg-green-50/30"
+              : "border-gray-200 group-hover:border-blue-300"
+          }`}
+        >
           <SignatureCanvas
             ref={sigRef}
-            penColor="#1e293b" // Deep slate for a more professional "ink" look
-            canvasProps={{
-              className: "w-full h-40 cursor-crosshair",
-            }}
+            penColor="#1e293b"
+            canvasProps={{ className: "w-full h-40 cursor-crosshair" }}
           />
         </div>
 
-        {/* Floating Instruction */}
         <div className="absolute top-2 sm:right-4 right-6 pointer-events-none">
-          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 opacity-50">
-            Sign inside the box
-          </span>
+          {confirmed ? (
+            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-green-500">
+              ✓ Signature confirmed
+            </span>
+          ) : (
+            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 opacity-50">
+              Sign inside the box
+            </span>
+          )}
         </div>
       </div>
 
@@ -65,9 +88,17 @@ export default function SignaturePad() {
           <button
             type="button"
             onClick={saveSignature}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+            disabled={saving}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 disabled:opacity-50 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
           >
-            Confirm Signature
+            {saving ? (
+              <>
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              "Confirm Signature"
+            )}
           </button>
         </div>
       </div>

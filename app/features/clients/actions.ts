@@ -7,7 +7,11 @@ import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import crypto from "crypto"
+import nodemailer from "nodemailer";
 
+
+const BUCKET = "kyc-documents";
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL!; // e.g. https://yourapp.com
 
 
 
@@ -115,6 +119,7 @@ export async function getClientById(id: number) {
       branch: true,
       nominee: true,
       beneficiary: true,
+      
     },
   });
 
@@ -188,7 +193,12 @@ export async function saveClient(data: {
       const member = await prisma.member.findFirst({
         where: {
           email,
-          branchId: Number(applicant.branchId),
+          branches: {
+            some: {
+              branchId: Number(applicant.branchId),
+            }
+          }
+
         },
       });
 
@@ -209,6 +219,7 @@ export async function saveClient(data: {
           signature: applicant.signature,
           idFront: applicant.idFront,
           idBack: applicant.idBack,
+          paymentSlip: applicant.paymentSlip,
           proposal: applicant.proposal,
           agreement: applicant.agreement,
           memberId: member ? member.id : null,
@@ -285,6 +296,7 @@ export async function updateClient(id: number, formData: any) {
         phoneLand: formData.applicant.phoneLand || null,
         idFront: formData.applicant.idFront || null,
         idBack: formData.applicant.idBack || null,
+        paymentSlip: formData.applicant.paymentSlip || null,
         proposal: formData.applicant.proposal || null,
         agreement: formData.applicant.agreement || null,
         investmentAmount: Number(formData.applicant.investmentAmount) || undefined,
@@ -395,6 +407,7 @@ export async function updateClientDocuments(
   data: {
     idFront?: string;
     idBack?: string;
+    paymentSlip?: string;
     proposal?: string;
     agreement?: string;
   }
@@ -407,6 +420,7 @@ export async function updateClientDocuments(
       data: {
         idFront: data.idFront ?? undefined,
         idBack: data.idBack ?? undefined,
+        paymentSlip: data.paymentSlip ?? undefined,
         proposal: data.proposal ?? undefined,
         agreement: data.agreement ?? undefined,
       },
@@ -423,7 +437,7 @@ export async function updateClientDocuments(
 
 // Delete client document field
 export async function deleteClientDocument(nic: string, field: string) {
-  const allowedFields = ["idFront", "idBack", "signature", "proposal", "agreement"];
+  const allowedFields = ["idFront", "idBack","paymentSlip", "signature", "proposal", "agreement"];
 
   if (!allowedFields.includes(field)) {
     return { success: false, error: "Invalid document field" };
@@ -446,27 +460,153 @@ export async function deleteClientDocument(nic: string, field: string) {
 }
 
 
-export async function generateUploadUrl(clientId: number) {
-  const token = crypto.randomBytes(32).toString("hex")
 
-  console.log(token);
+export async function generateUploadUrl(clientId: number) {
+  const token = crypto.randomBytes(32).toString("hex");
 
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Unauthorized");
+
+  const client = await prisma.client.findUnique({
+    where: { id: clientId },
+    select: { email: true, fullName: true },
+  });
+
+  if (!client) throw new Error("Client not found");
 
   await prisma.clientDocumentRequest.create({
     data: {
       clientId,
       token,
       createdById: user.id,
-      expiresAt: new Date(
-        Date.now() + 1000 * 60 * 60 * 24 * 2 // 2 days
-      ),
+      expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 2), // 2 days
     },
-  })
+  });
+
+  const uploadLink = `${process.env.NEXT_PUBLIC_APP_URL}/upload/${token}`;
+
+  // Only send email if client has one — otherwise just return the link to copy
+  if (client.email) {
+    try {
+      await sendDocumentRequestEmail({
+        to: client.email,
+        clientName: client.fullName,
+        uploadLink,
+      });
+    } catch (err) {
+      // Don't block link generation if email fails
+      console.error("Email send failed:", err);
+    }
+  }
+
+  return {
+    uploadLink,
+    emailSent: !!client.email,
+  };
 }
+
+
+async function sendDocumentRequestEmail({
+  to,
+  clientName,
+  uploadLink,
+}: {
+  to: string;
+  clientName: string;
+  uploadLink: string;
+}) {
+  const transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST,
+    port: Number(process.env.EMAIL_PORT),
+    secure: false,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+
+  await transporter.sendMail({
+    from: `"Document Request" <${process.env.SMTP_FROM}>`,
+    to,
+    subject: "Action Required: Please Upload Your Documents",
+    html: `
+      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 32px; background: #f8fafc; border-radius: 12px;">
+        <h2 style="color: #0f172a; margin-bottom: 8px;">Hi ${clientName},</h2>
+        <p style="color: #475569; line-height: 1.6;">
+          We need you to upload the following documents to complete your application:
+        </p>
+        <ul style="color: #475569; line-height: 2;">
+          <li>National ID / NIC — Front</li>
+          <li>National ID / NIC — Back</li>
+          <li>Payment Slip</li>
+        </ul>
+        <a href="${uploadLink}" style="
+          display: inline-block;
+          margin-top: 24px;
+          padding: 14px 28px;
+          background: #1e293b;
+          color: white;
+          border-radius: 8px;
+          text-decoration: none;
+          font-weight: bold;
+          font-size: 14px;
+        ">
+          Upload Documents
+        </a>
+        <p style="color: #94a3b8; font-size: 12px; margin-top: 24px;">
+          This link expires in 48 hours. Do not share it with anyone.
+        </p>
+      </div>
+    `,
+  });
+}
+
+
+
+export async function validateUploadToken(token: string) {
+  const request = await prisma.clientDocumentRequest.findUnique({
+    where: { token },
+    include: {
+      client: { select: { id: true, fullName: true, email: true } },
+    },
+  });
+
+  if (!request) return { valid: false, error: "Invalid link." };
+  if (request.used) return { valid: false, error: "This link has already been used." };
+  if (new Date() > request.expiresAt) return { valid: false, error: "This link has expired." };
+
+  return { valid: true, request };
+}
+
+
+export async function saveUploadedDocuments(
+  token: string,
+  urls: { idFront?: string; idBack?: string; paymentSlip?: string }
+) {
+  const request = await prisma.clientDocumentRequest.findUnique({
+    where: { token },
+  });
+
+  if (!request) return { success: false, error: "Invalid token" };
+  if (request.used) return { success: false, error: "Link already used" };
+  if (new Date() > request.expiresAt) return { success: false, error: "Link expired" };
+
+  await prisma.$transaction([
+    prisma.client.update({
+      where: { id: request.clientId },
+      data: {
+        idFront: urls.idFront ?? undefined,
+        idBack: urls.idBack ?? undefined,
+        paymentSlip: urls.paymentSlip ?? undefined,
+      },
+    }),
+    prisma.clientDocumentRequest.update({
+      where: { token },
+      data: { used: true },
+    }),
+  ]);
+
+  return { success: true };
+}
+

@@ -5,7 +5,7 @@ import { useForm, UseFormReturn } from "react-hook-form";
 
 export interface FormData {
   applicant: {
-    id?:number;
+    id?: number;
     fullName?: string;
     nic?: string;
     drivingLicense?: string;
@@ -18,9 +18,9 @@ export interface FormData {
     address?: string;
     branchId?: string;
     investmentAmount?: number;
-
     idFront?: string;
     idBack?: string;
+    paymentSlip?: string;   // <-- added
     proposal?: string;
     agreement?: string;
     signature?: string;
@@ -28,7 +28,6 @@ export interface FormData {
   investment: {
     planId?: string;
   };
-
   beneficiary: {
     fullName?: string;
     nic?: string;

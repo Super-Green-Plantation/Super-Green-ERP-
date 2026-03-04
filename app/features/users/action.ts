@@ -8,12 +8,13 @@ export const getUsers = async () => {
         include: {
             member: {
                 include: {
-                    branches: true
+                    branches: {
+                        include:{branch:true}
+                    }
                 }
             }
         }
     }
-
 
     );
     return users;

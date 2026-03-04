@@ -176,9 +176,9 @@ model Client {
   signature   String?
   idFront     String?
   idBack      String?
+  paymentSlip      String?
   proposal    String?
   agreement   String?
-  paymentSlip String?
 
   branchId Int
   branch   Branch @relation(fields: [branchId], references: [id])
@@ -382,7 +382,7 @@ model ClientDocument {
 
   idFront String?
   idBack  String?
-  paySlip String?
+  paymentSlip String?
 
   uploadedAt DateTime @default(now())
 }
