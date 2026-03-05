@@ -6,6 +6,7 @@ export interface MemberBranch {
   branch?: {
     id: number;
     name: string;
+    status:string;
     location?: string | null;
   };
 }
@@ -37,6 +38,7 @@ export interface Member {
   gender: string | null;
   civilStatus: string | null;
   address: string | null;
+  status:string | null;
 
   // --- Employment ---
   reportingPerson: string | null;
@@ -53,6 +55,8 @@ export interface Member {
   // --- Auth link ---
   userId: string | null;
 
+
+
   // --- Timestamps ---
   createdAt: string | Date;
   updatedAt: string | Date;
@@ -62,6 +66,7 @@ export interface Position {
   orc: any;
   id: number;
   title: string;
+  rank:string;
   baseSalary: number;
   createdAt: string | Date;
   updatedAt: string | Date;

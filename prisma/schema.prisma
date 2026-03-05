@@ -101,11 +101,9 @@ model Member {
 
   name  String
   phone String?
-  email String?
+  email String? @unique
   empNo String  @unique
 
-  // branchId Int
-  // branch   Branch @relation(fields: [branchId], references: [id])
   branches MemberBranch[]
   positionId Int
   position   Position @relation(fields: [positionId], references: [id])

@@ -146,9 +146,7 @@ const EmpTable = ({ onEdit, onRefresh, branchId }: EmpTableProps) => {
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-xs border border-slate-200 group-hover:bg-white transition-colors">
-                      {e.name.charAt(0)}
-                    </div>
+                   
                     <span className="text-sm font-bold text-slate-900 leading-tight">
                       {e.name}
                     </span>

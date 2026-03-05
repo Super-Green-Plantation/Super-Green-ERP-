@@ -24,6 +24,8 @@ import Link from "next/link";
 import CommissionStatementPage from "@/app/components/Commission/CommissionStatementPage";
 import { generateEmployeeCommissionPDF } from "@/app/utils/pdfGenerator";
 import ExportButton from "@/app/components/ExportStatement";
+import EmpModal from "@/app/components/Employee/Model";
+import { Member } from "@/app/types/member";
 
 interface PersonalCommissionTiers {
   id: number;
@@ -36,62 +38,36 @@ interface Orc {
   rate: any;
 }
 
-interface Position {
-  id: number;
-  title: string;
-  baseSalary: number;
-  rank: number;
-  orc: Orc | null;
-  personalCommissionTiers: PersonalCommissionTiers[];
-}
-interface Branch {
-  id: number;
-  name: string;
-  location: string;
-  status: string;
-}
-interface Employee {
-  id: number;
-  name: string;
-  email: string | null;
-  phone: string | null;
-  empNo: string;
-  totalCommission: number;
-  branchId: number;
-  positionId: number;
-
-  createdAt: string | Date;
-  updatedAt: string | Date;
-  position: Position | null;
-  branch: Branch | null;
-}
 
 const EmployeeDetailsPage = () => {
   const params = useParams();
   const { branchId, empId } = params;
 
-  const [employee, setEmployee] = useState<Employee | null>(null);
+  const [employee, setEmployee] = useState<Member | null>(null);
   const [loading, setLoading] = useState(true);
   const [allCommission, setAllCommission] = useState();
+  const [openModel, setModelOpen] = useState(false)
 
   const labelStyles =
     "text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] mb-1.5";
   const cardStyles =
     "bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden transition-all hover:shadow-md";
 
+  if (!branchId || !empId) return;
+  const fetchMember = async () => {
+    setLoading(true);
+    try {
+      const data = await getMemberDetails(Number(empId));
+      setEmployee(data.res);
+    } catch (err) {
+      console.error("Failed to fetch employee", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    if (!branchId || !empId) return;
-    const fetchMember = async () => {
-      setLoading(true);
-      try {
-        const data = await getMemberDetails(Number(empId));
-        setEmployee(data.res);
-      } catch (err) {
-        console.error("Failed to fetch employee", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+
     fetchMember();
   }, [branchId, empId]);
 
@@ -105,6 +81,10 @@ const EmployeeDetailsPage = () => {
 
   console.log("empppppppp", employee);
   console.log("allllllllll", allCommission);
+
+  if (!employee) return null;
+
+  const primaryBranch = employee.branches?.[0]?.branch;
 
   if (loading) {
     return (
@@ -138,9 +118,7 @@ const EmployeeDetailsPage = () => {
               <h1 className="text-3xl font-black text-gray-900 tracking-tight">
                 {employee.name}
               </h1>
-              <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-black rounded-md border border-blue-100 uppercase">
-                {employee.branch?.name}
-              </span>
+
             </div>
             <p className="text-sm text-gray-400 font-bold uppercase tracking-widest flex items-center gap-2">
               <Hash className="w-3.5 h-3.5" /> {employee.empNo} •{" "}
@@ -150,7 +128,8 @@ const EmployeeDetailsPage = () => {
         </div>
 
         <div className="flex gap-3">
-          <button className="flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-xl text-xs font-bold hover:bg-gray-800 transition-all shadow-lg shadow-gray-200">
+          <button
+            className="flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-xl text-xs font-bold hover:bg-gray-800 transition-all shadow-lg shadow-gray-200">
             <Pen className="w-4 h-4" /> Edit Profile
           </button>
 
@@ -209,27 +188,28 @@ const EmployeeDetailsPage = () => {
             <div className="p-8 grid grid-cols-1 md:grid-cols-3 gap-8 bg-orange-50/10">
               <DetailItem
                 label="Registered Branch"
-                value={employee.branch?.name || "N/A"}
+                value={primaryBranch?.name || "N/A"}
               />
               <DetailItem
                 label="Base Location"
-                value={employee.branch?.location || "N/A"}
+                value={primaryBranch?.location || "N/A"}
               />
               <div>
                 <p className={labelStyles}>Operational Status</p>
                 <div
-                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tight ${
-                    employee.branch?.status === "Active"
-                      ? "bg-emerald-100 text-emerald-700"
-                      : "bg-red-100 text-red-700"
-                  }`}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tight ${primaryBranch?.status === "Active"
+                    ? "bg-emerald-100 text-emerald-700"
+                    : "bg-red-100 text-red-700"
+                    }`}
                 >
                   <div
-                    className={`w-1.5 h-1.5 rounded-full ${employee.branch?.status === "Active" ? "bg-emerald-500" : "bg-red-500"}`}
+                    className={`w-1.5 h-1.5 rounded-full ${primaryBranch?.status === "Active" ? "bg-emerald-500" : "bg-red-500"
+                      }`}
                   />
-                  {employee.branch?.status}
+                  {primaryBranch?.status || "N/A"}
                 </div>
               </div>
+
             </div>
           </section>
         </div>
@@ -323,7 +303,7 @@ const EmployeeDetailsPage = () => {
         <div className="flex items-center gap-4 mb-8">
           <div className="h-px bg-gray-100 flex-1" />
           <h3 className="text-[10px] font-black text-gray-300 uppercase tracking-[0.4em]">
-            Financial History Ledger
+            Financial History
           </h3>
           <div className="h-px bg-gray-100 flex-1" />
         </div>
@@ -349,6 +329,16 @@ const EmployeeDetailsPage = () => {
           <Trash2 className="w-4 h-4" /> Terminate Record
         </button>
       </div>
+      {openModel && (
+        <EmpModal
+          mode="edit"
+          initialData={employee}
+          onClose={() => {
+            setModelOpen(false);
+          }}
+          onSuccess={fetchMember}
+        />
+      )}
     </div>
   );
 };
