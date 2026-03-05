@@ -26,21 +26,40 @@ export async function getAccessibleClients() {
     case "ADMIN":
     case "HR":
     case "DEV":
-      // see all clients
+      // See all clients
       whereCondition = {};
       break;
 
     case "BRANCH_MANAGER":
-      // branch clients
+      // Single branch from User.branchId
       whereCondition = {
         branchId: Number(dbUser.branchId),
       };
       break;
 
-    case "EMPLOYEE":
-      // own clients only
+    case "REGIONAL_MANAGER":
+    case "AGM": {
+      // These roles manage multiple branches via MemberBranch junction
+      // Query all branch IDs assigned to this member
+      if (!dbUser.member?.id) throw new Error("Member record not linked to user");
+
+      const memberBranches = await prisma.memberBranch.findMany({
+        where: { memberId: dbUser.member.id },
+        select: { branchId: true },
+      });
+
+      const branchIds = memberBranches.map((mb) => mb.branchId);
+
       whereCondition = {
-        memberId: Number(dbUser?.member?.id),
+        branchId: { in: branchIds },
+      };
+      break;
+    }
+
+    case "EMPLOYEE":
+      // Own clients only
+      whereCondition = {
+        memberId: dbUser.member?.id,
       };
       break;
 
