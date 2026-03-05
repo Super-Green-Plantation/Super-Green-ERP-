@@ -119,7 +119,7 @@ export async function getClientById(id: number) {
       branch: true,
       nominee: true,
       beneficiary: true,
-      
+
     },
   });
 
@@ -437,7 +437,7 @@ export async function updateClientDocuments(
 
 // Delete client document field
 export async function deleteClientDocument(nic: string, field: string) {
-  const allowedFields = ["idFront", "idBack","paymentSlip", "signature", "proposal", "agreement"];
+  const allowedFields = ["idFront", "idBack", "paymentSlip", "signature", "proposal", "agreement"];
 
   if (!allowedFields.includes(field)) {
     return { success: false, error: "Invalid document field" };
@@ -582,7 +582,12 @@ export async function validateUploadToken(token: string) {
 
 export async function saveUploadedDocuments(
   token: string,
-  urls: { idFront?: string; idBack?: string; paymentSlip?: string }
+  urls: {
+    idFront?: string;
+    idBack?: string;
+    paymentSlip?: string;
+    signature?: string; // ← optional, not required
+  }
 ) {
   const request = await prisma.clientDocumentRequest.findUnique({
     where: { token },
@@ -599,6 +604,7 @@ export async function saveUploadedDocuments(
         idFront: urls.idFront ?? undefined,
         idBack: urls.idBack ?? undefined,
         paymentSlip: urls.paymentSlip ?? undefined,
+        signature: urls.signature ?? undefined,
       },
     }),
     prisma.clientDocumentRequest.update({

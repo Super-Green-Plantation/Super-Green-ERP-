@@ -2,47 +2,18 @@
 
 import { v2 as cloudinary } from "cloudinary";
 import { serializeData } from "@/app/utils/serializers";
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/server";
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
 
-export async function getCloudinarySignature() {
-  try {
-    const timestamp = Math.floor(Date.now() / 1000);
-
-    const signature = cloudinary.utils.api_sign_request(
-      {
-        timestamp,
-        folder: "compliance-docs",
-      },
-      process.env.CLOUDINARY_API_SECRET!
-    );
-
-    return {
-      timestamp,
-      signature,
-      apiKey: process.env.CLOUDINARY_API_KEY,
-      cloudName: process.env.CLOUDINARY_CLOUD_NAME,
-    };
-  } catch (err) {
-    console.error("Cloudinary signature failed:", err);
-    throw new Error("Failed to generate upload signature");
-  }
-}
 
 export async function uploadClientSignature(dataUrl: string) {
   if (!dataUrl) throw new Error("No image data provided");
 
   try {
-    // Convert base64 data URL to a Buffer
     const base64 = dataUrl.replace(/^data:image\/\w+;base64,/, "");
     const buffer = Buffer.from(base64, "base64");
 
-    const supabase = await createClient(); // server client
+    const supabase = await createClient();
     const path = `signatures/${Date.now()}-${crypto.randomUUID()}.png`;
 
     const { error } = await supabase.storage
