@@ -146,11 +146,13 @@ model PositionTarget {
   id           Int      @id @default(autoincrement())
   positionId   Int
   position     Position @relation(fields: [positionId], references: [id])
-  periodNumber Int // 1 or 2
-  monthNumber  Int // 1, 2, or 3 within the period
+  periodNumber Int // 1 = first 3 months, 2 = second 3 months
+  monthNumber  Int // 1, 2, or 3 within that period
   targetAmount Float // e.g. 1_500_000
-  bonusAmount  Float // e.g. 50_000
+  bonusAmount  Float // fixed bonus if target hit, e.g. 50_000
   excessRate   Float    @default(0) // 0 for period 1, 0.005 for period 2
+
+  @@unique([positionId, periodNumber, monthNumber])
 }
 
 model MonthlyEvaluation {
@@ -159,6 +161,8 @@ model MonthlyEvaluation {
   member         Member   @relation(fields: [memberId], references: [id])
   year           Int
   month          Int // 1–12
+  periodNumber   Int? // 1 or 2 during probation, null if permanent
+  monthInPeriod  Int? // 1, 2, 3 within period
   volumeAchieved Float
   targetAmount   Float // snapshot at time of eval
   bonusEarned    Float    @default(0)
@@ -417,4 +421,3 @@ model ClientDocument {
 
   uploadedAt DateTime @default(now())
 }
-

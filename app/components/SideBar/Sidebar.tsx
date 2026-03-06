@@ -4,6 +4,7 @@ import { logout } from "@/app/auth/logout/action";
 import {
   BanknoteArrowUp,
   Calculator,
+  ChartCandlestick,
   ChevronLeft,
   GitBranch,
   IdCardLanyard,
@@ -12,6 +13,7 @@ import {
   LogOut,
   Menu,
   Percent,
+  Target,
   User,
   Users,
 } from "lucide-react";
@@ -36,6 +38,18 @@ const links = [
     href: "/features/branches/employees",
     icon: IdCardLanyard,
     role: ["ADMIN", "HR", "DEV", "BRANCH_MANAGER","REGIONAL_MANAGER", "AGM"]
+  },
+  {
+    name: "Targets",
+    href: "/features/hr/targets",
+    icon: Target,
+    role: ["ADMIN", "HR", "DEV"]
+  },
+  {
+    name: "Evaluations",
+    href: "/features/hr/evaluations",
+    icon: ChartCandlestick,
+    role: ["ADMIN", "HR", "DEV"]
   },
   {
     name: "Financial Plans",
