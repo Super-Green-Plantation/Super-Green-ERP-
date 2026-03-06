@@ -1,19 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   TrendingUp,
   ShieldCheck,
-  User,
-  MapPin,
-  UserCheck,
-  Trash2,
-  ChevronRight,
-  Loader2,
-  Calendar,
-  Phone,
-  Mail,
+  User, UserCheck,
+  Trash2, Calendar, Mail
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 import {
@@ -22,8 +15,8 @@ import {
 } from "@/app/features/investments/actions";
 import { DetailItem } from "@/app/components/DetailItem";
 import { generateInvestmentPDF } from "@/app/utils/pdfGenerator";
-import Loading from "@/app/components/Loading";
-import Error from "@/app/components/Error";
+import Loading from "@/app/components/Status/Loading";
+import Error from "@/app/components/Status/Error";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 

@@ -160,7 +160,7 @@ export async function getInvestmentDetailById(id: number) {
 
         advisor: {
           select: {
-            name: true,
+            nameWithInitials: true,
             empNo: true,
             branches: {
               select: {

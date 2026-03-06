@@ -1,8 +1,8 @@
 "use client";
 
-import Error from "@/app/components/Error";
+import Error from "@/app/components/Status/Error";
 import Heading from "@/app/components/Heading";
-import Loading from "@/app/components/Loading";
+import Loading from "@/app/components/Status/Loading";
 import Pagination from "@/app/components/Pagination";
 import { useClients } from "@/app/hooks/useClients";
 import { ExternalLink, Phone, User } from "lucide-react";

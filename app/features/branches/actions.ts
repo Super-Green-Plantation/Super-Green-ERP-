@@ -170,7 +170,7 @@ export async function getBranchEmployees(branchId: number) {
       select: {
         id: true,
         empNo: true,
-        name: true,
+        nameWithInitials: true,
         email: true,
         phone: true,
         totalCommission: true,

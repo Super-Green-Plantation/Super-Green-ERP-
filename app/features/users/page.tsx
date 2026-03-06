@@ -1,7 +1,7 @@
 "use client";
 
-import Error from '@/app/components/Error';
-import Loading from '@/app/components/Loading';
+import Error from '@/app/components/Status/Error';
+import Loading from '@/app/components/Status/Loading';
 import { useUsers } from '@/app/hooks/useUsers';
 import {
   CheckCircle2,

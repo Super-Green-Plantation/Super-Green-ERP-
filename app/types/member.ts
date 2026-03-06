@@ -55,8 +55,6 @@ export interface Member {
   // --- Auth link ---
   userId: string | null;
 
-
-
   // --- Timestamps ---
   createdAt: string | Date;
   updatedAt: string | Date;

@@ -1,8 +1,8 @@
 "use client";
 
-import InvestmentTable from "@/app/components/InvestmentTable";
-import Loading from "@/app/components/Loading";
-import Error from "@/app/components/Error";
+import InvestmentTable from "@/app/components/Tables/InvestmentTable";
+import Loading from "@/app/components/Status/Loading";
+import Error from "@/app/components/Status/Error";
 import { generateInvestmentsReportPDF } from "@/app/utils/pdfGenerator";
 import { Download, Plus, Wallet } from "lucide-react";
 import Link from "next/link";

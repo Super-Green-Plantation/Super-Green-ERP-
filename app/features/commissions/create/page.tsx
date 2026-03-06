@@ -5,9 +5,6 @@ import {
   getClientById,
   getClientsByBranch,
 } from "@/app/features/clients/actions";
-import {
-  getEmployeesByBranch,
-} from "@/app/features/employees/actions";
 import { getEligibleCommissions, processCommissions } from "@/app/features/commissions/actions";
 import { getPlansByClient, updateAdvisorId } from "@/app/features/investments/actions";
 import { createProfit } from "@/app/features/profit/actions";
@@ -17,18 +14,16 @@ import { FinancialPlan } from "@/app/types/FinancialPlan";
 import { Member } from "@/app/types/member";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 
+import Back from "@/app/components/Buttons/Back";
 import CommissionReceipt from "@/app/components/Commission/CommissionReceipt";
-import { ArrowLeft } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 import BranchStaffPanel from "./components/BranchStaffPanel";
 import ClientDetailsCard from "./components/ClientDetailsCard";
 import ClientSelector from "./components/ClientSelector";
 import MemberList from "./components/MemberList";
 import PlanCard from "./components/PlanCard";
-import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
-import Back from "@/app/components/Back";
 
 type CommissionReceipt = {
   alreadyProcessed: boolean;
@@ -60,7 +55,6 @@ const Page = () => {
   const [commissionDetails, setCommissionDetails] =
     useState<CommissionReceipt | null>(null);
 
-  const router = useRouter();
 
   console.log(commissionDetails);
   

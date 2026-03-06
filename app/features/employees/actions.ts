@@ -82,7 +82,6 @@ export async function createEmployee(data: EmpData) {
         return tx.member.create({
           data: {
             userId: supabaseUserId!,
-            name: data.name,
             email: data.email,
             phone: data.phone || null,
             empNo: data.empNo,
@@ -103,7 +102,6 @@ export async function createEmployee(data: EmpData) {
             accNo: data.accNo || null,
             bank: data.bank || null,
             bankBranch: data.bankBranch || null,
-            phone2: data.phone2 || null,
             branches: {
               create: data.branchIds.map((branchId) => ({ branchId })),
             },
@@ -131,7 +129,6 @@ export async function createEmployee(data: EmpData) {
     // ── WITHOUT EMAIL: create Member only, no Supabase/User record ───────────
     const member = await prisma.member.create({
       data: {
-        name: data.name,
         phone: data.phone || null,
         empNo: data.empNo,
         totalCommission: data.totalCommission,
@@ -151,7 +148,6 @@ export async function createEmployee(data: EmpData) {
         accNo: data.accNo || null,
         bank: data.bank || null,
         bankBranch: data.bankBranch || null,
-        phone2: data.phone2 || null,
         branches: {
           create: data.branchIds.map((branchId) => ({ branchId })),
         },
@@ -354,7 +350,6 @@ export async function updateEmployee(memberId: number, data: EmpData) {
         ...(userId && !existing.userId && { userId }),
 
         // Core
-        name: data.name,
         empNo: data.empNo,
         email: data.email || null,
         phone: data.phone || null,
@@ -368,7 +363,6 @@ export async function updateEmployee(memberId: number, data: EmpData) {
 
         // Name variants
         nameWithInitials: data.nameWithInitials || null,
-        phone2: data.phone2 || null,
 
         // Personal
         nic: data.nic || null,

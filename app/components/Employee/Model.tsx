@@ -96,6 +96,9 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
     bankBranch: "",
   });
 
+
+
+  
   // Fetch current branch info
   useEffect(() => {
     if (!branchId) return;
@@ -201,6 +204,10 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
       setLoading(false);
     }
   };
+
+  if(mode ==="edit"){
+
+  }
 
   // ─── Styles ────────────────────────────────────────────────
   const inputStyles =

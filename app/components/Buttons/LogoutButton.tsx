@@ -1,7 +1,7 @@
 "use client"
 
+import { logout } from "@/app/auth/logout/action"
 import { LogOut } from "lucide-react"
-import { logout } from "../auth/logout/action"
 
 export default function LogoutButton({ isCollapsed }: { isCollapsed: boolean }) {
   return (

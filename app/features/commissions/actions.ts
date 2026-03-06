@@ -102,7 +102,7 @@ export async function processCommissions(data: {
             member: {
               select: {
                 empNo: true,
-                name: true,
+                nameWithInitials: true,
                 position: true,
               },
             },

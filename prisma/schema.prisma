@@ -19,15 +19,15 @@ enum ReturnFrequency {
 }
 
 model Branch {
-  id          Int           @id @default(autoincrement())
+  id          Int            @id @default(autoincrement())
   name        String
   location    String?
   // members     Member[]
-  members MemberBranch[]
-  status      Status        @default(Active)
+  members     MemberBranch[]
+  status      Status         @default(Active)
   client      Client[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
   ActivityLog ActivityLog[]
   investments Investment[]
   commission  Commission[]
@@ -54,8 +54,9 @@ model Position {
 
   personalCommissionTiers PersonalCommissionTier[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  positionTargets PositionTarget[]
 }
 
 model CommissionRate {
@@ -81,59 +82,91 @@ model PersonalCommissionTier {
 
 //Junction Table
 model MemberBranch {
-  id        Int    @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-  memberId  Int
-  branchId  Int
+  memberId Int
+  branchId Int
 
-  member    Member @relation(fields: [memberId], references: [id])
-  branch    Branch @relation(fields: [branchId], references: [id])
+  member Member @relation(fields: [memberId], references: [id])
+  branch Branch @relation(fields: [branchId], references: [id])
 
   @@unique([memberId, branchId])
 }
 
+enum EmployeeStatus {
+  PROBATION
+  PERMANENT
+}
+
 //many side ekata foreign key eka / Parent has an array
 model Member {
-  id Int @id @default(autoincrement())
+  id                Int       @id @default(autoincrement())
+  nameWithInitials  String?
+  email             String?   @unique
+  empNo             String    @unique
+  phone             String?
+  nic               String?
+  dob               DateTime?
+  birthday          DateTime?
+  gender            String?
+  civilStatus       String?
+  address           String?
+  reportingPerson   String?
+  dateOfJoin        DateTime?
+  appointmentLetter String?
+  confirmation      String?
+  remark            String?
+  accNo             String?
+  bank              String?
+  bankBranch        String?
+  totalCommission   Float     @default(0)
+  profilePic        String?
 
   userId String? @unique @db.Uuid
   user   User?   @relation(fields: [userId], references: [id])
 
-  name  String
-  phone String?
-  email String? @unique
-  empNo String  @unique
+  status             EmployeeStatus @default(PROBATION)
+  probationStartDate DateTime?
 
-  branches MemberBranch[]
   positionId Int
   position   Position @relation(fields: [positionId], references: [id])
 
-  totalCommission Float @default(0)
-
+  branches    MemberBranch[]
   commissions Commission[]
   investments Investment[]
   activityLog ActivityLog[]
-  clients Client[]
+  clients     Client[]
 
-  nameWithInitials  String?
-   phone2            String?
-   nic               String?
-   dob               DateTime?
-   birthday          DateTime?
-   gender            String?
-   civilStatus       String?
-   address           String?
-   reportingPerson   String?
-   dateOfJoin        DateTime?
-   appointmentLetter String?
-   confirmation      String?
-   remark            String?
-   accNo             String?
-   bank              String?
-   bankBranch        String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  monthlyEvaluations MonthlyEvaluation[]
+}
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model PositionTarget {
+  id           Int      @id @default(autoincrement())
+  positionId   Int
+  position     Position @relation(fields: [positionId], references: [id])
+  periodNumber Int // 1 or 2
+  monthNumber  Int // 1, 2, or 3 within the period
+  targetAmount Float // e.g. 1_500_000
+  bonusAmount  Float // e.g. 50_000
+  excessRate   Float    @default(0) // 0 for period 1, 0.005 for period 2
+}
+
+model MonthlyEvaluation {
+  id             Int      @id @default(autoincrement())
+  memberId       Int
+  member         Member   @relation(fields: [memberId], references: [id])
+  year           Int
+  month          Int // 1–12
+  volumeAchieved Float
+  targetAmount   Float // snapshot at time of eval
+  bonusEarned    Float    @default(0)
+  excessBonus    Float    @default(0)
+  targetHit      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  @@unique([memberId, year, month])
 }
 
 model FinancialPlan {
@@ -174,7 +207,7 @@ model Client {
   signature   String?
   idFront     String?
   idBack      String?
-  paymentSlip      String?
+  paymentSlip String?
   proposal    String?
   agreement   String?
 
@@ -378,9 +411,10 @@ model ClientDocument {
   requestId Int
   request   ClientDocumentRequest @relation(fields: [requestId], references: [id])
 
-  idFront String?
-  idBack  String?
+  idFront     String?
+  idBack      String?
   paymentSlip String?
 
   uploadedAt DateTime @default(now())
 }
+

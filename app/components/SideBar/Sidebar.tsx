@@ -18,7 +18,7 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { SidebarSkeleton } from "../SidebarSkeleton";
+import { SidebarSkeleton } from "./SidebarSkeleton";
 
 type SidebarProps = {
   role: string | null;
