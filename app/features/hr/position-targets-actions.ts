@@ -12,7 +12,7 @@ export async function getPositions() {
     include: {
       orc: true,
       personalCommissionTiers: true,
-      positionTargets: true, // PositionTarget[]
+      positionTargets: true, // ← correct relation name
     },
   });
   return serializeData(positions);
@@ -28,6 +28,8 @@ export async function upsertPositionTargets(
     monthNumber: number;
     targetAmount: number;
     bonusAmount: number;
+    partialThreshold: number;
+    partialBonus: number;
     excessRate: number;
   }[]
 ) {
@@ -45,6 +47,8 @@ export async function upsertPositionTargets(
           update: {
             targetAmount: t.targetAmount,
             bonusAmount: t.bonusAmount,
+            partialThreshold: t.partialThreshold,
+            partialBonus: t.partialBonus,
             excessRate: t.excessRate,
           },
           create: {
@@ -53,6 +57,8 @@ export async function upsertPositionTargets(
             monthNumber: t.monthNumber,
             targetAmount: t.targetAmount,
             bonusAmount: t.bonusAmount,
+            partialThreshold: t.partialThreshold,
+            partialBonus: t.partialBonus,
             excessRate: t.excessRate,
           },
         })

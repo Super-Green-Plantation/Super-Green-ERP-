@@ -59,7 +59,6 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
 
   const [formData, setFormData] = useState({
     // --- Core (required) ---
-    name: "",
     empNo: "",
     positionId: "",
 
@@ -94,11 +93,10 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
     accNo: "",
     bank: "",
     bankBranch: "",
+    status: "PROBATION" as "PROBATION" | "PERMANENT",
+    probationStartDate: "",
   });
 
-
-
-  
   // Fetch current branch info
   useEffect(() => {
     if (!branchId) return;
@@ -117,7 +115,7 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
         initialData.branches?.map((mb: { branchId: number }) => mb.branchId) ?? [Number(branchId)];
 
       setFormData({
-        name: initialData.name ?? "",
+        nameWithInitials: initialData.nameWithInitials ?? "",
         empNo: initialData.empNo ?? "",
         positionId: String(initialData.position?.id ?? ""),
         branchIds: existingBranchIds,
@@ -125,7 +123,6 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
         phone: initialData.phone ?? "",
         phone2: initialData.phone2 ?? "",
         totalCommission: initialData.totalCommission ?? 0,
-        nameWithInitials: initialData.nameWithInitials ?? "",
         nic: initialData.nic ?? "",
         dob: initialData.dob ? initialData.dob.toString().slice(0, 10) : "",
         birthday: initialData.birthday ? initialData.birthday.toString().slice(0, 10) : "",
@@ -140,6 +137,10 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
         accNo: initialData.accNo ?? "",
         bank: initialData.bank ?? "",
         bankBranch: initialData.bankBranch ?? "",
+        status: initialData.status ?? "PROBATION",
+        probationStartDate: initialData.probationStartDate
+          ? initialData.probationStartDate.toString().slice(0, 10)
+          : "",
       });
     }
   }, [mode, initialData, branchId]);
@@ -179,8 +180,8 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
       const payload = {
         ...formData,
         positionId: Number(formData.positionId),
-        // For non-multi-branch roles, branchIds is always [currentBranchId]
         branchIds: isMultiBranch ? formData.branchIds : [Number(branchId)],
+        probationStartDate: formData.probationStartDate || null, // "" → null
       };
 
       if (mode === "add") {
@@ -205,7 +206,7 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
     }
   };
 
-  if(mode ==="edit"){
+  if (mode === "edit") {
 
   }
 
@@ -217,10 +218,9 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
   const labelStyles =
     "block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 ml-1";
   const tabBtn = (active: boolean) =>
-    `px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-      active
-        ? "bg-blue-600 text-white shadow-sm"
-        : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+    `px-4 py-2 text-sm font-medium rounded-lg transition-colors ${active
+      ? "bg-blue-600 text-white shadow-sm"
+      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
     }`;
 
   // ─── Render ────────────────────────────────────────────────
@@ -265,28 +265,14 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
 
                 {/* Full Name */}
                 <div className="md:col-span-2">
-                  <label className={labelStyles}>Full Name <span className="text-red-400">*</span></label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                    <input
-                      placeholder="e.g. John Michael Doe"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      required
-                      className={inputStyles}
-                    />
-                  </div>
-                </div>
-
-                {/* Name with Initials */}
-                <div>
-                  <label className={labelStyles}>Name with Initials</label>
+                  <label className={labelStyles}>Name with Initials <span className="text-red-400">*</span></label>
                   <div className="relative">
                     <User className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
                     <input
                       placeholder="e.g. J.M. Doe"
                       value={formData.nameWithInitials}
                       onChange={(e) => setFormData({ ...formData, nameWithInitials: e.target.value })}
+                      required
                       className={inputStyles}
                     />
                   </div>
@@ -306,6 +292,7 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                     />
                   </div>
                 </div>
+
 
                 {/* Email */}
                 <div className="md:col-span-2">
@@ -388,6 +375,44 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                     </div>
                   </div>
                 </div>
+
+                {/* Employment Status */}
+                <div>
+                  <label className={labelStyles}>Employment Status</label>
+                  <div className="flex gap-2">
+                    {(["PROBATION", "PERMANENT"] as const).map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, status: s })}
+                        className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-wider border transition-all ${formData.status === s
+                          ? s === "PERMANENT"
+                            ? "bg-emerald-600 text-white border-emerald-600"
+                            : "bg-amber-500 text-white border-amber-500"
+                          : "bg-white text-gray-400 border-gray-200 hover:border-gray-300"
+                          }`}
+                      >
+                        {s === "PERMANENT" ? "✓ Permanent" : "Probation"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Probation Start Date — only show when on probation */}
+                {formData.status === "PROBATION" && (
+                  <div>
+                    <label className={labelStyles}>Probation Start Date</label>
+                    <div className="relative">
+                      <Calendar className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                      <input
+                        type="date"
+                        value={formData.probationStartDate}
+                        onChange={(e) => setFormData({ ...formData, probationStartDate: e.target.value })}
+                        className={inputStyles}
+                      />
+                    </div>
+                  </div>
+                )}
 
                 {/* ── BRANCH SECTION ── */}
                 <div className="md:col-span-2">

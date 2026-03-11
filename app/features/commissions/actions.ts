@@ -38,7 +38,7 @@ export async function getEligibleCommissions(empNo: string, branchId: number) {
       where: { empNo },
       include: {
         position: { include: { orc: true } },
-        branches: { include: { branch: true } },
+        branches: { include: { branch: true, member:true } },
       },
     });
 

@@ -101,7 +101,7 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: EmployeeDet
           </div>
           <div className="min-w-0">
             <h1 className="text-xl sm:text-3xl font-black text-gray-900 tracking-tight truncate">
-              {employee.name}
+              {employee.nameWithInitials}
             </h1>
             <p className="text-xs text-gray-400 font-bold uppercase tracking-widest flex items-center gap-1.5 mt-0.5">
               <Hash className="w-3 h-3 shrink-0" />
@@ -181,7 +181,7 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: EmployeeDet
               </h2>
             </div>
             <div className="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-x-10 sm:gap-y-7">
-              <DetailItem label="Official Name" value={employee.name} icon={<User className="w-3.5 h-3.5" />} />
+              <DetailItem label="Official Name" value={employee.nameWithInitials} icon={<User className="w-3.5 h-3.5" />} />
               <DetailItem label="Email Address" value={employee.email} icon={<Mail className="w-3.5 h-3.5" />} />
               <DetailItem label="Phone Line" value={employee.phone} icon={<Phone className="w-3.5 h-3.5" />} />
               <DetailItem label="Employee Code" value={employee.empNo} icon={<Hash className="w-3.5 h-3.5" />} />

@@ -153,6 +153,7 @@ export default function EvaluationsPage() {
   const totalPayout = previews.reduce((s, p) => s + p.totalPayout, 0);
   const alreadyEvaluatedCount = previews.filter(p => p.alreadyEvaluated).length;
 
+  
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-6">
 
@@ -326,7 +327,7 @@ export default function EvaluationsPage() {
                       <td className="px-4 py-4">
                         <StatusBadge status={p.status} />
                       </td>
-                      <td className="px-4 py-4 min-w-[140px]">
+                      <td className="px-4 py-4 min-w-35">
                         {p.targetAmount > 0 ? (
                           <div>
                             <p className="text-xs font-bold text-slate-700 mb-1">

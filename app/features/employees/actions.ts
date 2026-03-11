@@ -8,9 +8,10 @@ import { generateTempPassword, sendWelcomeEmail } from "@/lib/email";
 import { supabaseAdmin } from "@/prisma/seed";
 import { createClient } from "@/lib/supabase/client";
 import { redirect } from "next/navigation";
+import { Member } from "@prisma/client";
 
 interface EmpData {
-  name: string;
+  // name: string;
   empNo: string;
   positionId: number;
 
@@ -40,6 +41,9 @@ interface EmpData {
   appointmentLetter?: string;
   confirmation?: string;
   remark?: string;
+
+  status: "PROBATION" | "PERMANENT";
+  probationStartDate: string | null;
 
   // Banking
   accNo?: string;
@@ -72,7 +76,7 @@ export async function createEmployee(data: EmpData) {
         await tx.user.create({
           data: {
             id: supabaseUserId!,
-            name: data.name,
+            name: data.nameWithInitials,
             email: data.email,
             role: "EMPLOYEE",
             branchId: data.branchIds[0],
@@ -105,6 +109,9 @@ export async function createEmployee(data: EmpData) {
             branches: {
               create: data.branchIds.map((branchId) => ({ branchId })),
             },
+            probationStartDate: data.probationStartDate
+              ? new Date(data.probationStartDate)
+              : null,
           },
         });
       });
@@ -113,7 +120,7 @@ export async function createEmployee(data: EmpData) {
       try {
         await sendWelcomeEmail({
           to: data.email,
-          name: data.name,
+          name: data.nameWithInitials,
           empNo: data.empNo,
           tempPassword,
         });
@@ -129,11 +136,11 @@ export async function createEmployee(data: EmpData) {
     // ── WITHOUT EMAIL: create Member only, no Supabase/User record ───────────
     const member = await prisma.member.create({
       data: {
+        nameWithInitials: data.nameWithInitials,
         phone: data.phone || null,
         empNo: data.empNo,
         totalCommission: data.totalCommission,
         positionId: data.positionId,
-        nameWithInitials: data.nameWithInitials || null,
         nic: data.nic || null,
         dob: data.dob ? new Date(data.dob) : null,
         birthday: data.birthday ? new Date(data.birthday) : null,
@@ -305,7 +312,7 @@ export async function updateEmployee(memberId: number, data: EmpData) {
         await prisma.user.create({
           data: {
             id: authData.user.id,
-            name: data.name,
+            name: data.nameWithInitials,
             email: data.email,
             role: "EMPLOYEE",
             branchId: data.branchIds[0],
@@ -317,7 +324,7 @@ export async function updateEmployee(memberId: number, data: EmpData) {
         try {
           await sendWelcomeEmail({
             to: data.email,
-            name: data.name ?? "",
+            name: data.nameWithInitials ?? "",
             empNo: data.empNo,
             tempPassword,
           });
@@ -335,7 +342,7 @@ export async function updateEmployee(memberId: number, data: EmpData) {
 
         await prisma.user.update({
           where: { id: existing.user.id },
-          data: { email: data.email, name: data.name },
+          data: { email: data.email, name: data.nameWithInitials },
         });
       }
     }
@@ -350,6 +357,9 @@ export async function updateEmployee(memberId: number, data: EmpData) {
         ...(userId && !existing.userId && { userId }),
 
         // Core
+        // : data.name,
+        nameWithInitials: data.nameWithInitials,
+        status: data.status,
         empNo: data.empNo,
         email: data.email || null,
         phone: data.phone || null,
@@ -360,10 +370,6 @@ export async function updateEmployee(memberId: number, data: EmpData) {
         branches: {
           create: data.branchIds.map((branchId) => ({ branchId })),
         },
-
-        // Name variants
-        nameWithInitials: data.nameWithInitials || null,
-
         // Personal
         nic: data.nic || null,
         dob: data.dob ? new Date(data.dob) : null,

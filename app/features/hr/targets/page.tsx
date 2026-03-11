@@ -10,6 +10,7 @@ import {
   CheckCircle2, AlertCircle,
 } from "lucide-react";
 import { getPositions, upsertPositionTargets } from "../position-targets-actions";
+import Link from "next/link";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -18,6 +19,8 @@ interface PositionTarget {
   monthNumber: number;
   targetAmount: number;
   bonusAmount: number;
+  partialThreshold: number;
+  partialBonus: number;
   excessRate: number;
 }
 
@@ -25,7 +28,7 @@ interface Position {
   id: number;
   title: string;
   rank: number;
-  targets: PositionTarget[];
+  positionTargets: PositionTarget[];
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -46,7 +49,15 @@ function buildDefaultTargets(existing: PositionTarget[]): PositionTarget[] {
   for (let p = 1; p <= 2; p++) {
     for (let m = 1; m <= 3; m++) {
       const found = existing.find(t => t.periodNumber === p && t.monthNumber === m);
-      rows.push(found ?? { periodNumber: p, monthNumber: m, targetAmount: 0, bonusAmount: 0, excessRate: 0 });
+      rows.push(found ?? {
+        periodNumber: p,
+        monthNumber: m,
+        targetAmount: 0,
+        bonusAmount: 0,
+        partialThreshold: 0,
+        partialBonus: 0,
+        excessRate: 0,
+      });
     }
   }
   return rows;
@@ -121,10 +132,9 @@ export default function PositionTargetsPage() {
   useEffect(() => {
     getPositions().then((data: Position[]) => {
       setPositions(data);
-      // Initialize edits from existing targets
       const initial: Record<number, PositionTarget[]> = {};
       data.forEach((p) => {
-        initial[p.id] = buildDefaultTargets(p.targets ?? []);
+        initial[p.id] = buildDefaultTargets(p.positionTargets ?? []);
       });
       setEdits(initial);
       // Auto-expand first position
@@ -200,13 +210,20 @@ export default function PositionTargetsPage() {
           </p>
         </div>
       </div>
+      <div>
+        <Link href={"/features/hr/salary"}>
+        For Permeant Employee
+        </Link>
+      </div>
 
       {/* ── Legend ── */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         {[
-          { icon: <TrendingUp className="w-4 h-4 text-blue-500" />, label: "Monthly Target", desc: "Investment volume to achieve" },
-          { icon: <Award className="w-4 h-4 text-emerald-500" />, label: "Fixed Bonus", desc: "Paid if target is hit" },
-          { icon: <Percent className="w-4 h-4 text-violet-500" />, label: "Excess Rate", desc: "Period 2 only — % of amount above target" },
+          { icon: <TrendingUp className="w-4 h-4 text-blue-500" />, label: "Full Target", desc: "Volume to hit for full bonus" },
+          { icon: <Award className="w-4 h-4 text-emerald-500" />, label: "Full Bonus", desc: "Paid when full target is hit" },
+          { icon: <TrendingUp className="w-4 h-4 text-amber-500" />, label: "Partial Threshold", desc: "Lower volume for partial bonus" },
+          { icon: <Award className="w-4 h-4 text-amber-400" />, label: "Partial Bonus", desc: "Paid when partial threshold is hit" },
+          { icon: <Percent className="w-4 h-4 text-violet-500" />, label: "Excess Rate", desc: "Period 2 only — % above target" },
         ].map((item) => (
           <div key={item.label} className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
             <div className="p-1.5 bg-white rounded-lg shadow-sm shrink-0">{item.icon}</div>
@@ -225,7 +242,7 @@ export default function PositionTargetsPage() {
           const isSaving = saving === position.id;
           const targets = edits[position.id] ?? [];
           const rankColor = RANK_COLORS[position.rank] ?? "bg-slate-100 text-slate-600 border-slate-200";
-          const hasTargets = position.targets?.length > 0;
+          const hasTargets = position.positionTargets?.length > 0;
 
           return (
             <div
@@ -235,10 +252,12 @@ export default function PositionTargetsPage() {
               }`}
             >
               {/* Accordion Header */}
-              <button
-                type="button"
+              <div
+                role="button"
+                tabIndex={0}
                 onClick={() => setExpandedId(isExpanded ? null : position.id)}
-                className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50/50 transition-colors"
+                onKeyDown={(e) => e.key === "Enter" && setExpandedId(isExpanded ? null : position.id)}
+                className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50/50 transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-3">
                   <span className={`px-3 py-1 rounded-lg text-xs font-black border uppercase tracking-wider ${rankColor}`}>
@@ -271,7 +290,7 @@ export default function PositionTargetsPage() {
                     : <ChevronRight className="w-4 h-4 text-slate-400" />
                   }
                 </div>
-              </button>
+              </div>
 
               {/* Accordion Body */}
               {isExpanded && (
@@ -299,13 +318,19 @@ export default function PositionTargetsPage() {
                         </div>
 
                         {/* Column headers */}
-                        <div className="grid grid-cols-4 gap-3 mb-2 px-1">
+                        <div className="grid grid-cols-6 gap-2 mb-2 px-1">
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Month</p>
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
-                            <TrendingUp className="w-3 h-3 text-blue-400" /> Target
+                            <TrendingUp className="w-3 h-3 text-blue-400" /> Full Target
                           </p>
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
-                            <Award className="w-3 h-3 text-emerald-400" /> Bonus
+                            <Award className="w-3 h-3 text-emerald-400" /> Full Bonus
+                          </p>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                            <TrendingUp className="w-3 h-3 text-amber-400" /> Partial Threshold
+                          </p>
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
+                            <Award className="w-3 h-3 text-amber-400" /> Partial Bonus
                           </p>
                           <p className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-1 ${
                             isPeriod2 ? "text-slate-400" : "text-slate-200"
@@ -319,15 +344,12 @@ export default function PositionTargetsPage() {
                           {periodTargets.map((t) => (
                             <div
                               key={`${t.periodNumber}-${t.monthNumber}`}
-                              className="grid grid-cols-4 gap-3 items-center p-3 bg-slate-50/50 rounded-xl border border-slate-100"
+                              className="grid grid-cols-6 gap-2 items-center p-3 bg-slate-50/50 rounded-xl border border-slate-100"
                             >
                               <div className="flex items-center gap-2">
                                 <div className="w-7 h-7 bg-white border border-slate-200 rounded-lg flex items-center justify-center text-xs font-black text-slate-700 shadow-sm">
                                   {t.monthNumber}
                                 </div>
-                                <span className="text-[10px] font-bold text-slate-400 uppercase">
-                                  Mo.{t.monthNumber}
-                                </span>
                               </div>
                               <MoneyInput
                                 value={t.targetAmount}
@@ -336,6 +358,14 @@ export default function PositionTargetsPage() {
                               <MoneyInput
                                 value={t.bonusAmount}
                                 onChange={(v) => updateTarget(position.id, t.periodNumber, t.monthNumber, "bonusAmount", v)}
+                              />
+                              <MoneyInput
+                                value={t.partialThreshold}
+                                onChange={(v) => updateTarget(position.id, t.periodNumber, t.monthNumber, "partialThreshold", v)}
+                              />
+                              <MoneyInput
+                                value={t.partialBonus}
+                                onChange={(v) => updateTarget(position.id, t.periodNumber, t.monthNumber, "partialBonus", v)}
                               />
                               <RateInput
                                 value={t.excessRate * 100}

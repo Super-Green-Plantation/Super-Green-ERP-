@@ -1,12 +1,12 @@
 "use client";
 import { getBranchById, getBranches } from "@/app/features/branches/actions";
 import { Branch } from "@/app/types/branch";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 const BranchDetails = () => {
   const [branch, setBranch] = useState<Branch[] | null>(null);
   const [selectedBranchId, setSelectedBranchId] = useState<number | null>(null);
-  const [branchDetails, setBranchDetails] = useState<Branch | null>(null);
+  const [branchDetails, setBranchDetails] = useState<any >(null);
 
   const fetchBranch = async () => {
     const braches = await getBranches();
@@ -60,9 +60,9 @@ const BranchDetails = () => {
           <option value="">
             {branchDetails ? "Choose a member..." : "Select a branch first"}
           </option>
-          {branchDetails?.members.map((m, index) => (
-            <option value={m.name} key={index}>
-              {m.name}
+          {branchDetails?.members.map((m:any, index:number) => (
+            <option value={m.nameWithInitials} key={index}>
+              {m.nameWithInitials}
             </option>
           ))}
         </select>

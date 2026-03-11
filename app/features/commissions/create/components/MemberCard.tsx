@@ -12,7 +12,7 @@ export default function MemberCard({ member }: Props) {
         <div className="flex items-center justify-between">
           <div>
             <p className="font-extrabold text-gray-900 tracking-tight leading-none mb-1">
-              {member.name}
+              {member.nameWithInitials}
             </p>
             <span className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider text-blue-600">
               <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-blue-500"></span>

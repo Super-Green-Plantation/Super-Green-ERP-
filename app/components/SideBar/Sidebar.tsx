@@ -12,6 +12,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  Nfc,
   Percent,
   Target,
   User,
@@ -49,6 +50,12 @@ const links = [
     name: "Evaluations",
     href: "/features/hr/evaluations",
     icon: ChartCandlestick,
+    role: ["ADMIN", "HR", "DEV"]
+  },
+  {
+    name: "Payroll",
+    href: "/features/hr/payroll",
+    icon: Nfc,
     role: ["ADMIN", "HR", "DEV"]
   },
   {

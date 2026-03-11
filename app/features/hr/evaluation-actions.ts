@@ -71,7 +71,8 @@ export async function getEvaluationPreview(branchId: number, year: number, month
           monthInPeriod = (monthsElapsed % 3) + 1;
 
           const target = member.position?.positionTargets?.find(
-            (t) => t.periodNumber === periodNumber && t.monthNumber === monthInPeriod
+            (t) => Number(t.periodNumber) === periodNumber &&
+              Number(t.monthNumber) === monthInPeriod
           );
 
           if (target) {
@@ -81,14 +82,22 @@ export async function getEvaluationPreview(branchId: number, year: number, month
             targetHit = volumeAchieved >= targetAmount;
 
             if (targetHit) {
+              // Full target hit → full bonus
               bonusEarned = bonusAmount;
               if (periodNumber === 2 && excessRate > 0) {
                 excessBonus = (volumeAchieved - targetAmount) * excessRate;
               }
+            } else if (
+              target.partialThreshold > 0 &&
+              volumeAchieved >= target.partialThreshold
+            ) {
+              // Partial threshold hit → partial bonus
+              bonusEarned = target.partialBonus;
             }
           }
         }
       }
+      // console.log("member:", member.nameWithInitials, "status:", member.status, "probationStart:", member.probationStartDate);
 
       const alreadyEvaluated = member.monthlyEvaluations.length > 0;
 
@@ -190,11 +199,19 @@ export async function runBatchEvaluation(
           if (target) {
             targetAmount = target.targetAmount;
             targetHit = volumeAchieved >= targetAmount;
+
             if (targetHit) {
+              // Full target hit → full bonus
               bonusEarned = target.bonusAmount;
               if (periodNumber === 2 && target.excessRate > 0) {
                 excessBonus = (volumeAchieved - targetAmount) * target.excessRate;
               }
+            } else if (
+              target.partialThreshold > 0 &&
+              volumeAchieved >= target.partialThreshold
+            ) {
+              // Partial threshold hit → partial bonus only
+              bonusEarned = target.partialBonus;
             }
           }
         }

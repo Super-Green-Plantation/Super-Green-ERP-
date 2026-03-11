@@ -148,7 +148,7 @@ const EmpTable = ({ onEdit, onRefresh, branchId }: EmpTableProps) => {
                   <div className="flex items-center gap-3">
                    
                     <span className="text-sm font-bold text-slate-900 leading-tight">
-                      {e.name}
+                      {e.nameWithInitials}
                     </span>
                   </div>
                 </td>

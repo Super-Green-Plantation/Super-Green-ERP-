@@ -1,6 +1,5 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -54,9 +53,11 @@ model Position {
 
   personalCommissionTiers PersonalCommissionTier[]
 
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  positionTargets PositionTarget[]
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  positionTargets         PositionTarget[]
+  positionPermanentTarget PositionPermanentTarget?
+  salary           PositionSalary?
 }
 
 model CommissionRate {
@@ -98,6 +99,85 @@ enum EmployeeStatus {
   PERMANENT
 }
 
+model PositionPermanentTarget {
+  id         Int      @id @default(autoincrement())
+  positionId Int      @unique
+  position   Position @relation(fields: [positionId], references: [id])
+
+  monthlyTarget      Float // e.g. 4_000_000
+  incentiveThreshold Float // e.g. 0.25 (25%)
+  incentiveAmount    Float // fixed amount paid when hit
+  allowanceThreshold Float // e.g. 0.75 (75%)
+  allowanceAmount    Float // fixed amount paid when hit
+}
+
+model PermanentEvaluation {
+  id              Int      @id @default(autoincrement())
+  memberId        Int
+  member          Member   @relation(fields: [memberId], references: [id])
+  year            Int
+  month           Int
+  volumeAchieved  Float
+  monthlyTarget   Float // snapshot
+  incentiveEarned Float    @default(0)
+  allowanceEarned Float    @default(0)
+  incentiveHit    Boolean  @default(false)
+  allowanceHit    Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  @@unique([memberId, year, month])
+}
+
+model PositionSalary {
+  id         Int      @id @default(autoincrement())
+  positionId Int      @unique
+  position   Position @relation(fields: [positionId], references: [id])
+
+  basicSalary     Float // e.g. 30000
+  monthlyTarget   Float // e.g. 3_000_000
+  incentiveAmount Float // paid at 100% target
+  allowanceAmount Float // paid at 75% target
+  orcRate         Float @default(0) // e.g. 0.01 for 1%
+  commRateLow     Float // e.g. 0.05 for probation=0.07
+  commRateHigh    Float // e.g. 0.08 for probation=0.10
+  commThreshold   Float @default(500000)
+
+  epfEmployee Float @default(0.08)
+  epfEmployer Float @default(0.12)
+  etfEmployer Float @default(0.03)
+}
+
+model MonthlyPayroll {
+  id       Int    @id @default(autoincrement())
+  memberId Int
+  member   Member @relation(fields: [memberId], references: [id])
+  year     Int
+  month    Int
+
+  basicSalary    Float
+  volumeAchieved Float @default(0)
+  monthlyTarget  Float
+
+  incentiveEarned  Float @default(0)
+  allowanceEarned  Float @default(0)
+  orcEarned        Float @default(0)
+  commissionEarned Float @default(0)
+
+  epfDeduction Float @default(0) // employee 8% of basic
+  epfEmployer  Float @default(0) // employer 12% of basic
+  etfEmployer  Float @default(0) // employer 3% of basic
+
+  incentiveHit Boolean @default(false)
+  allowanceHit Boolean @default(false)
+
+  grossPay Float @default(0) // basic + incentive + allowance + orc + commission
+  netPay   Float @default(0) // grossPay - epfDeduction
+
+  createdAt DateTime @default(now())
+
+  @@unique([memberId, year, month])
+}
+
 //many side ekata foreign key eka / Parent has an array
 model Member {
   id                Int       @id @default(autoincrement())
@@ -137,20 +217,24 @@ model Member {
   activityLog ActivityLog[]
   clients     Client[]
 
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
-  monthlyEvaluations MonthlyEvaluation[]
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  monthlyEvaluations   MonthlyEvaluation[]
+  permanentEvaluations PermanentEvaluation[]
+  monthlyPayrolls      MonthlyPayroll[]
 }
 
 model PositionTarget {
-  id           Int      @id @default(autoincrement())
-  positionId   Int
-  position     Position @relation(fields: [positionId], references: [id])
-  periodNumber Int // 1 = first 3 months, 2 = second 3 months
-  monthNumber  Int // 1, 2, or 3 within that period
-  targetAmount Float // e.g. 1_500_000
-  bonusAmount  Float // fixed bonus if target hit, e.g. 50_000
-  excessRate   Float    @default(0) // 0 for period 1, 0.005 for period 2
+  id               Int      @id @default(autoincrement())
+  positionId       Int
+  position         Position @relation(fields: [positionId], references: [id])
+  periodNumber     Int // 1 = first 3 months, 2 = second 3 months
+  monthNumber      Int // 1, 2, or 3 within that period
+  targetAmount     Float // e.g. 1_500_000
+  bonusAmount      Float // fixed bonus if target hit, e.g. 50_000
+  excessRate       Float    @default(0) // 0 for period 1, 0.005 for period 2
+  partialThreshold Float    @default(0)
+  partialBonus     Float    @default(0)
 
   @@unique([positionId, periodNumber, monthNumber])
 }
