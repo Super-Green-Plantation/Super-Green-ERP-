@@ -6,54 +6,60 @@ The system implements Role-Based Access Control (RBAC) to manage visibility and 
 
 ### Module Access Matrix
 
-| Module                | ADMIN | HR     | DEV    | BM     | RM     | AGM     | EMPLOYEE 
-| :---                  | :---: | :---:  | :---:  | :----: | :----: | :------:| :---: |
-| **Dashboard**         | ✅    | ✅    | ✅    | ✅     | ✅     | ✅     | ✅    |
-| **Branches**          | ✅    | ✅    | ✅    | ❌     | ✅     | ✅     | ❌    |
-| **Employee**          | ✅    | ✅    | ✅    | ✅     | ✅     | ✅     | ❌    |
-| **Clients**           | ✅    | ✅    | ✅    | ✅     | ✅     | ✅     | ✅    |
-| **Investments**       | ✅    | ✅    | ✅    | ✅     | ✅     | ✅     | ❌    |
-| **Financial Plans**   | ✅    | ✅    | ✅    | ✅     | ✅     | ✅     | ✅    |
-| **Commissions**       | ✅    | ✅    | ✅    | ✅     | ❌     | ❌     | ❌    |
-| **Calculations**      | ✅    | ✅    | ✅    | ✅     | ✅     | ✅     | ✅    |
-| **Users**             | ✅    | ✅    | ✅    | ❌     | ❌     | ❌     | ❌    |
-| **Profile**           | ✅    | ✅    | ✅    | ✅     | ✅     | ✅     | ✅    |
+| Module                | ADMIN | HR     | DEV    | BM     | RM     | ZM     | AGM     | EMPLOYEE 
+| :---                  | :---: | :---:  | :---:  | :----: | :----: | :----: | :----:  | :---: |
+| **Dashboard**         | ✅    | ✅    | ✅    | ✅     | ✅     | ✅     | ✅     | ✅    |
+| **Branches**          | ✅    | ✅    | ✅    | ❌     | ✅     | ✅     | ✅     | ❌    |
+| **Employee**          | ✅    | ✅    | ✅    | ✅     | ✅     | ✅     | ✅     | ❌    |
+| **Clients**           | ✅    | ✅    | ✅    | ✅     | ✅     | ✅     | ✅     | ✅    |
+| **Investments**       | ✅    | ✅    | ✅    | ✅     | ✅     | ✅     | ✅     | ❌    |
+| **Financial Plans**   | ✅    | ✅    | ✅    | ✅     | ✅     | ✅     | ✅     | ✅    |
+| **Commissions**       | ✅    | ✅    | ✅    | ✅     | ❌     | ❌     | ❌     | ❌    |
+| **Profit Tracking**   | ✅    | ✅    | ✅    | ❌     | ❌     | ❌     | ❌     | ❌    |
+| **HR & Payroll**      | ✅    | ✅    | ✅    | ❌     | ❌     | ❌     | ❌     | ❌    |
+| **Calculations**      | ✅    | ✅    | ✅    | ✅     | ✅     | ✅     | ✅     | ✅    |
+| **Users**             | ✅    | ✅    | ✅    | ❌     | ❌     | ❌     | ❌     | ❌    |
+| **Profile**           | ✅    | ✅    | ✅    | ✅     | ✅     | ✅     | ✅     | ✅    |
 
 ### Data Access Rules
-- **ADMIN / HR / DEV**: Can view and manage all data across all branches.
-- **BRANCH_MANAGER**: Can only view data (clients, employees) related to their assigned branch.
-- **REGIONAL_MANAGER / AGM**: Can view data for multiple branches assigned to them via the `MemberBranch` junction.
-- **EMPLOYEE**: Can only view their own assigned clients and personal dashboard/plans.
+- **ADMIN / HR / DEV**: Full visibility and management autonomy across all system branches.
+- **BRANCH_MANAGER**: Restricted to data (clients, employees) within their assigned branch.
+- **REGIONAL_MANAGER / ZONAL_MANAGER / AGM**: Access to multiple branches assigned via the `MemberBranch` junction.
+- **EMPLOYEE**: Restricted to personal dashboard and self-assigned client portfolios.
 
 ---
 
 ## Current Features
 
 ### 1. Core CRUD Operations
-- **Branch Management**: Create, Read, Update, and delete branches.
-- **Employee (Member) Management**: Full lifecycle management of employees, including position/rank, branch assignment, and role mapping.
-- **Financial Plan Management**: Define investment plans with specific durations and interest rates.
-- **Client Management**: Detailed client profiles including personal info, bank details, and legal documentation.
-- **Investment Tracking**: Recording and tracking investments linked to clients and financial plans.
+- **Branch Management**: Centralized control over branch lifecycle, including status (Active/Inactive) and location tracking.
+- **Employee (Member) Management**: Advanced profile management with position/rank hierarchies, probabilistic branch assignments, and historical record tracking.
+- **Financial Plan Management**: Flexible definition of investment durations, interest rates, and return frequencies (Monthly, Half-Yearly, Yearly).
+- **Client Management**: Deep profiles including KYC documentation (NIC, DL, Passport), employment details, and unique identifiers.
 
 ### 2. Client Onboarding & Document Management
-- **Self-Service Onboarding**: Generate and send secure, token-based links to clients via email.
-- **Digital Document Upload**: Clients can upload ID cards (Front/Back) and Payment Slips through a mobile-friendly interface.
-- **Signature Pad Integration**: Supports digital signatures for application forms.
+- **Token-Based Self-Service**: secure, time-limited upload links sent directly to clients for remote documentation submission.
+- **KYC & Legal Documents**: Automated handling of ID Front/Back images, payment slips, and signed proposals/agreements.
+- **Sign-Pad Integration**: Digital signature capture for legally binding enrollment forms.
+- **Beneficiary & Nominee Tracking**: Comprehensive capture of legal successors, including relationship types and bank account details for settlement.
 
 ### 3. Financial & Yield Engine
-- **Projection Calculator**: Real-time calculation of Monthly and Yearly yields for any investment amount based on selected financial plans.
-- **Commission System**: Automated calculation of **Personal Commission** and **Upline (ORC) Commission** based on the organizational hierarchy.
+- **Projection Calculator**: Dynamic simulation of yields based on Principal amount and selected Tenure.
+- **Commission System**: Tiered **Personal Commission** and **Upline (ORC) Commission** calculated automatically using organizational hierarchy and achievement thresholds.
+- **Profit Tracking Engine**: Real-time calculation of Net Profit per investment by deducting commission payouts from investment capital.
 
-### 4. Reporting & PDF Generation
-The system generates professional PDF reports for various business needs:
-- **Client Proposal/Application Forms**: Dynamic generation from UI data.
-- **Investment Receipts**: Official receipts for clients with plan breakdowns.
-- **Commission Statements**: Detailed earnings reports for employees.
-- **Branch Network Summaries**: High-level reports on branch performance and staff.
-- **Employee Lists**: Branch-specific staff reports.
-- **Investment Portfolios**: Full record exports for audit and tracking.
+### 4. HR, Payroll & Performance
+- **Evaluation Framework**: Monthly evaluation system for both Probation and Permanent staff. Includes auto-promotion logic after 6 months.
+- **Automated Payroll**: Monthly payroll processing including Basic Salary, Incentive Hits (Performance bonuses), Allowance Hits (75% threshold), and total Commission earnings.
+- **EPF/ETF Calculations**: Automatic calculation of Employee (8%) and Employer (12% EPF + 3% ETF) statutory contributions.
+- **Target Tracking**: Configurable monthly targets per position with excess bonus rates for over-achievement.
 
-### 5. System Administration
-- **User Management**: Control system login access, assign roles, and perform password resets.
-- **Activity Logging**: (Background) Tracking of CREATE, UPDATE, and DELETE actions for audit trails.
+### 5. Reporting & PDF Generation
+- **Client Artifacts**: Dynamic generation of Life Insurance Proposals, Application Forms, and Investment Receipts.
+- **Operational Reports**: Branch network summaries, salary sheets, and commission statements.
+- **Audit Tools**: Exportable investment portfolios and employee registries for compliance and auditing.
+
+### 6. System Administration
+- **User RBAC Management**: Granular control over system logins, role assignments, and branch linkages.
+- **Activity Logging**: Event-driven audit trails for CREATE, UPDATE, DELETE, and APPROVAL/REJECTION actions with metadata capture.
+

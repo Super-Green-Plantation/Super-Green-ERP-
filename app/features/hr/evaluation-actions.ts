@@ -10,7 +10,9 @@ import { revalidatePath } from "next/cache";
 
 export async function getEvaluationPreview(branchId: number, year: number, month: number) {
   try {
-    // All members in this branch with their position targets
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 1);
+
     const memberBranches = await prisma.memberBranch.findMany({
       where: { branchId },
       include: {
@@ -21,20 +23,19 @@ export async function getEvaluationPreview(branchId: number, year: number, month
                 positionTargets: true,
               },
             },
-            // Check if already evaluated this month
             monthlyEvaluations: {
               where: { year, month },
             },
-            // Get their clients' investments for this month
             clients: {
               include: {
                 investments: {
                   where: {
                     investmentDate: {
-                      gte: new Date(year, month - 1, 1),
-                      lt: new Date(year, month, 1),
+                      gte: startDate,
+                      lt: endDate,
                     },
                   },
+                  select: { amount: true },
                 },
               },
             },
@@ -44,12 +45,10 @@ export async function getEvaluationPreview(branchId: number, year: number, month
     });
 
     const previews = memberBranches.map(({ member }) => {
-      // Sum investment volume this month
       const volumeAchieved = member.clients.reduce((sum, client) =>
         sum + client.investments.reduce((s, inv) => s + inv.amount, 0), 0
       );
 
-      // Determine probation month index
       let periodNumber: number | null = null;
       let monthInPeriod: number | null = null;
       let targetAmount = 0;
@@ -71,7 +70,8 @@ export async function getEvaluationPreview(branchId: number, year: number, month
           monthInPeriod = (monthsElapsed % 3) + 1;
 
           const target = member.position?.positionTargets?.find(
-            (t) => Number(t.periodNumber) === periodNumber &&
+            (t) =>
+              Number(t.periodNumber) === periodNumber &&
               Number(t.monthNumber) === monthInPeriod
           );
 
@@ -82,7 +82,6 @@ export async function getEvaluationPreview(branchId: number, year: number, month
             targetHit = volumeAchieved >= targetAmount;
 
             if (targetHit) {
-              // Full target hit → full bonus
               bonusEarned = bonusAmount;
               if (periodNumber === 2 && excessRate > 0) {
                 excessBonus = (volumeAchieved - targetAmount) * excessRate;
@@ -91,13 +90,11 @@ export async function getEvaluationPreview(branchId: number, year: number, month
               target.partialThreshold > 0 &&
               volumeAchieved >= target.partialThreshold
             ) {
-              // Partial threshold hit → partial bonus
               bonusEarned = target.partialBonus;
             }
           }
         }
       }
-      // console.log("member:", member.nameWithInitials, "status:", member.status, "probationStart:", member.probationStartDate);
 
       const alreadyEvaluated = member.monthlyEvaluations.length > 0;
 
@@ -144,17 +141,15 @@ export async function runBatchEvaluation(
           include: {
             position: { include: { positionTargets: true } },
             monthlyEvaluations: { where: { year, month } },
-            clients: {
-              include: {
-                investments: {
-                  where: {
-                    investmentDate: {
-                      gte: new Date(year, month - 1, 1),
-                      lt: new Date(year, month, 1),
-                    },
-                  },
+            // Replace clients include with this:
+            advisorInvestments: {
+              where: {
+                investmentDate: {
+                  gte: new Date(year, month - 1, 1),
+                  lt: new Date(year, month, 1),
                 },
               },
+              select: { amount: true },
             },
           },
         },
@@ -170,9 +165,19 @@ export async function runBatchEvaluation(
         continue;
       }
 
-      const volumeAchieved = member.clients.reduce((sum, client) =>
-        sum + client.investments.reduce((s, inv) => s + inv.amount, 0), 0
-      );
+      // Replace the clients-based volume calculation:
+      const advisorInvestments = await prisma.investment.findMany({
+        where: {
+          advisorId: member.id,
+          investmentDate: {
+            gte: new Date(year, month - 1, 1),
+            lt: new Date(year, month, 1),
+          },
+        },
+        select: { amount: true },
+      });
+
+      const volumeAchieved = advisorInvestments.reduce((sum, inv) => sum + inv.amount, 0);
 
       let periodNumber: number | null = null;
       let monthInPeriod: number | null = null;
@@ -184,6 +189,10 @@ export async function runBatchEvaluation(
       if (member.status === "PROBATION" && member.probationStartDate) {
         const start = new Date(member.probationStartDate);
         const evalDate = new Date(year, month - 1, 1);
+        const existingEval = member.monthlyEvaluations?.[0];
+        const volumeAchieved = existingEval?.volumeAchieved ??
+          member.advisorInvestments?.reduce((sum, inv) => sum + inv.amount, 0) ?? 0;
+
         const monthsElapsed =
           (evalDate.getFullYear() - start.getFullYear()) * 12 +
           (evalDate.getMonth() - start.getMonth());

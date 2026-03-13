@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { getPositions, upsertPositionTargets } from "../position-targets-actions";
 import Link from "next/link";
+import Back from "@/app/components/Buttons/Back";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -210,9 +211,13 @@ export default function PositionTargetsPage() {
           </p>
         </div>
       </div>
-      <div>
-        <Link href={"/features/hr/salary"}>
-        For Permeant Employee
+
+      <div className="flex justify-end">
+        <Link
+          href="/features/hr/salary"
+          className="px-6 py-3 text-sm font-medium text-white bg-slate-900 rounded-lg shadow-sm hover:bg-slate-700 hover:shadow-md transition-all duration-200 "
+        >
+          For Permanent Employee
         </Link>
       </div>
 
@@ -247,9 +252,8 @@ export default function PositionTargetsPage() {
           return (
             <div
               key={position.id}
-              className={`bg-white rounded-2xl border transition-all duration-200 overflow-hidden ${
-                isExpanded ? "border-slate-300 shadow-md" : "border-slate-100 shadow-sm"
-              }`}
+              className={`bg-white rounded-2xl border transition-all duration-200 overflow-hidden ${isExpanded ? "border-slate-300 shadow-md" : "border-slate-100 shadow-sm"
+                }`}
             >
               {/* Accordion Header */}
               <div
@@ -303,11 +307,10 @@ export default function PositionTargetsPage() {
                       <div key={period} className="pt-5">
                         {/* Period header */}
                         <div className="flex items-center gap-3 mb-4">
-                          <div className={`px-3 py-1 rounded-lg text-[11px] font-black uppercase tracking-widest border ${
-                            isPeriod2
-                              ? "bg-violet-50 text-violet-700 border-violet-200"
-                              : "bg-blue-50 text-blue-700 border-blue-200"
-                          }`}>
+                          <div className={`px-3 py-1 rounded-lg text-[11px] font-black uppercase tracking-widest border ${isPeriod2
+                            ? "bg-violet-50 text-violet-700 border-violet-200"
+                            : "bg-blue-50 text-blue-700 border-blue-200"
+                            }`}>
                             Period {period} — {PERIOD_LABELS[period - 1]}
                           </div>
                           {isPeriod2 && (
@@ -332,9 +335,8 @@ export default function PositionTargetsPage() {
                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
                             <Award className="w-3 h-3 text-amber-400" /> Partial Bonus
                           </p>
-                          <p className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-1 ${
-                            isPeriod2 ? "text-slate-400" : "text-slate-200"
-                          }`}>
+                          <p className={`text-[10px] font-black uppercase tracking-widest flex items-center gap-1 ${isPeriod2 ? "text-slate-400" : "text-slate-200"
+                            }`}>
                             <Percent className="w-3 h-3 text-violet-400" /> Excess %
                           </p>
                         </div>

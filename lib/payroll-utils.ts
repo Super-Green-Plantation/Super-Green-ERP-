@@ -32,7 +32,7 @@ type PayrollBreakdown = {
  * EPF emp    → 12% of basicSalary (employer cost, not deducted)
  * ETF        → 3% of basicSalary (employer cost, not deducted)
  */
-export  function calculatePayroll(
+export function calculatePayroll(
   salary: {
     basicSalary: number;
     monthlyTarget: number;
@@ -45,6 +45,8 @@ export  function calculatePayroll(
     epfEmployee: number;
     epfEmployer: number;
     etfEmployer: number;
+    allowanceThresholdPermanent: number;
+    allowanceThresholdProbation: number;
   },
   memberStatus: "PROBATION" | "PERMANENT",
   volumeAchieved: number,
@@ -60,6 +62,9 @@ export  function calculatePayroll(
     epfEmployee,
     epfEmployer,
     etfEmployer,
+    allowanceThresholdPermanent,
+    allowanceThresholdProbation,
+
   } = salary;
 
   // Commission rate depends on permanent/probation status
@@ -72,9 +77,15 @@ export  function calculatePayroll(
         ? 0.05
         : 0.08;
 
-  // Thresholds
-  const allowanceHit = volumeAchieved >= monthlyTarget * 0.75;
-  const incentiveHit = volumeAchieved >= monthlyTarget;
+  // // Thresholds
+  // const allowanceHit = volumeAchieved >= monthlyTarget * 0.75;
+  // const incentiveHit = volumeAchieved >= monthlyTarget;
+  const allowanceThresholdPct = memberStatus === "PERMANENT"
+    ? salary.allowanceThresholdPermanent  // 1.0 for all except FA (0.75)
+    : salary.allowanceThresholdProbation; // 0.75 TL, 0.60 BM, 0.70 RM/ZM, 0.65 AGM
+
+  const allowanceHit = volumeAchieved >= monthlyTarget * allowanceThresholdPct;
+  const incentiveHit = volumeAchieved >= monthlyTarget; // always 100%
 
   const incentiveEarned = incentiveHit ? incentiveAmount : 0;
   const allowanceEarned = allowanceHit ? allowanceAmount : 0;
@@ -93,6 +104,7 @@ export  function calculatePayroll(
   const grossPay =
     basicSalary + incentiveEarned + allowanceEarned + orcEarned + commissionEarned;
   const netPay = grossPay - epfDeduction;
+
 
   return {
     basicSalary,

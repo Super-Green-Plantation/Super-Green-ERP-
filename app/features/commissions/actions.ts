@@ -38,7 +38,7 @@ export async function getEligibleCommissions(empNo: string, branchId: number) {
       where: { empNo },
       include: {
         position: { include: { orc: true } },
-        branches: { include: { branch: true, member:true } },
+        branches: { include: { branch: true, member: true } },
       },
     });
 
@@ -64,6 +64,8 @@ export async function processCommissions(data: {
 
   try {
     const result = await prisma.$transaction(async (tx) => {
+
+
       const createdCommissions: any[] = [];
 
       // Load investment
@@ -86,10 +88,7 @@ export async function processCommissions(data: {
         return serializeData({ alreadyProcessed: true, investment, commissions: existingCommissions });
       }
 
-      await tx.investment.update({
-        where: { id: investmentId },
-        data: { commissionsProcessed: true },
-      });
+
 
       // Load advisor
       const advisor = await tx.member.findUnique({
@@ -101,6 +100,44 @@ export async function processCommissions(data: {
               personalCommissionTiers: true,
             },
           },
+        },
+      });
+
+      if (!advisor) return null;
+
+      await tx.investment.update({
+        where: { id: investmentId },
+        data: {
+          commissionsProcessed: true,
+          advisorId: advisor.id
+        },
+      });
+
+      // Auto-update monthly payroll volume when commission is processed
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth() + 1;
+
+      if (!advisor) return null;
+
+      await tx.monthlyPayroll.upsert({
+        where: {
+          memberId_year_month: {
+            memberId: advisor.id,
+            year,
+            month,
+          },
+        },
+        update: {
+          volumeAchieved: { increment: investment.amount },
+        },
+        create: {
+          memberId: advisor.id,
+          year,
+          month,
+          basicSalary: 0,      // not yet calculated — HR runs full payroll later
+          monthlyTarget: 0,    // will be filled when payroll runs
+          volumeAchieved: investment.amount,
         },
       });
 

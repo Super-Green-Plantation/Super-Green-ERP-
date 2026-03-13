@@ -24,6 +24,7 @@ import { generateEmployeeCommissionPDF } from "@/app/utils/pdfGenerator";
 import ExportButton from "@/app/components/Doc/ExportStatement";
 import EmpModal from "@/app/components/Employee/Model";
 import { Member } from "@/app/types/member";
+import EmployeeStatusSection from "@/app/components/Employee/Employeestatussection";
 
 interface EmployeeDetailsPageProps {
   empId?: number;
@@ -217,17 +218,24 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: EmployeeDet
               <DetailItem label="Registered Branch" value={primaryBranch?.name || "N/A"} />
               <div>
                 <p className={labelStyles}>Operational Status</p>
-                <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tight ${
-                  primaryBranch?.status === "Active"
+                <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tight ${primaryBranch?.status === "Active"
                     ? "bg-emerald-100 text-emerald-700"
                     : "bg-red-100 text-red-700"
-                }`}>
+                  }`}>
                   <div className={`w-1.5 h-1.5 rounded-full ${primaryBranch?.status === "Active" ? "bg-emerald-500" : "bg-red-500"}`} />
                   {primaryBranch?.status || "N/A"}
                 </div>
               </div>
             </div>
           </section>
+
+          <EmployeeStatusSection
+            memberId={employee.id}
+            status={employee.status}
+            onStatusChange={(newStatus) =>
+              setEmployee((prev) => prev ? { ...prev, status: newStatus } : prev)
+            }
+          />
 
           {/* Employment details */}
           {(employee.dateOfJoin || employee.reportingPerson || employee.accNo) && (

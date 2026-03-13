@@ -433,26 +433,41 @@ export async function getMemberDetails(id: number) {
   }
 }
 
-export async function deleteEmployee(id: string) {
-  console.log(id);
+export async function deleteEmployee(id: number) {
   try {
-    const deleted = await prisma.member.delete({
-      where: { userId: id },
-    });
-
-    await prisma.user.delete({
+    // Fetch first to get userId before deleting
+    const member = await prisma.member.findUnique({
       where: { id },
+      select: { userId: true },
     });
 
-    await supabaseAdmin.auth.admin.deleteUser(String(id));
+    if (!member) return { success: false, error: "Member not found" };
+
+    // Delete member — cascades to MemberBranch, Commission, etc.
+    await prisma.member.delete({ where: { id } });
+
+    // Delete User record and Supabase auth user only if linked
+    if (member.userId) {
+      await prisma.user.delete({ where: { id: member.userId } }).catch(() => { });
+      await supabaseAdmin.auth.admin.deleteUser(member.userId).catch(() => { });
+    }
 
     revalidatePath("/features/employees");
-    // revalidatePath(`/features/branches/employees/${deleted.branchId}`);
-    return { success: true, member: deleted };
+    return { success: true };
   } catch (error) {
     console.error("Failed to delete employee:", error);
     return { success: false, error: "Failed to delete employee" };
   }
 }
 
+export async function toggleEmployeeStatus(id: number, currentStatus: "PROBATION" | "PERMANENT") {
+  const newStatus = currentStatus === "PROBATION" ? "PERMANENT" : "PROBATION";
 
+  await prisma.member.update({
+    where: { id },
+    data: { status: newStatus },
+  });
+
+  revalidatePath("/features/employees");
+  return { success: true, newStatus: newStatus as "PROBATION" | "PERMANENT" };
+}

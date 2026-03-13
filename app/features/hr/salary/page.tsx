@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { getPositionSalaries, upsertPositionSalary } from "../salary-config-action";
+import Back from "@/app/components/Buttons/Back";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -172,9 +173,13 @@ export default function SalaryConfigPage() {
     <div className="max-w-3xl mx-auto px-4 py-8 space-y-3">
       {/* Header */}
       <div className="mb-6">
+        <div className="flex gap-3 items-center">
+           <Back/>
         <h1 className="text-xl font-black text-slate-800 uppercase tracking-tight">
           Salary Configuration
         </h1>
+        </div>
+       
         <p className="text-sm text-slate-400 mt-1">
           Configure basic salary, targets, incentives, allowances and commission rates per position.
         </p>
