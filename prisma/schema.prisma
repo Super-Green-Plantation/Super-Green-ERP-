@@ -42,17 +42,11 @@ enum Title {
 }
 
 model Position {
-  id         Int   @id @default(autoincrement())
-  title      Title
-  baseSalary Float
-  rank       Int   @unique
-
+  id    Int   @id @default(autoincrement())
+  title Title
+  rank  Int   @unique
   orc CommissionRate?
-
   members Member[]
-
-  personalCommissionTiers PersonalCommissionTier[]
-
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   positionTargets PositionTarget[]
@@ -66,18 +60,6 @@ model CommissionRate {
   positionId Int      @unique
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
-}
-
-model PersonalCommissionTier {
-  id         Int     @id @default(autoincrement())
-  positionId Int
-  minAmount  Float
-  maxAmount  Float? // null = no upper limit
-  rate       Decimal
-
-  position Position @relation(fields: [positionId], references: [id])
-
-  @@index([positionId])
 }
 
 //Junction Table
@@ -105,7 +87,7 @@ model PermanentEvaluation {
   year            Int
   month           Int
   volumeAchieved  Float
-  monthlyTarget   Float // snapshot
+  monthlyTarget   Float 
   incentiveEarned Float    @default(0)
   allowanceEarned Float    @default(0)
   incentiveHit    Boolean  @default(false)
@@ -120,7 +102,6 @@ model PositionSalary {
   positionId Int      @unique
   position   Position @relation(fields: [positionId], references: [id])
 
-  basicSalary     Float // e.g. 30000
   monthlyTarget   Float // e.g. 3_000_000
   incentiveAmount Float // paid at 100% target
   allowanceAmount Float // paid at 75% target
@@ -135,6 +116,9 @@ model PositionSalary {
 
   allowanceThresholdProbation Float @default(0.75)
   allowanceThresholdPermanent Float @default(1.0)
+
+  basicSalaryPermanent Float @default(0)
+  basicSalaryProbation Float @default(0)
 }
 
 model MonthlyPayroll {
@@ -144,9 +128,9 @@ model MonthlyPayroll {
   year     Int
   month    Int
 
-  basicSalary    Float
-  volumeAchieved Float @default(0)
-  monthlyTarget  Float
+  basicSalaryPermanent Float @default(0)
+  volumeAchieved       Float @default(0)
+  monthlyTarget        Float
 
   incentiveEarned  Float @default(0)
   allowanceEarned  Float @default(0)
@@ -174,10 +158,10 @@ model Member {
   nameWithInitials  String?
   email             String?   @unique
   empNo             String    @unique
+  epfNo             String
   phone             String?
   nic               String?
   dob               DateTime?
-  birthday          DateTime?
   gender            String?
   civilStatus       String?
   address           String?
@@ -352,8 +336,8 @@ model Investment {
   planId Int?
   plan   FinancialPlan? @relation(fields: [planId], references: [id])
 
-  advisorId Int?
-  advisor    Member?      @relation("AdvisorInvestments", fields: [advisorId], references: [id], onDelete: SetNull , onUpdate: Cascade)
+  advisorId  Int?
+  advisor    Member?      @relation("AdvisorInvestments", fields: [advisorId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   commission Commission[]
 
   profit Profit? // optional is safer 

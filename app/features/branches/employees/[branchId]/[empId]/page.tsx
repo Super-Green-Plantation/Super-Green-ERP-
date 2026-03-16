@@ -25,6 +25,8 @@ import ExportButton from "@/app/components/Doc/ExportStatement";
 import EmpModal from "@/app/components/Employee/Model";
 import { Member } from "@/app/types/member";
 import EmployeeStatusSection from "@/app/components/Employee/Employeestatussection";
+import Loading from "@/app/components/Status/Loading";
+import Image from "next/image";
 
 interface EmployeeDetailsPageProps {
   empId?: number;
@@ -67,21 +69,7 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: EmployeeDet
     fetchAllCommission();
   }, [resolvedEmpId]);
 
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] bg-gray-50 gap-4">
-        <div className="relative">
-          <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-2 h-2 bg-blue-600 rounded-full" />
-          </div>
-        </div>
-        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest animate-pulse">
-          Loading Profile
-        </p>
-      </div>
-    );
-  }
+  if (loading) return <Loading />
 
   if (!employee) return null;
 
@@ -97,8 +85,21 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: EmployeeDet
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-6">
         <div className="flex items-center gap-3 sm:gap-5 min-w-0">
           {!readOnly && <Back />}
-          <div className="h-12 w-12 sm:h-16 sm:w-16 shrink-0 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-200">
-            <User className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
+          <div className=" shrink-0 flex items-center rounded-full justify-center shadow-lg shadow-blue-200">
+
+            {employee.profilePic ? (
+              <Image
+                src={employee.profilePic}
+                alt={employee.nameWithInitials ?? "Profile"}
+                width={40}
+                height={40}
+                className="w-10 h-10 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                <User className="w-5 h-5 text-gray-400" />
+              </div>
+            )}
           </div>
           <div className="min-w-0">
             <h1 className="text-xl sm:text-3xl font-black text-gray-900 tracking-tight truncate">
@@ -149,14 +150,6 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: EmployeeDet
           </div>
 
           <div className="relative z-10 mt-4 grid sm:grid-cols-2 gap-3 text-center">
-            <div className="p-2 bg-white/5 rounded-xl border border-white/5">
-              <p className="text-[9px] text-gray-500 uppercase font-black mb-0.5">Personal</p>
-              <p className="text-sm font-semibold">{Number(employee.position?.personalCommissionTiers[0]?.rate)}%</p>
-            </div>
-            {/* <div className="p-2 bg-white/5 rounded-xl border border-white/5">
-              <p className="text-[9px] text-gray-500 uppercase font-semibold mb-0.5">ORC</p>
-              <p className="text-sm font-semibold">{Number(employee.position?.orc?.rate)}%</p>
-            </div> */}
             <div className="p-2 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
               <p className="text-[9px] text-emerald-400 uppercase font-semibold mb-0.5">Earned</p>
               <p className="text-sm font-semibold text-emerald-400">
@@ -186,6 +179,7 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: EmployeeDet
               <DetailItem label="Email Address" value={employee.email} icon={<Mail className="w-3.5 h-3.5" />} />
               <DetailItem label="Phone Line" value={employee.phone} icon={<Phone className="w-3.5 h-3.5" />} />
               <DetailItem label="Employee Code" value={employee.empNo} icon={<Hash className="w-3.5 h-3.5" />} />
+              <DetailItem label="EPF Number" value={employee.epfNo} icon={<Hash className="w-3.5 h-3.5" />} />
               {employee.phone2 && (
                 <DetailItem label="Phone 2" value={employee.phone2} icon={<Phone className="w-3.5 h-3.5" />} />
               )}
@@ -219,8 +213,8 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: EmployeeDet
               <div>
                 <p className={labelStyles}>Operational Status</p>
                 <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tight ${primaryBranch?.status === "Active"
-                    ? "bg-emerald-100 text-emerald-700"
-                    : "bg-red-100 text-red-700"
+                  ? "bg-emerald-100 text-emerald-700"
+                  : "bg-red-100 text-red-700"
                   }`}>
                   <div className={`w-1.5 h-1.5 rounded-full ${primaryBranch?.status === "Active" ? "bg-emerald-500" : "bg-red-500"}`} />
                   {primaryBranch?.status || "N/A"}
@@ -295,10 +289,6 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: EmployeeDet
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-gray-400 font-medium">Rank Seniority</span>
                   <span className="font-semibold text-blue-400">Level {employee.position?.rank}</span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-400 font-medium">Personal Comm.</span>
-                  <span className="font-semibold">{Number(employee.position?.personalCommissionTiers[0]?.rate)}%</span>
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-gray-400 font-medium">ORC Overriding</span>

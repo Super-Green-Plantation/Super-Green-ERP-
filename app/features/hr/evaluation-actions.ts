@@ -58,6 +58,8 @@ export async function getEvaluationPreview(branchId: number, year: number, month
       let bonusEarned = 0;
       let excessBonus = 0;
 
+      console.log("probation check:", member.empNo, member.status, member.probationStartDate);
+
       if (member.status === "PROBATION" && member.probationStartDate) {
         const start = new Date(member.probationStartDate);
         const evalDate = new Date(year, month - 1, 1);

@@ -19,9 +19,7 @@ export async function getUpperMembers(
       },
     },
     include: {
-      position: {
-        include: { orc: true, personalCommissionTiers: true },
-      },
+      position:true
     },
   });
 }

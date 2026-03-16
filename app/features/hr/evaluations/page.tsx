@@ -91,6 +91,9 @@ export default function EvaluationsPage() {
     } finally { setRunning(false); }
   };
 
+  console.log(previews);
+  
+
   const probationCount = previews.filter(p => p.status === "PROBATION").length;
   const permanentCount = previews.length - probationCount;
   const targetHitCount = previews.filter(p => p.targetHit).length;
@@ -242,7 +245,7 @@ export default function EvaluationsPage() {
                             </p>
                             <VolumeBar achieved={p.volumeAchieved} target={p.targetAmount} />
                           </div>
-                        ) : p.status === "PERMANENT" ? (
+                        ) : p.status === "PERMANENT" ? ( 
                           <span className="text-xs font-semibold text-slate-500">
                             {p.volumeAchieved > 0 ? `Rs. ${fmt(p.volumeAchieved)}` : "—"}
                           </span>

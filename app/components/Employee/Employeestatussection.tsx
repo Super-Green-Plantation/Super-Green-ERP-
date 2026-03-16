@@ -14,6 +14,7 @@ import {
     TrendingUp
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import Loading from "../Status/Loading";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -201,6 +202,8 @@ function PermanentStatus({ data, status, onToggle, toggling }: {
     toggling: boolean;
 }) {
 
+    console.log(data);
+    
     const { salary, currentPayroll, payrollHistory } = data;
 
     if (!salary) {
@@ -372,13 +375,7 @@ export default function EmployeeStatusSection({
     };
 
 
-    if (loading) {
-        return (
-            <div className="flex items-center justify-center h-24">
-                <Loader2 className="w-5 h-5 animate-spin text-slate-300" />
-            </div>
-        );
-    }
+    if (loading) return <Loading />
 
     if (!data) return null;
 

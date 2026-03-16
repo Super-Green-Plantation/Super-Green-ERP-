@@ -35,7 +35,8 @@ export async function getPositionSalaries() {
  */
 export async function upsertPositionSalary(data: {
   positionId: number;
-  basicSalary: number;
+  basicSalaryPermanent: number;
+  // basicSalaryProbation: number;
   monthlyTarget: number;
   incentiveAmount: number;
   allowanceAmount: number;

@@ -214,7 +214,7 @@ const Page = () => {
 
       console.log(
         "upper member ORC rate:",
-        members?.upperMember?.[0]?.position?.orc?.rate,
+        members?.upperMember?.[0]?.position?.salary?.orcRate,
       );
     };
 

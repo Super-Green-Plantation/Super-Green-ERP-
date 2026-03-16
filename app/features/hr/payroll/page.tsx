@@ -104,6 +104,8 @@ export default function PayrollPage() {
     }
   };
 
+  
+
   // Derived stats
   const totalGross = preview.reduce((s, r) => s + (r.breakdown?.grossPay ?? 0), 0);
   const totalNet = preview.reduce((s, r) => s + (r.breakdown?.netPay ?? 0), 0);
@@ -113,6 +115,8 @@ export default function PayrollPage() {
   const alreadyProcessedCount = preview.filter((r) => r.alreadyProcessed).length;
   const unconfiguredCount = preview.filter((r) => !r.salaryConfigured).length;
 
+  console.log(preview);
+  
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
 
@@ -277,7 +281,7 @@ export default function PayrollPage() {
                     ) : (
                       <>
                         <td className="px-4 py-3 text-right text-xs font-semibold text-slate-600">
-                          {fmt(row.breakdown?.basicSalary ?? 0)}
+                          {fmt(row.breakdown?.basicSalaryPermanent ?? 0)}
                         </td>
                         <td className="px-4 py-3 text-right text-xs font-semibold">
                           <span className={row.breakdown?.incentiveHit ? "text-emerald-600 font-bold" : "text-slate-400"}>

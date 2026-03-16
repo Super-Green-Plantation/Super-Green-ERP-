@@ -7,7 +7,6 @@ import { revalidatePath } from "next/cache";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type PayrollBreakdown = {
-    basicSalary: number;
     monthlyTarget: number;
     volumeAchieved: number;
     incentiveEarned: number;
@@ -44,34 +43,68 @@ export async function getPayrollPreview(
     month: number,
     volumes: Record<number, number> = {},
 ) {
+    console.log("####################",branchId, year, month, volumes);
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 1);
+
     const branchMembers = await prisma.memberBranch.findMany({
         where: { branchId },
         include: {
             member: {
                 include: {
                     position: { include: { salary: true } },
-                    monthlyPayrolls: {
-                        where: { year, month },
+                    monthlyPayrolls: { where: { year, month } },
+                    commissions: {
+                        where: {
+                            type: "PERSONAL",
+                            investment: {
+                                investmentDate: { gte: startDate, lt: endDate },
+                            },
+                        },
+                        select: { amount: true },
                     },
                 },
             },
         },
     });
 
+    
+
     const rows = branchMembers.map(({ member }: any) => {
         const salary = member.position?.salary;
         const existing = member.monthlyPayrolls?.[0] ?? null;
-        const volumeAchieved = volumes[member.id] ?? existing?.volumeAchieved ?? 0;
+        const volumeAchieved = volumes[member.id] ?? Number(existing?.volumeAchieved ?? 0);
 
-        let breakdown: PayrollBreakdown | null = null;
-        if (salary) {
-            breakdown = calculatePayroll(
-                salary,
-                member.status,
-                volumeAchieved,
-            );
-        }
+        const actualCommissionEarned = member.commissions.reduce(
+            (sum: number, c: any) => sum + Number(c.amount),
+            0
+        );
 
+        const normalizedSalary = {
+            ...salary,
+            basicSalaryPermanent: Number(salary.basicSalaryPermanent),
+            basicSalaryProbation: Number(salary.basicSalaryProbation),
+            monthlyTarget: Number(salary.monthlyTarget),
+            incentiveAmount: Number(salary.incentiveAmount),
+            allowanceAmount: Number(salary.allowanceAmount),
+            orcRate: Number(salary.orcRate),
+            commRateLow: Number(salary.commRateLow),
+            commRateHigh: Number(salary.commRateHigh),
+            commThreshold: Number(salary.commThreshold),
+            epfEmployee: Number(salary.epfEmployee),
+            epfEmployer: Number(salary.epfEmployer),
+            etfEmployer: Number(salary.etfEmployer),
+            allowanceThresholdPermanent: Number(salary.allowanceThresholdPermanent),
+            allowanceThresholdProbation: Number(salary.allowanceThresholdProbation),
+        };
+
+        const breakdown = calculatePayroll(
+            normalizedSalary,
+            actualCommissionEarned,
+            member.status,
+            volumeAchieved,
+            0,
+        );
         return {
             memberId: member.id,
             name: member.nameWithInitials ?? member.name,
@@ -87,6 +120,7 @@ export async function getPayrollPreview(
 
     return rows;
 }
+
 
 // ─── runMonthlyPayroll ────────────────────────────────────────────────────────
 /**
@@ -107,9 +141,12 @@ export async function runMonthlyPayroll(
     branchId: number,
     year: number,
     month: number,
-    volumes: Record<number, number>, // { memberId: volumeAchieved }
+    volumes: Record<number, number>,
     force = false,
 ) {
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 1);
+
     const branchMembers = await prisma.memberBranch.findMany({
         where: { branchId },
         include: {
@@ -117,6 +154,15 @@ export async function runMonthlyPayroll(
                 include: {
                     position: { include: { salary: true } },
                     monthlyPayrolls: { where: { year, month } },
+                    commissions: {
+                        where: {
+                            type: "PERSONAL",
+                            investment: {
+                                investmentDate: { gte: startDate, lt: endDate },
+                            },
+                        },
+                        select: { amount: true },
+                    },
                 },
             },
         },
@@ -141,20 +187,59 @@ export async function runMonthlyPayroll(
         }
 
         const volumeAchieved = volumes[member.id] ?? 0;
-        const breakdown = calculatePayroll(salary, member.status, volumeAchieved);
+
+        console.log("commissions for", member.empNo, JSON.stringify(member.commissions));
+
+
+
+
+
+        const actualCommissionEarned = member.commissions.reduce(
+            (sum: number, c: any) => sum + Number(c.amount),
+            0
+        );
+
+        console.log("calculatePayroll inputs:", {
+            empNo: member.empNo,
+            actualCommissionEarned,
+            status: member.status,
+            volumeAchieved,
+        });
+        const normalizedSalary = {
+            ...salary,
+            basicSalaryPermanent: Number(salary.basicSalaryPermanent),
+            basicSalaryProbation: Number(salary.basicSalaryProbation),
+            monthlyTarget: Number(salary.monthlyTarget),
+            incentiveAmount: Number(salary.incentiveAmount),
+            allowanceAmount: Number(salary.allowanceAmount),
+            orcRate: Number(salary.orcRate),
+            commRateLow: Number(salary.commRateLow),
+            commRateHigh: Number(salary.commRateHigh),
+            commThreshold: Number(salary.commThreshold),
+            epfEmployee: Number(salary.epfEmployee),
+            epfEmployer: Number(salary.epfEmployer),
+            etfEmployer: Number(salary.etfEmployer),
+            allowanceThresholdPermanent: Number(salary.allowanceThresholdPermanent),
+            allowanceThresholdProbation: Number(salary.allowanceThresholdProbation),
+        };
+
+
+
+        const breakdown = calculatePayroll(
+            normalizedSalary,
+            actualCommissionEarned,  // commissionEarned
+            member.status,           // memberStatus
+            volumeAchieved,          // volumeAchieved
+            0,                       // orcVolume — wire up later
+        );
+
+        console.log("breakdown:", JSON.stringify(breakdown));
 
         try {
             await prisma.monthlyPayroll.upsert({
                 where: { memberId_year_month: { memberId: member.id, year, month } },
-                create: {
-                    memberId: member.id,
-                    year,
-                    month,
-                    ...breakdown,
-                },
-                update: {
-                    ...breakdown,
-                },
+                create: { memberId: member.id, year, month, ...breakdown },
+                update: { ...breakdown },
             });
             processed++;
         } catch (e) {

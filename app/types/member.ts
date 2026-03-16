@@ -17,6 +17,7 @@ export interface Member {
   // --- Core (required) ---
   // name: string;
   empNo: string;
+  epfNo:string;
   position: Position;
 
   // --- Branch(es) ---
@@ -61,6 +62,7 @@ export interface Member {
   // --- Timestamps ---
   createdAt: string | Date;
   updatedAt: string | Date;
+  profilePic:string | undefined
 }
 
 export interface Position {
@@ -72,7 +74,26 @@ export interface Position {
   createdAt: string | Date;
   updatedAt: string | Date;
   commissionRate?: CommissionRate;
-  personalCommissionTiers: PersonalCommissionTiers[]
+  personalCommissionTiers: PersonalCommissionTiers[];
+  salary?: PositionSalary;
+}
+
+export interface PositionSalary {
+  id: number;
+  positionId: number;
+  basicSalaryPermanent: number;
+  monthlyTarget: number;
+  incentiveAmount: number;
+  allowanceAmount: number;
+  orcRate: number;       // stored as decimal, e.g. 0.02 = 2%
+  commRateLow: number;
+  commRateHigh: number;
+  commThreshold: number;
+  epfEmployee: number;
+  epfEmployer: number;
+  etfEmployer: number;
+  allowanceThresholdProbation: number;
+  allowanceThresholdPermanent: number;
 }
 
 export interface PersonalCommissionTiers {

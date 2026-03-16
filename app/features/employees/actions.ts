@@ -1,18 +1,16 @@
 "use server"
 
-import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
-import { getUpperMembers } from "@/lib/member";
 import { serializeData } from "@/app/utils/serializers";
 import { generateTempPassword, sendWelcomeEmail } from "@/lib/email";
+import { getUpperMembers } from "@/lib/member";
+import { prisma } from "@/lib/prisma";
 import { supabaseAdmin } from "@/prisma/seed";
-import { createClient } from "@/lib/supabase/client";
-import { redirect } from "next/navigation";
-import { Member } from "@prisma/client";
+import { revalidatePath } from "next/cache";
 
 interface EmpData {
   // name: string;
   empNo: string;
+  epfNo: string;
   positionId: number;
 
   // Replaces branchId — always at least one entry (the current branch)
@@ -30,7 +28,6 @@ interface EmpData {
   // Personal
   nic?: string;
   dob?: string;
-  birthday?: string;
   gender?: string;
   civilStatus?: string;
   address?: string;
@@ -43,15 +40,17 @@ interface EmpData {
   remark?: string;
 
   status: "PROBATION" | "PERMANENT";
-  probationStartDate: string | null;
+  probationStartDate: Date | null;
 
   // Banking
   accNo?: string;
   bank?: string;
   bankBranch?: string;
+  profilePic?: string;
 }
 export async function createEmployee(data: EmpData) {
   let supabaseUserId: string | null = null;
+  console.log(data);
 
   try {
     // ── WITH EMAIL: create Supabase user + User record + Member ──────────────
@@ -89,12 +88,12 @@ export async function createEmployee(data: EmpData) {
             email: data.email,
             phone: data.phone || null,
             empNo: data.empNo,
+            epfNo: data.epfNo,
             totalCommission: data.totalCommission,
             positionId: data.positionId,
             nameWithInitials: data.nameWithInitials || null,
             nic: data.nic || null,
             dob: data.dob ? new Date(data.dob) : null,
-            birthday: data.birthday ? new Date(data.birthday) : null,
             gender: data.gender || null,
             civilStatus: data.civilStatus || null,
             address: data.address || null,
@@ -106,12 +105,14 @@ export async function createEmployee(data: EmpData) {
             accNo: data.accNo || null,
             bank: data.bank || null,
             bankBranch: data.bankBranch || null,
+            status: data.status,
             branches: {
               create: data.branchIds.map((branchId) => ({ branchId })),
             },
             probationStartDate: data.probationStartDate
               ? new Date(data.probationStartDate)
               : null,
+            profilePic: data.profilePic
           },
         });
       });
@@ -139,11 +140,11 @@ export async function createEmployee(data: EmpData) {
         nameWithInitials: data.nameWithInitials,
         phone: data.phone || null,
         empNo: data.empNo,
+        epfNo: data.epfNo,
         totalCommission: data.totalCommission,
         positionId: data.positionId,
         nic: data.nic || null,
         dob: data.dob ? new Date(data.dob) : null,
-        birthday: data.birthday ? new Date(data.birthday) : null,
         gender: data.gender || null,
         civilStatus: data.civilStatus || null,
         address: data.address || null,
@@ -154,10 +155,15 @@ export async function createEmployee(data: EmpData) {
         remark: data.remark || null,
         accNo: data.accNo || null,
         bank: data.bank || null,
+        status: data.status,
         bankBranch: data.bankBranch || null,
         branches: {
           create: data.branchIds.map((branchId) => ({ branchId })),
         },
+        probationStartDate: data.probationStartDate
+          ? new Date(data.probationStartDate)
+          : null,
+        profilePic: data.profilePic
       },
     });
 
@@ -193,7 +199,9 @@ export async function getEmployeesByBranch(
       branches: {
         some: { branchId },
       },
+
     },
+
     orderBy: { id: "asc" },
     take: limit + 1, // fetch one extra to determine if there's a next page
     ...(cursor
@@ -206,7 +214,6 @@ export async function getEmployeesByBranch(
       position: {
         include: {
           orc: true,
-          personalCommissionTiers: true,
         },
       },
     },
@@ -357,10 +364,10 @@ export async function updateEmployee(memberId: number, data: EmpData) {
         ...(userId && !existing.userId && { userId }),
 
         // Core
-        // : data.name,
         nameWithInitials: data.nameWithInitials,
         status: data.status,
         empNo: data.empNo,
+        epfNo: data.epfNo,
         email: data.email || null,
         phone: data.phone || null,
         totalCommission: Number(data.totalCommission),
@@ -373,10 +380,10 @@ export async function updateEmployee(memberId: number, data: EmpData) {
         // Personal
         nic: data.nic || null,
         dob: data.dob ? new Date(data.dob) : null,
-        birthday: data.birthday ? new Date(data.birthday) : null,
         gender: data.gender || null,
         civilStatus: data.civilStatus || null,
         address: data.address || null,
+        profilePic: data.profilePic,
 
         // Employment
         reportingPerson: data.reportingPerson || null,
@@ -384,6 +391,7 @@ export async function updateEmployee(memberId: number, data: EmpData) {
         appointmentLetter: data.appointmentLetter || null,
         confirmation: data.confirmation || null,
         remark: data.remark || null,
+        probationStartDate: data.probationStartDate || null,
 
         // Banking
         accNo: data.accNo || null,
@@ -416,7 +424,6 @@ export async function getMemberDetails(id: number) {
         position: {
           include: {
             orc: true,
-            personalCommissionTiers: true,
           },
         },
       },
@@ -470,4 +477,33 @@ export async function toggleEmployeeStatus(id: number, currentStatus: "PROBATION
 
   revalidatePath("/features/employees");
   return { success: true, newStatus: newStatus as "PROBATION" | "PERMANENT" };
+}
+
+
+export async function uploadProfilePic(file: File, empNo: string) {
+  try {
+    const ext = file.name.split(".").pop();
+    const path = `profile-pictures/${empNo}-${Date.now()}.${ext}`;
+
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    const { error } = await supabaseAdmin.storage
+      .from("employee-assets")        // your bucket name
+      .upload(path, buffer, {
+        contentType: file.type,
+        upsert: true,
+      });
+
+    if (error) throw error;
+
+    const { data } = supabaseAdmin.storage
+      .from("employee-assets")
+      .getPublicUrl(path);
+
+    return { success: true, url: data.publicUrl };
+  } catch (err: any) {
+    console.error("uploadProfilePic error:", err);
+    return { success: false, error: err.message ?? "Upload failed" };
+  }
 }

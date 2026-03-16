@@ -11,7 +11,6 @@ export async function getPositions() {
     orderBy: { rank: "asc" },
     include: {
       orc: true,
-      personalCommissionTiers: true,
       positionTargets: true, // ← correct relation name
     },
   });

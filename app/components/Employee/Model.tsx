@@ -18,12 +18,13 @@ import {
   Users,
   ChevronDown,
   Check,
+  Upload,
 } from "lucide-react";
 import { Member } from "@/app/types/member";
 import { getBranchById, getBranches } from "@/app/features/branches/actions";
 import { useParams } from "next/navigation";
 import { Branch } from "@/app/types/branch";
-import { createEmployee, updateEmployee } from "@/app/features/employees/actions";
+import { createEmployee, updateEmployee, uploadProfilePic } from "@/app/features/employees/actions";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -54,12 +55,31 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
   const [loading, setLoading] = useState(false);
   const [branchDropdownOpen, setBranchDropdownOpen] = useState(false);
 
+  const [profilePicFile, setProfilePicFile] = useState<File | null>(null);
+  const [profilePicPreview, setProfilePicPreview] = useState<string>("");
+  const [uploadingPic, setUploadingPic] = useState(false);
+
+
+
+  useEffect(() => {
+    if (mode === "edit" && initialData?.profilePic) {
+      setProfilePicPreview(initialData.profilePic);
+    }
+  }, [mode, initialData]);
+
+  const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setProfilePicFile(file);
+    setProfilePicPreview(URL.createObjectURL(file));
+  };
   // Active section tab for grouping the many fields
   const [activeTab, setActiveTab] = useState<"basic" | "personal" | "employment">("basic");
 
   const [formData, setFormData] = useState({
     // --- Core (required) ---
     empNo: "",
+    epfNo: "",
     positionId: "",
 
     // --- Branch(es) ---
@@ -77,7 +97,6 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
     // --- Personal ---
     nic: "",
     dob: "",
-    birthday: "",         // reminder date if different
     gender: "",
     civilStatus: "",
     address: "",
@@ -95,6 +114,7 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
     bankBranch: "",
     status: "PROBATION" as "PROBATION" | "PERMANENT",
     probationStartDate: "",
+    profilePic: "" ,
   });
 
   // Fetch current branch info
@@ -117,6 +137,7 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
       setFormData({
         nameWithInitials: initialData.nameWithInitials ?? "",
         empNo: initialData.empNo ?? "",
+        epfNo: initialData.epfNo ?? "",
         positionId: String(initialData.position?.id ?? ""),
         branchIds: existingBranchIds,
         email: initialData.email ?? "",
@@ -125,7 +146,6 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
         totalCommission: initialData.totalCommission ?? 0,
         nic: initialData.nic ?? "",
         dob: initialData.dob ? initialData.dob.toString().slice(0, 10) : "",
-        birthday: initialData.birthday ? initialData.birthday.toString().slice(0, 10) : "",
         gender: initialData.gender ?? "",
         civilStatus: initialData.civilStatus ?? "",
         address: initialData.address ?? "",
@@ -136,13 +156,17 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
         remark: initialData.remark ?? "",
         accNo: initialData.accNo ?? "",
         bank: initialData.bank ?? "",
+        profilePic: "",
         bankBranch: initialData.bankBranch ?? "",
         status: initialData.status ?? "PROBATION",
         probationStartDate: initialData.probationStartDate
-          ? initialData.probationStartDate.toString().slice(0, 10)
+          ? initialData.probationStartDate.toISOString().slice(0, 10)
           : "",
       });
     }
+
+    console.log("initialData dates:", initialData?.probationStartDate, initialData?.dateOfJoin);
+
   }, [mode, initialData, branchId]);
 
   const isMultiBranch = MULTI_BRANCH_POSITION_IDS.includes(Number(formData.positionId));
@@ -177,11 +201,30 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
     e.preventDefault();
     setLoading(true);
     try {
+      let profilePicUrl:string | undefined = formData.profilePic;
+
+      // Upload profile pic if a new file was selected
+      if (profilePicFile) {
+        setUploadingPic(true);
+        const uploadRes = await uploadProfilePic(profilePicFile, formData.empNo);
+        setUploadingPic(false);
+        if (!uploadRes.success) {
+          toast.error(uploadRes.error ?? "Failed to upload profile picture");
+          return;
+        }
+        profilePicUrl = uploadRes.url;
+      }
+
       const payload = {
         ...formData,
+        profilePic: profilePicUrl,
         positionId: Number(formData.positionId),
         branchIds: isMultiBranch ? formData.branchIds : [Number(branchId)],
-        probationStartDate: formData.probationStartDate || null, // "" → null
+        probationStartDate: formData.status === "PROBATION"
+          ? mode === "edit" && formData.probationStartDate
+            ? new Date(formData.probationStartDate)
+            : (formData.dateOfJoin ? new Date(formData.dateOfJoin) : new Date())
+          : null,
       };
 
       if (mode === "add") {
@@ -205,10 +248,6 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
       setLoading(false);
     }
   };
-
-  if (mode === "edit") {
-
-  }
 
   // ─── Styles ────────────────────────────────────────────────
   const inputStyles =
@@ -279,12 +318,12 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                 </div>
 
                 {/* Emp No */}
-                <div>
+                <div className="w-full">
                   <label className={labelStyles}>Employee ID <span className="text-red-400">*</span></label>
                   <div className="relative">
                     <Hash className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
                     <input
-                      placeholder="EMP-000"
+                      placeholder="EMP-001"
                       value={formData.empNo}
                       onChange={(e) => setFormData({ ...formData, empNo: e.target.value })}
                       required
@@ -292,6 +331,23 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                     />
                   </div>
                 </div>
+
+
+                <div className="w-full">
+                  <label className={labelStyles}>EPF Number <span className="text-red-400">*</span></label>
+                  <div className="relative">
+                    <Hash className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                    <input
+                      placeholder="EPF-001"
+                      value={formData.epfNo}
+                      onChange={(e) => setFormData({ ...formData, epfNo: e.target.value })}
+                      required
+                      className={inputStyles}
+                    />
+                  </div>
+
+                </div>
+
 
 
                 {/* Email */}
@@ -565,8 +621,8 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                     <Calendar className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
                     <input
                       type="date"
-                      value={formData.birthday}
-                      onChange={(e) => setFormData({ ...formData, birthday: e.target.value })}
+                      value={formData.dob}
+                      onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
                       className={inputStyles}
                     />
                   </div>
@@ -586,6 +642,56 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                     />
                   </div>
                 </div>
+
+                {/* Profile Picture */}
+                <div className="md:col-span-2">
+                  <label className={labelStyles}>Profile Picture</label>
+                  <div className="flex items-center gap-4">
+                    {/* Preview */}
+                    <div className="w-16 h-16 rounded-full border-2 border-gray-200 overflow-hidden bg-gray-100 shrink-0 flex items-center justify-center">
+                      {profilePicPreview ? (
+                        <img
+                          src={profilePicPreview}
+                          alt="Profile"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <User className="w-7 h-7 text-gray-300" />
+                      )}
+                    </div>
+
+                    {/* Upload button */}
+                    <div className="flex-1">
+                      <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors">
+                        <Upload className="w-4 h-4" />
+                        {profilePicPreview ? "Change Photo" : "Upload Photo"}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleProfilePicChange}
+                          className="hidden"
+                        />
+                      </label>
+                      <p className="text-xs text-gray-400 mt-1">JPG, PNG up to 2MB</p>
+                    </div>
+
+                    {/* Remove button */}
+                    {profilePicPreview && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setProfilePicPreview("");
+                          setProfilePicFile(null);
+                          setFormData((prev) => ({ ...prev, profilePic: "" }));
+                        }}
+                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+
               </div>
             )}
 

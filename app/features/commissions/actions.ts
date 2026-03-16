@@ -37,7 +37,7 @@ export async function getEligibleCommissions(empNo: string, branchId: number) {
     const advisor = await prisma.member.findUnique({
       where: { empNo },
       include: {
-        position: { include: { orc: true } },
+        position: { include: { salary: true } },
         branches: { include: { branch: true, member: true } },
       },
     });
@@ -52,7 +52,6 @@ export async function getEligibleCommissions(empNo: string, branchId: number) {
     throw error;
   }
 }
-// Process commissions for an investment
 
 // ── processCommissions ────────────────────────────────────────────────────────
 export async function processCommissions(data: {
@@ -64,18 +63,14 @@ export async function processCommissions(data: {
 
   try {
     const result = await prisma.$transaction(async (tx) => {
-
-
       const createdCommissions: any[] = [];
 
-      // Load investment
       const investment = await tx.investment.findUnique({
         where: { id: investmentId },
       });
 
       if (!investment) throw new ApiError("INVESTMENT_NOT_FOUND", "Investment not found", 404);
 
-      // Already processed — return existing
       if (investment.commissionsProcessed) {
         const existingCommissions = await tx.commission.findMany({
           where: { investmentId },
@@ -88,38 +83,58 @@ export async function processCommissions(data: {
         return serializeData({ alreadyProcessed: true, investment, commissions: existingCommissions });
       }
 
-
-
-      // Load advisor
       const advisor = await tx.member.findUnique({
         where: { empNo },
         include: {
           position: {
             include: {
               orc: true,
-              personalCommissionTiers: true,
+              salary: true, // contains commThreshold, commRateLow, commRateHigh, etc.
             },
           },
         },
       });
 
-      if (!advisor) return null;
+      if (!advisor) throw new ApiError("ADVISOR_NOT_FOUND", "Advisor not found", 404);
+      if (!advisor.position) throw new ApiError("POSITION_MISSING", "Advisor has no position");
+      if (!advisor.position.salary) throw new ApiError("SALARY_CONFIG_MISSING", "No salary config for position");
+
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth() + 1;
+
+      // Get current month's accumulated volume BEFORE this investment
+      const currentPayroll = await tx.monthlyPayroll.findUnique({
+        where: {
+          memberId_year_month: {
+            memberId: advisor.id,
+            year,
+            month,
+          },
+        },
+      });
+
+      const volumeBefore = Number(currentPayroll?.volumeAchieved ?? 0);
+      const volumeAfter = volumeBefore + investment.amount;
+      const { commThreshold } = advisor.position.salary;
+
+      // commRate is determined by status and whether total volume (after this investment) crosses the threshold
+      const commRate =
+        advisor.status === "PROBATION"
+          ? volumeAfter < commThreshold ? 0.07 : 0.10
+          : volumeAfter < commThreshold ? 0.05 : 0.08;
+
+      const personalAmount = investment.amount * commRate;
 
       await tx.investment.update({
         where: { id: investmentId },
         data: {
           commissionsProcessed: true,
-          advisorId: advisor.id
+          advisorId: advisor.id,
         },
       });
 
-      // Auto-update monthly payroll volume when commission is processed
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = now.getMonth() + 1;
-
-      if (!advisor) return null;
-
+      // Upsert monthly payroll volume
       await tx.monthlyPayroll.upsert({
         where: {
           memberId_year_month: {
@@ -135,26 +150,11 @@ export async function processCommissions(data: {
           memberId: advisor.id,
           year,
           month,
-          basicSalary: 0,      // not yet calculated — HR runs full payroll later
-          monthlyTarget: 0,    // will be filled when payroll runs
+          basicSalaryPermanent: 0,
+          monthlyTarget: 0,
           volumeAchieved: investment.amount,
         },
       });
-
-      if (!advisor) throw new ApiError("ADVISOR_NOT_FOUND", "Advisor not found", 404);
-      if (!advisor.position) throw new ApiError("POSITION_MISSING", "Advisor has no position");
-
-      // Personal commission
-      const personalTier = await tx.personalCommissionTier.findFirst({
-        where: { positionId: advisor.positionId },
-      });
-
-      if (!personalTier) throw new ApiError("NO_TIER", "No personal commission tier found");
-
-      const personalRate = Number(personalTier.rate) / 100;
-      if (personalRate > 10) throw new ApiError("PERSONAL_RATE_TOO_HIGH", "Personal commission rate too high");
-
-      const personalAmount = investment.amount * personalRate;
 
       const updatedAdvisor = await tx.member.update({
         where: { empNo },
@@ -175,13 +175,14 @@ export async function processCommissions(data: {
 
       createdCommissions.push(personalRecord);
 
-      // Upline commissions — cross-branch aware
+      // Upline commissions — ORC rate from position.salary.orcRate
       const uplines = await getUplineChain(advisor.position.rank, branchId);
 
       for (const upline of uplines) {
-        if (!upline.position?.orc) continue;
+        if (!upline.position?.salary) continue;  // skip if no salary config
 
-        const uplineRate = Number(upline.position.orc.rate) / 100;
+        const uplineRate = Number(upline.position.salary.orcRate);
+        if (uplineRate <= 0) continue;            // skip if ORC rate is zero
         if (uplineRate > 1) throw new ApiError("ORC_RATE_TOO_HIGH", "ORC rate too high");
 
         const uplineAmount = investment.amount * uplineRate;
@@ -195,6 +196,7 @@ export async function processCommissions(data: {
           data: {
             investmentId,
             memberEmpNo: upline.empNo,
+            branchId,
             amount: uplineAmount,
             type: "UPLINE",
             refNumber: generateCommissionRef(),
@@ -276,7 +278,7 @@ async function getUplineChain(advisorRank: number, branchId: number) {
       position: { rank: { gt: advisorRank } },
     },
     include: {
-      position: { include: { orc: true } },
+      position: { include: { salary: true } },
       branches: { include: { branch: true } },
     },
     orderBy: { position: { rank: "asc" } },
@@ -294,7 +296,7 @@ async function getUplineChain(advisorRank: number, branchId: number) {
       position: { rank: { gt: highestBranchRank } },
     },
     include: {
-      position: { include: { orc: true } },
+      position: { include: { salary: true } },
       branches: { include: { branch: true } },
     },
     orderBy: { position: { rank: "asc" } },

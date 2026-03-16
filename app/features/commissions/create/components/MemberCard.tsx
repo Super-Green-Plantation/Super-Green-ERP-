@@ -39,26 +39,19 @@ export default function MemberCard({ member }: Props) {
             ORC Rate
           </p>
           <p className="text-base font-bold text-gray-700">
-            {member.position?.orc ? `${member.position.orc.rate}%` : "0%"}
+            {member.position?.salary?.orcRate
+              ? `${(Number(member.position.salary.orcRate) * 100).toFixed(1)}%`
+              : "0%"}
           </p>
         </div>
 
         <div className="p-3 text-center">
           <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">
-            Personal Rate
+            Status
           </p>
-          
-            {member.position?.personalCommissionTiers?.length ? (
-              <div className="space-y-0.5">
-                {member.position.personalCommissionTiers.map((p) => (
-                  <span key={p.id} className="block text-sm">
-                    {p.rate}%
-                  </span>
-                ))}
-              </div>
-            ) : (
-              "0%"
-            )}
+          <p className="text-base font-bold text-gray-700">
+            {member.status ?? "—"}
+          </p>
         </div>
       </div>
     </div>

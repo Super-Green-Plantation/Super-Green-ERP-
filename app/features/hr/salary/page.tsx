@@ -12,7 +12,7 @@ import Back from "@/app/components/Buttons/Back";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type SalaryForm = {
-  basicSalary: number;
+  basicSalaryPermanent: number;
   monthlyTarget: number;
   incentiveAmount: number;
   allowanceAmount: number;
@@ -26,7 +26,7 @@ type SalaryForm = {
 };
 
 const DEFAULT_FORM: SalaryForm = {
-  basicSalary: 0,
+  basicSalaryPermanent: 0,
   monthlyTarget: 0,
   incentiveAmount: 0,
   allowanceAmount: 0,
@@ -110,7 +110,7 @@ export default function SalaryConfigPage() {
       for (const p of data) {
         initial[p.id] = p.salary
           ? {
-              basicSalary: p.salary.basicSalary,
+              basicSalaryPermanent: p.salary.basicSalaryPermanent,
               monthlyTarget: p.salary.monthlyTarget,
               incentiveAmount: p.salary.incentiveAmount,
               allowanceAmount: p.salary.allowanceAmount,
@@ -218,7 +218,7 @@ export default function SalaryConfigPage() {
 
                 {isConfigured && (
                   <span className="text-[10px] text-slate-400 font-medium">
-                    Basic: Rs.{fmt(position.salary.basicSalary)} · Target: Rs.{fmt(position.salary.monthlyTarget)}
+                    Basic: Rs.{fmt(position.salary.basicSalaryPermanent)} · Target: Rs.{fmt(position.salary.monthlyTarget)}
                   </span>
                 )}
               </div>
@@ -259,8 +259,8 @@ export default function SalaryConfigPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <Field
                       label="Basic Salary (Rs.)"
-                      value={form.basicSalary}
-                      onChange={(v) => setField(position.id, "basicSalary", v)}
+                      value={form.basicSalaryPermanent}
+                      onChange={(v) => setField(position.id, "basicSalaryPermanent", v)}
                       prefix="Rs."
                       hint="Fixed monthly salary before deductions"
                     />

@@ -1,18 +1,18 @@
-type PayrollBreakdown = {
-  basicSalary: number;
+export type PayrollBreakdown = {
+  basicSalaryPermanent: number;  // ← was basicSalary
   monthlyTarget: number;
   volumeAchieved: number;
   incentiveEarned: number;
   allowanceEarned: number;
   orcEarned: number;
   commissionEarned: number;
-  epfDeduction: number;   // employee pays this (deducted from gross)
-  epfEmployer: number;    // employer pays this (not deducted, shown for info)
-  etfEmployer: number;    // employer pays this (not deducted, shown for info)
+  epfDeduction: number;
+  epfEmployer: number;
+  etfEmployer: number;
   incentiveHit: boolean;
   allowanceHit: boolean;
-  grossPay: number;       // basic + incentive + allowance + orc + commission
-  netPay: number;         // grossPay - epfDeduction
+  grossPay: number;
+  netPay: number;
 };
 
 // ─── calculatePayroll ─────────────────────────────────────────────────────────
@@ -34,7 +34,8 @@ type PayrollBreakdown = {
  */
 export function calculatePayroll(
   salary: {
-    basicSalary: number;
+    basicSalaryPermanent: number;  
+    basicSalaryProbation: number;
     monthlyTarget: number;
     incentiveAmount: number;
     allowanceAmount: number;
@@ -48,12 +49,12 @@ export function calculatePayroll(
     allowanceThresholdPermanent: number;
     allowanceThresholdProbation: number;
   },
+  commissionEarned: number = 0,
   memberStatus: "PROBATION" | "PERMANENT",
   volumeAchieved: number,
   orcVolume: number = 0, // total ORC-eligible volume from commissions
 ): PayrollBreakdown {
   const {
-    basicSalary,
     monthlyTarget,
     incentiveAmount,
     allowanceAmount,
@@ -64,18 +65,10 @@ export function calculatePayroll(
     etfEmployer,
     allowanceThresholdPermanent,
     allowanceThresholdProbation,
-
+    basicSalaryPermanent,
+    basicSalaryProbation
   } = salary;
 
-  // Commission rate depends on permanent/probation status
-  const commRate =
-    memberStatus === "PROBATION"
-      ? volumeAchieved < commThreshold
-        ? 0.07
-        : 0.10
-      : volumeAchieved < commThreshold
-        ? 0.05
-        : 0.08;
 
   // // Thresholds
   // const allowanceHit = volumeAchieved >= monthlyTarget * 0.75;
@@ -83,6 +76,11 @@ export function calculatePayroll(
   const allowanceThresholdPct = memberStatus === "PERMANENT"
     ? salary.allowanceThresholdPermanent  // 1.0 for all except FA (0.75)
     : salary.allowanceThresholdProbation; // 0.75 TL, 0.60 BM, 0.70 RM/ZM, 0.65 AGM
+
+  const basicSalary = memberStatus === "PERMANENT"
+    ? Number(salary.basicSalaryPermanent)
+    : Number(salary.basicSalaryProbation); // 0
+
 
   const allowanceHit = volumeAchieved >= monthlyTarget * allowanceThresholdPct;
   const incentiveHit = volumeAchieved >= monthlyTarget; // always 100%
@@ -92,9 +90,6 @@ export function calculatePayroll(
 
   // ORC = flat rate on total ORC-eligible volume (from commission system)
   const orcEarned = orcVolume * orcRate;
-
-  // New business commission on volume achieved
-  const commissionEarned = volumeAchieved * commRate;
 
   // EPF/ETF on basic salary only
   const epfDeduction = basicSalary * epfEmployee;
@@ -107,7 +102,7 @@ export function calculatePayroll(
 
 
   return {
-    basicSalary,
+    basicSalaryPermanent: basicSalary,
     monthlyTarget,
     volumeAchieved,
     incentiveEarned,
