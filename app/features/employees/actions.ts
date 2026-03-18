@@ -87,6 +87,7 @@ export async function createEmployee(data: EmpData) {
             userId: supabaseUserId!,
             email: data.email,
             phone: data.phone || null,
+            phone2: data.phone2 || null,
             empNo: data.empNo,
             epfNo: data.epfNo,
             totalCommission: data.totalCommission,
@@ -139,6 +140,7 @@ export async function createEmployee(data: EmpData) {
       data: {
         nameWithInitials: data.nameWithInitials,
         phone: data.phone || null,
+        phone2: data.phone2 || null,
         empNo: data.empNo,
         epfNo: data.epfNo,
         totalCommission: data.totalCommission,
@@ -370,6 +372,7 @@ export async function updateEmployee(memberId: number, data: EmpData) {
         epfNo: data.epfNo,
         email: data.email || null,
         phone: data.phone || null,
+        phone2: data.phone2 || null,
         totalCommission: Number(data.totalCommission),
         positionId: Number(data.positionId),
 
@@ -506,4 +509,45 @@ export async function uploadProfilePic(file: File, empNo: string) {
     console.error("uploadProfilePic error:", err);
     return { success: false, error: err.message ?? "Upload failed" };
   }
+}
+
+// server action
+export async function getPositions() {
+  return prisma.position.findMany({
+    orderBy: { rank: "desc" },
+    select: { id: true, title: true, rank: true },
+  });
+}
+
+export async function getUplineMembers(positionId: number, branchIds: number[]) {
+  if (!positionId) return [];
+
+  const selectedPosition = await prisma.position.findUnique({
+    where: { id: positionId },
+    select: { rank: true },
+  });
+
+  if (!selectedPosition) return [];
+
+  return prisma.member.findMany({
+    where: {
+      position: {
+        rank: { gt: selectedPosition.rank }, // higher rank = higher up
+      },
+      branches: {
+        some: {
+          branchId: { in: branchIds }, // shares at least one branch
+        },
+      },
+    },
+    select: {
+      id: true,
+      nameWithInitials: true,
+      empNo: true,
+      position: { select: { title: true } },
+    },
+    orderBy: {
+      position: { rank: "desc" },
+    },
+  });
 }

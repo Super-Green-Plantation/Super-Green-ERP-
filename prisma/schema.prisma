@@ -160,6 +160,7 @@ model Member {
   empNo             String    @unique
   epfNo             String
   phone             String?
+  phone2             String?
   nic               String?
   dob               DateTime?
   gender            String?

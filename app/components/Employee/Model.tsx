@@ -24,7 +24,7 @@ import { Member } from "@/app/types/member";
 import { getBranchById, getBranches } from "@/app/features/branches/actions";
 import { useParams } from "next/navigation";
 import { Branch } from "@/app/types/branch";
-import { createEmployee, updateEmployee, uploadProfilePic } from "@/app/features/employees/actions";
+import { createEmployee, getPositions, getUplineMembers, updateEmployee, uploadProfilePic } from "@/app/features/employees/actions";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -37,14 +37,14 @@ interface EmpModalProps {
 
 // Positions that can be assigned to multiple branches
 const MULTI_BRANCH_POSITION_IDS = [4, 5, 6]; // RM, ZM, AGM
-const POSITION_MAP: Record<string, string> = {
-  "6": "AGM",
-  "5": "ZM",
-  "4": "RM",
-  "3": "BM",
-  "2": "TL",
-  "1": "FA",
-};
+// const POSITION_MAP: Record<string, string> = {
+//   "6": "AGM",
+//   "5": "ZM",
+//   "4": "RM",
+//   "3": "BM",
+//   "2": "TL",
+//   "1": "FA",
+// };
 
 const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
   const { branchId } = useParams<{ branchId: string }>();
@@ -59,6 +59,13 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
   const [profilePicPreview, setProfilePicPreview] = useState<string>("");
   const [uploadingPic, setUploadingPic] = useState(false);
 
+  const [positions, setPositions] = useState<{ id: number; title: string; rank: number }[]>([]);
+
+
+
+  useEffect(() => {
+    getPositions().then(setPositions);
+  }, []);
 
 
   useEffect(() => {
@@ -73,6 +80,8 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
     setProfilePicFile(file);
     setProfilePicPreview(URL.createObjectURL(file));
   };
+
+
   // Active section tab for grouping the many fields
   const [activeTab, setActiveTab] = useState<"basic" | "personal" | "employment">("basic");
 
@@ -114,7 +123,7 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
     bankBranch: "",
     status: "PROBATION" as "PROBATION" | "PERMANENT",
     probationStartDate: "",
-    profilePic: "" ,
+    profilePic: "",
   });
 
   // Fetch current branch info
@@ -171,6 +180,7 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
 
   const isMultiBranch = MULTI_BRANCH_POSITION_IDS.includes(Number(formData.positionId));
 
+
   // When position changes, reset to single branch if not multi-branch role
   const handlePositionChange = (value: string) => {
     const isMulti = MULTI_BRANCH_POSITION_IDS.includes(Number(value));
@@ -201,7 +211,7 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
     e.preventDefault();
     setLoading(true);
     try {
-      let profilePicUrl:string | undefined = formData.profilePic;
+      let profilePicUrl: string | undefined = formData.profilePic;
 
       // Upload profile pic if a new file was selected
       if (profilePicFile) {
@@ -248,6 +258,17 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
       setLoading(false);
     }
   };
+
+  const [uplineSuggestions, setUplineSuggestions] = useState<{ id: number; nameWithInitials: string | null; empNo: string; position: { title: string } }[]>([]);
+
+  useEffect(() => {
+    if (!formData.positionId) return;
+    getUplineMembers(Number(formData.positionId), formData.branchIds)
+      .then(setUplineSuggestions);
+  }, [formData.positionId, formData.branchIds]);
+
+
+
 
   // ─── Styles ────────────────────────────────────────────────
   const inputStyles =
@@ -475,9 +496,17 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                   <label className={labelStyles}>
                     {isMultiBranch ? "Assigned Branches" : "Assigned Branch"}
                     {isMultiBranch && (
-                      <span className="ml-2 text-blue-500 normal-case font-normal tracking-normal">
-                        — {POSITION_MAP[formData.positionId]} can manage multiple branches
-                      </span>
+                      <select
+                        value={formData.positionId}
+                        onChange={(e) => handlePositionChange(e.target.value)}
+                        required
+                        className={inputStyles + " appearance-none pr-10"}
+                      >
+                        <option value="" disabled>Select Position</option>
+                        {positions.map((p) => (
+                          <option key={p.id} value={p.id}>{p.title}</option>
+                        ))}
+                      </select>
                     )}
                   </label>
 
@@ -704,13 +733,23 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                   <label className={labelStyles}>Reporting Person</label>
                   <div className="relative">
                     <User className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                    <input
-                      placeholder="Name or Employee ID of supervisor"
+                    <select
                       value={formData.reportingPerson}
                       onChange={(e) => setFormData({ ...formData, reportingPerson: e.target.value })}
-                      className={inputStyles}
-                    />
+                      className={inputStyles + " appearance-none pr-10"}
+                    >
+                      <option value="">Select reporting person...</option>
+                      {uplineSuggestions.map((m) => (
+                        <option key={m.id} value={m.empNo}>
+                          {m.nameWithInitials} ({m.position.title} — {m.empNo})
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
                   </div>
+                  {uplineSuggestions.length === 0 && formData.positionId && (
+                    <p className="text-xs text-gray-400 mt-1">No higher-rank members found in selected branches.</p>
+                  )}
                 </div>
 
                 {/* Date of Join */}
