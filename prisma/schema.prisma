@@ -1,6 +1,5 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -19,15 +18,15 @@ enum ReturnFrequency {
 }
 
 model Branch {
-  id          Int           @id @default(autoincrement())
+  id          Int            @id @default(autoincrement())
   name        String
   location    String?
   // members     Member[]
-  members MemberBranch[]
-  status      Status        @default(Active)
+  members     MemberBranch[]
+  status      Status         @default(Active)
   client      Client[]
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
   ActivityLog ActivityLog[]
   investments Investment[]
   commission  Commission[]
@@ -43,19 +42,15 @@ enum Title {
 }
 
 model Position {
-  id         Int   @id @default(autoincrement())
-  title      Title
-  baseSalary Float
-  rank       Int   @unique
-
+  id    Int   @id @default(autoincrement())
+  title Title
+  rank  Int   @unique
   orc CommissionRate?
-
   members Member[]
-
-  personalCommissionTiers PersonalCommissionTier[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  positionTargets PositionTarget[]
+  salary          PositionSalary?
 }
 
 model CommissionRate {
@@ -67,75 +62,174 @@ model CommissionRate {
   updatedAt  DateTime @updatedAt
 }
 
-model PersonalCommissionTier {
-  id         Int     @id @default(autoincrement())
-  positionId Int
-  minAmount  Float
-  maxAmount  Float? // null = no upper limit
-  rate       Decimal
-
-  position Position @relation(fields: [positionId], references: [id])
-
-  @@index([positionId])
-}
-
 //Junction Table
 model MemberBranch {
-  id        Int    @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-  memberId  Int
-  branchId  Int
+  memberId Int
+  branchId Int
 
-  member    Member @relation(fields: [memberId], references: [id])
-  branch    Branch @relation(fields: [branchId], references: [id])
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  branch Branch @relation(fields: [branchId], references: [id])
 
   @@unique([memberId, branchId])
 }
 
+enum EmployeeStatus {
+  PROBATION
+  PERMANENT
+}
+
+model PermanentEvaluation {
+  id              Int      @id @default(autoincrement())
+  memberId        Int
+  member          Member   @relation(fields: [memberId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  year            Int
+  month           Int
+  volumeAchieved  Float
+  monthlyTarget   Float 
+  incentiveEarned Float    @default(0)
+  allowanceEarned Float    @default(0)
+  incentiveHit    Boolean  @default(false)
+  allowanceHit    Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  @@unique([memberId, year, month])
+}
+
+model PositionSalary {
+  id         Int      @id @default(autoincrement())
+  positionId Int      @unique
+  position   Position @relation(fields: [positionId], references: [id])
+
+  monthlyTarget   Float // e.g. 3_000_000
+  incentiveAmount Float // paid at 100% target
+  allowanceAmount Float // paid at 75% target
+  orcRate         Float @default(0) // e.g. 0.01 for 1%
+  commRateLow     Float // e.g. 0.05 for probation=0.07
+  commRateHigh    Float // e.g. 0.08 for probation=0.10
+  commThreshold   Float @default(500000)
+
+  epfEmployee Float @default(0.08)
+  epfEmployer Float @default(0.12)
+  etfEmployer Float @default(0.03)
+
+  allowanceThresholdProbation Float @default(0.75)
+  allowanceThresholdPermanent Float @default(1.0)
+
+  basicSalaryPermanent Float @default(0)
+  basicSalaryProbation Float @default(0)
+}
+
+model MonthlyPayroll {
+  id       Int    @id @default(autoincrement())
+  memberId Int
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  year     Int
+  month    Int
+
+  basicSalaryPermanent Float @default(0)
+  volumeAchieved       Float @default(0)
+  monthlyTarget        Float
+
+  incentiveEarned  Float @default(0)
+  allowanceEarned  Float @default(0)
+  orcEarned        Float @default(0)
+  commissionEarned Float @default(0)
+
+  epfDeduction Float @default(0) // employee 8% of basic
+  epfEmployer  Float @default(0) // employer 12% of basic
+  etfEmployer  Float @default(0) // employer 3% of basic
+
+  incentiveHit Boolean @default(false)
+  allowanceHit Boolean @default(false)
+
+  grossPay Float @default(0) // basic + incentive + allowance + orc + commission
+  netPay   Float @default(0) // grossPay - epfDeduction
+
+  createdAt DateTime @default(now())
+
+  @@unique([memberId, year, month])
+}
+
 //many side ekata foreign key eka / Parent has an array
 model Member {
-  id Int @id @default(autoincrement())
+  id                Int       @id @default(autoincrement())
+  nameWithInitials  String?
+  email             String?   @unique
+  empNo             String    @unique
+  epfNo             String
+  phone             String?
+  phone2             String?
+  nic               String?
+  dob               DateTime?
+  gender            String?
+  civilStatus       String?
+  address           String?
+  reportingPerson   String?
+  dateOfJoin        DateTime?
+  appointmentLetter String?
+  confirmation      String?
+  remark            String?
+  accNo             String?
+  bank              String?
+  bankBranch        String?
+  totalCommission   Float     @default(0)
+  profilePic        String?
 
   userId String? @unique @db.Uuid
   user   User?   @relation(fields: [userId], references: [id])
 
-  name  String
-  phone String?
-  email String?
-  empNo String  @unique
+  status             EmployeeStatus @default(PROBATION)
+  probationStartDate DateTime?
 
-  // branchId Int
-  // branch   Branch @relation(fields: [branchId], references: [id])
-  branches MemberBranch[]
   positionId Int
   position   Position @relation(fields: [positionId], references: [id])
 
-  totalCommission Float @default(0)
+  branches           MemberBranch[]
+  commissions        Commission[]
+  advisorInvestments Investment[]   @relation("AdvisorInvestments")
+  activityLog        ActivityLog[]
+  clients            Client[]
 
-  commissions Commission[]
-  investments Investment[]
-  activityLog ActivityLog[]
-  clients Client[]
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  monthlyEvaluations   MonthlyEvaluation[]
+  permanentEvaluations PermanentEvaluation[]
+  monthlyPayrolls      MonthlyPayroll[]
+}
 
-  nameWithInitials  String?
-   phone2            String?
-   nic               String?
-   dob               DateTime?
-   birthday          DateTime?
-   gender            String?
-   civilStatus       String?
-   address           String?
-   reportingPerson   String?
-   dateOfJoin        DateTime?
-   appointmentLetter String?
-   confirmation      String?
-   remark            String?
-   accNo             String?
-   bank              String?
-   bankBranch        String?
+model PositionTarget {
+  id               Int      @id @default(autoincrement())
+  positionId       Int
+  position         Position @relation(fields: [positionId], references: [id])
+  periodNumber     Int // 1 = first 3 months, 2 = second 3 months
+  monthNumber      Int // 1, 2, or 3 within that period
+  targetAmount     Float // e.g. 1_500_000
+  bonusAmount      Float // fixed bonus if target hit, e.g. 50_000
+  excessRate       Float    @default(0) // 0 for period 1, 0.005 for period 2
+  partialThreshold Float    @default(0)
+  partialBonus     Float    @default(0)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  @@unique([positionId, periodNumber, monthNumber])
+}
+
+model MonthlyEvaluation {
+  id             Int      @id @default(autoincrement())
+  memberId       Int
+  member         Member   @relation(fields: [memberId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  year           Int
+  month          Int // 1–12
+  periodNumber   Int? // 1 or 2 during probation, null if permanent
+  monthInPeriod  Int? // 1, 2, 3 within period
+  volumeAchieved Float
+  targetAmount   Float // snapshot at time of eval
+  bonusEarned    Float    @default(0)
+  excessBonus    Float    @default(0)
+  targetHit      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  @@unique([memberId, year, month])
 }
 
 model FinancialPlan {
@@ -165,7 +259,7 @@ model Client {
   phoneLand   String?
 
   memberId Int? // optional for existing clients
-  member   Member? @relation(fields: [memberId], references: [id])
+  member   Member? @relation(fields: [memberId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   dateOfBirth DateTime?
   occupation  String?
@@ -176,7 +270,7 @@ model Client {
   signature   String?
   idFront     String?
   idBack      String?
-  paymentSlip      String?
+  paymentSlip String?
   proposal    String?
   agreement   String?
 
@@ -243,9 +337,8 @@ model Investment {
   planId Int?
   plan   FinancialPlan? @relation(fields: [planId], references: [id])
 
-  advisorId Int?
-  advisor   Member? @relation(fields: [advisorId], references: [id])
-
+  advisorId  Int?
+  advisor    Member?      @relation("AdvisorInvestments", fields: [advisorId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   commission Commission[]
 
   profit Profit? // optional is safer 
@@ -267,7 +360,7 @@ model Commission {
   type      CommissionType
   createdAt DateTime       @default(now())
 
-  member     Member     @relation(fields: [memberEmpNo], references: [empNo])
+  member     Member     @relation(fields: [memberEmpNo], references: [empNo], onDelete: Cascade, onUpdate: Cascade)
   investment Investment @relation(fields: [investmentId], references: [id], onDelete: Cascade)
   Branch     Branch     @relation(fields: [branchId], references: [id])
 
@@ -319,7 +412,7 @@ model ActivityLog {
   entityId Int? // clientId, investmentId, etc.
 
   performedById Int // Member.id
-  performedBy   Member @relation(fields: [performedById], references: [id])
+  performedBy   Member @relation(fields: [performedById], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   branchId Int?
   branch   Branch? @relation(fields: [branchId], references: [id])
@@ -380,8 +473,8 @@ model ClientDocument {
   requestId Int
   request   ClientDocumentRequest @relation(fields: [requestId], references: [id])
 
-  idFront String?
-  idBack  String?
+  idFront     String?
+  idBack      String?
   paymentSlip String?
 
   uploadedAt DateTime @default(now())

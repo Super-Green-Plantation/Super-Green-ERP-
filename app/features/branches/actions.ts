@@ -16,14 +16,11 @@ export async function getBranches() {
               include: {
                 position: {
                   include: {
-                    personalCommissionTiers: true,
                     orc: true,
                   },
                 },
               }
-
             }
-
           },
         },
       },
@@ -47,7 +44,6 @@ export async function getBranchById(id: number) {
               include: {
                 position: {
                   include: {
-                    personalCommissionTiers: true,
                     orc: true,
                   },
                 },
@@ -84,7 +80,6 @@ export async function getBranchesByMemberId(memberId: number) {
                   include: {
                     position: {
                       include: {
-                        personalCommissionTiers: true,
                         orc: true,
                       },
                     },
@@ -170,7 +165,7 @@ export async function getBranchEmployees(branchId: number) {
       select: {
         id: true,
         empNo: true,
-        name: true,
+        nameWithInitials: true,
         email: true,
         phone: true,
         totalCommission: true,

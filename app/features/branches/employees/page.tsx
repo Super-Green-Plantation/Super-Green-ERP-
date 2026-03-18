@@ -6,8 +6,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getBranchById, getBranchesByMemberId } from "../actions";
 import { useBranches } from "@/app/hooks/useBranches";
-import Loading from "@/app/components/Loading";
-import Error from "@/app/components/Error";
+import Loading from "@/app/components/Status/Loading";
+import Error from "@/app/components/Status/Error";
 
 interface Branch {
   id: number;

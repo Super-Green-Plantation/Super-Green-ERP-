@@ -249,7 +249,7 @@ export default function PublicUploadPage() {
                         {isPDF ? (
                           <div className="flex flex-col items-center justify-center h-full bg-slate-50 gap-1">
                             <FileText className="w-8 h-8 text-slate-400" />
-                            <p className="text-[10px] text-slate-500 truncate max-w-[200px]">{file.name}</p>
+                            <p className="text-[10px] text-slate-500 truncate max-w-50">{file.name}</p>
                           </div>
                         ) : (
                           <img src={preview!} alt="preview" className="w-full h-full object-cover" />

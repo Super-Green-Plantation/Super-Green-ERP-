@@ -1,8 +1,8 @@
 "use client";
 
-import Error from "@/app/components/Error";
+import Error from "@/app/components/Status/Error";
 import Heading from "@/app/components/Heading";
-import Loading from "@/app/components/Loading";
+import Loading from "@/app/components/Status/Loading";
 import Pagination from "@/app/components/Pagination";
 import { useClients } from "@/app/hooks/useClients";
 import { ExternalLink, Phone, User } from "lucide-react";
@@ -98,9 +98,7 @@ const Page = () => {
                     {/* Name Column */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-black text-[10px]">
-                          {client.fullName.charAt(0)}
-                        </div>
+                        
                         <span className="text-sm font-bold text-slate-900 leading-tight">
                           {client.fullName}
                         </span>

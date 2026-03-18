@@ -29,7 +29,6 @@ export async function getCurrentUser() {
 
     if (!dbUser) {
         redirect("/auth/signin")
-        // throw new Error("User not found in DB")
     }
 
     return dbUser

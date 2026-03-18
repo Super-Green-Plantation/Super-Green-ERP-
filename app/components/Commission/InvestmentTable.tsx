@@ -3,8 +3,8 @@ import { useCommission } from "@/app/hooks/useCommission";
 import { Eye, Inbox, MapPin, User } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import Error from "../Error";
-import Loading from "../Loading";
+import Error from "../Status/Error";
+import Loading from "../Status/Loading";
 import { getCommissionByBranch } from "@/app/features/commissions/actions";
 
 

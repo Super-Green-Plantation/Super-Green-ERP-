@@ -68,7 +68,7 @@ const EmpTable = ({ onEdit, onRefresh, branchId }: EmpTableProps) => {
   };
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteEmployee(id),
+    mutationFn: (id: number) => deleteEmployee(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["employees", branchId] });
       toast.success("Employee deleted successfully");
@@ -80,9 +80,11 @@ const EmpTable = ({ onEdit, onRefresh, branchId }: EmpTableProps) => {
     },
   });
 
-  const handleDelete = (id: string) => {
+  const handleDelete = (id: number) => {
+    console.log(id);
+    
     if (!confirm("Delete this employee?")) return;
-    deleteMutation.mutate(id);
+    deleteMutation.mutate(Number(id));
   };
 
 
@@ -146,11 +148,9 @@ const EmpTable = ({ onEdit, onRefresh, branchId }: EmpTableProps) => {
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-xs border border-slate-200 group-hover:bg-white transition-colors">
-                      {e.name.charAt(0)}
-                    </div>
+                   
                     <span className="text-sm font-bold text-slate-900 leading-tight">
-                      {e.name}
+                      {e.nameWithInitials}
                     </span>
                   </div>
                 </td>
@@ -179,7 +179,7 @@ const EmpTable = ({ onEdit, onRefresh, branchId }: EmpTableProps) => {
                         <Pen size={16} />
                       </button>
                       <button
-                        onClick={() => handleDelete(e.userId)}
+                        onClick={() => handleDelete(e.id)}
                         className="p-2 text-slate-400 hover:text-rose-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-xl transition-all"
                         title="Delete"
                       >

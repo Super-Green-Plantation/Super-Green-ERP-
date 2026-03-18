@@ -4,6 +4,7 @@ import { logout } from "@/app/auth/logout/action";
 import {
   BanknoteArrowUp,
   Calculator,
+  ChartCandlestick,
   ChevronLeft,
   GitBranch,
   IdCardLanyard,
@@ -11,14 +12,16 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  Nfc,
   Percent,
+  Target,
   User,
   Users,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { SidebarSkeleton } from "../SidebarSkeleton";
+import { SidebarSkeleton } from "./SidebarSkeleton";
 
 type SidebarProps = {
   role: string | null;
@@ -36,6 +39,24 @@ const links = [
     href: "/features/branches/employees",
     icon: IdCardLanyard,
     role: ["ADMIN", "HR", "DEV", "BRANCH_MANAGER","REGIONAL_MANAGER", "AGM"]
+  },
+  {
+    name: "Targets",
+    href: "/features/hr/targets",
+    icon: Target,
+    role: ["ADMIN", "HR", "DEV"]
+  },
+  {
+    name: "Evaluations",
+    href: "/features/hr/evaluations",
+    icon: ChartCandlestick,
+    role: ["ADMIN", "HR", "DEV"]
+  },
+  {
+    name: "Payroll",
+    href: "/features/hr/payroll",
+    icon: Nfc,
+    role: ["ADMIN", "HR", "DEV"]
   },
   {
     name: "Financial Plans",

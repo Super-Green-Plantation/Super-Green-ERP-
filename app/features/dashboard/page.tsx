@@ -1,7 +1,7 @@
 "use client";
-import Error from "@/app/components/Error";
-import InvestmentTable from "@/app/components/InvestmentTable";
-import Loading from "@/app/components/Loading";
+import Error from "@/app/components/Status/Error";
+import InvestmentTable from "@/app/components/Tables/InvestmentTable";
+import Loading from "@/app/components/Status/Loading";
 import { StatCard } from "@/app/components/StatCard";
 import { useDashboard } from "@/app/hooks/useDashboard";
 import { Briefcase, MapPin, TrendingUp, Users } from "lucide-react";

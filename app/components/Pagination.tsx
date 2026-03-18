@@ -68,7 +68,7 @@ export default function Pagination({
               key={page}
               onClick={() => onPageChange(page as number)}
               disabled={isLoading}
-              className={`min-w-[32px] h-8 px-2 rounded-lg text-xs font-black transition-all ${
+              className={`min-w-8 h-8 px-2 rounded-lg text-xs font-black transition-all ${
                 currentPage === page
                   ? "bg-slate-900 text-white shadow-sm"
                   : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"

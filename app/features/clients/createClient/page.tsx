@@ -5,7 +5,7 @@ import ApplicantDetails from "./ApplicantDetails";
 import BeneficiaryDetails from "./BeneficiaryDetails";
 import NomineeDetails from "./NomineeDetails";
 import { SubmitButton } from "./SubmitButto";
-import Back from "@/app/components/Back";
+import Back from "@/app/components/Buttons/Back";
 import DocumentUploadSection from "./ClientDocuments";
 import Heading from "@/app/components/Heading";
 import { useRef } from "react";

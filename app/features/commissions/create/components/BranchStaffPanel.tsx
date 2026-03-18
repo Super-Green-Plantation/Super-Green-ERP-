@@ -81,9 +81,9 @@ export default function BranchStaffPanel({
             <option value="">
               {branch ? "All Employees" : "Select a branch first"}
             </option>
-            {branch?.members?.map((m) => (
-              <option key={m.empNo} value={m.empNo}>
-                {m.name} ({m.empNo})
+            {branch?.members?.map((mb:any, index) => (
+              <option key={index} value={mb.member.empNo}>
+                {mb.member.nameWithInitials} ({mb.member.empNo})
               </option>
             ))}
           </select>

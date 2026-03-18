@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "PositionTarget" ADD COLUMN     "partialBonus" DOUBLE PRECISION NOT NULL DEFAULT 0,
+ADD COLUMN     "partialThreshold" DOUBLE PRECISION NOT NULL DEFAULT 0;

@@ -120,9 +120,13 @@ export const generateBranchEmployeePDF = (data: any) => {
 
   let currentY = 50;
 
-  // Stats
-  const totalEmployees = members?.length || 0;
-  const activeEmployees = members?.filter((m: any) => m.status === 'Active')?.length || 0;
+  // members is MemberBranch[] — unwrap the nested member object
+  const employees = members?.map((m: any) =>
+    m.member ?? m // fallback: if already a flat Member, use as-is
+  ) || [];
+
+  const totalEmployees = employees.length;
+  const activeEmployees = employees.filter((e: any) => e.status === "Active").length;
 
   doc.setDrawColor(230, 230, 230);
   doc.setFillColor(COLORS.light[0], COLORS.light[1], COLORS.light[2]);
@@ -141,14 +145,14 @@ export const generateBranchEmployeePDF = (data: any) => {
 
   currentY += 40;
 
-  const tableData = members?.map((emp: any) => [
-    emp.empNo,
-    emp.name,
+  const tableData = employees.map((emp: any) => [
+    emp.empNo       || "N/A",
+    emp.name        || "N/A",
     emp.position?.title || "N/A",
-    emp.email || "N/A",
-    emp.phone || "N/A",
-    emp.status || "Active",
-  ]) || [];
+    emp.email       || "N/A",
+    emp.phone       || "N/A",
+    emp.status      || "Active",
+  ]);
 
   autoTable(doc, {
     head: [["Emp No", "Name", "Position", "Email", "Phone", "Status"]],

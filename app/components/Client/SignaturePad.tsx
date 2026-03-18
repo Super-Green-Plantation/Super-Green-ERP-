@@ -1,12 +1,11 @@
 
 "use client";
 
+import { useFormContext } from "@/app/context/FormContext";
+import { uploadClientSignature } from "@/app/features/uploads/actions";
 import { Eraser, Loader2 } from "lucide-react";
 import { useRef, useState } from "react";
-import SignatureCanvas from "react-signature-canvas";
-import { useFormContext } from "../context/FormContext";
-import { uploadClientSignature } from "../features/uploads/actions";
-import { toast } from "sonner";
+import SignatureCanvas from "react-signature-canvas";import { toast } from "sonner";
 
 export default function SignaturePad() {
   const { form } = useFormContext();

@@ -8,8 +8,8 @@ import {
   Trash2,
 } from "lucide-react";
 
-import { useDeleteDoc } from "../hooks/useDoc";
 import { useQueries, useQueryClient } from "@tanstack/react-query";
+import { useDeleteDoc } from "@/app/hooks/useDoc";
 
 export const DocPreview = ({
   label,

@@ -6,6 +6,7 @@ export interface MemberBranch {
   branch?: {
     id: number;
     name: string;
+    status: string;
     location?: string | null;
   };
 }
@@ -14,8 +15,9 @@ export interface Member {
   id: number;
 
   // --- Core (required) ---
-  name: string;
+  // name: string;
   empNo: string;
+  epfNo:string;
   position: Position;
 
   // --- Branch(es) ---
@@ -53,26 +55,51 @@ export interface Member {
   // --- Auth link ---
   userId: string | null;
 
+  // In formData initial state
+  status: "PROBATION" | "PERMANENT";
+  probationStartDate: "" | Date| null;
+
   // --- Timestamps ---
   createdAt: string | Date;
   updatedAt: string | Date;
+  profilePic:string | undefined
 }
 
 export interface Position {
   orc: any;
   id: number;
   title: string;
+  rank: string;
   baseSalary: number;
   createdAt: string | Date;
   updatedAt: string | Date;
   commissionRate?: CommissionRate;
-   personalCommissionTiers:PersonalCommissionTiers[]
+  personalCommissionTiers: PersonalCommissionTiers[];
+  salary?: PositionSalary;
 }
 
-export interface PersonalCommissionTiers{
+export interface PositionSalary {
   id: number;
-  positionId:number;
-  minAmount:number;
+  positionId: number;
+  basicSalaryPermanent: number;
+  monthlyTarget: number;
+  incentiveAmount: number;
+  allowanceAmount: number;
+  orcRate: number;       // stored as decimal, e.g. 0.02 = 2%
+  commRateLow: number;
+  commRateHigh: number;
+  commThreshold: number;
+  epfEmployee: number;
+  epfEmployer: number;
+  etfEmployer: number;
+  allowanceThresholdProbation: number;
+  allowanceThresholdPermanent: number;
+}
+
+export interface PersonalCommissionTiers {
+  id: number;
+  positionId: number;
+  minAmount: number;
   rate: any;
 }
 

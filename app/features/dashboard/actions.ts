@@ -32,16 +32,22 @@ export async function getDashboardStats() {
         },
       }),
       prisma.investment.findMany({
-        include: {
-          advisor: {
-            include: {
-              branches: true,
-              position: true,
-            },
-          },
-          client: true,
-        },
-        orderBy: { investmentDate: "desc" },
+        // include: {
+        //   // advisor: {
+        //   //   include: {
+        //   //     branches: true,
+        //   //     position: true,
+        //   //   },
+        //   // },
+        //   advisor: {
+        //     include: {
+        //       branches: { include: { branch: true } },
+        //       position: true
+        //     }
+        //   },
+        //   client: true,
+        // },
+        // orderBy: { investmentDate: "desc" },
       }),
       prisma.client.count(),
       prisma.member.count(),

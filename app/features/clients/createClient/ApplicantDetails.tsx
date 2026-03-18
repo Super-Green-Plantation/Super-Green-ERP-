@@ -1,6 +1,6 @@
 "use client";
 
-import SignaturePad from "@/app/components/SignaturePad";
+import SignaturePad from "@/app/components/Client/SignaturePad";
 import { useFormContext } from "@/app/context/FormContext";
 import { getBranchById, getBranches } from "@/app/features/branches/actions";
 import { getFinancialPlans } from "@/app/features/financial_plans/actions";

@@ -8,9 +8,9 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, DollarSign, User, Building2, FileText, UserCircle, Loader2, Plus } from "lucide-react";
 import Link from "next/link";
-import Loading from "@/app/components/Loading";
-import Error from "@/app/components/Error";
-import Back from "@/app/components/Back";
+import Loading from "@/app/components/Status/Loading";
+import Error from "@/app/components/Status/Error";
+import Back from "@/app/components/Buttons/Back";
 
 export default function CreateInvestmentPage() {
   const router = useRouter();

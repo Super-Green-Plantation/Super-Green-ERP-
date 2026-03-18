@@ -1,13 +1,12 @@
 "use client";
 
-import Back from "@/app/components/Back";
+import Back from "@/app/components/Buttons/Back";
 import UpdateDocsModal from "@/app/components/Client/UpdateDocsModal";
 import UpdateClientModal from "@/app/components/Client/UpdateModel";
-import ClientInvestmentTable from "@/app/components/ClientInvestmentTable";
+import ClientInvestmentTable from "@/app/components/Tables/ClientInvestmentTable";
 import { DetailItem } from "@/app/components/DetailItem";
-import { DocPreview } from "@/app/components/DocPreview";
-import ErrorMessage from "@/app/components/Error";
-import Loading from "@/app/components/Loading";
+import ErrorMessage from "@/app/components/Status/Error";
+import Loading from "@/app/components/Status/Loading";
 import { useClient } from "@/app/hooks/useClient";
 import { deleteClient, generateUploadUrl, updateClient, updateClientDocuments } from "@/app/features/clients/actions";
 
@@ -32,9 +31,10 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import Heading from "@/app/components/Heading";
-import { ProposalTemplate } from "@/app/components/ProposalTemplate";
-import CopyButton from "@/app/components/CopyButton";
-import SendDocumentLinkButton from "@/app/components/SendDocumentLinkButton";
+import { ProposalTemplate } from "@/app/components/Doc/ProposalTemplate";
+import CopyButton from "@/app/components/Buttons/CopyButton";
+import SendDocumentLinkButton from "@/app/components/Buttons/SendDocumentLinkButton";
+import { DocPreview } from "@/app/components/Doc/DocPreview";
 
 export default function ApplicationViewPage() {
   const queryClient = useQueryClient();
