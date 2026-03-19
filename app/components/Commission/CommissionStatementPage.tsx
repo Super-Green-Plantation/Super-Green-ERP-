@@ -15,6 +15,8 @@ const CommissionStatementPage = ({ data }: { data: any }) => {
   const totalSalesVolume = commissions.reduce((sum: number, item: any) => sum + (item.investment?.amount || 0), 0);
   const memberNo = commissions[0]?.memberEmpNo || "N/A";
 
+  console.log(commissions);
+  
   return (
     <div className="max-w-5xl mx-auto rounded-2xl bg-white">
 
@@ -117,7 +119,7 @@ const CommissionStatementPage = ({ data }: { data: any }) => {
                     </div>
                     <div>
                       <p className="text-sm font-bold text-gray-900">
-                        Client ID: {item.investment.clientId}
+                        Client : {item.investment?.client?.fullName || item.investment.clientId}
                       </p>
                       <p className="text-[10px] text-gray-400 font-medium">
                         Inv ID: #{item.investmentId} • {new Date(item.createdAt).toLocaleDateString()}
@@ -168,7 +170,7 @@ const CommissionStatementPage = ({ data }: { data: any }) => {
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-gray-900 truncate">
-                    Client {item.investment.clientId}
+                    Client  {item.investment.clientId}
                   </p>
                   <p className="text-[10px] text-gray-400 font-medium">
                     #{item.investmentId} • {new Date(item.createdAt).toLocaleDateString()}

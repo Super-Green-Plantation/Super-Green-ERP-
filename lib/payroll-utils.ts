@@ -39,7 +39,6 @@ export function calculatePayroll(
     monthlyTarget: number;
     incentiveAmount: number;
     allowanceAmount: number;
-    orcRate: number;
     commRateLow: number;
     commRateHigh: number;
     commThreshold: number;
@@ -52,21 +51,16 @@ export function calculatePayroll(
   commissionEarned: number = 0,
   memberStatus: "PROBATION" | "PERMANENT",
   volumeAchieved: number,
+  orcRate: number = 0,
   orcVolume: number = 0, // total ORC-eligible volume from commissions
 ): PayrollBreakdown {
   const {
     monthlyTarget,
     incentiveAmount,
     allowanceAmount,
-    orcRate,
-    commThreshold,
     epfEmployee,
     epfEmployer,
     etfEmployer,
-    allowanceThresholdPermanent,
-    allowanceThresholdProbation,
-    basicSalaryPermanent,
-    basicSalaryProbation
   } = salary;
 
 

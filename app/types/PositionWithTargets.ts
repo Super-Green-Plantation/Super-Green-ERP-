@@ -1,14 +1,8 @@
 import { RowConfig } from "../features/hr/targets/components/shared";
-import { CommissionRate, Member } from "./member";
 
-export interface Position {
+export interface PositionWithTargets {
   id: number;
   title: string;
-  baseSalary: number;
-  commissionRate?: CommissionRate;
-
-  members?: Member[];
-
   rank: number;
   orc: {
     ratePermanent: number;

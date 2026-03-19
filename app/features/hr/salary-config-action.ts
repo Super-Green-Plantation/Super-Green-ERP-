@@ -18,7 +18,7 @@ import { revalidatePath } from "next/cache";
 export async function getPositionSalaries() {
   const positions = await prisma.position.findMany({
     orderBy: { rank: "asc" },
-    include: { salary: true },
+    include: { salary: true, orc: true },
   });
   return positions;
 }
@@ -36,23 +36,34 @@ export async function getPositionSalaries() {
 export async function upsertPositionSalary(data: {
   positionId: number;
   basicSalaryPermanent: number;
-  // basicSalaryProbation: number;
+  basicSalaryProbation: number;
   monthlyTarget: number;
   incentiveAmount: number;
   allowanceAmount: number;
-  orcRate: number;
+  orcRatePermanent: number;   
   commRateLow: number;
   commRateHigh: number;
   commThreshold: number;
   epfEmployee: number;
   epfEmployer: number;
   etfEmployer: number;
+  allowanceThresholdPermanent: number;
+  allowanceThresholdProbation: number;
 }) {
-  await prisma.positionSalary.upsert({
-    where: { positionId: data.positionId },
-    create: data,
-    update: data,
-  });
+  const { positionId, orcRatePermanent, ...salaryData } = data;
+
+  await Promise.all([
+    prisma.positionSalary.upsert({
+      where: { positionId },
+      create: { positionId, ...salaryData },
+      update: salaryData,
+    }),
+    prisma.commissionRate.upsert({
+      where: { positionId },
+      create: { positionId, ratePermanent: orcRatePermanent / 100 },
+      update: { ratePermanent: orcRatePermanent / 100 },
+    }),
+  ]);
 
   revalidatePath("/features/hr/salary");
   return { success: true };

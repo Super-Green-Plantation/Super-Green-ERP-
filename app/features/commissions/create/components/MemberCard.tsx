@@ -4,7 +4,9 @@ interface Props {
   member: Member;
 }
 
+
 export default function MemberCard({ member }: Props) {
+  console.log("orcRate raw:", member.position?.salary?.orcRate);
   return (
     <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:shadow-md">
       {/* Header Section */}
@@ -39,8 +41,12 @@ export default function MemberCard({ member }: Props) {
             ORC Rate
           </p>
           <p className="text-base font-bold text-gray-700">
-            {member.position?.salary?.orcRate
-              ? `${(Number(member.position.salary.orcRate) * 100).toFixed(1)}%`
+            {member.position?.orc
+              ? `${(Number(
+                member.status === "PERMANENT"
+                  ? member.position.orc.ratePermanent
+                  : member.position.orc.rateNonPermanent
+              ) * 100).toFixed(2)}%`
               : "0%"}
           </p>
         </div>

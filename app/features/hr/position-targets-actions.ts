@@ -1,24 +1,27 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { serializeData } from "@/app/utils/serializers";
-import { revalidatePath } from "next/cache";
 
-// ── getPositions ──────────────────────────────────────────────────────────────
-
+// in position-targets-actions.ts
 export async function getPositions() {
   const positions = await prisma.position.findMany({
     orderBy: { rank: "asc" },
     include: {
+      positionTargets: {
+        orderBy: [{ periodNumber: "asc" }, { monthNumber: "asc" }],
+      },
       orc: true,
-      positionTargets: true, // ← correct relation name
     },
   });
-  return serializeData(positions);
-}
 
-// ── upsertPositionTargets ─────────────────────────────────────────────────────
-// Saves all 6 month targets (2 periods × 3 months) for a single position.
+  return positions.map(p => ({
+    ...p,
+    orc: p.orc ? {
+      ratePermanent: Number(p.orc.ratePermanent),
+      rateNonPermanent: Number(p.orc.rateNonPermanent),
+    } : null,
+  }));
+}
 
 export async function upsertPositionTargets(
   positionId: number,
@@ -27,13 +30,21 @@ export async function upsertPositionTargets(
     monthNumber: number;
     targetAmount: number;
     bonusAmount: number;
+    bonusThresholdPct: number;
+    vehicleAmount: number;
+    vehicleThresholdPct: number;
+    teamActiveAmount: number;
+    teamActiveThresholdPct: number;
+    minActiveAdvisors: number;
+    minActiveFMs: number;
+    minActiveBMs: number;
+    excessRate: number;
     partialThreshold: number;
     partialBonus: number;
-    excessRate: number;
   }[]
 ) {
   try {
-    await prisma.$transaction(
+    await Promise.all(
       targets.map((t) =>
         prisma.positionTarget.upsert({
           where: {
@@ -43,31 +54,34 @@ export async function upsertPositionTargets(
               monthNumber: t.monthNumber,
             },
           },
-          update: {
-            targetAmount: t.targetAmount,
-            bonusAmount: t.bonusAmount,
-            partialThreshold: t.partialThreshold,
-            partialBonus: t.partialBonus,
-            excessRate: t.excessRate,
-          },
-          create: {
-            positionId,
-            periodNumber: t.periodNumber,
-            monthNumber: t.monthNumber,
-            targetAmount: t.targetAmount,
-            bonusAmount: t.bonusAmount,
-            partialThreshold: t.partialThreshold,
-            partialBonus: t.partialBonus,
-            excessRate: t.excessRate,
-          },
+          create: { positionId, ...t },
+          update: t,
         })
       )
     );
-
-    revalidatePath("/features/hr/targets");
     return { success: true };
   } catch (err) {
-    console.error("Failed to upsert targets:", err);
+    console.error("upsertPositionTargets error:", err);
     return { success: false, error: "Failed to save targets" };
+  }
+}
+
+export async function upsertPositionOrc(
+  positionId: number,
+  rateNonPermanent: number,
+) {
+  try {
+    await prisma.commissionRate.upsert({
+      where: { positionId },
+      create: {
+        positionId,
+        rateNonPermanent
+      },
+      update: { rateNonPermanent },
+    });
+    return { success: true };
+  } catch (err) {
+    console.error("upsertPositionOrc error:", err);
+    return { success: false, error: "Failed to save ORC rate" };
   }
 }

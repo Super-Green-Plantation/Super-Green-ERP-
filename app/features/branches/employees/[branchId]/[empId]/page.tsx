@@ -8,6 +8,8 @@ import {
   BadgeInfo,
   Briefcase,
   Calendar,
+  CreditCard,
+  FileText,
   Hash,
   Loader2,
   Mail,
@@ -33,6 +35,27 @@ interface EmployeeDetailsPageProps {
   readOnly?: boolean;
 }
 
+const FormField = ({
+  label,
+  value,
+  icon,
+}: {
+  label: string;
+  value?: string | number | null;
+  icon?: React.ReactNode;
+}) => (
+  <div>
+    <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.15em] mb-1.5 flex items-center gap-1">
+      {icon && <span className="text-gray-300">{icon}</span>}
+      {label}
+    </p>
+    <p className={`text-sm font-semibold ${value ? "text-gray-800" : "text-gray-300"}`}>
+      {value ?? "—"}
+    </p>
+  </div>
+);
+
+
 const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: EmployeeDetailsPageProps) => {
   const params = useParams();
   const resolvedEmpId = propEmpId ?? Number(params.empId);
@@ -42,6 +65,17 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: EmployeeDet
   const [loading, setLoading] = useState(true);
   const [allCommission, setAllCommission] = useState();
   const [openModel, setModelOpen] = useState(false);
+  const [orc, setOrc] = useState(0);
+  console.log(employee);
+
+  useEffect(() => {
+    if (employee?.status === "PERMANENT") {
+      setOrc(employee.position?.orc?.ratePermanent * 100 || 0);
+    } else if (employee?.status === "PROBATION") {
+      setOrc(employee.position?.orc?.rateNonPermanent * 100 || 0);
+    }
+
+  }, [employee])
 
   if (!resolvedEmpId) return null;
 
@@ -142,7 +176,7 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: EmployeeDet
               <h3 className="text-xl font-semibold tracking-tighter leading-tight truncate">
                 {employee.position?.title}
               </h3>
-              {/* <p className="text-xs text-gray-400 mt-1">Level {employee.position?.rank}</p> */}
+              <p className="text-sm text-gray-400 mt-1">Branch - {employee.branches[0]?.branch?.name || "N/A"}</p>
             </div>
             <div className="p-2.5 bg-white/5 rounded-xl border border-white/10 shrink-0">
               <Briefcase className="w-4 h-4 text-blue-400" />
@@ -156,6 +190,22 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: EmployeeDet
                 {employee.totalCommission?.toLocaleString()}
               </p>
             </div>
+
+            <div className="p-2 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+              <p className="text-[9px] text-emerald-400 uppercase font-semibold mb-0.5">Status</p>
+              <p className="text-sm font-semibold text-emerald-400">
+                {employee.status}
+              </p>
+
+            </div>
+
+            <div className="p-2 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+              <p className="text-[9px] text-emerald-400 uppercase font-semibold mb-0.5">ORC </p>
+              <p className="text-sm font-semibold text-emerald-400">
+                {orc || "N/A"} %
+              </p>
+            </div>
+
           </div>
         </section>
       </div>
@@ -166,59 +216,116 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: EmployeeDet
         {/* Left column */}
         <div className="lg:col-span-2 space-y-6">
 
-          {/* General Identity */}
+          {/* ── General Identity ── */}
           <section className={cardStyles}>
-            <div className="px-4 sm:px-6 py-3.5 border-b border-gray-50 flex items-center gap-2">
+            <div className="px-4 sm:px-6 py-3.5 border-b border-gray-100 flex items-center gap-2">
               <BadgeInfo className="w-4 h-4 text-blue-500 shrink-0" />
-              <h2 className="font-black text-gray-800 text-xs uppercase tracking-widest">
-                General Identity
-              </h2>
+              <h2 className="font-black text-gray-800 text-xs uppercase tracking-widest">General Identity</h2>
             </div>
-            <div className="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-x-10 sm:gap-y-7">
-              <DetailItem label="Official Name" value={employee.nameWithInitials} icon={<User className="w-3.5 h-3.5" />} />
-              <DetailItem label="Email Address" value={employee.email} icon={<Mail className="w-3.5 h-3.5" />} />
-              <DetailItem label="Phone Line" value={employee.phone} icon={<Phone className="w-3.5 h-3.5" />} />
-              <DetailItem label="Employee Code" value={employee.empNo} icon={<Hash className="w-3.5 h-3.5" />} />
-              <DetailItem label="EPF Number" value={employee.epfNo} icon={<Hash className="w-3.5 h-3.5" />} />
-              {employee.phone2 && (
-                <DetailItem label="Phone 2" value={employee.phone2} icon={<Phone className="w-3.5 h-3.5" />} />
-              )}
-              {employee.nic && (
-                <DetailItem label="NIC" value={employee.nic} />
-              )}
-              {employee.gender && (
-                <DetailItem label="Gender" value={employee.gender} />
-              )}
-              {employee.civilStatus && (
-                <DetailItem label="Civil Status" value={employee.civilStatus} />
-              )}
-              {employee.address && (
+
+            <div className="divide-y divide-dashed divide-gray-100">
+              {/* Name & Codes */}
+              <div className="px-4 sm:px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <FormField label="Official Name" value={employee.nameWithInitials} icon={<User className="w-3.5 h-3.5" />} />
+                <FormField label="Employee Code" value={employee.empNo} icon={<Hash className="w-3.5 h-3.5" />} />
+                <FormField label="EPF Number" value={employee.epfNo} icon={<Hash className="w-3.5 h-3.5" />} />
+              </div>
+
+              {/* Contact */}
+              <div className="px-4 sm:px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <FormField label="Email Address" value={employee.email} icon={<Mail className="w-3.5 h-3.5" />} />
+                <FormField label="Phone Line 1" value={employee.phone} icon={<Phone className="w-3.5 h-3.5" />} />
+                <FormField label="Phone Line 2" value={employee.phone2} icon={<Phone className="w-3.5 h-3.5" />} />
+              </div>
+
+              {/* Personal */}
+              <div className="px-4 sm:px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <FormField label="NIC" value={employee.nic} icon={<CreditCard className="w-3.5 h-3.5" />} />
+                <FormField label="Gender" value={employee.gender} />
+                <FormField label="Civil Status" value={employee.civilStatus} />
+              </div>
+
+              {/* DOB */}
+              <div className="px-4 sm:px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <FormField
+                  label="Date of Birth"
+                  value={employee.dob ? new Date(employee.dob).toLocaleDateString() : null}
+                  icon={<Calendar className="w-3.5 h-3.5" />}
+                />
                 <div className="sm:col-span-2">
-                  <DetailItem label="Address" value={employee.address} icon={<MapPin className="w-3.5 h-3.5" />} />
+                  <FormField label="Address" value={employee.address} icon={<MapPin className="w-3.5 h-3.5" />} />
                 </div>
-              )}
+              </div>
             </div>
           </section>
 
-          {/* Branch Assignment */}
-          <section className={cardStyles}>
-            <div className="px-4 sm:px-6 py-3.5 border-b border-gray-50 flex items-center gap-2">
+          {/* ── Branch Assignment ── */}
+          {/* <section className={cardStyles}>
+            <div className="px-4 sm:px-6 py-3.5 border-b border-gray-100 flex items-center gap-2">
               <MapPin className="w-4 h-4 text-orange-500 shrink-0" />
-              <h2 className="font-black text-gray-800 text-xs uppercase tracking-widest">
-                Branch Assignment
-              </h2>
+              <h2 className="font-black text-gray-800 text-xs uppercase tracking-widest">Branch Assignment</h2>
             </div>
-            <div className="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-5 bg-orange-50/10">
-              <DetailItem label="Registered Branch" value={primaryBranch?.name || "N/A"} />
-              <div>
-                <p className={labelStyles}>Operational Status</p>
-                <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tight ${primaryBranch?.status === "Active"
-                  ? "bg-emerald-100 text-emerald-700"
-                  : "bg-red-100 text-red-700"
-                  }`}>
-                  <div className={`w-1.5 h-1.5 rounded-full ${primaryBranch?.status === "Active" ? "bg-emerald-500" : "bg-red-500"}`} />
-                  {primaryBranch?.status || "N/A"}
-                </div>
+
+            <div className="divide-y divide-dashed divide-gray-100">
+              <div className="px-4 sm:px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {employee.branches?.map((mb: any) => (
+                  <div key={mb.id} className="flex items-start gap-3 justify-between">
+                    <div className="mt-0.5 p-1.5 bg-orange-50 rounded-lg shrink-0">
+                      <MapPin className="w-3 h-3 text-orange-400" />
+                    </div>
+                    <div className="flex gap-4">
+                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">
+                        {mb.branch.name}
+                      </p>
+                      <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase
+              ${mb.branch.status === "Active" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}
+                      >
+                        <div className={`w-1.5 h-1.5 rounded-full ${mb.branch.status === "Active" ? "bg-emerald-500" : "bg-red-500"}`} />
+                        {mb.branch.status}
+                      </div>
+                      <p className="text-[10px] text-gray-400 mt-0.5">{mb.branch.location}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section> */}
+
+          {/* ── Employment & Banking ── */}
+          <section className={cardStyles}>
+            <div className="px-4 sm:px-6 py-3.5 border-b border-gray-100 flex items-center gap-2">
+              <Briefcase className="w-4 h-4 text-violet-500 shrink-0" />
+              <h2 className="font-black text-gray-800 text-xs uppercase tracking-widest">Employment & Banking</h2>
+            </div>
+
+            <div className="divide-y divide-dashed divide-gray-100">
+              {/* Employment */}
+              <div className="px-4 sm:px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <FormField
+                  label="Date of Join"
+                  value={employee.dateOfJoin ? new Date(employee.dateOfJoin).toLocaleDateString() : null}
+                  icon={<Calendar className="w-3.5 h-3.5" />}
+                />
+                <FormField
+                  label="Probation Start"
+                  value={employee.probationStartDate ? new Date(employee.probationStartDate).toLocaleDateString() : null}
+                  icon={<Calendar className="w-3.5 h-3.5" />}
+                />
+                <FormField label="Reporting Person" value={employee.reportingPerson} icon={<User className="w-3.5 h-3.5" />} />
+              </div>
+
+              {/* Docs */}
+              <div className="px-4 sm:px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <FormField label="Appointment Letter" value={employee.appointmentLetter} icon={<FileText className="w-3.5 h-3.5" />} />
+                <FormField label="Confirmation Ref" value={employee.confirmation} icon={<FileText className="w-3.5 h-3.5" />} />
+                <FormField label="Remark" value={employee.remark} />
+              </div>
+
+              {/* Banking */}
+              <div className="px-4 sm:px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <FormField label="Account No." value={employee.accNo} icon={<CreditCard className="w-3.5 h-3.5" />} />
+                <FormField label="Bank" value={employee.bank} />
+                <FormField label="Bank Branch" value={employee.bankBranch} icon={<MapPin className="w-3.5 h-3.5" />} />
               </div>
             </div>
           </section>
@@ -292,7 +399,7 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: EmployeeDet
                 </div>
                 <div className="flex justify-between items-center text-sm">
                   <span className="text-gray-400 font-medium">ORC Overriding</span>
-                  <span className="font-semibold">{Number(employee.position?.orc?.rate)}%</span>
+                  <span className="font-semibold">{orc}%</span>
                 </div>
               </div>
 

@@ -493,7 +493,7 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
 
                 {/* ── BRANCH SECTION ── */}
                 <div className="md:col-span-2">
-                  <label className={labelStyles}>
+                  {/* <label className={labelStyles}>
                     {isMultiBranch ? "Assigned Branches" : "Assigned Branch"}
                     {isMultiBranch && (
                       <select
@@ -508,7 +508,7 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                         ))}
                       </select>
                     )}
-                  </label>
+                  </label> */}
 
                   {!isMultiBranch ? (
                     /* Single branch — read-only display */

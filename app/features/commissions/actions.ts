@@ -20,7 +20,8 @@ export async function getEmployeeCommissions(empNo: number) {
     const commissions = await prisma.commission.findMany({
       where: { memberEmpNo: member?.empNo },
       include: {
-        investment: true,
+        investment: { include: { plan: true, client: true } },
+        
       },
     });
 
@@ -61,6 +62,8 @@ export async function processCommissions(data: {
 }) {
   const { investmentId, empNo, branchId } = data;
 
+  console.log(data);
+  
   try {
     const result = await prisma.$transaction(async (tx) => {
       const createdCommissions: any[] = [];
@@ -161,7 +164,9 @@ export async function processCommissions(data: {
         data: { totalCommission: { increment: personalAmount } },
       });
 
-      const personalRecord = await tx.commission.create({
+
+
+      const uplineRecord = await tx.commission.create({
         data: {
           investmentId,
           memberEmpNo: empNo,
@@ -173,16 +178,19 @@ export async function processCommissions(data: {
         include: { member: { include: { position: true } } },
       });
 
-      createdCommissions.push(personalRecord);
+      createdCommissions.push(uplineRecord);
 
       // Upline commissions — ORC rate from position.salary.orcRate
       const uplines = await getUplineChain(advisor.position.rank, branchId);
 
       for (const upline of uplines) {
-        if (!upline.position?.salary) continue;  // skip if no salary config
+        if (!upline.position?.orc) continue;
 
-        const uplineRate = Number(upline.position.salary.orcRate);
-        if (uplineRate <= 0) continue;            // skip if ORC rate is zero
+        const orcRate = upline.status === "PERMANENT"
+          ? upline.position.orc.ratePermanent
+          : upline.position.orc.rateNonPermanent;
+
+        const uplineRate = Number(orcRate);
         if (uplineRate > 1) throw new ApiError("ORC_RATE_TOO_HIGH", "ORC rate too high");
 
         const uplineAmount = investment.amount * uplineRate;
@@ -192,16 +200,38 @@ export async function processCommissions(data: {
           data: { totalCommission: { increment: uplineAmount } },
         });
 
-        const uplineRecord = await tx.commission.create({
+        await tx.commission.create({
           data: {
             investmentId,
             memberEmpNo: upline.empNo,
-            branchId,
             amount: uplineAmount,
             type: "UPLINE",
             refNumber: generateCommissionRef(),
+            branchId,
           } as any,
           include: { member: { include: { position: true } } },
+        });
+
+        // Cascade volume to upline's monthly payroll
+        await tx.monthlyPayroll.upsert({
+          where: {
+            memberId_year_month: {
+              memberId: upline.id,
+              year,
+              month,
+            },
+          },
+          update: {
+            volumeAchieved: { increment: investment.amount },
+          },
+          create: {
+            memberId: upline.id,
+            year,
+            month,
+            basicSalaryPermanent: 0,
+            monthlyTarget: 0,
+            volumeAchieved: investment.amount,
+          },
         });
 
         createdCommissions.push(uplineRecord);
@@ -233,11 +263,14 @@ export async function getCommissionByBranch(branchId: number) {
     const commissions = await prisma.commission.findMany({
       where: { branchId },
       include: {
-        member: true, investment: { include: { plan: true, } }, Branch: true
+        member: true, investment: { include: { plan: true, client:true } }, Branch: true
       },
       orderBy: { createdAt: "desc" },
 
     });
+
+    console.log(commissions);
+    
 
     return serializeData(commissions);
   } catch (error) {
@@ -253,7 +286,8 @@ export async function getCommissionDetails() {
         id: true,
         amount: true,
         Branch: true,
-        investment: { include: { plan: true } },
+        
+        investment: { include: { plan: true,client: true } },
         member: true,
 
 
@@ -278,7 +312,7 @@ async function getUplineChain(advisorRank: number, branchId: number) {
       position: { rank: { gt: advisorRank } },
     },
     include: {
-      position: { include: { salary: true } },
+      position: { include: { salary: true, orc: true } },
       branches: { include: { branch: true } },
     },
     orderBy: { position: { rank: "asc" } },
@@ -296,7 +330,7 @@ async function getUplineChain(advisorRank: number, branchId: number) {
       position: { rank: { gt: highestBranchRank } },
     },
     include: {
-      position: { include: { salary: true } },
+      position: { include: { salary: true, orc: true } },
       branches: { include: { branch: true } },
     },
     orderBy: { position: { rank: "asc" } },

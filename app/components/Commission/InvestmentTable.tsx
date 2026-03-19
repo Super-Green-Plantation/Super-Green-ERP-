@@ -28,7 +28,7 @@ useEffect(() => {
   if (!dbUser) return;
 
   const loadInvestments = async () => {
-    if (dbUser.role === "BRANCH_MANAGER") {
+    if (dbUser.role === "BRANCH_MANAGER" ) {
       const branchData =
         await getCommissionByBranch(dbUser.branchId || 0);
 
@@ -92,10 +92,10 @@ useEffect(() => {
                   <div className="flex flex-col gap-0.5">
                     <div className="flex items-center gap-1.5 text-sm font-bold text-slate-700">
                       <User size={12} className="text-slate-300" />
-                      {item.member.name || "System"}
+                      {item.member.nameWithInitials || "System"}
                     </div>
                     <div className="text-[10px] text-slate-400 font-bold uppercase tracking-tight pl-4">
-                      <span className="text-slate-300">Client:</span> {item.clientName}
+                      <span className="text-slate-300">Client:</span> {item.investment.client?.fullName || "N/A"}
                     </div>
                   </div>
                 </td>

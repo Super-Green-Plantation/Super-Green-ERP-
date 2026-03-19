@@ -69,7 +69,7 @@ export interface Position {
   orc: any;
   id: number;
   title: string;
-  rank: string;
+  rank: number;
   baseSalary: number;
   createdAt: string | Date;
   updatedAt: string | Date;

@@ -43,7 +43,6 @@ export async function getPayrollPreview(
     month: number,
     volumes: Record<number, number> = {},
 ) {
-    console.log("####################",branchId, year, month, volumes);
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 1);
 
@@ -52,7 +51,7 @@ export async function getPayrollPreview(
         include: {
             member: {
                 include: {
-                    position: { include: { salary: true } },
+                    position: { include: { salary: true, orc: true } },
                     monthlyPayrolls: { where: { year, month } },
                     commissions: {
                         where: {
@@ -68,7 +67,7 @@ export async function getPayrollPreview(
         },
     });
 
-    
+
 
     const rows = branchMembers.map(({ member }: any) => {
         const salary = member.position?.salary;
@@ -98,12 +97,17 @@ export async function getPayrollPreview(
             allowanceThresholdProbation: Number(salary.allowanceThresholdProbation),
         };
 
+        const orcRate = member.status === "PERMANENT"
+            ? Number(member.position.orc?.ratePermanent ?? 0)
+            : Number(member.position.orc?.rateNonPermanent ?? 0);
+
         const breakdown = calculatePayroll(
             normalizedSalary,
             actualCommissionEarned,
             member.status,
             volumeAchieved,
-            0,
+            0,        // orcVolume — wire up later
+            orcRate,  // ← pass in
         );
         return {
             memberId: member.id,
@@ -205,6 +209,8 @@ export async function runMonthlyPayroll(
             status: member.status,
             volumeAchieved,
         });
+
+        
         const normalizedSalary = {
             ...salary,
             basicSalaryPermanent: Number(salary.basicSalaryPermanent),
@@ -212,7 +218,7 @@ export async function runMonthlyPayroll(
             monthlyTarget: Number(salary.monthlyTarget),
             incentiveAmount: Number(salary.incentiveAmount),
             allowanceAmount: Number(salary.allowanceAmount),
-            orcRate: Number(salary.orcRate),
+            // orcRate: Number(salary.orcRate),
             commRateLow: Number(salary.commRateLow),
             commRateHigh: Number(salary.commRateHigh),
             commThreshold: Number(salary.commThreshold),

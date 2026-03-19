@@ -110,14 +110,30 @@ export async function createInvestment(data: {
 
 export async function getInvestmentById(id: number) {
   try {
-    const investment = await prisma.investment.findUnique({
+
+    const commission = await prisma.commission.findUnique({
       where: { id },
+      include: {
+          investment: {
+            include: {
+              client: true,
+              plan: true,
+              advisor: true,
+            },
+          },
+      },
+    });
+
+    const investment = await prisma.investment.findUnique({
+      where: { id: commission?.investmentId },
       include: {
         client: true,
         plan: true,
         advisor: {
           include: {
-            branches: true,
+            branches: {include:{
+              branch:true, member: true
+            }}
           },
         },
       },

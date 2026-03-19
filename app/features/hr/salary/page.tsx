@@ -8,35 +8,43 @@ import {
 import { toast } from "sonner";
 import { getPositionSalaries, upsertPositionSalary } from "../salary-config-action";
 import Back from "@/app/components/Buttons/Back";
+import Loading from "@/app/components/Status/Loading";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type SalaryForm = {
   basicSalaryPermanent: number;
+  basicSalaryProbation: number;
   monthlyTarget: number;
   incentiveAmount: number;
   allowanceAmount: number;
-  orcRate: number;         // stored as decimal e.g. 0.01
+  orcRatePermanent: number;   // ← add this
   commRateLow: number;     // e.g. 0.05
   commRateHigh: number;    // e.g. 0.08
   commThreshold: number;   // e.g. 500000
   epfEmployee: number;     // 0.08
   epfEmployer: number;     // 0.12
   etfEmployer: number;     // 0.03
+  allowanceThresholdPermanent: number; // e.g. 1.0 (100% of target)
+  allowanceThresholdProbation: number; // e.g. 0.75 (75% of target)
 };
 
 const DEFAULT_FORM: SalaryForm = {
   basicSalaryPermanent: 0,
+  orcRatePermanent: 0,   // ← default to 0
+  basicSalaryProbation: 0,
   monthlyTarget: 0,
   incentiveAmount: 0,
   allowanceAmount: 0,
-  orcRate: 0,
+  // remove orcRate
   commRateLow: 0.05,
   commRateHigh: 0.08,
   commThreshold: 500000,
   epfEmployee: 0.08,
   epfEmployer: 0.12,
   etfEmployer: 0.03,
+  allowanceThresholdPermanent: 1.0,
+  allowanceThresholdProbation: 0.75,
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -45,10 +53,11 @@ const fmt = (n: number) =>
   n >= 1_000_000
     ? `${(n / 1_000_000).toFixed(1)}M`
     : n >= 1000
-    ? `${(n / 1000).toFixed(0)}K`
-    : String(n);
+      ? `${(n / 1000).toFixed(0)}K`
+      : String(n);
 
-const pct = (n: number) => `${(n * 100).toFixed(2)}%`;
+// for fields stored as whole % in form state (ORC, EPF, commRate)
+const pctDisplay = (n: number) => `${n.toFixed(2)}%`;
 
 // ─── Field component ──────────────────────────────────────────────────────────
 
@@ -102,7 +111,7 @@ export default function SalaryConfigPage() {
 
   // Load all positions + existing salary configs
   useEffect(() => {
-    getPositionSalaries().then((data:any) => {
+    getPositionSalaries().then((data: any) => {
       setPositions(data);
 
       // Pre-fill forms: use existing config if available, else defaults
@@ -110,24 +119,27 @@ export default function SalaryConfigPage() {
       for (const p of data) {
         initial[p.id] = p.salary
           ? {
-              basicSalaryPermanent: p.salary.basicSalaryPermanent,
-              monthlyTarget: p.salary.monthlyTarget,
-              incentiveAmount: p.salary.incentiveAmount,
-              allowanceAmount: p.salary.allowanceAmount,
-              orcRate: p.salary.orcRate,
-              commRateLow: p.salary.commRateLow,
-              commRateHigh: p.salary.commRateHigh,
-              commThreshold: p.salary.commThreshold,
-              epfEmployee: p.salary.epfEmployee,
-              epfEmployer: p.salary.epfEmployer,
-              etfEmployer: p.salary.etfEmployer,
-            }
+            basicSalaryPermanent: p.salary.basicSalaryPermanent ?? 0,
+            basicSalaryProbation: p.salary.basicSalaryProbation ?? 0,
+            monthlyTarget: p.salary.monthlyTarget ?? 0,
+            incentiveAmount: p.salary.incentiveAmount ?? 0,
+            allowanceAmount: p.salary.allowanceAmount ?? 0,
+            orcRatePermanent: (p.orc?.ratePermanent ?? 0) * 100,  // ← from CommissionRate
+            commRateLow: p.salary.commRateLow ?? 0.05,
+            commRateHigh: p.salary.commRateHigh ?? 0.08,
+            commThreshold: p.salary.commThreshold ?? 500000,
+            epfEmployee: p.salary.epfEmployee ?? 0.08,
+            epfEmployer: p.salary.epfEmployer ?? 0.12,
+            etfEmployer: p.salary.etfEmployer ?? 0.03,
+            allowanceThresholdPermanent: p.salary.allowanceThresholdPermanent ?? 1.0,
+            allowanceThresholdProbation: p.salary.allowanceThresholdProbation ?? 0.75,
+          }
           : { ...DEFAULT_FORM };
       }
       setForms(initial);
 
       // Auto-expand first unconfigured position
-      const first = data.find((p:any) => !p.salary);
+      const first = data.find((p: any) => !p.salary);
       if (first) setExpandedId(first.id);
 
       setLoading(false);
@@ -161,25 +173,19 @@ export default function SalaryConfigPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
-      </div>
-    );
-  }
+  if (loading) return <Loading/>
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8 space-y-3">
+    <div className="max-w-7xl mx-auto px-4 py-8 space-y-3">
       {/* Header */}
       <div className="mb-6">
         <div className="flex gap-3 items-center">
-           <Back/>
-        <h1 className="text-xl font-black text-slate-800 uppercase tracking-tight">
-          Salary Configuration
-        </h1>
+          <Back />
+          <h1 className="text-xl font-black text-slate-800 uppercase tracking-tight">
+            Salary Configuration
+          </h1>
         </div>
-       
+
         <p className="text-sm text-slate-400 mt-1">
           Configure basic salary, targets, incentives, allowances and commission rates per position.
         </p>
@@ -317,14 +323,14 @@ export default function SalaryConfigPage() {
                       value={form.commRateLow}
                       onChange={(v) => setField(position.id, "commRateLow", v)}
                       suffix="%×100"
-                      hint={`Currently: ${pct(form.commRateLow)}`}
+                      hint={`Currently: ${pctDisplay (form.commRateLow)}`}
                     />
                     <Field
                       label="Rate above threshold"
                       value={form.commRateHigh}
                       onChange={(v) => setField(position.id, "commRateHigh", v)}
                       suffix="%×100"
-                      hint={`Currently: ${pct(form.commRateHigh)}`}
+                      hint={`Currently: ${pctDisplay (form.commRateHigh)}`}
                     />
                     <Field
                       label="Volume threshold (Rs.)"
@@ -347,10 +353,10 @@ export default function SalaryConfigPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <Field
                       label="ORC Rate (decimal)"
-                      value={form.orcRate}
-                      onChange={(v) => setField(position.id, "orcRate", v)}
+                      value={form.orcRatePermanent}
+                      onChange={(v) => setField(position.id, "orcRatePermanent", v)}
                       suffix="%×100"
-                      hint={`Currently: ${pct(form.orcRate)} — 0 if not applicable`}
+                      hint={`Currently: ${pctDisplay (form.orcRatePermanent)} — 0 if not applicable`}
                     />
                   </div>
                 </div>
@@ -369,21 +375,21 @@ export default function SalaryConfigPage() {
                       value={form.epfEmployee}
                       onChange={(v) => setField(position.id, "epfEmployee", v)}
                       suffix="%×100"
-                      hint={`Deducted from pay: ${pct(form.epfEmployee)}`}
+                      hint={`Deducted from pay: ${pctDisplay (form.epfEmployee)}`}
                     />
                     <Field
                       label="EPF — Employer"
                       value={form.epfEmployer}
                       onChange={(v) => setField(position.id, "epfEmployer", v)}
                       suffix="%×100"
-                      hint={`Employer cost: ${pct(form.epfEmployer)}`}
+                      hint={`Employer cost: ${pctDisplay (form.epfEmployer)}`}
                     />
                     <Field
                       label="ETF — Employer"
                       value={form.etfEmployer}
                       onChange={(v) => setField(position.id, "etfEmployer", v)}
                       suffix="%×100"
-                      hint={`Employer cost: ${pct(form.etfEmployer)}`}
+                      hint={`Employer cost: ${pctDisplay (form.etfEmployer)}`}
                     />
                   </div>
                 </div>

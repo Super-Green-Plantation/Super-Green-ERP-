@@ -216,8 +216,10 @@ export async function getEmployeesByBranch(
       position: {
         include: {
           orc: true,
+          salary: true,
         },
       },
+      branches: true,
     },
   });
 

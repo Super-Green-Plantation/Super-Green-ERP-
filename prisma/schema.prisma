@@ -42,11 +42,11 @@ enum Title {
 }
 
 model Position {
-  id    Int   @id @default(autoincrement())
-  title Title
-  rank  Int   @unique
-  orc CommissionRate?
-  members Member[]
+  id              Int              @id @default(autoincrement())
+  title           Title
+  rank            Int              @unique
+  orc             CommissionRate?
+  members         Member[]
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   positionTargets PositionTarget[]
@@ -54,14 +54,14 @@ model Position {
 }
 
 model CommissionRate {
-  id         Int      @id @default(autoincrement())
-  rate       Decimal?
-  position   Position @relation(fields: [positionId], references: [id])
-  positionId Int      @unique
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id               Int      @id @default(autoincrement())
+  positionId       Int      @unique
+  position         Position @relation(fields: [positionId], references: [id])
+  ratePermanent    Float   @default(0)
+  rateNonPermanent Float   @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }
-
 //Junction Table
 model MemberBranch {
   id Int @id @default(autoincrement())
@@ -87,7 +87,7 @@ model PermanentEvaluation {
   year            Int
   month           Int
   volumeAchieved  Float
-  monthlyTarget   Float 
+  monthlyTarget   Float
   incentiveEarned Float    @default(0)
   allowanceEarned Float    @default(0)
   incentiveHit    Boolean  @default(false)
@@ -105,7 +105,6 @@ model PositionSalary {
   monthlyTarget   Float // e.g. 3_000_000
   incentiveAmount Float // paid at 100% target
   allowanceAmount Float // paid at 75% target
-  orcRate         Float @default(0) // e.g. 0.01 for 1%
   commRateLow     Float // e.g. 0.05 for probation=0.07
   commRateHigh    Float // e.g. 0.08 for probation=0.10
   commThreshold   Float @default(500000)
@@ -160,7 +159,7 @@ model Member {
   empNo             String    @unique
   epfNo             String
   phone             String?
-  phone2             String?
+  phone2            String?
   nic               String?
   dob               DateTime?
   gender            String?
@@ -200,16 +199,34 @@ model Member {
 }
 
 model PositionTarget {
-  id               Int      @id @default(autoincrement())
-  positionId       Int
-  position         Position @relation(fields: [positionId], references: [id])
-  periodNumber     Int // 1 = first 3 months, 2 = second 3 months
-  monthNumber      Int // 1, 2, or 3 within that period
-  targetAmount     Float // e.g. 1_500_000
-  bonusAmount      Float // fixed bonus if target hit, e.g. 50_000
-  excessRate       Float    @default(0) // 0 for period 1, 0.005 for period 2
-  partialThreshold Float    @default(0)
-  partialBonus     Float    @default(0)
+  id           Int      @id @default(autoincrement())
+  positionId   Int
+  position     Position @relation(fields: [positionId], references: [id])
+  periodNumber Int
+  monthNumber  Int
+
+  // Volume target
+  targetAmount Float
+
+  // Incentive (bonus)
+  bonusAmount       Float
+  bonusThresholdPct Float @default(1.0) // % of target required, e.g. 0.50 for BM
+
+  // Vehicle & Fuel
+  vehicleAmount       Float @default(0)
+  vehicleThresholdPct Float @default(0) // e.g. 0.60 for BM
+
+  // Team Active
+  teamActiveAmount       Float @default(0)
+  teamActiveThresholdPct Float @default(0) // e.g. 0.85 for BM
+  minActiveAdvisors      Int   @default(0)
+  minActiveFMs           Int   @default(0)
+  minActiveBMs           Int   @default(0)
+
+  // FA only
+  excessRate       Float @default(0)
+  partialThreshold Float @default(0)
+  partialBonus     Float @default(0)
 
   @@unique([positionId, periodNumber, monthNumber])
 }

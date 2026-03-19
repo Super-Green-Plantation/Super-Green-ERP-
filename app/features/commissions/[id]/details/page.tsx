@@ -25,6 +25,9 @@ const InvestmentDetails = () => {
   const params = useParams();
   const id = Number(params?.id);
 
+  console.log(id);
+  
+
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const queryClient = useQueryClient();
@@ -59,6 +62,8 @@ const InvestmentDetails = () => {
     }
   };
 
+  console.log(data);
+  
   if (loading) return <Loading />;
   if (!data) return <Error />;
 
@@ -244,11 +249,11 @@ const InvestmentDetails = () => {
           <div className="p-6">
             <div className="flex items-center gap-5 mb-8">
               <div className="w-16 h-16 rounded-4xl bg-slate-900 flex items-center justify-center text-white text-2xl font-black shadow-xl shadow-slate-200 uppercase">
-                {member?.name ? member.name.charAt(0) : "N"}
+                {member.nameWithInitials ? member.nameWithInitials.charAt(0) : "N"}
               </div>
               <div>
                 <h3 className="text-xl font-black text-slate-900 tracking-tight">
-                  {member?.name || "No Advisor Assigned"}
+                  {member?.nameWithInitials || "No Advisor Assigned"}
                 </h3>
                 <div className="inline-block px-2 py-0.5 bg-purple-50 text-purple-600 text-[10px] font-black rounded uppercase tracking-tighter border border-purple-100">
                   Ref: {member?.empNo || "UNASSIGNED"}
@@ -257,10 +262,10 @@ const InvestmentDetails = () => {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 border-t border-slate-100 pt-6">
-              <DetailItem label="Operating Branch" value={member?.branch?.name || "N/A"} />
+              <DetailItem label="Operating Branch" value={member?.branches?.map((b:any) => b.branch?.name).join(", ") || "N/A"} />
               <DetailItem
                 label="Base Location"
-                value={member?.branch?.location || "N/A"}
+                value={member?.branches?.map((b:any) => b.branch?.location).join(", ") || "N/A"}
               />
             </div>
           </div>
