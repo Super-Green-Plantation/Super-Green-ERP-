@@ -21,6 +21,7 @@ export default function SignInPage() {
   useEffect(() => {
     if (state.error) {
       toast.error(state.error);
+      setLoading(false);
     }
   }, [state.error]);
 
@@ -112,6 +113,7 @@ export default function SignInPage() {
 
             {/* Submit Button */}
             <button
+            onClick={()=>setLoading(true)}
               type="submit"
               disabled={email === "" || password === ""}
               className="group relative w-full bg-white hover:bg-slate-100 disabled:bg-slate-700 text-slate-950 rounded-2xl py-4 text-[11px] font-black uppercase tracking-[0.2em] transition-all shadow-xl shadow-white/5 active:scale-[0.98] flex items-center justify-center gap-2 overflow-hidden"
