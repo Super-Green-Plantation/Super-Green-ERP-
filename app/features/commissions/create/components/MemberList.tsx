@@ -30,8 +30,8 @@ export default function MemberList({
 
   return (
     <div className="space-y-3">
-      {members?.map((m) => (
-        <MemberCard key={m.id} member={m} />
+      {members?.map((m, index) => (
+        <MemberCard key={index} member={m} />
       ))}
     </div>
   );

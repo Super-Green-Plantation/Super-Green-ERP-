@@ -13,16 +13,6 @@ import Pagination from "@/app/components/Pagination";
 const PAGE_SIZE = 10;
 
 const InvestmentTable = ({ investments }: any) => {
-  // const [currentPage, setCurrentPage] = useState(1);
-
-  // const allInvestments: any[] = investments?.getAllInvestment ?? [];
-  // const totalPages = Math.ceil(allInvestments.length / PAGE_SIZE);
-  // const paginatedInvestments = allInvestments.slice(
-  //   (currentPage - 1) * PAGE_SIZE,
-  //   currentPage * PAGE_SIZE
-  // );
-  console.log(investments);
-  
 
   return (
     <div className="w-full bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -79,9 +69,7 @@ const InvestmentTable = ({ investments }: any) => {
                 {/* Client Details */}
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
-                      <User size={14} />
-                    </div>
+                    
                     <div>
                       <div className="text-sm font-bold text-slate-900">
                         {item.client.fullName}

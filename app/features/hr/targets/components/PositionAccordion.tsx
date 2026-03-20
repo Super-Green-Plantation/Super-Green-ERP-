@@ -2,7 +2,7 @@
 "use client";
 
 import { Save, ChevronDown, ChevronRight, CheckCircle2, Loader2 } from "lucide-react";
-import {  PositionEdits, RowConfig, FaPeriodConfig, RANK_COLORS } from "./shared";
+import { PositionEdits, RowConfig, FaPeriodConfig, RANK_COLORS } from "./shared";
 import FaTargetConfig from "./FaTargetConfig";
 import NonFaTargetConfig from "./NonFaTargetConfig";
 import { Position } from "@/app/types/Position";
@@ -23,14 +23,16 @@ interface PositionAccordionProps {
     field: keyof Omit<RowConfig, "periodNumber" | "monthNumber">,
     value: number
   ) => void;
+
+  onUpdateAfter6Month: (value: number) => void;
   onUpdateFa: (period: "p1" | "p2", field: keyof FaPeriodConfig, value: number) => void;
-  onUpdateOrc: (status:string, value: number) => void;
+  onUpdateOrc: (status: string, value: number) => void;
   onSyncToggle: (period: number, month: number, checked: boolean) => void;
 }
 
 export default function PositionAccordion({
   position, isExpanded, isSaving, edit, syncedMonths, syncKey,
-  onToggle, onSave, onUpdateRow, onUpdateFa, onUpdateOrc, onSyncToggle,
+  onToggle, onSave, onUpdateRow, onUpdateFa, onUpdateOrc, onSyncToggle,onUpdateAfter6Month
 }: PositionAccordionProps) {
   const isFa = position.rank === 1;
   const rankColor = RANK_COLORS[position.rank] ?? RANK_COLORS[1];
@@ -97,6 +99,8 @@ export default function PositionAccordion({
               onUpdateRow={onUpdateRow}
               onSyncToggle={onSyncToggle}
               onUpdateOrc={onUpdateOrc}
+              after6MonthTarget={edit.after6MonthTarget}
+              onUpdateAfter6Month={onUpdateAfter6Month}
             />
           )}
         </div>

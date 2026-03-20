@@ -105,7 +105,7 @@ export async function createBranch(data: { name: string; location: string }) {
     const newBranch = await prisma.branch.create({
       data: {
         name: data.name,
-        location: data.location,
+        location: data.location ? data.location : data.name,
       },
     });
 

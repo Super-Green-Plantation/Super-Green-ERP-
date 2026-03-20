@@ -8,6 +8,7 @@ import {
 import { getBranches } from "@/app/features/branches/actions";
 import { toast } from "sonner";
 import { getPayrollPreview, runMonthlyPayroll } from "../payroll-action";
+import Heading from "@/app/components/Heading";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -104,7 +105,7 @@ export default function PayrollPage() {
     }
   };
 
-  
+
 
   // Derived stats
   const totalGross = preview.reduce((s, r) => s + (r.breakdown?.grossPay ?? 0), 0);
@@ -116,15 +117,15 @@ export default function PayrollPage() {
   const unconfiguredCount = preview.filter((r) => !r.salaryConfigured).length;
 
   console.log(preview);
-  
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
 
       {/* Header */}
       <div>
-        <h1 className="text-xl font-black text-slate-800 uppercase tracking-tight">
+        <Heading>
           Monthly Payroll
-        </h1>
+        </Heading>
         <p className="text-sm text-slate-400 mt-1">
           Enter volume achieved per employee and run payroll for the selected month.
         </p>
@@ -255,11 +256,10 @@ export default function PayrollPage() {
                     </td>
                     <td className="px-4 py-3">
                       <span className="text-xs font-bold text-slate-500">{row.position}</span>
-                      <span className={`ml-2 text-[10px] font-black px-1.5 py-0.5 rounded-full ${
-                        row.status === "PERMANENT"
+                      <span className={`ml-2 text-[10px] font-black px-1.5 py-0.5 rounded-full ${row.status === "PERMANENT"
                           ? "bg-emerald-50 text-emerald-600"
                           : "bg-amber-50 text-amber-600"
-                      }`}>
+                        }`}>
                         {row.status === "PERMANENT" ? "Perm" : "Prob"}
                       </span>
                     </td>

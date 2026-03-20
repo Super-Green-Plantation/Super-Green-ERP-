@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { getPositionSalaries, upsertPositionSalary } from "../salary-config-action";
 import Back from "@/app/components/Buttons/Back";
 import Loading from "@/app/components/Status/Loading";
+import Heading from "@/app/components/Heading";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

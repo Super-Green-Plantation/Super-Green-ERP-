@@ -155,7 +155,7 @@ const EmpTable = ({ onEdit, onRefresh, branchId }: EmpTableProps) => {
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-black bg-blue-50 text-blue-600 border border-blue-100 uppercase tracking-tight">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-bold bg-green-100 text-green-600 border border-green-100 uppercase tracking-tight">
                     <Briefcase size={12} className="opacity-70" />
                     {e.position?.title || "N/A"}
                   </div>

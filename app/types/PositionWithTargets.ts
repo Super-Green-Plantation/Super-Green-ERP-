@@ -1,4 +1,10 @@
+// PositionWithTargets.ts
 import { RowConfig } from "../features/hr/targets/components/shared";
+
+export interface PositionTargetRow extends RowConfig {
+  id: number;
+  positionId: number;
+}
 
 export interface PositionWithTargets {
   id: number;
@@ -8,8 +14,7 @@ export interface PositionWithTargets {
     ratePermanent: number;
     rateNonPermanent: number;
   } | null;
-  positionTargets: RowConfig[];
-
+  positionTargets: PositionTargetRow[];
   createdAt: string | Date;
   updatedAt: string | Date;
 }

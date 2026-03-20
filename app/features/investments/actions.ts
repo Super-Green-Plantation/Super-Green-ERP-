@@ -255,3 +255,76 @@ export async function deleteInvestment(id: number) {
     throw new Error("Failed to delete investment");
   }
 }
+
+export async function createInvestmentForExistingClient(data: {
+  clientId: number;
+  branchId: number;
+  planId?: number;
+  amount: number;
+  beneficiaryId?: number | null;
+  nomineeId?: number | null;
+  newBeneficiary?: {
+    fullName: string;
+    nic?: string;
+    phone: string;
+    bankName: string;
+    bankBranch: string;
+    accountNo: string;
+    relationship: string;
+  } | null;
+  newNominee?: {
+    fullName: string;
+    permanentAddress: string;
+    postalAddress?: string;
+  } | null;
+}) {
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      let beneficiaryId = data.beneficiaryId ?? null;
+      let nomineeId = data.nomineeId ?? null;
+
+      // Create new beneficiary if provided
+      if (data.newBeneficiary?.fullName) {
+        const b = await tx.beneficiary.create({
+          data: {
+            clientId: data.clientId,
+            ...data.newBeneficiary,
+            nic: data.newBeneficiary.nic || null,
+          },
+        });
+        beneficiaryId = b.id;
+      }
+
+      // Create new nominee if provided
+      if (data.newNominee?.fullName) {
+        const n = await tx.nominee.create({
+          data: {
+            clientId: data.clientId,
+            ...data.newNominee,
+            postalAddress: data.newNominee.postalAddress || null,
+          },
+        });
+        nomineeId = n.id;
+      }
+
+      return tx.investment.create({
+        data: {
+          clientId: data.clientId,
+          branchId: data.branchId,
+          planId: data.planId ? Number(data.planId) : null,
+          investmentDate: new Date(),
+          amount: data.amount,
+          refNumber: generateInvestmentNumber(),
+          beneficiaryId,
+          nomineeId,
+        },
+      });
+    });
+
+    revalidatePath("/features/investments");
+    return serializeData({ success: true, investment: result });
+  } catch (err) {
+    console.error("createInvestmentForExistingClient error:", err);
+    return { success: false, error: "Failed to create investment" };
+  }
+}

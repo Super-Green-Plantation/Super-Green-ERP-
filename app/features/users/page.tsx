@@ -1,5 +1,6 @@
 "use client";
 
+import Heading from '@/app/components/Heading';
 import Error from '@/app/components/Status/Error';
 import Loading from '@/app/components/Status/Loading';
 import { useUsers } from '@/app/hooks/useUsers';
@@ -8,23 +9,18 @@ import {
   Clock,
   Loader2,
   MapPin,
-  MoreVertical,
   Shield,
-  TrendingUp,
   User as UserIcon
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { updateUserStatus } from './action';
 import { ActionMenu } from './ActionMenu';
-import Heading from '@/app/components/Heading';
 
 const UserListPage = () => {
 
   const { data: usersData, isLoading, isError } = useUsers();
   const [users, setUsers] = useState<any[]>([]);
-
-
 
   // Initialize local state when hook finishes loading
   useEffect(() => {

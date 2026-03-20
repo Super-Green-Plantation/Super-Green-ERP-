@@ -12,6 +12,7 @@ import {
   buildEdits,
 } from "./components/shared";
 import { PositionWithTargets } from "@/app/types/PositionWithTargets";
+import Heading from "@/app/components/Heading";
 
 export default function PositionTargetsPage() {
   const [positions, setPositions] = useState<PositionWithTargets[]>([]);
@@ -130,6 +131,14 @@ export default function PositionTargetsPage() {
     }
   }, []);
 
+  const updateAfter6Month = useCallback((positionId: number, value: number) => {
+    setEdits(prev => ({
+      ...prev,
+      [positionId]: { ...prev[positionId], after6MonthTarget: value },
+    }));
+  }, []);
+
+
   const handleSave = async (positionId: number, isFa: boolean) => {
     setSaving(positionId);
     try {
@@ -149,6 +158,7 @@ export default function PositionTargetsPage() {
             excessRate: p1.excessRate / 100,
             partialThreshold: p1.partialThreshold,
             partialBonus: p1.partialBonus,
+            after6MonthTarget: 0,
           })),
           ...[1, 2, 3].map(m => ({
             periodNumber: 2, monthNumber: m,
@@ -160,6 +170,7 @@ export default function PositionTargetsPage() {
             excessRate: p2.excessRate / 100,
             partialThreshold: p2.partialThreshold,
             partialBonus: p2.partialBonus,
+            after6MonthTarget: 0,
           })),
         ];
       } else {
@@ -169,6 +180,8 @@ export default function PositionTargetsPage() {
           vehicleThresholdPct: r.vehicleThresholdPct / 100,
           teamActiveThresholdPct: r.teamActiveThresholdPct / 100,
           excessRate: r.excessRate / 100,
+          after6MonthTarget: edit.after6MonthTarget, // ← write from position-level state
+
         }));
       }
 
@@ -208,20 +221,17 @@ export default function PositionTargetsPage() {
             <Target className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Position Targets</h1>
+            <Heading>Position Targets</Heading>
             <p className="text-sm text-slate-500 font-medium mt-0.5">
               Configure probation-period monthly targets and bonuses per position.
             </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 border border-amber-200 rounded-xl">
-            <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
-            <p className="text-[11px] font-bold text-amber-700">Changes apply to future evaluations only</p>
-          </div>
+
           <Link
             href="/features/hr/salary"
-            className="px-4 py-2 text-xs font-black uppercase tracking-widest text-white bg-slate-900 rounded-xl hover:bg-slate-700 transition-all"
+            className="px-5 py-3 text-xs font-black uppercase tracking-widest text-white bg-slate-900 rounded-xl hover:bg-slate-700 transition-all"
           >
             Permanent Config
           </Link>
@@ -248,6 +258,8 @@ export default function PositionTargetsPage() {
             onUpdateOrc={(status, value) => updateOrc(position.id, status, value)}
             onSyncToggle={(period, month, checked) =>
               handleSyncToggle(position.id, period, month, checked)}
+            onUpdateAfter6Month={(value) => updateAfter6Month(position.id, value)}
+
           />
         ))}
       </div>

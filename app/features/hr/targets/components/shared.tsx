@@ -29,6 +29,7 @@ export interface RowConfig {
     excessRate: number;
     partialThreshold: number;
     partialBonus: number;
+    after6MonthTarget: number;
 }
 
 export interface FaPeriodConfig {
@@ -46,6 +47,7 @@ export type PositionEdits = Record<number, {
     fa: { p1: FaPeriodConfig; p2: FaPeriodConfig };
     orcRatePermanent: number;
     orcRateNonPermanent: number;
+    after6MonthTarget: number;
 }>;
 
 export const RANK_COLORS: Record<number, string> = {
@@ -65,6 +67,7 @@ export function blankRow(period: number, month: number): RowConfig {
         teamActiveAmount: 0, teamActiveThresholdPct: 0,
         minActiveAdvisors: 0, minActiveFMs: 0, minActiveBMs: 0,
         excessRate: 0, partialThreshold: 0, partialBonus: 0,
+        after6MonthTarget: 0,
     };
 }
 
@@ -76,7 +79,7 @@ export function buildEdits(position: PositionWithTargets): PositionEdits[number]
         for (let m = 1; m <= 3; m++) {
             const found = existing.find(t => t.periodNumber === p && t.monthNumber === m);
             rows.push(found ? {
-                ...blankRow(p, m), ...found, 
+                ...blankRow(p, m), ...found,
                 bonusThresholdPct: found.bonusThresholdPct * 100,    // 0.75 → 75
                 vehicleThresholdPct: found.vehicleThresholdPct * 100, // 0.60 → 60
                 teamActiveThresholdPct: found.teamActiveThresholdPct * 100,
@@ -84,6 +87,9 @@ export function buildEdits(position: PositionWithTargets): PositionEdits[number]
             } : blankRow(p, m));
         }
     }
+
+    const sourceRow = existing.find(t => t.periodNumber === 1 && t.monthNumber === 1);
+
 
     const p1row = rows[0];
     const p2row = rows[3];
@@ -108,6 +114,7 @@ export function buildEdits(position: PositionWithTargets): PositionEdits[number]
         },
         orcRatePermanent: Number(position.orc?.ratePermanent ?? 0) * 100,
         orcRateNonPermanent: Number(position.orc?.rateNonPermanent ?? 0) * 100,
+        after6MonthTarget: sourceRow?.after6MonthTarget ?? 0,
     };
 }
 

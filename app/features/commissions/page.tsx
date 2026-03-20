@@ -1,6 +1,7 @@
 "use client";
 
 import InvestmentTable from "@/app/components/Commission/InvestmentTable";
+import Heading from "@/app/components/Heading";
 import { PERMISSIONS } from "@/lib/auth/permissions";
 import { usePermission } from "@/lib/auth/usePermission";
 import { Plus, Wallet } from "lucide-react";
@@ -33,9 +34,9 @@ const Commission = () => {
     <div className="max-w-7xl mx-auto sm:space-y-8 space-y-2 sm:p-4 md:p-8 min-h-screen">
       {/* Header Container */}
       <div className="flex flex-col sm:justify-between space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3 sm:items-center">
-        <h1 className="sm:text-2xl text-lg font-semibold md:text-3xl text-slate-900 tracking-tighter flex items-center">
+        <Heading>
           Commission
-        </h1>
+        </Heading>
         {canAdd && (
           <Link
             href="/features/commissions/create"

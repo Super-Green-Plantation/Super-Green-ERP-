@@ -58,7 +58,6 @@ const Page = () => {
     <div className="max-w-7xl mx-auto sm:space-y-8 space-y-2 sm:p-4 md:p-8 min-h-screen">
       <header className="mb-8">
         <Heading>
-
           Available Financial Plans
         </Heading>
         <p className="text-slate-500 mt-1 font-medium">

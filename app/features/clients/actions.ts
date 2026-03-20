@@ -72,13 +72,15 @@ export async function getAccessibleClients() {
     include: {
       investments: true,
       branch: true,
-      beneficiary: true,
-      nominee: true,
+      beneficiaries: true,
+      nominees: true,
     },
     orderBy: {
       createdAt: "desc",
     },
   });
+  console.log("clients from server",clients);
+  
 
   return serializeData(clients);
 }
@@ -88,8 +90,8 @@ export async function getClients() {
   try {
     const clients = await prisma.client.findMany({
       include: {
-        beneficiary: true,
-        nominee: true,
+        beneficiaries: true,
+        nominees: true,
         investments: true,
         branch: {
           include: {
@@ -136,8 +138,8 @@ export async function getClientById(id: number) {
     include: {
       investments: { include: { plan: true } },
       branch: true,
-      nominee: true,
-      beneficiary: true,
+      nominees: true,
+      beneficiaries: true,
 
     },
   });
@@ -156,8 +158,8 @@ export async function getClientsByBranch(branchId: number) {
       include: {
         investments: true,
         branch: true,
-        beneficiary: true,
-        nominee: true,
+        beneficiaries: true,
+        nominees: true,
       },
       orderBy: {
         createdAt: "desc",
@@ -180,8 +182,8 @@ export async function getClientsByMember(memberId: number) {
       include: {
         investments: true,
         branch: true,
-        beneficiary: true,
-        nominee: true,
+        beneficiaries: true,
+        nominees: true,
       },
     });
     return { clients };
@@ -199,7 +201,6 @@ export async function saveClient(data: {
 }, email: any) {
   const { applicant, investment, beneficiary, nominee } = data;
 
-  // Validate required fields
   if (!applicant.fullName || !applicant.address || !applicant.branchId) {
     return { success: false, error: "Missing required fields: fullName, address, branchId" };
   }
@@ -207,21 +208,16 @@ export async function saveClient(data: {
   const investmentNumber = generateInvestmentNumber();
 
   try {
-    const client = await prisma.$transaction(async (prisma: any) => {
-
-      const member = await prisma.member.findFirst({
+    const client = await prisma.$transaction(async (tx: any) => {
+      const member = await tx.member.findFirst({
         where: {
           email,
-          branches: {
-            some: {
-              branchId: Number(applicant.branchId),
-            }
-          }
-
+          branches: { some: { branchId: Number(applicant.branchId) } },
         },
       });
 
-      const createdClient = await prisma.client.create({
+      // Create beneficiary and nominee first so we have their IDs
+      const createdClient = await tx.client.create({
         data: {
           fullName: applicant.fullName,
           nic: applicant.nic || null,
@@ -242,49 +238,56 @@ export async function saveClient(data: {
           proposal: applicant.proposal,
           agreement: applicant.agreement,
           memberId: member ? member.id : null,
-
-          investments: {
-            create: [
-              {
-                refNumber: investmentNumber,
-                branchId: applicant.branchId,
-                planId: Number(investment.planId),
-                investmentDate: new Date(),
-                amount: Number(applicant.investmentAmount),
-              },
-            ],
-          },
-          beneficiary: beneficiary
-            ? {
-              create: {
-                fullName: beneficiary.fullName,
-                nic: beneficiary.nic || null,
-                phone: beneficiary.phone || "",
-                bankName: beneficiary.bankName || "",
-                bankBranch: beneficiary.bankBranch || "",
-                accountNo: beneficiary.accountNo || "",
-                relationship: beneficiary.relationship || "",
-              },
-            }
-            : undefined,
-          nominee: nominee
-            ? {
-              create: {
-                fullName: nominee.fullName,
-                permanentAddress: nominee.permanentAddress || "",
-                postalAddress: nominee.postalAddress || null,
-              },
-            }
-            : undefined,
-        },
-        include: {
-          investments: true,
-          beneficiary: true,
-          nominee: true,
         },
       });
 
-      return createdClient;
+      // Create beneficiary linked to client
+      let beneficiaryId: number | null = null;
+      if (beneficiary?.fullName) {
+        const createdBeneficiary = await tx.beneficiary.create({
+          data: {
+            clientId: createdClient.id,
+            fullName: beneficiary.fullName,
+            nic: beneficiary.nic || null,
+            phone: beneficiary.phone || "",
+            bankName: beneficiary.bankName || "",
+            bankBranch: beneficiary.bankBranch || "",
+            accountNo: beneficiary.accountNo || "",
+            relationship: beneficiary.relationship || "",
+          },
+        });
+        beneficiaryId = createdBeneficiary.id;
+      }
+
+      // Create nominee linked to client
+      let nomineeId: number | null = null;
+      if (nominee?.fullName) {
+        const createdNominee = await tx.nominee.create({
+          data: {
+            clientId: createdClient.id,
+            fullName: nominee.fullName,
+            permanentAddress: nominee.permanentAddress || "",
+            postalAddress: nominee.postalAddress || null,
+          },
+        });
+        nomineeId = createdNominee.id;
+      }
+
+      // Create investment linked to client + beneficiary + nominee
+      const createdInvestment = await tx.investment.create({
+        data: {
+          clientId: createdClient.id,
+          refNumber: investmentNumber,
+          branchId: applicant.branchId,
+          planId: Number(investment.planId),
+          investmentDate: new Date(),
+          amount: Number(applicant.investmentAmount),
+          beneficiaryId,
+          nomineeId,
+        },
+      });
+
+      return { ...createdClient, investments: [createdInvestment] };
     });
 
     revalidatePath("/features/clients");
@@ -300,7 +303,6 @@ export async function updateClient(id: number, formData: any) {
   const clientId = id;
 
   try {
-    // Update applicant info
     const updatedClient = await prisma.client.update({
       where: { id: clientId },
       data: {
@@ -319,12 +321,16 @@ export async function updateClient(id: number, formData: any) {
         proposal: formData.applicant.proposal || null,
         agreement: formData.applicant.agreement || null,
         investmentAmount: Number(formData.applicant.investmentAmount) || undefined,
-        dateOfBirth: formData.applicant.dateOfBirth ? new Date(formData.applicant.dateOfBirth) : undefined,
-        branchId: formData.applicant.branchId ? Number(formData.applicant.branchId) : undefined,
+        dateOfBirth: formData.applicant.dateOfBirth
+          ? new Date(formData.applicant.dateOfBirth)
+          : undefined,
+        branchId: formData.applicant.branchId
+          ? Number(formData.applicant.branchId)
+          : undefined,
       },
     });
 
-    // Upsert investment info
+    // Update investment
     const existingInvestment = await prisma.investment.findFirst({
       where: { clientId },
     });
@@ -336,65 +342,65 @@ export async function updateClient(id: number, formData: any) {
           planId: formData.investment?.planId
             ? Number(formData.investment.planId)
             : existingInvestment.planId,
-          amount:
-            Number(formData.applicant.investmentAmount) ?? Number(existingInvestment.amount),
-        },
-      });
-    } else if (formData.investment?.planId) {
-      await prisma.investment.create({
-        data: {
-          clientId,
-          branchId: formData.applicant.branchId,
-          planId: Number(formData.investment.planId),
-          investmentDate: new Date(),
-          amount: formData.applicant.investmentAmount,
-          refNumber: generateInvestmentNumber(),
+          amount: Number(formData.applicant.investmentAmount) ?? Number(existingInvestment.amount),
         },
       });
     }
 
-    // Upsert beneficiary info
+    // Upsert beneficiary — create new or update existing by id
     if (formData.beneficiary?.fullName) {
-      await prisma.beneficiary.upsert({
-        where: { clientId },
-        update: {
-          fullName: formData.beneficiary.fullName,
-          relationship: formData.beneficiary.relationship || "",
-          bankName: formData.beneficiary.bankName || "",
-          accountNo: formData.beneficiary.accountNo || "",
-          bankBranch: formData.beneficiary.bankBranch || "",
-          nic: formData.beneficiary.nic || null,
-          phone: formData.beneficiary.phone || "",
-        },
-        create: {
-          clientId,
-          fullName: formData.beneficiary.fullName,
-          relationship: formData.beneficiary.relationship || "",
-          bankName: formData.beneficiary.bankName || "",
-          accountNo: formData.beneficiary.accountNo || "",
-          bankBranch: formData.beneficiary.bankBranch || "",
-          nic: formData.beneficiary.nic || null,
-          phone: formData.beneficiary.phone || "",
-        },
-      });
+      if (formData.beneficiary.id) {
+        // Update existing beneficiary
+        await prisma.beneficiary.update({
+          where: { id: formData.beneficiary.id },
+          data: {
+            fullName: formData.beneficiary.fullName,
+            relationship: formData.beneficiary.relationship || "",
+            bankName: formData.beneficiary.bankName || "",
+            accountNo: formData.beneficiary.accountNo || "",
+            bankBranch: formData.beneficiary.bankBranch || "",
+            nic: formData.beneficiary.nic || null,
+            phone: formData.beneficiary.phone || "",
+          },
+        });
+      } else {
+        // Create new beneficiary for this client
+        await prisma.beneficiary.create({
+          data: {
+            clientId,
+            fullName: formData.beneficiary.fullName,
+            relationship: formData.beneficiary.relationship || "",
+            bankName: formData.beneficiary.bankName || "",
+            accountNo: formData.beneficiary.accountNo || "",
+            bankBranch: formData.beneficiary.bankBranch || "",
+            nic: formData.beneficiary.nic || null,
+            phone: formData.beneficiary.phone || "",
+          },
+        });
+      }
     }
 
-    // Upsert nominee info
+    // Upsert nominee
     if (formData.nominee?.fullName) {
-      await prisma.nominee.upsert({
-        where: { clientId },
-        update: {
-          fullName: formData.nominee.fullName,
-          permanentAddress: formData.nominee.permanentAddress || "",
-          postalAddress: formData.nominee.postalAddress || null,
-        },
-        create: {
-          clientId,
-          fullName: formData.nominee.fullName,
-          permanentAddress: formData.nominee.permanentAddress || "",
-          postalAddress: formData.nominee.postalAddress || null,
-        },
-      });
+      if (formData.nominee.id) {
+        await prisma.nominee.update({
+          where: { id: formData.nominee.id },
+          data: {
+            fullName: formData.nominee.fullName,
+            permanentAddress: formData.nominee.permanentAddress || "",
+            postalAddress: formData.nominee.postalAddress || null,
+          },
+        });
+      } else {
+        await prisma.nominee.create({
+          data: {
+            clientId,
+            fullName: formData.nominee.fullName,
+            permanentAddress: formData.nominee.permanentAddress || "",
+            postalAddress: formData.nominee.postalAddress || null,
+          },
+        });
+      }
     }
 
     revalidatePath("/features/clients");

@@ -1,8 +1,8 @@
 //non-FA 6-row view with ORC
 "use client";
 
-import { Percent } from "lucide-react";
-import { Field, Section, RowConfig, PositionEdits } from "./shared";
+import { Percent, TrendingUp } from "lucide-react";
+import { Field, Section, RowConfig, PositionEdits, formatIndicator } from "./shared";
 import MonthRow from "./MonthRow";
 
 interface NonFaTargetConfigProps {
@@ -16,13 +16,16 @@ interface NonFaTargetConfigProps {
     field: keyof Omit<RowConfig, "periodNumber" | "monthNumber">,
     value: number
   ) => void;
+  after6MonthTarget: number;
+  onUpdateAfter6Month: (value: number) => void;
+
   onSyncToggle: (period: number, month: number, checked: boolean) => void;
-  onUpdateOrc: (status:string, value: number) => void;
+  onUpdateOrc: (status: string, value: number) => void;
 }
 
 export default function NonFaTargetConfig({
   positionId, edit, syncedMonths, syncKey,
-  onUpdateRow, onSyncToggle, onUpdateOrc,
+  onUpdateRow, onSyncToggle, onUpdateOrc, after6MonthTarget, onUpdateAfter6Month
 }: NonFaTargetConfigProps) {
   return (
     <div className="space-y-6">
@@ -55,15 +58,23 @@ export default function NonFaTargetConfig({
         );
       })}
 
-      <Section icon={<Percent className="w-4 h-4" />} title="ORC Rate">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* <Field
-            label="ORC Rate — Permanent"
-            value={edit.orcRatePermanent}
-            onChange={v => onUpdateOrc("permanent", v)}
-            suffix="%×100"
-            hint={`Currently: ${edit.orcRatePermanent}%`}
-          /> */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+        <Section icon={<TrendingUp className="w-4 h-4" />} title="After 6th Month Target">
+          <Field
+            label="Monthly Target — After 6 Months"
+            value={after6MonthTarget}
+            onChange={onUpdateAfter6Month}
+            prefix="Rs."
+            hint={
+              formatIndicator(after6MonthTarget)
+                ? `Currently: ${formatIndicator(after6MonthTarget)} — ongoing target after probation period`
+                : "Volume target applicable after completing 6 months"
+            }
+          />
+        </Section>
+
+        <Section icon={<Percent className="w-4 h-4" />} title="ORC Rate">
           <Field
             label="ORC Rate — Non-Permanent"
             value={edit.orcRateNonPermanent}
@@ -71,8 +82,8 @@ export default function NonFaTargetConfig({
             suffix="%×100"
             hint={`Currently: ${edit.orcRateNonPermanent}%`}
           />
-        </div>
-      </Section>
+        </Section>
+      </div>
     </div>
   );
 }

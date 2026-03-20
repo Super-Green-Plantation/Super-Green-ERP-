@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { getBranches } from "@/app/features/branches/actions";
 import { getEvaluationPreview, runBatchEvaluation } from "@/app/features/hr/evaluation-actions";
+import Heading from "@/app/components/Heading";
 
 interface EvalPreview {
   memberId: number;
@@ -30,8 +31,8 @@ interface EvalPreview {
 interface Branch { id: number; name: string; location: string; }
 
 const MONTHS = [
-  "January","February","March","April","May","June",
-  "July","August","September","October","November","December",
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
 ];
 const fmt = (n: number) => n.toLocaleString("en-LK", { minimumFractionDigits: 0 });
 const currentYear = new Date().getFullYear();
@@ -92,7 +93,7 @@ export default function EvaluationsPage() {
   };
 
   console.log(previews);
-  
+
 
   const probationCount = previews.filter(p => p.status === "PROBATION").length;
   const permanentCount = previews.length - probationCount;
@@ -109,7 +110,7 @@ export default function EvaluationsPage() {
           <ClipboardList className="w-6 h-6 text-white" />
         </div>
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Monthly Evaluations</h1>
+          <Heading>Monthly Evaluations</Heading>
           <p className="text-sm text-slate-500 font-medium mt-0.5">Run probation target evaluations by branch and month.</p>
         </div>
       </div>
@@ -161,9 +162,8 @@ export default function EvaluationsPage() {
                 <button
                   key={f}
                   onClick={() => setFilter(f)}
-                  className={`px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all ${
-                    filter === f ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700"
-                  }`}
+                  className={`px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all ${filter === f ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                    }`}
                 >
                   {f === "ALL" ? `All (${previews.length})` : f === "PROBATION" ? `Probation (${probationCount})` : `Permanent (${permanentCount})`}
                 </button>
@@ -245,7 +245,7 @@ export default function EvaluationsPage() {
                             </p>
                             <VolumeBar achieved={p.volumeAchieved} target={p.targetAmount} />
                           </div>
-                        ) : p.status === "PERMANENT" ? ( 
+                        ) : p.status === "PERMANENT" ? (
                           <span className="text-xs font-semibold text-slate-500">
                             {p.volumeAchieved > 0 ? `Rs. ${fmt(p.volumeAchieved)}` : "—"}
                           </span>

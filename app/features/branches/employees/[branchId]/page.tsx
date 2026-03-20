@@ -49,7 +49,7 @@ const Page = () => {
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 p-4 md:p-8 min-h-screen">
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-b border-slate-100 ">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-100 ">
         <div className="flex items-center gap-3">
           <Back />
           <div className="h-12 w-px bg-slate-200 hidden md:block" />
@@ -61,13 +61,6 @@ const Page = () => {
                   branchData?.name
                 )}
               </Heading>
-
-            {/* <div className="flex items-center gap-4 mt-2">
-              <p className="text-xs text-slate-500 font-bold flex items-center gap-1.5">
-                <MapPin size={14} className="text-slate-400" />
-                {branchData?.location || "Loading location..."}
-              </p>
-            </div> */}
           </div>
         </div>
 

@@ -101,15 +101,15 @@ const CommissionReceipt = ({ data }: { data: any }) => {
           </div>
 
           <div className="space-y-3">
-            {commissions.map((comm: any) => (
+            {commissions.map((comm: any, index:number) => (
               <div
-                key={comm.id}
+                key={index}
                 className="relative p-4 bg-white border border-gray-100 rounded-md hover:border-gray-300 transition-all group/item"
               >
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-bold text-gray-900 uppercase">
-                      {comm.member?.name}
+                      {comm.member?.nameWithInitials}
                     </p>
                     <ArrowUpRight className="w-3 h-3 text-gray-300 group-hover/item:text-emerald-500 transition-colors" />
                   </div>

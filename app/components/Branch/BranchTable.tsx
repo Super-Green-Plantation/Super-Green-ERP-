@@ -85,16 +85,16 @@ const BranchTable = ({ data, isLoading, onRefresh }: BranchTableProps) => {
                 Code
               </th>
               <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
-                Branch Identity
+                Branch Name
               </th>
               <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
-                Region / Location
+                 Location
               </th>
               <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
-                Operational Capacity
+                Total Employees
               </th>
               <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500 text-center">
-                Management
+                Action
               </th>
             </tr>
           </thead>
