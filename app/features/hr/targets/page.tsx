@@ -223,7 +223,7 @@ export default function PositionTargetsPage() {
             href="/features/hr/salary"
             className="px-4 py-2 text-xs font-black uppercase tracking-widest text-white bg-slate-900 rounded-xl hover:bg-slate-700 transition-all"
           >
-            Permanent Config →
+            Permanent Config
           </Link>
         </div>
       </div>

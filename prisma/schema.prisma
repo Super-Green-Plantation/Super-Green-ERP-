@@ -228,6 +228,9 @@ model PositionTarget {
   partialThreshold Float @default(0)
   partialBonus     Float @default(0)
 
+  //after 6 month target
+  after6MonthTarget Float @default(0)
+
   @@unique([positionId, periodNumber, monthNumber])
 }
 

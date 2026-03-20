@@ -45,7 +45,8 @@ export async function upsertPositionTargets(
 ) {
   try {
     await Promise.all(
-      targets.map((t) =>
+      targets.map((t) => {
+        const { periodNumber, monthNumber, ...updateData } = t;
         prisma.positionTarget.upsert({
           where: {
             positionId_periodNumber_monthNumber: {
@@ -55,9 +56,9 @@ export async function upsertPositionTargets(
             },
           },
           create: { positionId, ...t },
-          update: t,
+          update: updateData,
         })
-      )
+      })
     );
     return { success: true };
   } catch (err) {

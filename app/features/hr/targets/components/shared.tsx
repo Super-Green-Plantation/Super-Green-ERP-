@@ -75,7 +75,13 @@ export function buildEdits(position: PositionWithTargets): PositionEdits[number]
     for (let p = 1; p <= 2; p++) {
         for (let m = 1; m <= 3; m++) {
             const found = existing.find(t => t.periodNumber === p && t.monthNumber === m);
-            rows.push(found ? { ...blankRow(p, m), ...found } : blankRow(p, m));
+            rows.push(found ? {
+                ...blankRow(p, m), ...found, 
+                bonusThresholdPct: found.bonusThresholdPct * 100,    // 0.75 → 75
+                vehicleThresholdPct: found.vehicleThresholdPct * 100, // 0.60 → 60
+                teamActiveThresholdPct: found.teamActiveThresholdPct * 100,
+                excessRate: found.excessRate * 100,
+            } : blankRow(p, m));
         }
     }
 
@@ -90,14 +96,14 @@ export function buildEdits(position: PositionWithTargets): PositionEdits[number]
                 bonusAmount: p1row.bonusAmount,
                 partialThreshold: p1row.partialThreshold,
                 partialBonus: p1row.partialBonus,
-                excessRate: p1row.excessRate * 100,
+                excessRate: p1row.excessRate
             },
             p2: {
                 targetAmount: p2row.targetAmount,
                 bonusAmount: p2row.bonusAmount,
                 partialThreshold: p2row.partialThreshold,
                 partialBonus: p2row.partialBonus,
-                excessRate: p2row.excessRate * 100,
+                excessRate: p2row.excessRate
             },
         },
         orcRatePermanent: Number(position.orc?.ratePermanent ?? 0) * 100,
