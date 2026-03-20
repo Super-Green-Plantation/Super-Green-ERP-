@@ -4,17 +4,15 @@ import { Pool } from "pg";
 
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
-const pool = new Pool({
-  connectionString: process.env.DIRECT_URL, // ← port 5432, not 6543
-});
-
 function createPrismaClient() {
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL, // pooler URL (port 6543)
+    max: 1, // critical for serverless — limit connections per instance
+  });
+
   const adapter = new PrismaPg(pool);
   return new PrismaClient({ adapter });
 }
-
-
-
 
 export const prisma = globalForPrisma.prisma ?? createPrismaClient();
 
