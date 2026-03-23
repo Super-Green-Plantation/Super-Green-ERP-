@@ -35,6 +35,7 @@ import { ProposalTemplate } from "@/app/components/Doc/ProposalTemplate";
 import CopyButton from "@/app/components/Buttons/CopyButton";
 import SendDocumentLinkButton from "@/app/components/Buttons/SendDocumentLinkButton";
 import { DocPreview } from "@/app/components/Doc/DocPreview";
+import { MaturityBadge } from "@/app/components/Buttons/MaturityBadge";
 
 export default function ApplicationViewPage() {
   const queryClient = useQueryClient();
@@ -45,11 +46,12 @@ export default function ApplicationViewPage() {
   const router = useRouter();
 
   const proposalRef = useRef<HTMLDivElement>(null);
-  
+
   const { data: formData, isLoading, isError } = useClient(Number(id));
 
   console.log("formData", formData);
-  
+
+
 
   useEffect(() => {
     if (!formData?.investment.planId) return;
@@ -95,19 +97,19 @@ export default function ApplicationViewPage() {
     }
   };
 
-  const getUrl = async()=>{
+  const getUrl = async () => {
     try {
       const res = await generateUploadUrl(Number(id));
       console.log(res);
     } catch (error) {
       console.log(error);
-      
+
     }
   }
 
-useEffect(() => {
-  getUrl();
-}, [])
+  useEffect(() => {
+    getUrl();
+  }, [])
 
   const handleDetailsUpdate = async (updatedPayload: any) => {
     try {
@@ -137,13 +139,15 @@ useEffect(() => {
 
   if (isLoading) return <Loading />;
   if (isError) return <ErrorMessage />;
+  console.log(formData?.investment);
+
 
   return (
     <div className="max-w-7xl mx-auto  space-y-8 min-h-screen">
       <div style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}>
         <div ref={proposalRef}>
-           {/* Pass your actual data to your Template component */}
-           <ProposalTemplate data={formData} plan={plan} />
+          {/* Pass your actual data to your Template component */}
+          <ProposalTemplate data={formData} plan={plan} />
         </div>
       </div>
       {/* Header Actions */}
@@ -152,9 +156,9 @@ useEffect(() => {
           <Back />
           <div>
 
-            <Heading>
+            <h2 className="text-lg font-bold text-gray-800">
               Application Details
-            </Heading>
+            </h2>
             <p className="text-sm text-gray-500 font-medium">
               Ref ID: {formData?.investment.refNumber}
             </p>
@@ -171,13 +175,13 @@ useEffect(() => {
                 className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 hover:bg-blue-600 text-white text-[11px] font-black uppercase tracking-[0.15em] rounded-xl transition-all shadow-lg shadow-slate-900/20 active:scale-95 border border-white/5"
               >
                 <Pen className="w-4 h-4 text-blue-400" />
-                <span>Update Details</span>
+                <span>Update</span>
               </button>
 
               {/* Download PDF Button */}
               <button
                 onClick={() => generateClientApplicationPDF(
-                  proposalRef.current, 
+                  proposalRef.current,
                   `Proposal_${formData?.applicant?.fullName?.replace(/\s+/g, '_')}`
                 )}
                 className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 hover:bg-emerald-600 text-white text-[11px] font-black uppercase tracking-[0.15em] rounded-xl transition-all shadow-lg active:scale-95 border border-white/5"
@@ -186,22 +190,10 @@ useEffect(() => {
                 <span>Download PDF</span>
               </button>
 
-              {/* Delete Button */}
-              <button
-                onClick={() => {
-                  if (
-                    confirm(
-                      "Are you sure you want to delete this application? This action cannot be undone.",
-                    )
-                  ) {
-                    handelDelete(formData?.applicant.nic);
-                  }
-                }}
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 border-2 border-red-500/20 bg-red-500/10 hover:bg-red-600 hover:text-white text-red-500 rounded-xl text-[11px] font-black uppercase tracking-[0.15em] transition-all active:scale-95"
-              >
-                <Trash2 className="w-4 h-4" />
-                <span>Delete</span>
-              </button>
+              <div>
+                <MaturityBadge investments={formData?.investments} />
+              </div>
+
 
             </div>
           </section>
@@ -326,9 +318,9 @@ useEffect(() => {
         <div className="space-y-8">
           {/* Compliance & KYC Documents */}
           <section className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-           
-           <SendDocumentLinkButton clientId={Number(id)}/> 
-           
+
+            <SendDocumentLinkButton clientId={Number(id)} />
+
             <div className="px-6 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-white rounded-lg border border-slate-200 shadow-sm">
@@ -338,7 +330,7 @@ useEffect(() => {
                   Documents
                 </h2>
               </div>
-            
+
             </div>
 
             <div className="p-6">
@@ -356,7 +348,7 @@ useEffect(() => {
                   id={formData?.applicant.nic}
                   docKey="idBack"
                 />
-                 <DocPreview
+                <DocPreview
                   label="Payment Slip"
                   url={formData?.applicant.paymentSlip}
                   id={formData?.applicant.nic}
@@ -441,7 +433,7 @@ useEffect(() => {
             <div className="my-6 border-t border-white/5" />
 
             {/* Metrics Grid */}
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid sm:grid-cols-3 gap-2">
               <div className="flex flex-col items-center p-3 rounded-xl bg-white/5 border border-white/5">
                 <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">
                   Rate
@@ -456,7 +448,7 @@ useEffect(() => {
                   Amount
                 </p>
                 <p className="text-white font-bold text-base">
-                  <span className="text-[10px] text-gray-400 mr-0.5">Rs.</span>
+                  <span className="text-lg font-bold text-gray-400 mr-0.5">Rs.</span>
                   {formData?.applicant.investmentAmount || "N/A"}
                 </p>
               </div>
@@ -465,9 +457,9 @@ useEffect(() => {
                 <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">
                   Period
                 </p>
-                <p className="text-blue-400 font-bold text-base">
+                <p className="text-blue-400 font-bold text-lg">
                   {plan?.duration || "N/A"}{" "}
-                  <span className="text-[10px] font-normal">mo</span>
+                  <span className="text-lg font-bold">Months</span>
                 </p>
               </div>
             </div>
@@ -491,6 +483,22 @@ useEffect(() => {
           onSave={handleDocsUpdate}
         />
       ) : null}
+
+      <div className="w-full p-4 border border-red-100 bg-red-50/30 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div>
+          <h4 className="text-red-800 font-bold text-sm">Terminate Application</h4>
+          <p className="text-red-600/70 text-xs">Once deleted, this data is gone forever.</p>
+        </div>
+
+        <button
+          onClick={() => {/* logic */ }}
+          className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 active:scale-95 transition-all text-sm font-bold"
+        >
+          <Trash2 className="w-4 h-4" />
+          Delete Permanent
+        </button>
+      </div>
+
     </div>
   );
 }

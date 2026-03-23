@@ -10,14 +10,8 @@ import crypto from "crypto"
 import nodemailer from "nodemailer";
 
 
-const BUCKET = "kyc-documents";
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL!; // e.g. https://yourapp.com
-
-
-
-export async function getAccessibleClients() {
+export async function getAccessibleClients(page = 1, pageSize = 10) {
   const dbUser = await getCurrentUserWithRole();
-
   if (!dbUser) throw new Error("User not found");
 
   let whereCondition: any = {};
@@ -26,29 +20,17 @@ export async function getAccessibleClients() {
     case "ADMIN":
     case "HR":
     case "DEV":
-      // See all clients
       whereCondition = {};
       break;
 
     case "BRANCH_MANAGER":
-      // Single branch from User.branchId
-      whereCondition = {
-        branchId: Number(dbUser.branchId),
-      };
-      break;
-
     case "REGIONAL_MANAGER":
-    case "AGM": {
-      // These roles manage multiple branches via MemberBranch junction
-      // Query all branch IDs assigned to this member
-      if (!dbUser.member?.id) throw new Error("Member record not linked to user");
+    case "AGM":
+    case "EMPLOYEE": {
+      // All roles get their branches from MemberBranch via member relation
+      const branchIds = dbUser.member?.branches?.map(mb => mb.branchId) ?? [];
 
-      const memberBranches = await prisma.memberBranch.findMany({
-        where: { memberId: dbUser.member.id },
-        select: { branchId: true },
-      });
-
-      const branchIds = memberBranches.map((mb) => mb.branchId);
+      if (branchIds.length === 0) throw new Error("No branches assigned to this user");
 
       whereCondition = {
         branchId: { in: branchIds },
@@ -56,33 +38,32 @@ export async function getAccessibleClients() {
       break;
     }
 
-    case "EMPLOYEE":
-      // Own clients only
-      whereCondition = {
-        memberId: dbUser.member?.id,
-      };
-      break;
-
     default:
       throw new Error("Unauthorized role");
   }
 
-  const clients = await prisma.client.findMany({
-    where: whereCondition,
-    include: {
-      investments: true,
-      branch: true,
-      beneficiaries: true,
-      nominees: true,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
-  console.log("clients from server",clients);
-  
+  const [clients, total] = await Promise.all([
+    prisma.client.findMany({
+      where: whereCondition,
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      include: {
+        investments: { include: { plan: true } },
+        branch: true,
+        beneficiaries: true,
+        nominees: true,
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.client.count({ where: whereCondition }),
+  ]);
 
-  return serializeData(clients);
+  return serializeData({
+    clients,
+    total,
+    totalPages: Math.ceil(total / pageSize),
+    currentPage: page,
+  });
 }
 
 // Get all clients with full details
@@ -136,7 +117,7 @@ export async function getClientById(id: number) {
         : { branchId: Number(dbUser!.branchId) }),
     },
     include: {
-      investments: { include: { plan: true } },
+      investments: { include: { plan: true, } },
       branch: true,
       nominees: true,
       beneficiaries: true,
@@ -273,14 +254,28 @@ export async function saveClient(data: {
         nomineeId = createdNominee.id;
       }
 
-      // Create investment linked to client + beneficiary + nominee
+      const investmentDate = applicant.investmentDate
+        ? new Date(applicant.investmentDate)
+        : new Date(); // fallback to today
+
+      const plan = await tx.financialPlan.findUnique({
+        where: { id: Number(investment.planId) }
+      });
+
+      const maturityDate = plan ? new Date(
+        new Date(investmentDate).setMonth(
+          new Date(investmentDate).getMonth() + plan.duration
+        )
+      ) : null;
+
       const createdInvestment = await tx.investment.create({
         data: {
           clientId: createdClient.id,
           refNumber: investmentNumber,
           branchId: applicant.branchId,
           planId: Number(investment.planId),
-          investmentDate: new Date(),
+          investmentDate,      // ← now a Date object
+          maturityDate,
           amount: Number(applicant.investmentAmount),
           beneficiaryId,
           nomineeId,

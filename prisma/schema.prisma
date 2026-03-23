@@ -57,11 +57,12 @@ model CommissionRate {
   id               Int      @id @default(autoincrement())
   positionId       Int      @unique
   position         Position @relation(fields: [positionId], references: [id])
-  ratePermanent    Float   @default(0)
-  rateNonPermanent Float   @default(0)
+  ratePermanent    Float    @default(0)
+  rateNonPermanent Float    @default(0)
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }
+
 //Junction Table
 model MemberBranch {
   id Int @id @default(autoincrement())
@@ -228,7 +229,7 @@ model PositionTarget {
   partialThreshold Float @default(0)
   partialBonus     Float @default(0)
 
-  after6MonthTarget  Float @default(0)
+  after6MonthTarget Float @default(0)
 
   @@unique([positionId, periodNumber, monthNumber])
 }
@@ -266,7 +267,7 @@ model FinancialPlan {
 }
 
 model Beneficiary {
-  id           Int    @id @default(autoincrement())
+  id           Int     @id @default(autoincrement())
   fullName     String
   nic          String?
   phone        String
@@ -278,7 +279,7 @@ model Beneficiary {
   clientId Int
   client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
-  investments Investment[]  // investments that use this beneficiary
+  investments Investment[] // investments that use this beneficiary
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -293,7 +294,7 @@ model Nominee {
   clientId Int
   client   Client @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
-  investments Investment[]  // investments that use this nominee
+  investments Investment[] // investments that use this nominee
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -325,42 +326,46 @@ model Investment {
 
   commission           Commission[]
   profit               Profit?
-  commissionsProcessed Boolean @default(false)
+  commissionsProcessed Boolean      @default(false)
+
+  maturityDate     DateTime? // store for easy querying/filtering
+  isMatured        Boolean   @default(false)
+  maturityNotified Boolean   @default(false) // track if notification was sent
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Client {
-  id             Int       @id @default(autoincrement())
-  fullName       String
-  nic            String?   @unique
-  drivingLicense String?   @unique
-  passportNo     String?   @unique
-  email          String?   @unique
-  phoneMobile    String?
-  phoneLand      String?
-  memberId       Int?
-  member         Member?   @relation(fields: [memberId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  dateOfBirth    DateTime?
-  occupation     String?
-  address        String
-  investmentAmount Int
-  signature      String?
-  idFront        String?
-  idBack         String?
-  paymentSlip    String?
-  proposal       String?
-  agreement      String?
-  branchId       Int
-  branch         Branch    @relation(fields: [branchId], references: [id])
-  status         Status    @default(Active)
-  investments    Investment[]
-  beneficiaries  Beneficiary[]  // ← one-to-many
-  nominees       Nominee[]      // ← one-to-many
-  createdAt              DateTime @default(now())
-  updatedAt              DateTime @updatedAt
-  ClientDocumentRequest  ClientDocumentRequest[]
+  id                    Int                     @id @default(autoincrement())
+  fullName              String
+  nic                   String?                 @unique
+  drivingLicense        String?                 @unique
+  passportNo            String?                 @unique
+  email                 String?                 @unique
+  phoneMobile           String?
+  phoneLand             String?
+  memberId              Int?
+  member                Member?                 @relation(fields: [memberId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  dateOfBirth           DateTime?
+  occupation            String?
+  address               String
+  investmentAmount      Int
+  signature             String?
+  idFront               String?
+  idBack                String?
+  paymentSlip           String?
+  proposal              String?
+  agreement             String?
+  branchId              Int
+  branch                Branch                  @relation(fields: [branchId], references: [id])
+  status                Status                  @default(Active)
+  investments           Investment[]
+  beneficiaries         Beneficiary[] // ← one-to-many
+  nominees              Nominee[] // ← one-to-many
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  ClientDocumentRequest ClientDocumentRequest[]
 }
 
 model Commission {

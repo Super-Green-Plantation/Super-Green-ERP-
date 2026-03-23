@@ -12,20 +12,18 @@ import { useState } from "react";
 const PAGE_SIZE = 10;
 
 const Page = () => {
-  const { data: c, isLoading, isError } = useClients();
-  console.log("clientsss",c);
-  
+
   const [currentPage, setCurrentPage] = useState(1);
+  const { data, isLoading, isError } = useClients(currentPage);
 
   if (isLoading) return <Loading />;
   if (isError) return <Error />;
 
-  // const allClients = c?.clients ?? [];
-  // const totalPages = Math.ceil(allClients.length / PAGE_SIZE);
-  // const paginatedClients = allClients.slice(
-  //   (currentPage - 1) * PAGE_SIZE,
-  //   currentPage * PAGE_SIZE
-  // );
+  const clients = data?.clients ?? [];
+  const totalPages = data?.totalPages ?? 1;
+
+  console.log(clients);
+
 
   return (
     <div className="max-w-7xl mx-auto sm:space-y-8 space-y-2 sm:p-4 md:p-8 min-h-screen">
@@ -52,16 +50,16 @@ const Page = () => {
                   ID
                 </th>
                 <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
-                   Name
+                  Name
                 </th>
                 <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
                   Contact Info
                 </th>
                 <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
-                  NIC 
+                  NIC
                 </th>
                 <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
-                  Status
+                  Inv. Amount
                 </th>
                 <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500 text-center">
                   Actions
@@ -69,7 +67,7 @@ const Page = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {c.length === 0 ? (
+              {clients.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center">
                     <div className="flex flex-col items-center gap-2">
@@ -83,7 +81,7 @@ const Page = () => {
                   </td>
                 </tr>
               ) : (
-                c.map((client: any) => (
+                clients.map((client: any) => (
                   <tr
                     key={client.id}
                     className="hover:bg-slate-50/80 transition-colors group"
@@ -98,7 +96,7 @@ const Page = () => {
                     {/* Name Column */}
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        
+
                         <span className="text-sm font-bold text-slate-900 leading-tight">
                           {client.fullName}
                         </span>
@@ -108,9 +106,8 @@ const Page = () => {
                     {/* Contact Info Column */}
                     <td className="px-6 py-4">
                       <div className="flex flex-col gap-0.5">
-                        <div className="flex items-center gap-1.5 text-sm font-bold text-slate-700">
+                        <div className="text-[11px] text-slate-400 font-medium ml-4">
                           <span className="text-[10px] text-slate-300">
-                            <Phone size={12} />
                           </span>
                           {client.phoneMobile || "No Phone"}
                         </div>
@@ -122,7 +119,7 @@ const Page = () => {
 
                     {/* NIC Column */}
                     <td className="px-6 py-4">
-                      <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-slate-100 text-slate-500 rounded font-bold text-[10px] uppercase">
+                      <div className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-slate-100 text-slate-500 rounded font-bold text-[11px] uppercase">
                         {client.nic || "Pending"}
                       </div>
                     </td>
@@ -131,17 +128,13 @@ const Page = () => {
                     <td className="px-6 py-4">
                       <div
                         className={`
-                  inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tight
-                  ${client.status === "Active"
-                            ? "bg-emerald-100 text-emerald-700"
-                            : "bg-rose-100 text-rose-700"
-                          }
-                `}
-                      >
+                  inline-flex items-center gap-1.5 px-6 py-1 rounded-full text-[11px] font-bold uppercase tracking-tight
+                    ${client.investmentAmount > 0 ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}
+                 `}>
                         <div
-                          className={`w-1.5 h-1.5 rounded-full ${client.status === "Active" ? "bg-emerald-500" : "bg-rose-500"}`}
+                          className={`w-1.5 h-1.5 rounded-full ${client.investmentAmount > 0 ? "bg-emerald-500" : "bg-rose-500"}`}
                         />
-                        {client.status}
+                        Rs. {client.investmentAmount}
                       </div>
                     </td>
 
@@ -163,11 +156,11 @@ const Page = () => {
         </div>
       </div>
 
-      {/* <Pagination
+      <Pagination
         currentPage={currentPage}
         totalPages={totalPages}
-        onPageChange={(page) => setCurrentPage(page)}
-      /> */}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 };

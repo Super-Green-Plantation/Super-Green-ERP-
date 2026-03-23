@@ -35,7 +35,7 @@ type SidebarProps = {
 
 const links = [
   { name: "Dashboard", href: "/features/dashboard", icon: LayoutDashboard, role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "AGM"] },
-  { name: "Branches", href: "/features/branches", icon: GitBranch, role: ["ADMIN", "HR", "DEV", "REGIONAL_MANAGER", "AGM"] },
+  { name: "Branches", href: "/features/branches", icon: GitBranch, role: ["ADMIN", "HR", "DEV", ] },
   {
     name: "Employee",
     href: "/features/branches/employees",

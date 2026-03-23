@@ -6,3 +6,32 @@ bm send link to client to upload id, signing pad
 
 =====================
 can all employee from branch view all clients or clients from employee
+
+
+ci/cd 
+
+
+
+**2. Branch strategy:**
+```
+main          → production (vercel.com/your-app)
+develop       → staging (preview URL)
+feature/*     → feature preview URLs
+```
+
+Workflow:
+```
+feature/xxx → PR to develop → merge → staging deploy
+develop → PR to main → merge → production deploy
+```
+
+**3. Add secrets to GitHub:**
+
+Go to GitHub repo → Settings → Secrets and variables → Actions → New repository secret:
+```
+DATABASE_URL
+DIRECT_URL
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+SUPABASE_SERVICE_ROLE_KEY
+NEXT_PUBLIC_APP_URL

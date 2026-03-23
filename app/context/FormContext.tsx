@@ -18,6 +18,7 @@ export interface FormData {
     address?: string;
     branchId?: string;
     investmentAmount?: number;
+    investmentDate?: string;
     idFront?: string;
     idBack?: string;
     paymentSlip?: string;   // <-- added

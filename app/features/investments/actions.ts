@@ -1,10 +1,9 @@
 "use server"
 
+import { serializeData } from "@/app/utils/serializers";
+import { getCurrentUserWithRole } from "@/lib/getCurrentUserWithRole";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { serializeData } from "@/app/utils/serializers";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
 
 // Generate investment reference number
 function generateInvestmentNumber() {
@@ -16,61 +15,55 @@ function generateInvestmentNumber() {
   return `${prefix}-${timestamp}-${random}`;
 }
 
-export async function getInvestments() {
-  const cookieStore = await cookies();
+export async function getInvestments(page = 1, pageSize = 10) {
+  const dbUser = await getCurrentUserWithRole();
+  if (!dbUser) throw new Error("User not found");
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: () => { },
-      },
+  let whereCondition: any = {};
+
+  switch (dbUser.role) {
+    case "ADMIN":
+    case "HR":
+    case "DEV":
+      whereCondition = {};
+      break;
+
+    case "BRANCH_MANAGER":
+    case "REGIONAL_MANAGER":
+    case "AGM":
+    case "EMPLOYEE": {
+      const branchIds = dbUser.member?.branches?.map(mb => mb.branchId) ?? [];
+      if (branchIds.length === 0) throw new Error("No branches assigned to this user");
+      whereCondition = { branchId: { in: branchIds } };
+      break;
     }
-  );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    throw new Error("Unauthorized");
+    default:
+      throw new Error("Unauthorized role");
   }
 
-  // Get internal user (Prisma user)
-  const dbUser = await prisma.user.findUnique({
-    where: { email: user.email! },
-  });
-
-  if (!dbUser) {
-    throw new Error("User not found");
-  }
-
-  let whereClause = {};
-
-  const privilegedRoles = ["ADMIN", "HR", "DEV"];
-
-  if (!privilegedRoles.includes(dbUser.role)) {
-    whereClause = {
-      client: {
-        branchId: dbUser.branchId,
+  const [investments, total] = await Promise.all([
+    prisma.investment.findMany({
+      where: whereCondition,
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+      include: {
+        client: true,
+        plan: true,
+        advisor: true,
+        branch: true,
       },
-    };
-  }
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.investment.count({ where: whereCondition }),
+  ]);
 
-  const investments = await prisma.investment.findMany({
-    where: whereClause,
-    include: {
-      client: true,
-      plan: true,
-      advisor: true,
-      branch: true,
-    },
-    orderBy: { createdAt: "desc" },
+  return serializeData({
+    investments,
+    total,
+    totalPages: Math.ceil(total / pageSize),
+    currentPage: page,
   });
-
-  return serializeData(investments);
 }
 
 export async function createInvestment(data: {
@@ -114,13 +107,13 @@ export async function getInvestmentById(id: number) {
     const commission = await prisma.commission.findUnique({
       where: { id },
       include: {
-          investment: {
-            include: {
-              client: true,
-              plan: true,
-              advisor: true,
-            },
+        investment: {
+          include: {
+            client: true,
+            plan: true,
+            advisor: true,
           },
+        },
       },
     });
 
@@ -131,9 +124,11 @@ export async function getInvestmentById(id: number) {
         plan: true,
         advisor: {
           include: {
-            branches: {include:{
-              branch:true, member: true
-            }}
+            branches: {
+              include: {
+                branch: true, member: true
+              }
+            }
           },
         },
       },
@@ -261,6 +256,7 @@ export async function createInvestmentForExistingClient(data: {
   branchId: number;
   planId?: number;
   amount: number;
+  investmentDate?: string;
   beneficiaryId?: number | null;
   nomineeId?: number | null;
   newBeneficiary?: {
@@ -307,6 +303,20 @@ export async function createInvestmentForExistingClient(data: {
         nomineeId = n.id;
       }
 
+      const investmentDate = data.investmentDate
+        ? new Date(data.investmentDate)
+        : new Date();
+
+      const plan = data.planId
+        ? await prisma.financialPlan.findUnique({ where: { id: data.planId } })
+        : null;
+
+      const maturityDate = plan ? new Date(
+        new Date(investmentDate).setMonth(
+          new Date(investmentDate).getMonth() + plan.duration
+        )
+      ) : null;
+
       return tx.investment.create({
         data: {
           clientId: data.clientId,
@@ -317,6 +327,7 @@ export async function createInvestmentForExistingClient(data: {
           refNumber: generateInvestmentNumber(),
           beneficiaryId,
           nomineeId,
+          maturityDate,
         },
       });
     });

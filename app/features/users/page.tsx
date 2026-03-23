@@ -93,15 +93,13 @@ const UserListPage = () => {
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center font-black text-sm shadow-lg shadow-slate-200 uppercase">
-                        {user.member?.name?.charAt(0) || <UserIcon size={16} />}
+                        {user?.name?.charAt(0) || <UserIcon size={16} />}
                       </div>
                       <div className="flex flex-col">
                         <span className="text-sm font-black text-slate-900 leading-tight">
-                          {user.member?.name || "Unassigned"}
+                          {user?.name || "Unassigned"}
                         </span>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter flex items-center gap-1">
-                          Ref: {user.member?.empNo || user.id.slice(0, 8)}
-                        </span>
+                        
                       </div>
                     </div>
                   </td>

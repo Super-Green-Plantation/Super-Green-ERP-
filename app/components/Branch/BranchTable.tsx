@@ -7,6 +7,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import BranchModal from "./Model";
 import Pagination from "@/app/components/Pagination";
+import Loading from "../Status/Loading";
 
 interface Branch {
   id: number;
@@ -57,18 +58,7 @@ const BranchTable = ({ data, isLoading, onRefresh }: BranchTableProps) => {
   };
 
   // Styled Loading State
-  if (isLoading) {
-    return (
-      <div className="flex h-40 items-center justify-center rounded-xl border border-blue-100 bg-blue-50/50">
-        <div className="flex flex-col items-center gap-2">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
-          <p className="text-sm font-black text-blue-400 uppercase tracking-widest animate-pulse">
-            Loading branches...
-          </p>
-        </div>
-      </div>
-    );
-  }
+  if (isLoading) return <Loading/>
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
@@ -159,13 +149,6 @@ const BranchTable = ({ data, isLoading, onRefresh }: BranchTableProps) => {
                     </button>
 
                     <div className="h-4 w-px bg-slate-200 mx-1" />
-
-                    {/* <Link
-                        href={`/features/branches/${branch.id}`}
-                        className="p-2 text-slate-400 hover:text-slate-900 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-xl transition-all"
-                      >
-                        <ExternalLink size={18} />
-                      </Link> */}
                   </div>
                 </td>
               </tr>

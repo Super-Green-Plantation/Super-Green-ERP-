@@ -27,6 +27,8 @@ const Page = () => {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEmp, setSelectedEmp] = useState<Member | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
 
   const fetchData = async () => {
     if (!branchId || isNaN(branchId)) return;
@@ -54,13 +56,13 @@ const Page = () => {
           <Back />
           <div className="h-12 w-px bg-slate-200 hidden md:block" />
           <div className="flex gap-4 items-center">
-              <Heading>
-                {loading ? (
-                  <Loader2 className="animate-spin w-6 h-6 text-slate-300" />
-                ) : (
-                  branchData?.name
-                )}
-              </Heading>
+            <Heading>
+              {loading ? (
+                <Loader2 className="animate-spin w-6 h-6 text-slate-300" />
+              ) : (
+                branchData?.name
+              )}
+            </Heading>
           </div>
         </div>
 
@@ -103,6 +105,8 @@ const Page = () => {
           <div className="relative w-full">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               type="text"
               placeholder="Search by name, employee ID or position..."
               className="w-full bg-slate-50/50 border-none rounded-xl pl-11 pr-4 py-3 text-sm font-bold text-slate-700 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/10 transition-all"

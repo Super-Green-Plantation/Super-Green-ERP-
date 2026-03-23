@@ -86,10 +86,10 @@ export function generateBranchNetworkPDF(branches: any[]) {
     doc.text(`${branch.location} | Status: ${branch.status}`, 15, currentY + 5);
 
     const tableRows = (branch.members || []).map((m: any) => [
-      m.empNo,
-      m.name,
-      m.position?.title || "N/A",
-      `LKR ${m.totalCommission?.toLocaleString() || 0}`
+      m.member.empNo,
+      m.member.nameWithInitials,
+      m.member.position?.title || "N/A",
+      `LKR ${m.member.totalCommission?.toLocaleString() || 0}`
     ]);
 
     autoTable(doc, {
@@ -135,23 +135,21 @@ export const generateBranchEmployeePDF = (data: any) => {
   doc.setTextColor(COLORS.textLight[0], COLORS.textLight[1], COLORS.textLight[2]);
   doc.setFontSize(8);
   doc.text("TOTAL EMPLOYEES", 25, currentY + 10);
-  doc.text("ACTIVE STATUS", pageWidth / 2 + 5, currentY + 10);
 
   doc.setTextColor(COLORS.primary[0], COLORS.primary[1], COLORS.primary[2]);
   doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
   doc.text(`${totalEmployees}`, 25, currentY + 18);
-  doc.text(`${activeEmployees}`, pageWidth / 2 + 5, currentY + 18);
 
   currentY += 40;
 
   const tableData = employees.map((emp: any) => [
-    emp.empNo       || "N/A",
-    emp.name        || "N/A",
+    emp.empNo || "N/A",
+    emp.nameWithInitials || "N/A",
     emp.position?.title || "N/A",
-    emp.email       || "N/A",
-    emp.phone       || "N/A",
-    emp.status      || "Active",
+    emp.email || "N/A",
+    emp.phone || "N/A",
+    emp.status || "Active",
   ]);
 
   autoTable(doc, {
@@ -443,8 +441,8 @@ export const generateClientApplicationPDF = async (
       const imgData = canvas.toDataURL("image/png");
 
       // Always fill full A4 width; scale height proportionally
-      const ratio  = canvas.height / canvas.width;
-      const imgH   = pdfW * ratio;
+      const ratio = canvas.height / canvas.width;
+      const imgH = pdfW * ratio;
 
       if (i > 0) pdf.addPage();
 
@@ -452,10 +450,10 @@ export const generateClientApplicationPDF = async (
       if (imgH <= pdfH) {
         pdf.addImage(imgData, "PNG", 0, 0, pdfW, imgH);
       } else {
-        const scale  = pdfH / imgH;
+        const scale = pdfH / imgH;
         const finalW = pdfW * scale;
         const finalH = pdfH;
-        const xOff   = (pdfW - finalW) / 2;
+        const xOff = (pdfW - finalW) / 2;
         pdf.addImage(imgData, "PNG", xOff, 0, finalW, finalH);
       }
     }

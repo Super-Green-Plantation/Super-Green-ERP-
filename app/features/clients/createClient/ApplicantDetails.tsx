@@ -7,6 +7,7 @@ import { getFinancialPlans } from "@/app/features/financial_plans/actions";
 import { Branch } from "@/app/types/branch";
 import { FinancialPlan } from "@/app/types/FinancialPlan";
 import { useEffect, useState } from "react";
+import { Field } from "../../hr/targets/components/shared";
 
 const ApplicantDetails = () => {
   const { form } = useFormContext();
@@ -19,7 +20,7 @@ const ApplicantDetails = () => {
 
   console.log(branch);
   console.log(selectedBranchId);
-  
+
   const fetchBranch = async () => {
     const branches = await getBranches();
     setBranch(branches);
@@ -65,7 +66,7 @@ const ApplicantDetails = () => {
             <label className={labelClass}>Full Name</label>
             <input type="text" {...register("applicant.fullName")} placeholder="Legal name as per NIC" className={inputClass} />
           </div>
-          
+
           <div>
             <label className={labelClass}>NIC Number</label>
             <input type="text" {...register("applicant.nic")} className={inputClass} />
@@ -98,7 +99,7 @@ const ApplicantDetails = () => {
             <label className={labelClass}>Occupation</label>
             <input type="text" {...register("applicant.occupation")} className={inputClass} />
           </div>
-          
+
           <div className="md:col-span-2">
             <label className={labelClass}>Full Residential Address</label>
             <input type="text" {...register("applicant.address")} className={inputClass} />
@@ -118,16 +119,23 @@ const ApplicantDetails = () => {
                   {plans?.map((b) => <option value={b.id} key={b.id}>{b.name}</option>)}
                 </select>
               </div>
+              <div>
+                <label className={labelClass}>Assigned Branch</label>
+                <select className={inputClass} {...register("applicant.branchId", { valueAsNumber: true })}>
+                  <option value="">Choose a branch...</option>
+                  {branch?.map((b) => <option value={b.id} key={b.id}>{b.name}</option>)}
+                </select>
+              </div>
+
+              <div>
+                <label className={labelClass}>Investment Date</label>
+                <input type="date" {...register("applicant.investmentDate")} className={inputClass} />
+              </div>
             </div>
-            <div>
-              <label className={labelClass}>Assigned Branch</label>
-              <select className={inputClass} {...register("applicant.branchId", { valueAsNumber: true })}>
-                <option value="">Choose a branch...</option>
-                {branch?.map((b) => <option value={b.id} key={b.id}>{b.name}</option>)}
-              </select>
-            </div>
+
+
           </div>
-          
+
           <div className="md:col-span-2 pt-4">
             <label className={labelClass}>E-Signature</label>
             <SignaturePad />

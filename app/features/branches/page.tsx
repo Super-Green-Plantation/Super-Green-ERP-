@@ -19,6 +19,7 @@ const Page = () => {
   const [branches, setBranches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  
 
   const fetchData = async () => {
     try {
