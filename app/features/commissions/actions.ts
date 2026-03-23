@@ -21,7 +21,7 @@ export async function getEmployeeCommissions(empNo: number) {
       where: { memberEmpNo: member?.empNo },
       include: {
         investment: { include: { plan: true, client: true } },
-        
+
       },
     });
 
@@ -63,8 +63,25 @@ export async function processCommissions(data: {
   const { investmentId, empNo, branchId } = data;
 
   console.log(data);
-  
+
   try {
+    const advisor = await prisma.member.findUnique({
+      where: { empNo },
+      include: {
+        position: {
+          include: {
+            orc: true,
+            salary: true, // contains commThreshold, commRateLow, commRateHigh, etc.
+          },
+        },
+      },
+    });
+
+    if (!advisor) throw new ApiError("ADVISOR_NOT_FOUND", "Advisor not found", 404);
+
+    const uplines = await getUplineChain(advisor.position.rank, branchId);
+
+    
     const result = await prisma.$transaction(async (tx) => {
       const createdCommissions: any[] = [];
 
@@ -86,19 +103,7 @@ export async function processCommissions(data: {
         return serializeData({ alreadyProcessed: true, investment, commissions: existingCommissions });
       }
 
-      const advisor = await tx.member.findUnique({
-        where: { empNo },
-        include: {
-          position: {
-            include: {
-              orc: true,
-              salary: true, // contains commThreshold, commRateLow, commRateHigh, etc.
-            },
-          },
-        },
-      });
 
-      if (!advisor) throw new ApiError("ADVISOR_NOT_FOUND", "Advisor not found", 404);
       if (!advisor.position) throw new ApiError("POSITION_MISSING", "Advisor has no position");
       if (!advisor.position.salary) throw new ApiError("SALARY_CONFIG_MISSING", "No salary config for position");
 
@@ -181,8 +186,7 @@ export async function processCommissions(data: {
       createdCommissions.push(uplineRecord);
 
       // Upline commissions — ORC rate from position.salary.orcRate
-      const uplines = await getUplineChain(advisor.position.rank, branchId);
-
+      
       for (const upline of uplines) {
         if (!upline.position?.orc) continue;
 
@@ -191,9 +195,9 @@ export async function processCommissions(data: {
           : upline.position.orc.rateNonPermanent;
 
         const uplineRate = Number(orcRate);
-        if (uplineRate > 1) throw new ApiError("ORC_RATE_TOO_HIGH", "ORC rate too high");
+        if (uplineRate > 2) throw new ApiError("ORC_RATE_TOO_HIGH", "ORC rate too high");
 
-        const uplineAmount = investment.amount * uplineRate;
+        const uplineAmount = investment.amount * Number(orcRate);
 
         await tx.member.update({
           where: { empNo: upline.empNo },
@@ -263,14 +267,14 @@ export async function getCommissionByBranch(branchId: number) {
     const commissions = await prisma.commission.findMany({
       where: { branchId },
       include: {
-        member: true, investment: { include: { plan: true, client:true } }, Branch: true
+        member: true, investment: { include: { plan: true, client: true } }, Branch: true
       },
       orderBy: { createdAt: "desc" },
 
     });
 
     console.log(commissions);
-    
+
 
     return serializeData(commissions);
   } catch (error) {
@@ -286,8 +290,8 @@ export async function getCommissionDetails() {
         id: true,
         amount: true,
         Branch: true,
-        
-        investment: { include: { plan: true,client: true } },
+
+        investment: { include: { plan: true, client: true } },
         member: true,
 
 

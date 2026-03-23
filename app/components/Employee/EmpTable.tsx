@@ -19,6 +19,7 @@ import { useEffect, useState } from "react";
 import Pagination from "@/app/components/Pagination";
 import { usePermission } from "@/lib/auth/usePermission";
 import { PERMISSIONS } from "@/lib/auth/permissions";
+import ConfirmDialog from "../ui/ConfirmDialog";
 
 interface EmpTableProps {
   onEdit: (emp: Member) => void;
@@ -33,6 +34,11 @@ const EmpTable = ({ onEdit, onRefresh, branchId }: EmpTableProps) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [userRole, setUserRole] = useState<string | null>(null);
   const canEdit = usePermission(userRole, PERMISSIONS.UPDATE_FINANCIAL_PLAN);
+
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; branchId: number | null }>({
+    open: false,
+    branchId: null,
+  });
 
   const {
     data,
@@ -80,11 +86,13 @@ const EmpTable = ({ onEdit, onRefresh, branchId }: EmpTableProps) => {
     },
   });
 
-  const handleDelete = (id: number) => {
-    console.log(id);
-    
-    if (!confirm("Delete this employee?")) return;
-    deleteMutation.mutate(Number(id));
+  const handleDeleteClick = (branchId: number) => {
+    setDeleteDialog({ open: true, branchId });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteDialog.branchId) return;
+    deleteMutation.mutate(deleteDialog.branchId);
   };
 
 
@@ -148,7 +156,7 @@ const EmpTable = ({ onEdit, onRefresh, branchId }: EmpTableProps) => {
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
-                   
+
                     <span className="text-sm font-bold text-slate-900 leading-tight">
                       {e.nameWithInitials}
                     </span>
@@ -179,7 +187,7 @@ const EmpTable = ({ onEdit, onRefresh, branchId }: EmpTableProps) => {
                         <Pen size={16} />
                       </button>
                       <button
-                        onClick={() => handleDelete(e.id)}
+                        onClick={() => handleDeleteClick(e.id)}
                         className="p-2 text-slate-400 hover:text-rose-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-xl transition-all"
                         title="Delete"
                       >
@@ -218,6 +226,17 @@ const EmpTable = ({ onEdit, onRefresh, branchId }: EmpTableProps) => {
         totalPages={knownTotalPages}
         onPageChange={handlePageChange}
         isLoading={isFetchingNextPage}
+      />
+
+      <ConfirmDialog
+        open={deleteDialog.open}
+        onClose={() => setDeleteDialog({ open: false, branchId: null })}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Employee"
+        description="This will permanently delete this employee and all associated data. This action cannot be undone."
+        confirmLabel="Delete Employee"
+        cancelLabel="Keep it"
+        variant="danger"
       />
     </div>
   );

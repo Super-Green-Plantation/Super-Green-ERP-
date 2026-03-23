@@ -1,27 +1,26 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import AddPlanModal from "@/app/components/FinancialPlans/AddPlanModal";
+import EditPlanModal from "@/app/components/FinancialPlans/EditPlanModal";
+import Heading from "@/app/components/Heading";
+import Error from "@/app/components/Status/Error";
+import Loading from "@/app/components/Status/Loading";
+import { usePlans } from "@/app/hooks/usePlans";
+import { PERMISSIONS } from "@/lib/auth/permissions";
+import { usePermission } from "@/lib/auth/usePermission";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  Calendar,
+  CircleDollarSign,
   Clock,
   Edit2,
   Plus,
   Trash2,
-  TrendingUp,
-  CircleDollarSign,
+  TrendingUp
 } from "lucide-react";
-import AddPlanModal from "@/app/components/FinancialPlans/AddPlanModal";
-import EditPlanModal from "@/app/components/FinancialPlans/EditPlanModal";
-import { getFinancialPlans, deleteFinancialPlan } from "./actions";
-import { usePlans } from "@/app/hooks/usePlans";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Spinner } from "@/components/ui/spinner";
-import Loading from "@/app/components/Status/Loading";
-import Error from "@/app/components/Status/Error";
-import Heading from "@/app/components/Heading";
-import { usePermission } from "@/lib/auth/usePermission";
-import { PERMISSIONS } from "@/lib/auth/permissions";
+import { deleteFinancialPlan } from "./actions";
+import ConfirmDialog from "@/app/components/ui/ConfirmDialog";
 
 export default function Page() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -30,10 +29,12 @@ export default function Page() {
   const [userRole, setUserRole] = useState<string | null>(null);
   const queryClient = useQueryClient();
   const { data: plans = [], isLoading, isError } = usePlans();
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; branchId: number | null }>({
+    open: false,
+    branchId: null,
+  });
 
-  console.log(plans);
-
-  const deletePlanMutation = useMutation({
+  const deleteMutation = useMutation({
     mutationFn: (id: number) => deleteFinancialPlan(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["plans"] });
@@ -44,9 +45,13 @@ export default function Page() {
     },
   });
 
-  const handleDelete = (id: number) => {
-    if (!confirm("Do you want to delete this financial plan?")) return;
-    deletePlanMutation.mutate(id);
+  const handleDeleteClick = (branchId: number) => {
+    setDeleteDialog({ open: true, branchId });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteDialog.branchId) return;
+    deleteMutation.mutate(deleteDialog.branchId);
   };
 
   const handleEditClick = (plan: any) => {
@@ -177,7 +182,7 @@ export default function Page() {
 
                   {canDelete && (
                     <button
-                      onClick={() => handleDelete(plan.id)}
+                      onClick={() => handleDeleteClick(plan.id)}
                       className="flex-1 flex items-center justify-center gap-2 text-sm font-bold text-red-500 hover:bg-red-50 py-2.5 rounded-lg transition-all border border-transparent hover:border-red-100"
                     >
                       <Trash2 size={16} /> Delete
@@ -218,6 +223,17 @@ export default function Page() {
           }}
         />
       )}
+
+      <ConfirmDialog
+        open={deleteDialog.open}
+        onClose={() => setDeleteDialog({ open: false, branchId: null })}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Investment Plan"
+        description="This will permanently delete this investment plan and all associated data. This action cannot be undone."
+        confirmLabel="Delete Plan"
+        cancelLabel="Keep it"
+        variant="danger"
+      />
     </div>
   );
 }

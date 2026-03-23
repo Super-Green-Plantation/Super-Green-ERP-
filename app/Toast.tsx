@@ -7,7 +7,7 @@ export default function Toast({ children }: { children: React.ReactNode }) {
   return (
     <>
       {children}
-      <Toaster richColors position="top-right" />
+      <Toaster  position="top-right" />
     </>
   );
 }

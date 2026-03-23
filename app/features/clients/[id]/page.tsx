@@ -36,6 +36,7 @@ import CopyButton from "@/app/components/Buttons/CopyButton";
 import SendDocumentLinkButton from "@/app/components/Buttons/SendDocumentLinkButton";
 import { DocPreview } from "@/app/components/Doc/DocPreview";
 import { MaturityBadge } from "@/app/components/Buttons/MaturityBadge";
+import ConfirmDialog from "@/app/components/ui/ConfirmDialog";
 
 export default function ApplicationViewPage() {
   const queryClient = useQueryClient();
@@ -49,7 +50,7 @@ export default function ApplicationViewPage() {
 
   const { data: formData, isLoading, isError } = useClient(Number(id));
 
-  console.log("formData", formData);
+  const [deleteDialog, setDeleteDialog] = useState(false);
 
 
 
@@ -125,16 +126,14 @@ export default function ApplicationViewPage() {
     }
   };
 
-  const handelDelete = async (nic: any) => {
-    const res = await deleteClient(nic);
-    queryClient.invalidateQueries({
-      queryKey: ["client", Number(id)],
-    });
-
-    router.push("/features/clients");
+  const handleDeleteConfirm = async () => {
+    const res = await deleteClient(formData?.applicant?.nic);
     if (!res) {
       toast.error("Failed to delete client");
+      return;
     }
+    queryClient.invalidateQueries({ queryKey: ["client", Number(id)] });
+    router.push("/features/clients");
   };
 
   if (isLoading) return <Loading />;
@@ -491,12 +490,23 @@ export default function ApplicationViewPage() {
         </div>
 
         <button
-          onClick={() => {/* logic */ }}
+          onClick={() => setDeleteDialog(true)}
           className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 active:scale-95 transition-all text-sm font-bold"
         >
           <Trash2 className="w-4 h-4" />
           Delete Permanent
         </button>
+
+        <ConfirmDialog
+          open={deleteDialog}
+          onClose={() => setDeleteDialog(false)}
+          onConfirm={handleDeleteConfirm}
+          title="Delete Client"
+          description={`This will permanently delete ${formData?.applicant?.fullName} and all associated investments, documents and records. This cannot be undone.`}
+          confirmLabel="Delete Client"
+          cancelLabel="Keep it"
+          variant="danger"
+        />
       </div>
 
     </div>

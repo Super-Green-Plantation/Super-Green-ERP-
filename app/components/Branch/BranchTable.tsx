@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import BranchModal from "./Model";
 import Pagination from "@/app/components/Pagination";
 import Loading from "../Status/Loading";
+import ConfirmDialog from "../ui/ConfirmDialog";
 
 interface Branch {
   id: number;
@@ -29,10 +30,16 @@ const BranchTable = ({ data, isLoading, onRefresh }: BranchTableProps) => {
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
 
+
   const totalPages = Math.ceil((data?.length ?? 0) / PAGE_SIZE);
   const paginatedData = data?.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   const queryClient = useQueryClient();
+
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; branchId: number | null }>({
+    open: false,
+    branchId: null,
+  });
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => deleteBranch(id),
@@ -51,21 +58,21 @@ const BranchTable = ({ data, isLoading, onRefresh }: BranchTableProps) => {
     setSelectedBranch(branch);
     setUpdateModel(true);
   };
-  const handelDelete = async (branchId: number) => {
-    if (confirm("Are you sure you want to delete this branch?")) {
-      deleteMutation.mutate(branchId);
-    }
+  const handleDeleteClick = (branchId: number) => {
+    setDeleteDialog({ open: true, branchId });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteDialog.branchId) return;
+    deleteMutation.mutate(deleteDialog.branchId);
   };
 
   // Styled Loading State
-  if (isLoading) return <Loading/>
+  if (isLoading) return <Loading />
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
       <div className="flex justify-end  items-center">
-      
-
-
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
@@ -78,7 +85,7 @@ const BranchTable = ({ data, isLoading, onRefresh }: BranchTableProps) => {
                 Branch Name
               </th>
               <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
-                 Location
+                Location
               </th>
               <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
                 Total Employees
@@ -141,12 +148,14 @@ const BranchTable = ({ data, isLoading, onRefresh }: BranchTableProps) => {
                     </button>
 
                     <button
-                      onClick={() => handelDelete(branch.id)}
+                      onClick={() => handleDeleteClick(branch.id)}
                       className="p-2 text-slate-400 hover:text-rose-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-xl transition-all"
-                      title="Archive Branch"
+                      title="Delete Branch"
                     >
                       <Trash2 size={18} />
                     </button>
+
+
 
                     <div className="h-4 w-px bg-slate-200 mx-1" />
                   </div>
@@ -189,6 +198,17 @@ const BranchTable = ({ data, isLoading, onRefresh }: BranchTableProps) => {
           }}
         />
       )}
+
+      <ConfirmDialog
+        open={deleteDialog.open}
+        onClose={() => setDeleteDialog({ open: false, branchId: null })}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Branch"
+        description="This will permanently delete this branch and all associated data. This action cannot be undone."
+        confirmLabel="Delete Branch"
+        cancelLabel="Keep it"
+        variant="danger"
+      />
     </div>
   );
 };

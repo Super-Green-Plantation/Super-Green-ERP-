@@ -7,7 +7,7 @@ import { Check, ChevronRight, Loader2, MoreVertical } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { toast } from 'sonner';
-import { updateUserRole } from './action';
+import { deleteUser, updateUserRole } from './action';
 
 // const ROLES = ['ADMIN', 'HR', 'DEV', 'IT_US', 'BRANCH_MANAGER', 'EMPLOYEE'] as const;
 // type Role = typeof ROLES[number];
@@ -85,6 +85,17 @@ export const ActionMenu = ({ userId, currentRole, email }: { userId: string; cur
         }
     };
 
+    const handleDeleteUser = async (userId: string) => {
+        setLoadingAction('delete');
+        console.log(userId);
+        await deleteUser(userId);
+        queryClient.invalidateQueries({ queryKey: ['users'] });
+        toast.success('User deleted');
+        setLoadingAction(null);
+        setOpen(false);
+        
+    }
+
     const menu = open ? (
         <div
             ref={menuRef}   // ← add this
@@ -133,6 +144,14 @@ export const ActionMenu = ({ userId, currentRole, email }: { userId: string; cur
             >
                 {loadingAction === 'reset' && <Loader2 size={12} className="animate-spin" />}
                 {loadingAction === 'reset' ? 'Sending...' : 'Reset Password'}
+            </button>
+
+            {/* delete user */}
+            <button
+                className="w-full text-left px-4 py-2.5 text-sm font-semibold text-red-700 bg-red-100 transition-colors flex items-center gap-2 disabled:opacity-50"
+                onClick={()=>handleDeleteUser(userId)}
+            >
+                Delete User
             </button>
         </div>
     ) : null;

@@ -71,7 +71,7 @@ model MemberBranch {
   branchId Int
 
   member Member @relation(fields: [memberId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  branch Branch @relation(fields: [branchId], references: [id])
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   @@unique([memberId, branchId])
 }
@@ -178,7 +178,7 @@ model Member {
   profilePic        String?
 
   userId String? @unique @db.Uuid
-  user   User?   @relation(fields: [userId], references: [id])
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   status             EmployeeStatus @default(PROBATION)
   probationStartDate DateTime?
@@ -476,7 +476,7 @@ model ClientDocumentRequest {
 
   token       String @unique
   createdById String @db.Uuid
-  createdBy   User   @relation(fields: [createdById], references: [id])
+  createdBy   User   @relation(fields: [createdById], references: [id], onDelete: Cascade)
 
   expiresAt DateTime
   used      Boolean  @default(false)

@@ -19,18 +19,25 @@ import Loading from "@/app/components/Status/Loading";
 import Error from "@/app/components/Status/Error";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import ConfirmDialog from "@/app/components/ui/ConfirmDialog";
 
 const InvestmentDetails = () => {
   const router = useRouter();
   const params = useParams();
   const id = Number(params?.id);
 
-  console.log(id);
   
-
+  
   const [data, setData] = useState<any>(null);
+  console.log(data);
   const [loading, setLoading] = useState(true);
   const queryClient = useQueryClient();
+
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; branchId: number | null }>({
+    open: false,
+    branchId: null,
+  });
+
 
   useEffect(() => {
     const fetchInvestment = async () => {
@@ -48,9 +55,16 @@ const InvestmentDetails = () => {
     if (id) fetchInvestment();
   }, [id]);
 
-  const handleDelete = async () => {
+  const handleDeleteClick = (branchId: number) => {
+    setDeleteDialog({ open: true, branchId });
+  };
+
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteDialog.branchId) return;
     try {
-      await deleteInvestment(id);
+     
+      await deleteInvestment(data?.id);
       toast.success("Investment deleted successfully");
       await queryClient.invalidateQueries({ queryKey: ["investments"] });
 
@@ -62,8 +76,8 @@ const InvestmentDetails = () => {
     }
   };
 
-  console.log(data);
-  
+
+
   if (loading) return <Loading />;
   if (!data) return <Error />;
 
@@ -78,7 +92,7 @@ const InvestmentDetails = () => {
   return (
     <div className="max-w-7xl mx-auto space-y-6 min-h-screen p-4 md:p-8">
       {/* Header Actions */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 border-b border-slate-100 pb-8 mb-4">
+      <div className="flex flex-col md:flex-row lg:items-center justify-between gap-6 border-b border-slate-100 pb-8 mb-4">
         {/* Left Side: Back Button & Title */}
         <div className="flex items-center gap-5">
           <button
@@ -207,8 +221,8 @@ const InvestmentDetails = () => {
                   <span className="text-xs font-bold text-slate-400 mr-1 uppercase">
                     Rs.
                   </span>
-                  {(client?.investmentAmount && plan?.rate && plan?.duration) 
-                    ? (((client.investmentAmount * plan.rate) / 100) * (plan.duration / 12)).toLocaleString() 
+                  {(client?.investmentAmount && plan?.rate && plan?.duration)
+                    ? (((client.investmentAmount * plan.rate) / 100) * (plan.duration / 12)).toLocaleString()
                     : "0"}
                 </p>
               </div>
@@ -262,10 +276,10 @@ const InvestmentDetails = () => {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 border-t border-slate-100 pt-6">
-              <DetailItem label="Operating Branch" value={member?.branches?.map((b:any) => b.branch?.name).join(", ") || "N/A"} />
+              <DetailItem label="Operating Branch" value={member?.branches?.map((b: any) => b.branch?.name).join(", ") || "N/A"} />
               <DetailItem
                 label="Base Location"
-                value={member?.branches?.map((b:any) => b.branch?.location).join(", ") || "N/A"}
+                value={member?.branches?.map((b: any) => b.branch?.location).join(", ") || "N/A"}
               />
             </div>
           </div>
@@ -284,12 +298,22 @@ const InvestmentDetails = () => {
           </p>
         </div>
         <button
-          onClick={handleDelete}
+          onClick={() => handleDeleteClick(data.id)}
           className="w-full md:w-auto px-8 py-3 bg-rose-600 text-white rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-rose-700 transition-all shadow-lg shadow-rose-200 flex items-center justify-center gap-2 active:scale-95"
         >
           <Trash2 className="w-4 h-4" /> Void Investment
         </button>
       </div>
+      <ConfirmDialog
+        open={deleteDialog.open}
+        onClose={() => setDeleteDialog({ open: false, branchId: null })}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Commission"
+        description="This will permanently delete this Commission and all associated data. This action cannot be undone."
+        confirmLabel="Delete Commission"
+        cancelLabel="Keep it"
+        variant="danger"
+      />
     </div>
   );
 };

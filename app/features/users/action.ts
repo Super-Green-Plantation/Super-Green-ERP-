@@ -49,3 +49,10 @@ export const sendPasswordReset = async (email: string) => {
     console.log("Password reset email sent:", data);
     return { success: true };
 }
+
+
+export const deleteUser = async (userId: string) => {
+    await prisma.user.delete({
+        where: { id: userId }
+    })
+}
