@@ -44,6 +44,7 @@
     "pdfmake": "^0.3.3",
     "pg": "^8.19.0",
     "puppeteer": "^24.36.1",
+    "radix-ui": "^1.4.3",
     "react": "19.0.0",
     "react-dom": "19.0.0",
     "react-hook-form": "^7.71.1",
