@@ -37,7 +37,7 @@ const DashboardPage = () => {
         <StatCard
           label="Investment Sum"
           value={`Rs. ${achieved.toLocaleString()}`}
-          subText={`Profit: Rs. ${data.totProfit._sum.totalProfit?.toLocaleString() || 0}`}
+          subText={`Profit: Rs. ${data.totProfit._sum.totalProfit || 0}`}
           icon={<TrendingUp size={20} />}
           color="emerald"
         >

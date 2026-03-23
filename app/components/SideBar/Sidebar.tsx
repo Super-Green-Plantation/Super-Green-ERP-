@@ -24,6 +24,7 @@ import { usePathname } from "next/navigation";
 import { SidebarSkeleton } from "./SidebarSkeleton";
 import { useEffect, useState } from "react";
 import Loading from "../Status/Loading";
+import { createPortal } from "react-dom";
 
 type SidebarProps = {
   role: string | null;
@@ -35,7 +36,7 @@ type SidebarProps = {
 
 const links = [
   { name: "Dashboard", href: "/features/dashboard", icon: LayoutDashboard, role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "AGM"] },
-  { name: "Branches", href: "/features/branches", icon: GitBranch, role: ["ADMIN", "HR", "DEV", ] },
+  { name: "Branches", href: "/features/branches", icon: GitBranch, role: ["ADMIN", "HR", "DEV",] },
   {
     name: "Employee",
     href: "/features/branches/employees",
@@ -96,7 +97,7 @@ const Sidebar = ({ role, loading, isCollapsed, setIsCollapsed }: SidebarProps) =
 
 
   return (
-    <aside
+    <><aside
       style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       className={`flex-1 overflow-y-auto
     fixed left-0 top-0 h-screen
@@ -200,11 +201,15 @@ const Sidebar = ({ role, loading, isCollapsed, setIsCollapsed }: SidebarProps) =
         </form>
       </div>
 
-      {load && (
-        <Loading />
-      )}
+
 
     </aside>
+      {load && createPortal(
+        <Loading />,
+        document.body
+      )}
+    </>
+
   );
 };
 
