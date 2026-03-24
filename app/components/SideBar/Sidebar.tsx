@@ -104,12 +104,12 @@ const Sidebar = ({ role, loading, isCollapsed, setIsCollapsed, onNavigate }: Sid
   return (
     <>
       {/* Backdrop — mobile only, shown when sidebar is open */}
-      {!isCollapsed && (
+      {/* {!isCollapsed && (
         <div
           className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm lg:hidden"
           onClick={() => setIsCollapsed(true)}
         />
-      )}
+      )} */}
 
       <aside
         ref={sidebarRef}
@@ -151,14 +151,25 @@ const Sidebar = ({ role, loading, isCollapsed, setIsCollapsed, onNavigate }: Sid
         <nav className="flex-1 px-3 space-y-2 overflow-y-auto mt-4">
           {filteredLinks.map((link) => {
             const Icon = link.icon;
-            const isActive = pathname === link.href;
+            const sortedLinks = [...links].sort(
+              (a, b) => b.href.length - a.href.length
+            );
+
+            const isActive =
+              sortedLinks.find((l) => pathname.startsWith(l.href))?.href === link.href;
 
             return (
               <Link
                 key={link.href}
                 href={link.href}
                 title={isCollapsed ? link.name : ""}
-                onClick={onNavigate}
+                onClick={() => {
+                  onNavigate();
+                  if (window.innerWidth <= 375) {
+                    setIsCollapsed(true);
+                  }
+
+                }}
                 className={`
                   flex items-center gap-4
                   px-4 py-3 rounded-xl
