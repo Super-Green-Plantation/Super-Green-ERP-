@@ -1,15 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import {
-  ChevronDown, ChevronRight, Save, Loader2, CheckCircle2,
-  Banknote, Target, TrendingUp, Car, Percent
-} from "lucide-react";
-import { toast } from "sonner";
-import { getPositionSalaries, upsertPositionSalary } from "../salary-config-action";
 import Back from "@/app/components/Buttons/Back";
 import Loading from "@/app/components/Status/Loading";
-import Heading from "@/app/components/Heading";
+import {
+  Banknote,
+  Car,
+  CheckCircle2,
+  ChevronDown, ChevronRight,
+  Loader2,
+  Percent,
+  Save,
+  Target, TrendingUp
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { getPositionSalaries, upsertPositionSalary } from "../salary-config-action";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -177,7 +182,7 @@ export default function SalaryConfigPage() {
   if (loading) return <Loading/>
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 space-y-3">
+    <div className="max-w-7xl mx-auto sm:space-y-8 space-y-2 sm:p-4 md:p-8 min-h-screen ">
       {/* Header */}
       <div className="mb-6">
         <div className="flex gap-3 items-center">
@@ -201,7 +206,7 @@ export default function SalaryConfigPage() {
         return (
           <div
             key={position.id}
-            className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm"
+            className="my-3 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm"
           >
             {/* Accordion Header */}
             <div
@@ -211,11 +216,15 @@ export default function SalaryConfigPage() {
               onKeyDown={(e) => e.key === "Enter" && setExpandedId(isExpanded ? null : position.id)}
               className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50/50 transition-colors cursor-pointer"
             >
-              <div className="flex items-center gap-3">
-                <span className="px-3 py-1 rounded-lg text-xs font-black border uppercase tracking-wider bg-slate-100 text-slate-600 border-slate-200">
+              <div className=" sm:flex space-y-3 items-center gap-3">
+                <div className="flex items-center gap-3 justify-between">
+                   <span className="px-3 py-1 rounded-lg text-xs font-black border uppercase tracking-wider bg-slate-100 text-slate-600 border-slate-200">
                   {position.title}
                 </span>
                 <span className="text-xs text-slate-400 font-bold">Rank {position.rank}</span>
+                </div>
+               
+               
 
                 {isConfigured && (
                   <span className="flex items-center gap-1 text-[10px] font-black text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">

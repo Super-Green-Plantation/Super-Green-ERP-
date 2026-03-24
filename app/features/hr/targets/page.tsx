@@ -13,6 +13,7 @@ import {
 } from "./components/shared";
 import { PositionWithTargets } from "@/app/types/PositionWithTargets";
 import Heading from "@/app/components/Heading";
+import Loading from "@/app/components/Status/Loading";
 
 export default function PositionTargetsPage() {
   const [positions, setPositions] = useState<PositionWithTargets[]>([]);
@@ -203,16 +204,10 @@ export default function PositionTargetsPage() {
   };
 
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
-      </div>
-    );
-  }
+  if (loading) return <Loading/>
 
   return (
-    <div className="max-w-7xl mx-auto  space-y-6">
+    <div className="max-w-7xl mx-auto sm:space-y-8 space-y-2 sm:p-4 md:p-8 min-h-screen">
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
@@ -237,7 +232,7 @@ export default function PositionTargetsPage() {
       </div>
 
       {/* Accordions */}
-      <div className="space-y-3">
+      <div className="space-y-3 space-x-0 mx-auto">
         {positions.map((position) => (
           <PositionAccordion
             key={position.id}

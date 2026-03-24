@@ -32,7 +32,7 @@ export default function NonFaTargetConfig({
       {[1, 2].map(period => {
         const periodRows = edit.rows.filter(r => r.periodNumber === period);
         return (
-          <div key={period} className="space-y-4">
+          <div key={period} className="space-y-4 space-x-0">
             <div className="flex items-center gap-2">
               <span className={`px-3 py-1 rounded-lg text-[11px] font-black uppercase tracking-widest border
                 ${period === 1

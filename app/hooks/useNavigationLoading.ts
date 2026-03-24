@@ -1,25 +1,24 @@
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 
 export function useNavigationLoading() {
   const pathname = usePathname();
   const [loading, setLoading] = useState(false);
   const [prevPathname, setPrevPathname] = useState(pathname);
+  const [isPending, startTransition] = useTransition();
 
   const startLoading = () => {
-    // Small delay ensures loader is visible
-    setTimeout(() => setLoading(true), 50);
+    startTransition(() => {
+      setLoading(true);
+    });
   };
 
   useEffect(() => {
     if (pathname !== prevPathname) {
-      // Keep loader visible briefly for UX
-      setTimeout(() => {
-        setLoading(false);
-        setPrevPathname(pathname);
-      }, 200);
+      setLoading(false);
+      setPrevPathname(pathname);
     }
   }, [pathname, prevPathname]);
 
-  return { loading, startLoading };
+  return { loading: loading || isPending, startLoading };
 }

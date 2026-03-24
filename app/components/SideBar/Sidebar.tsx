@@ -103,15 +103,7 @@ const Sidebar = ({ role, loading, isCollapsed, setIsCollapsed, onNavigate }: Sid
 
   return (
     <>
-      {/* Backdrop — mobile only, shown when sidebar is open */}
-      {/* {!isCollapsed && (
-        <div
-          className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm lg:hidden"
-          onClick={() => setIsCollapsed(true)}
-        />
-      )} */}
-
-      <aside
+          <aside
         ref={sidebarRef}
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         className={`flex-1 overflow-y-auto

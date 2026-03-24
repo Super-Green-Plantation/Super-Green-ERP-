@@ -11,7 +11,6 @@ export async function getCurrentUser() {
         redirect("/auth/signin")
     }
 
-    // If you store users in Prisma
     const dbUser = await prisma.user.findUnique({
         where: { email: user.email! },
         include: {
@@ -24,8 +23,6 @@ export async function getCurrentUser() {
             }
         }
     })
-
-
 
     if (!dbUser) {
         redirect("/auth/signin")
