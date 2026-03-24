@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Member" ALTER COLUMN "epfNo" DROP NOT NULL;

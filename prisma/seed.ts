@@ -34,6 +34,15 @@ async function main() {
     },
   });
 
+  await prisma.member.create({
+
+    data: {
+      nameWithInitials: "Admin User",
+      empNo: "EMP000",
+      positionId: 0
+    }
+  });
+
   console.log("✅ Admin seeded");
 }
 

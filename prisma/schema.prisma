@@ -33,6 +33,7 @@ model Branch {
 }
 
 enum Title {
+  ADMIN
   AGM
   ZM
   RM
@@ -158,7 +159,7 @@ model Member {
   nameWithInitials  String?
   email             String?   @unique
   empNo             String    @unique
-  epfNo             String
+  epfNo             String?
   phone             String?
   phone2            String?
   nic               String?
@@ -415,11 +416,13 @@ enum ActivityAction {
 }
 
 enum ActivityEntity {
+  BRANCH
   CLIENT
   INVESTMENT
   COMMISSION
   PROFIT
   MEMBER
+  FINANCIAL_PLAN
 }
 
 model ActivityLog {
@@ -430,8 +433,8 @@ model ActivityLog {
 
   entityId Int? // clientId, investmentId, etc.
 
-  performedById Int // Member.id
-  performedBy   Member @relation(fields: [performedById], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  performedById Int? // Member.id
+  performedBy   Member? @relation(fields: [performedById], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   branchId Int?
   branch   Branch? @relation(fields: [branchId], references: [id])

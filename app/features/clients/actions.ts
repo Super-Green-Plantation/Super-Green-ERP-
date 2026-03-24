@@ -3,8 +3,10 @@
 import { serializeData } from "@/app/utils/serializers";
 import { getCurrentUserWithRole } from "@/lib/getCurrentUserWithRole";
 import { generateInvestmentNumber } from "@/lib/investment";
+import { logActivity } from "@/lib/logActivity";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
+import { ActivityAction, ActivityEntity } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import crypto from "crypto"
 import nodemailer from "nodemailer";
@@ -189,6 +191,8 @@ export async function saveClient(data: {
   const investmentNumber = generateInvestmentNumber();
 
   try {
+    const currentUser = await getCurrentUserWithRole();
+
     const client = await prisma.$transaction(async (tx: any) => {
       const member = await tx.member.findFirst({
         where: {
@@ -274,7 +278,7 @@ export async function saveClient(data: {
           refNumber: investmentNumber,
           branchId: applicant.branchId,
           planId: Number(investment.planId),
-          investmentDate,      
+          investmentDate,
           maturityDate,
           amount: Number(applicant.investmentAmount),
           beneficiaryId,
@@ -286,6 +290,16 @@ export async function saveClient(data: {
     });
 
     revalidatePath("/features/clients");
+
+    void logActivity({
+      action: ActivityAction.CREATE,
+      entity: ActivityEntity.CLIENT,
+      entityId: client.id,
+      performedById: currentUser?.member?.id ?? 0,
+      branchId: applicant.branchId,
+      metadata: { after: client },
+    });
+
     return serializeData({ success: true, client });
   } catch (err) {
     console.error("Error creating client:", err);
@@ -298,6 +312,11 @@ export async function updateClient(id: number, formData: any) {
   const clientId = id;
 
   try {
+    const [currentUser, oldClient] = await Promise.all([
+      getCurrentUserWithRole(),
+      prisma.client.findUnique({ where: { id: clientId } }),
+    ]);
+
     const updatedClient = await prisma.client.update({
       where: { id: clientId },
       data: {
@@ -399,6 +418,16 @@ export async function updateClient(id: number, formData: any) {
     }
 
     revalidatePath("/features/clients");
+
+    void logActivity({
+      action: ActivityAction.UPDATE,
+      entity: ActivityEntity.CLIENT,
+      entityId: clientId,
+      performedById: currentUser?.member?.id ?? 0,
+      branchId: updatedClient.branchId,
+      metadata: { before: oldClient, after: updatedClient },
+    });
+
     return serializeData({ success: true, client: updatedClient });
   } catch (error) {
     console.error("Error updating client:", error);
@@ -409,11 +438,26 @@ export async function updateClient(id: number, formData: any) {
 // Delete client
 export async function deleteClient(nic: string) {
   try {
+    const [currentUser, existingClient] = await Promise.all([
+      getCurrentUserWithRole(),
+      prisma.client.findUnique({ where: { nic } }),
+    ]);
+
     const res = await prisma.client.delete({
       where: { nic },
     });
 
     revalidatePath("/features/clients");
+
+    void logActivity({
+      action: ActivityAction.DELETE,
+      entity: ActivityEntity.CLIENT,
+      entityId: existingClient?.id,
+      performedById: currentUser?.member?.id ?? 0,
+      branchId: existingClient?.branchId,
+      metadata: { deleted: existingClient },
+    });
+
     return serializeData({ success: true, client: res });
   } catch (error) {
     console.error("Error deleting client:", error);
@@ -435,6 +479,11 @@ export async function updateClientDocuments(
   if (!clientId) return { success: false, error: "Client ID is required" };
 
   try {
+    const [currentUser, client] = await Promise.all([
+      getCurrentUserWithRole(),
+      prisma.client.findUnique({ where: { id: clientId }, select: { branchId: true } }),
+    ]);
+
     await prisma.client.update({
       where: { id: clientId },
       data: {
@@ -448,6 +497,16 @@ export async function updateClientDocuments(
 
     revalidatePath("/features/clients");
     revalidatePath(`/features/clients/${clientId}`);
+
+    void logActivity({
+      action: ActivityAction.UPDATE,
+      entity: ActivityEntity.CLIENT,
+      entityId: clientId,
+      performedById: currentUser?.member?.id ?? 0,
+      branchId: client?.branchId,
+      metadata: { updatedFields: Object.keys(data) },
+    });
+
     return { success: true };
   } catch (err) {
     console.error("Error updating documents:", err);
@@ -471,7 +530,17 @@ export async function deleteClientDocument(nic: string, field: string) {
       },
     });
 
+    const currentUser = await getCurrentUserWithRole().catch(() => null);
+
     revalidatePath("/features/clients");
+
+    logActivity({
+      action: ActivityAction.DELETE,
+      entity: ActivityEntity.CLIENT,
+      performedById: currentUser?.member?.id ?? 0,
+      metadata: { deletedFieldValue: field, clientNic: nic },
+    });
+
     return { success: true, field };
   } catch (error) {
     console.error("Error deleting document:", error);
@@ -633,6 +702,13 @@ export async function saveUploadedDocuments(
     }),
   ]);
 
+  logActivity({
+    action: ActivityAction.UPDATE,
+    entity: ActivityEntity.CLIENT,
+    entityId: request.clientId,
+    performedById: undefined, // Internal/Guest Action
+    metadata: { action: "documents_uploaded_via_token", token },
+  });
+
   return { success: true };
 }
-

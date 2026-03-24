@@ -2,7 +2,9 @@
 
 import { serializeData } from "@/app/utils/serializers";
 import { getCurrentUserWithRole } from "@/lib/getCurrentUserWithRole";
+import { logActivity } from "@/lib/logActivity";
 import { prisma } from "@/lib/prisma";
+import { ActivityAction, ActivityEntity } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 // Generate investment reference number
@@ -74,6 +76,7 @@ export async function createInvestment(data: {
   amount: number;
 }) {
   try {
+    const currentUser = await getCurrentUserWithRole();
     const refNumber = generateInvestmentNumber();
 
     const investment = await prisma.investment.create({
@@ -94,6 +97,16 @@ export async function createInvestment(data: {
     });
 
     revalidatePath("/features/investments");
+
+    void logActivity({
+      action: ActivityAction.CREATE,
+      entity: ActivityEntity.INVESTMENT,
+      entityId: investment.id,
+      performedById: currentUser?.member?.id ?? 0,
+      branchId: investment.branchId,
+      metadata: { after: investment },
+    });
+
     return { success: true, investment: serializeData(investment) };
   } catch (error) {
     console.error("Error creating investment:", error);
@@ -198,6 +211,11 @@ export async function getInvestmentDetailById(id: number) {
 // Update the advisor for a specific investment
 export async function updateAdvisorId(investmentId: number, advisorEmpNo: string) {
   try {
+    const [currentUser, oldInvestment] = await Promise.all([
+      getCurrentUserWithRole(),
+      prisma.investment.findUnique({ where: { id: investmentId }, select: { advisorId: true, branchId: true } }),
+    ]);
+
     const updated = await prisma.investment.update({
       where: { id: investmentId },
       data: {
@@ -208,6 +226,16 @@ export async function updateAdvisorId(investmentId: number, advisorEmpNo: string
     });
 
     revalidatePath("/features/commissions");
+
+    void logActivity({
+      action: ActivityAction.UPDATE,
+      entity: ActivityEntity.INVESTMENT,
+      entityId: investmentId,
+      performedById: currentUser?.member?.id ?? 0,
+      branchId: oldInvestment?.branchId,
+      metadata: { updatedField: "advisorId", before: { advisorId: oldInvestment?.advisorId }, after: { advisorEmpNo } },
+    });
+
     return { success: true, investment: serializeData(updated) };
   } catch (error) {
     console.error("Error updating advisor:", error);
@@ -240,10 +268,25 @@ export async function getPlansByClient(clientId: number) {
 
 export async function deleteInvestment(id: number) {
   try {
+    const [currentUser, existing] = await Promise.all([
+      getCurrentUserWithRole(),
+      prisma.investment.findUnique({ where: { id }, select: { branchId: true, clientId: true } }),
+    ]);
+
     await prisma.investment.delete({
       where: { id },
     });
     revalidatePath("/features/commissions");
+
+    void logActivity({
+      action: ActivityAction.DELETE,
+      entity: ActivityEntity.INVESTMENT,
+      entityId: id,
+      performedById: currentUser?.member?.id ?? 0,
+      branchId: existing?.branchId,
+      metadata: { investmentId: id, clientId: existing?.clientId },
+    });
+
     return { success: true };
   } catch (error) {
     console.error("Error deleting investment:", error);
@@ -275,6 +318,8 @@ export async function createInvestmentForExistingClient(data: {
   } | null;
 }) {
   try {
+    const currentUser = await getCurrentUserWithRole();
+
     const result = await prisma.$transaction(async (tx) => {
       let beneficiaryId = data.beneficiaryId ?? null;
       let nomineeId = data.nomineeId ?? null;
@@ -333,6 +378,16 @@ export async function createInvestmentForExistingClient(data: {
     });
 
     revalidatePath("/features/investments");
+
+    void logActivity({
+      action: ActivityAction.CREATE,
+      entity: ActivityEntity.INVESTMENT,
+      entityId: result.id,
+      performedById: currentUser?.member?.id ?? 0,
+      branchId: data.branchId,
+      metadata: { after: result },
+    });
+
     return serializeData({ success: true, investment: result });
   } catch (err) {
     console.error("createInvestmentForExistingClient error:", err);

@@ -2,6 +2,9 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { logActivity } from "@/lib/logActivity";
+import { getCurrentUserWithRole } from "@/lib/getCurrentUserWithRole";
+import { ActivityAction, ActivityEntity } from "@prisma/client";
 
 export async function getFinancialPlans() {
   return await prisma.financialPlan.findMany({
@@ -18,10 +21,27 @@ export async function createFinancialPlan(formData: FormData) {
   const investment = investmentValue ? parseFloat(investmentValue) : null;
 
   try {
-    await prisma.financialPlan.create({
+    const currentUser = await getCurrentUserWithRole();
+
+    const plan = await prisma.financialPlan.create({
       data: { name, duration, rate, description, investment },
     });
+
     revalidatePath("/features/financial_plans");
+
+    const memberId = currentUser?.member?.id;
+
+    if (!memberId) throw new Error("Current user has no associated member record");
+
+
+void logActivity({
+      action: ActivityAction.CREATE,
+      entity: ActivityEntity.FINANCIAL_PLAN,
+      entityId: plan.id,
+      performedById: memberId,
+      metadata: { created: plan },
+    });
+
     return { success: true };
   } catch (error) {
     return { success: false };
@@ -30,7 +50,12 @@ export async function createFinancialPlan(formData: FormData) {
 
 export async function updateFinancialPlan(id: number, data: any) {
   try {
-    await prisma.financialPlan.update({
+    const [currentUser, oldPlan] = await Promise.all([
+      getCurrentUserWithRole(),
+      prisma.financialPlan.findUnique({ where: { id } }),
+    ]);
+
+    const updated = await prisma.financialPlan.update({
       where: { id },
       data: {
         name: data.name,
@@ -40,7 +65,17 @@ export async function updateFinancialPlan(id: number, data: any) {
         investment: data.investment
       },
     });
+
     revalidatePath("/features/financial_plans");
+
+    void logActivity({
+      action: ActivityAction.UPDATE,
+      entity: ActivityEntity.FINANCIAL_PLAN,
+      entityId: id,
+      performedById: currentUser?.member?.id ?? 0,
+      metadata: { before: oldPlan, after: updated },
+    });
+
     return { success: true };
   } catch (error) {
     return { success: false };
@@ -49,8 +84,22 @@ export async function updateFinancialPlan(id: number, data: any) {
 
 export async function deleteFinancialPlan(id: number) {
   try {
+    const [currentUser, existing] = await Promise.all([
+      getCurrentUserWithRole(),
+      prisma.financialPlan.findUnique({ where: { id } }),
+    ]);
+
     await prisma.financialPlan.delete({ where: { id } });
     revalidatePath("/features/financial_plans");
+
+    void logActivity({
+      action: ActivityAction.DELETE,
+      entity: ActivityEntity.FINANCIAL_PLAN,
+      entityId: id,
+      performedById: currentUser?.member?.id ?? 0,
+      metadata: { deleted: existing },
+    });
+
     return { success: true };
   } catch (error) {
     return { success: false };

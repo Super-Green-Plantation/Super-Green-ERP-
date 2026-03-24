@@ -3,6 +3,9 @@
 import { prisma } from "@/lib/prisma";
 import { serializeData } from "@/app/utils/serializers";
 import { revalidatePath } from "next/cache";
+import { logActivity } from "@/lib/logActivity";
+import { getCurrentUserWithRole } from "@/lib/getCurrentUserWithRole";
+import { ActivityAction, ActivityEntity } from "@prisma/client";
 
 // ── getEvaluationPreview ──────────────────────────────────────────────────────
 // Returns a preview of what the evaluation would produce for all members
@@ -135,6 +138,7 @@ export async function runBatchEvaluation(
   month: number,
   force = false
 ) {
+  const currentUser = await getCurrentUserWithRole();
   try {
     const memberBranches = await prisma.memberBranch.findMany({
       where: { branchId },
@@ -254,6 +258,17 @@ export async function runBatchEvaluation(
     }
 
     revalidatePath("/features/hr/evaluations");
+
+    const evaluated = results.filter((r: any) => !r.skipped).length;
+    const skipped = results.filter((r: any) => r.skipped).length;
+    void logActivity({
+      action: ActivityAction.CREATE,
+      entity: ActivityEntity.MEMBER,
+      performedById: currentUser?.member?.id ?? 0,
+      branchId,
+      metadata: { type: "batchEvaluation", year, month, evaluated, skipped },
+    });
+
     return { success: true, results: serializeData(results) };
   } catch (err) {
     console.error("runBatchEvaluation error:", err);

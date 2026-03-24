@@ -4,6 +4,9 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { ApiError } from "@/lib/error";
 import { serializeData } from "@/app/utils/serializers";
+import { logActivity } from "@/lib/logActivity";
+import { getCurrentUserWithRole } from "@/lib/getCurrentUserWithRole";
+import { ActivityAction, ActivityEntity } from "@prisma/client";
 
 // Generate commission reference number
 function generateCommissionRef() {
@@ -65,6 +68,8 @@ export async function processCommissions(data: {
   console.log(data);
 
   try {
+    const currentUser = await getCurrentUserWithRole();
+
     const advisor = await prisma.member.findUnique({
       where: { empNo },
       include: {
@@ -250,6 +255,20 @@ export async function processCommissions(data: {
     });
 
     revalidatePath("/features/commissions");
+
+    void logActivity({
+      action: ActivityAction.CREATE,
+      entity: ActivityEntity.COMMISSION,
+      entityId: investmentId,
+      performedById: currentUser?.member?.id ?? 0,
+      branchId,
+      metadata: {
+        investmentId,
+        advisorEmpNo: empNo,
+        processedAt: new Date().toISOString(),
+      },
+    });
+
     return { success: true, receipt: serializeData(result) };
   } catch (err: any) {
     console.error("Error processing commissions:", err);

@@ -1,6 +1,9 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { getCurrentUserWithRole } from "@/lib/getCurrentUserWithRole";
+import { logActivity } from "@/lib/logActivity";
+import { ActivityAction, ActivityEntity } from "@prisma/client";
 
 // in position-targets-actions.ts
 export async function getPositions() {
@@ -44,10 +47,12 @@ export async function upsertPositionTargets(
   }[]
 ) {
   try {
+    const currentUser = await getCurrentUserWithRole().catch(() => null);
+
     await Promise.all(
       targets.map((t) => {
         const { periodNumber, monthNumber, ...updateData } = t;
-        prisma.positionTarget.upsert({
+        return prisma.positionTarget.upsert({
           where: {
             positionId_periodNumber_monthNumber: {
               positionId,
@@ -57,9 +62,17 @@ export async function upsertPositionTargets(
           },
           create: { positionId, ...t },
           update: updateData,
-        })
+        });
       })
     );
+
+    logActivity({
+      action: ActivityAction.UPDATE,
+      entity: ActivityEntity.MEMBER, // Closest match for HR structure
+      performedById: currentUser?.member?.id ?? 0,
+      metadata: { action: "position_targets_updated", positionId },
+    });
+
     return { success: true };
   } catch (err) {
     console.error("upsertPositionTargets error:", err);
@@ -72,6 +85,8 @@ export async function upsertPositionOrc(
   rateNonPermanent: number,
 ) {
   try {
+    const currentUser = await getCurrentUserWithRole().catch(() => null);
+
     await prisma.commissionRate.upsert({
       where: { positionId },
       create: {
@@ -80,6 +95,14 @@ export async function upsertPositionOrc(
       },
       update: { rateNonPermanent },
     });
+
+    logActivity({
+      action: ActivityAction.UPDATE,
+      entity: ActivityEntity.MEMBER,
+      performedById: currentUser?.member?.id ?? 0,
+      metadata: { action: "position_orc_updated", positionId, rateNonPermanent },
+    });
+
     return { success: true };
   } catch (err) {
     console.error("upsertPositionOrc error:", err);

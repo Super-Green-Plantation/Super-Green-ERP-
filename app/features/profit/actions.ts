@@ -3,6 +3,9 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { serializeData } from "@/app/utils/serializers";
+import { logActivity } from "@/lib/logActivity";
+import { getCurrentUserWithRole } from "@/lib/getCurrentUserWithRole";
+import { ActivityAction, ActivityEntity } from "@prisma/client";
 
 type Commission = { amount: number };
 
@@ -12,6 +15,8 @@ export async function createProfit(commissions: {
   commissions: Commission[];
 }) {
   try {
+    const currentUser = await getCurrentUserWithRole();
+
     const existing = await prisma.profit.findUnique({
       where: { investmentId: commissions.investment.id },
     });
@@ -39,6 +44,20 @@ export async function createProfit(commissions: {
     });
 
     revalidatePath("/features/profit");
+
+    void logActivity({
+      action: ActivityAction.CREATE,
+      entity: ActivityEntity.PROFIT,
+      entityId: result.id,
+      performedById: currentUser?.member?.id ?? 0,
+      metadata: {
+        investmentId: commissions.investment.id,
+        investmentAmount: commissions.investment.amount,
+        commissionPayout: totalCommission,
+        totalProfit: profit,
+      },
+    });
+
     return { success: true, profit: serializeData(result) };
   } catch (error) {
     console.error("Error creating profit:", error);

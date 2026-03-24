@@ -38,7 +38,7 @@ export default function SignInPage() {
         {/* Logo/Branding Area */}
         <div className="text-center mb-10">
           <div className="inline-flex overflow-hidden items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-2xl shadow-white/5 mb-6">
-            <Image src="/logo.jpeg" alt="Logo" width={64} height={60} />
+            <Image src="/logo.png" alt="Logo" width={64} height={60} />
 
           </div>
           <h1 className="text-2xl font-black text-white tracking-tighter uppercase">

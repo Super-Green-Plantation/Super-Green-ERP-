@@ -121,7 +121,7 @@ const Sidebar = ({ role, loading, isCollapsed, setIsCollapsed, onNavigate }: Sid
             <span className="flex text-xl font-black tracking-tighter text-white whitespace-nowrap animate-in fade-in duration-500">
               <div className="mr-3 overflow-hidden rounded-full bg-white flex items-center justify-center">
                 <Image
-                  src="/logo.jpeg"
+                  src="/logo.png"
                   alt="logo"
                   width={32}
                   height={32}

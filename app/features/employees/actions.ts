@@ -2,8 +2,11 @@
 
 import { serializeData } from "@/app/utils/serializers";
 import { generateTempPassword, sendWelcomeEmail } from "@/lib/email";
+import { getCurrentUserWithRole } from "@/lib/getCurrentUserWithRole";
+import { logActivity } from "@/lib/logActivity";
 import { getUpperMembers } from "@/lib/member";
 import { prisma } from "@/lib/prisma";
+import { ActivityAction, ActivityEntity } from "@prisma/client";
 import { supabaseAdmin } from "@/prisma/seed";
 import { revalidatePath } from "next/cache";
 
@@ -53,6 +56,8 @@ export async function createEmployee(data: EmpData) {
   console.log(data);
 
   try {
+    const currentUser = await getCurrentUserWithRole();
+
     // ── WITH EMAIL: create Supabase user + User record + Member ──────────────
     if (data.email) {
       const tempPassword = generateTempPassword();
@@ -127,11 +132,21 @@ export async function createEmployee(data: EmpData) {
           tempPassword,
         });
       } catch (emailErr) {
-        console.warn("Welcome email failed:", emailErr);
+        console.warn("Welcome email send failed:", emailErr);
       }
 
       revalidatePath("/features/employees");
       revalidatePath(`/features/branches/employees/${data.branchIds[0]}`);
+
+      void logActivity({
+        action: ActivityAction.CREATE,
+        entity: ActivityEntity.MEMBER,
+        entityId: member.id,
+        performedById: currentUser?.member?.id ?? 0,
+        branchId: data.branchIds[0],
+        metadata: { empNo: member.empNo, name: member.nameWithInitials },
+      });
+
       return { success: true, member };
     }
 
@@ -171,6 +186,16 @@ export async function createEmployee(data: EmpData) {
 
     revalidatePath("/features/employees");
     revalidatePath(`/features/branches/employees/${data.branchIds[0]}`);
+
+    void logActivity({
+      action: ActivityAction.CREATE,
+      entity: ActivityEntity.MEMBER,
+      entityId: member.id,
+      performedById: currentUser?.member?.id ?? 0,
+      branchId: data.branchIds[0],
+      metadata: { empNo: member.empNo, name: member.nameWithInitials },
+    });
+
     return { success: true, member };
 
   } catch (err) {
@@ -292,10 +317,13 @@ export async function updateEmployee(memberId: number, data: EmpData) {
   let supabaseUserId: string | null = null;
 
   try {
-    const existing = await prisma.member.findUnique({
-      where: { id: memberId },
-      include: { user: true },
-    });
+    const [currentUser, existing] = await Promise.all([
+      getCurrentUserWithRole(),
+      prisma.member.findUnique({
+        where: { id: memberId },
+        include: { user: true },
+      }),
+    ]);
 
     if (!existing) return { success: false, error: "Member not found" };
 
@@ -406,6 +434,29 @@ export async function updateEmployee(memberId: number, data: EmpData) {
     });
 
     revalidatePath("/features/employees");
+
+    void logActivity({
+      action: ActivityAction.UPDATE,
+      entity: ActivityEntity.MEMBER,
+      entityId: memberId,
+      performedById: currentUser?.member?.id ?? 0,
+      branchId: data.branchIds[0],
+      metadata: {
+        before: {
+          empNo: existing.empNo,
+          nameWithInitials: existing.nameWithInitials,
+          status: existing.status,
+          email: existing.email,
+        },
+        after: {
+          empNo: updated.empNo,
+          nameWithInitials: updated.nameWithInitials,
+          status: updated.status,
+          email: updated.email,
+        },
+      },
+    });
+
     return { success: true, member: updated };
   } catch (error) {
     console.error("Error updating employee:", error);
@@ -447,10 +498,12 @@ export async function getMemberDetails(id: number) {
 
 export async function deleteEmployee(id: number) {
   try {
+    const currentUser = await getCurrentUserWithRole();
+
     // Fetch first to get userId before deleting
     const member = await prisma.member.findUnique({
       where: { id },
-      select: { userId: true },
+      select: { userId: true, empNo: true, nameWithInitials: true, branches: { select: { branchId: true } } },
     });
 
     if (!member) return { success: false, error: "Member not found" };
@@ -465,6 +518,16 @@ export async function deleteEmployee(id: number) {
     }
 
     revalidatePath("/features/employees");
+
+    void logActivity({
+      action: ActivityAction.DELETE,
+      entity: ActivityEntity.MEMBER,
+      entityId: id,
+      performedById: currentUser?.member?.id ?? 0,
+      branchId: member.branches[0]?.branchId,
+      metadata: { empNo: member.empNo, name: member.nameWithInitials },
+    });
+
     return { success: true };
   } catch (error) {
     console.error("Failed to delete employee:", error);
@@ -474,6 +537,7 @@ export async function deleteEmployee(id: number) {
 
 export async function toggleEmployeeStatus(id: number, currentStatus: "PROBATION" | "PERMANENT") {
   const newStatus = currentStatus === "PROBATION" ? "PERMANENT" : "PROBATION";
+  const currentUser = await getCurrentUserWithRole();
 
   await prisma.member.update({
     where: { id },
@@ -481,6 +545,15 @@ export async function toggleEmployeeStatus(id: number, currentStatus: "PROBATION
   });
 
   revalidatePath("/features/employees");
+
+  void logActivity({
+    action: ActivityAction.UPDATE,
+    entity: ActivityEntity.MEMBER,
+    entityId: id,
+    performedById: currentUser?.member?.id ?? 0,
+    metadata: { before: { status: currentStatus }, after: { status: newStatus } },
+  });
+
   return { success: true, newStatus: newStatus as "PROBATION" | "PERMANENT" };
 }
 
@@ -505,6 +578,15 @@ export async function uploadProfilePic(file: File, empNo: string) {
     const { data } = supabaseAdmin.storage
       .from("employee-assets")
       .getPublicUrl(path);
+
+    const currentUser = await getCurrentUserWithRole().catch(() => null);
+
+    logActivity({
+      action: ActivityAction.UPDATE,
+      entity: ActivityEntity.MEMBER,
+      performedById: currentUser?.member?.id ?? 0,
+      metadata: { action: "profile_pic_uploaded", empNo },
+    });
 
     return { success: true, url: data.publicUrl };
   } catch (err: any) {

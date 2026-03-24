@@ -252,8 +252,22 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
         onSuccess?.();
         onClose();
       }
-    } catch {
-      toast.error("Error saving employee details");
+    } catch (err: any) {
+      console.error(err);
+
+      let msg = "Error saving employee details";
+
+      if (err instanceof Error) {
+        if (err.message.includes("already been registered")) {
+          msg = "This email is already used by another employee.";
+        } else if (err.message.includes("Auth user creation failed")) {
+          msg = "Failed to create user in authentication system.";
+        } else {
+          msg = err.message; // fallback
+        }
+      }
+
+      toast.error(msg);
     } finally {
       setLoading(false);
     }

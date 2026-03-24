@@ -4,6 +4,11 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
 import { serializeData } from "@/app/utils/serializers";
+import { logActivity } from "@/lib/logActivity";
+import { Prisma } from "@prisma/client";
+import { ActivityAction, ActivityEntity } from "@prisma/client";
+import { getCurrentUserWithRole } from "@/lib/getCurrentUserWithRole";
+
 
 // Get all branches with full details
 export async function getBranches() {
@@ -48,8 +53,8 @@ export async function getBranchById(id: number) {
                   },
                 },
               }
-            }
 
+            },
           },
         },
       },
@@ -102,6 +107,7 @@ export async function getBranchesByMemberId(memberId: number) {
 // Create new branch
 export async function createBranch(data: { name: string; location: string }) {
   try {
+    const currentUser = await getCurrentUserWithRole();
     const newBranch = await prisma.branch.create({
       data: {
         name: data.name,
@@ -110,6 +116,16 @@ export async function createBranch(data: { name: string; location: string }) {
     });
 
     revalidatePath("/features/branches");
+
+    void logActivity({
+      action: ActivityAction.CREATE,
+      entity: ActivityEntity.BRANCH,
+      entityId: newBranch.id,
+      performedById: currentUser?.member?.id ?? 0,
+      branchId: newBranch.id,
+      metadata: { after: newBranch },
+    });
+
     return { success: true, branch: newBranch };
   } catch (error) {
     console.error("Error creating branch:", error);
@@ -120,6 +136,11 @@ export async function createBranch(data: { name: string; location: string }) {
 // Update branch
 export async function updateBranch(id: number, data: { name: string; location: string }) {
   try {
+    const [currentUser, oldBranch] = await Promise.all([
+      getCurrentUserWithRole(),
+      prisma.branch.findUnique({ where: { id } }),
+    ]);
+
     const updatedBranch = await prisma.branch.update({
       where: { id },
       data: {
@@ -129,6 +150,16 @@ export async function updateBranch(id: number, data: { name: string; location: s
     });
 
     revalidatePath("/features/branches");
+
+    void logActivity({
+      action: ActivityAction.UPDATE,
+      entity: ActivityEntity.BRANCH,
+      entityId: id,
+      performedById: currentUser?.member?.id ?? 0,
+      branchId: id,
+      metadata: { before: oldBranch, after: updatedBranch },
+    });
+
     return { success: true, branch: updatedBranch };
   } catch (error) {
     console.error("Error updating branch:", error);
@@ -139,11 +170,22 @@ export async function updateBranch(id: number, data: { name: string; location: s
 // Delete branch
 export async function deleteBranch(id: number) {
   try {
+    const currentUser = await getCurrentUserWithRole();
+
     await prisma.branch.delete({
       where: { id },
     });
 
     revalidatePath("/features/branches");
+
+    void logActivity({
+      action: ActivityAction.DELETE,
+      entity: ActivityEntity.BRANCH,
+      entityId: id,
+      performedById: currentUser?.member?.id ?? 0,
+      metadata: { branchId: id },
+    });
+
     return { success: true };
   } catch (error: any) {
     console.error("Error deleting branch:", error);
