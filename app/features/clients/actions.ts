@@ -274,7 +274,7 @@ export async function saveClient(data: {
           refNumber: investmentNumber,
           branchId: applicant.branchId,
           planId: Number(investment.planId),
-          investmentDate,      // ← now a Date object
+          investmentDate,      
           maturityDate,
           amount: Number(applicant.investmentAmount),
           beneficiaryId,

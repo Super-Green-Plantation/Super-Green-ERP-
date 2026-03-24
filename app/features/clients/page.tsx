@@ -23,15 +23,23 @@ const Page = () => {
   const totalPages = data?.totalPages ?? 1;
 
   console.log(clients);
+  console.log(data.total);
+
 
 
   return (
     <div className="max-w-7xl mx-auto sm:space-y-8 space-y-2 sm:p-4 md:p-8 min-h-screen">
       {/* Header */}
       <div className="sm:flex sm:justify-between sm:items-center mb-6">
-        <Heading className="mb-3">
-          Clients
+
+        <div>
+          <Heading className="mb-3">
+          Client
         </Heading>
+          <p className="text-sm text-slate-500 font-medium mt-0.5">
+            {data?.total} total clients
+          </p>
+        </div>
         <Link
           href="/features/clients/createClient"
           className="flex-1 sm:flex-none flex items-center justify-center uppercase gap-2 px-4 py-3 bg-slate-900 hover:bg-blue-600 text-white text-xs sm:font-black font-bold tracking-widest rounded-xl transition-all shadow-xl shadow-slate-200 active:scale-95"

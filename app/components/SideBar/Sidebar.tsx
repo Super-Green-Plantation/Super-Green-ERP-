@@ -31,6 +31,7 @@ type SidebarProps = {
   loading: boolean;
   isCollapsed: boolean;
   setIsCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
+  onNavigate: () => void;
 };
 
 
@@ -76,13 +77,10 @@ const links = [
 ];
 
 
-const Sidebar = ({ role, loading, isCollapsed, setIsCollapsed }: SidebarProps) => {
-  const [load, setLoad] = useState(false);
+const Sidebar = ({ role, loading, isCollapsed, setIsCollapsed, onNavigate }: SidebarProps) => {
   const pathname = usePathname();
 
-  useEffect(() => {
-    setLoad(false);
-  }, [pathname]);
+
 
   if (loading) {
     return <SidebarSkeleton isCollapsed={isCollapsed} />
@@ -97,7 +95,8 @@ const Sidebar = ({ role, loading, isCollapsed, setIsCollapsed }: SidebarProps) =
 
 
   return (
-    <><aside
+    <>
+    <aside
       style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       className={`flex-1 overflow-y-auto
     fixed left-0 top-0 h-screen
@@ -132,6 +131,7 @@ const Sidebar = ({ role, loading, isCollapsed, setIsCollapsed }: SidebarProps) =
         </button>
       </div>
 
+
       {/* Navigation */}
       <nav className="flex-1 px-3 space-y-2 overflow-y-auto mt-4">
         {filteredLinks.map((link) => {
@@ -143,7 +143,7 @@ const Sidebar = ({ role, loading, isCollapsed, setIsCollapsed }: SidebarProps) =
               key={link.href}
               href={link.href}
               title={isCollapsed ? link.name : ""}
-              onClick={() => setLoad(true)}
+              onClick={onNavigate}
               className={`
                 flex items-center gap-4
                 px-4 py-3 rounded-xl
@@ -204,10 +204,7 @@ const Sidebar = ({ role, loading, isCollapsed, setIsCollapsed }: SidebarProps) =
 
 
     </aside>
-      {load && createPortal(
-        <Loading />,
-        document.body
-      )}
+
     </>
 
   );

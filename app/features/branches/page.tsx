@@ -19,7 +19,7 @@ const Page = () => {
   const [branches, setBranches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  
+
 
   const fetchData = async () => {
     try {
@@ -42,13 +42,14 @@ const Page = () => {
 
   return (
     <div className="max-w-7xl mx-auto sm:space-y-8 space-y-2 sm:p-4 md:p-8 min-h-screen">
-      <div>
-        <h1 className="sm:text-2xl text-lg font-semibold md:text-3xl text-slate-900 tracking-tighter flex items-center gap-3">
-
-        </h1>
+      <div className="md:flex justify-between">
+        <div className="mb-5 ">
         <Heading>
           Branch Network
         </Heading>
+        <p className="text-sm font-bold text-slate-900">
+          Total Branches : {loading ? "-" : totalBranches}
+        </p>
       </div>
 
 
@@ -67,23 +68,12 @@ const Page = () => {
           Add Branch
         </button>
       </div>
+      </div>
+      
 
       {/* --- STATS & SEARCH BAR --- */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Stat 1 */}
-        <div className="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm flex items-center gap-5 relative overflow-hidden">
-          <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center z-10">
-            <Building2 className="w-6 h-6 text-blue-600" />
-          </div>
-          <div className="z-10">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-              Total Branches
-            </p>
-            <p className="text-2xl font-bold text-slate-900">
-              {loading ? "-" : totalBranches}
-            </p>
-          </div>
-        </div>
+
 
         {/* Search */}
         <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm flex items-center">

@@ -49,13 +49,13 @@ export default function PositionAccordion({
         onKeyDown={(e) => e.key === "Enter" && onToggle()}
         className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50/50 transition-colors cursor-pointer"
       >
-        <div className="flex items-center gap-3">
-          <span className={`px-3 py-1 rounded-lg text-xs font-black border uppercase tracking-wider ${rankColor}`}>
+        <div className="sm:flex items-center gap-3">
+          <span className={`px-3 py-1 mb-2 rounded-lg text-xs font-black border uppercase tracking-wider ${rankColor}`}>
             {position.title}
           </span>
-          <span className="text-xs text-slate-400 font-bold">Rank {position.rank}</span>
+          <span className="text-xs text-slate-400 font-bold pl-2">Rank {position.rank}</span>
           {hasTargets && (
-            <span className="flex items-center gap-1 text-[10px] font-black text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
+            <span className="flex items-center gap-1 text-[10px] mt-2 font-black text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
               <CheckCircle2 className="w-3 h-3" /> Configured
             </span>
           )}

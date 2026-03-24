@@ -6,6 +6,8 @@ import Sidebar from "../components/SideBar/Sidebar";
 import Providers from "../providers";
 import Toast from "../Toast";
 import { createClient } from "@/lib/supabase/client";
+import { useNavigationLoading } from "../hooks/useNavigationLoading";
+import Loading from "../components/Status/Loading";
 
 export default function FeaturesLayout({
   children,
@@ -16,6 +18,8 @@ export default function FeaturesLayout({
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+    const { loading: navigating, startLoading } = useNavigationLoading();
+  
 
   useEffect(() => {
     const loadUser = async () => {
@@ -44,6 +48,7 @@ export default function FeaturesLayout({
         loading={loading}
         isCollapsed={isCollapsed}
         setIsCollapsed={setIsCollapsed}
+        onNavigate={startLoading}
       />
 
       <main
@@ -57,6 +62,7 @@ export default function FeaturesLayout({
           <Toast>{children}</Toast>
         </Providers>
       </main>
+      {navigating && <Loading />}
     </>
   );
 }

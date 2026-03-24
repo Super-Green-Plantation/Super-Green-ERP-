@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Pagination from "@/app/components/Pagination";
 import { usePermission } from "@/lib/auth/usePermission";
 import { PERMISSIONS } from "@/lib/auth/permissions";
@@ -25,11 +25,11 @@ interface EmpTableProps {
   onEdit: (emp: Member) => void;
   onRefresh: () => void;
   branchId?: any;
+  searchQuery?: string;
 }
-
 const PAGE_SIZE = 10;
 
-const EmpTable = ({ onEdit, onRefresh, branchId }: EmpTableProps) => {
+const EmpTable = ({ onEdit, onRefresh, branchId, searchQuery }: EmpTableProps) => {
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -50,11 +50,22 @@ const EmpTable = ({ onEdit, onRefresh, branchId }: EmpTableProps) => {
   } = useEmployees(branchId);
 
   const allEmployees = data?.pages.flatMap((page) => page.emp) ?? [];
+
+  const filteredEmployees = useMemo(() => {
+    if (!searchQuery?.trim()) return allEmployees;
+    const q = searchQuery.toLowerCase();
+    return allEmployees.filter(emp =>
+      emp.nameWithInitials?.toLowerCase().includes(q) ||
+      emp.empNo?.toLowerCase().includes(q) ||
+      emp.position?.title?.toLowerCase().includes(q)
+    );
+  }, [allEmployees, searchQuery]);
+
   const totalLoaded = allEmployees.length;
   const loadedPages = data?.pages.length ?? 0;
 
   // Visible slice for current page
-  const pageEmployees = allEmployees.slice(
+  const pageEmployees = filteredEmployees.slice(
     (currentPage - 1) * PAGE_SIZE,
     currentPage * PAGE_SIZE
   );

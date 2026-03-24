@@ -102,13 +102,11 @@ export default function EvaluationsPage() {
   const alreadyEvaluatedCount = previews.filter(p => p.alreadyEvaluated).length;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-6">
+    <div className="max-w-6xl mx-auto  space-y-6">
 
       {/* Header */}
       <div className="flex items-center gap-4 pb-6 border-b border-slate-100">
-        <div className="p-3 bg-slate-900 rounded-2xl shadow-lg shadow-slate-900/20">
-          <ClipboardList className="w-6 h-6 text-white" />
-        </div>
+        
         <div>
           <Heading>Monthly Evaluations</Heading>
           <p className="text-sm text-slate-500 font-medium mt-0.5">Run probation target evaluations by branch and month.</p>
@@ -151,13 +149,13 @@ export default function EvaluationsPage() {
         </div>
 
         {/* Preview button + filter tabs */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="sm:flex flex-wrap items-center gap-3 ">
           <button onClick={handlePreview} disabled={!selectedBranchId || loadingPreview} className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-700 disabled:bg-slate-300 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all active:scale-95">
             {loadingPreview ? <><Loader2 className="w-4 h-4 animate-spin" /> Loading...</> : <><Users className="w-4 h-4" /> Preview Employees</>}
           </button>
 
           {previews.length > 0 && (
-            <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-xl">
+            <div className="sm:flex sm:items-center gap-1 p-1 bg-slate-100 rounded-xl">
               {(["ALL", "PROBATION", "PERMANENT"] as const).map((f) => (
                 <button
                   key={f}
