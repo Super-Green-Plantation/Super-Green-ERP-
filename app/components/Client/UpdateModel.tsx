@@ -30,7 +30,6 @@ const UpdateClientModal = ({
       phoneMobile: "",
       occupation: "",
       address: "",
-      // investmentAmount: "", // default empty
       drivingLicense: "",
       passportNo: "",
       phoneLand: "",

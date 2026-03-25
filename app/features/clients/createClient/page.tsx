@@ -4,7 +4,7 @@ import { FormProvider } from "@/app/context/FormContext";
 import ApplicantDetails from "./ApplicantDetails";
 import BeneficiaryDetails from "./BeneficiaryDetails";
 import NomineeDetails from "./NomineeDetails";
-import { SubmitButton } from "./SubmitButto";
+import { SubmitButton } from "./SubmitButton";
 import Back from "@/app/components/Buttons/Back";
 import DocumentUploadSection from "./ClientDocuments";
 import Heading from "@/app/components/Heading";

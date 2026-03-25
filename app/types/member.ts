@@ -56,7 +56,7 @@ export interface Member {
   userId: string | null;
 
   // In formData initial state
-  status: "PROBATION" | "PERMANENT";
+  status: "PROBATION" | "PERMANENT" | "MANAGEMENT";
   probationStartDate: "" | Date| null;
 
   // --- Timestamps ---

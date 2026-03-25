@@ -52,6 +52,7 @@ export default function ApplicationViewPage() {
 
   const [deleteDialog, setDeleteDialog] = useState(false);
 
+console.log(id);
 
 
   useEffect(() => {
@@ -127,7 +128,7 @@ export default function ApplicationViewPage() {
   };
 
   const handleDeleteConfirm = async () => {
-    const res = await deleteClient(formData?.applicant?.nic);
+    const res = await deleteClient(Number(id));
     if (!res) {
       toast.error("Failed to delete client");
       return;

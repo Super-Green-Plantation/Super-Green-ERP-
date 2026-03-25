@@ -17,6 +17,8 @@ type DbUser = {
   branchId?: number;
 };
 
+
+
 // Exposed via a ref so SubmitButton can trigger upload from DocumentUploadSection
 export type PendingFilesRef = React.MutableRefObject<Record<string, File | null>>;
 
@@ -45,6 +47,7 @@ export const SubmitButton = ({
   const { form } = useFormContext();
   const [loading, setLoading] = useState(false);
   const [dbUser, setDbUser] = useState<DbUser | null>(null);
+const { reset, resetField } = form;
 
   useEffect(() => {
     fetch("/api/me")
@@ -90,7 +93,16 @@ export const SubmitButton = ({
       }
 
       toast.success("Client saved successfully!");
-      form.reset();
+
+      reset();
+      resetField("applicant.idFront");
+      resetField("applicant.idBack");
+      resetField("applicant.paymentSlip");
+      resetField("applicant.proposal");
+      resetField("applicant.agreement");
+      resetField("applicant.signature");
+      resetField("applicant.investmentAmount");
+      pendingFilesRef.current = {};
     } catch (err) {
       console.error(err);
       toast.error("Something went wrong, please try again");

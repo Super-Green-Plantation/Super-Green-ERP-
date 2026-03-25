@@ -49,7 +49,7 @@ export function calculatePayroll(
     allowanceThresholdProbation: number;
   },
   commissionEarned: number = 0,
-  memberStatus: "PROBATION" | "PERMANENT",
+  memberStatus: "PROBATION" | "PERMANENT" | "MANAGEMENT",
   volumeAchieved: number,
   orcRate: number = 0,
   orcVolume: number = 0, // total ORC-eligible volume from commissions

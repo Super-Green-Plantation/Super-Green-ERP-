@@ -58,7 +58,7 @@ function StatPill({ label, value, highlight = false }: {
 
 function ProbationStatus({ data, status, onToggle, toggling }: {
     data: any;
-    status: "PROBATION" | "PERMANENT";
+    status: "PROBATION" | "PERMANENT" | "MANAGEMENT";
     onToggle: () => void;
     toggling: boolean;
 }) {
@@ -197,7 +197,7 @@ function ProbationStatus({ data, status, onToggle, toggling }: {
 
 function PermanentStatus({ data, status, onToggle, toggling }: {
     data: any;
-    status: "PROBATION" | "PERMANENT";
+    status: "PROBATION" | "PERMANENT" | "MANAGEMENT";
     onToggle: () => void;
     toggling: boolean;
 }) {
@@ -349,8 +349,8 @@ export default function EmployeeStatusSection({
     onStatusChange,
 }: {
     memberId: number;
-    status: "PROBATION" | "PERMANENT";
-    onStatusChange?: (newStatus: "PROBATION" | "PERMANENT") => void;
+    status: "PROBATION" | "PERMANENT" | "MANAGEMENT";
+    onStatusChange?: (newStatus: "PROBATION" | "PERMANENT" | "MANAGEMENT") => void;
 }) {
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);

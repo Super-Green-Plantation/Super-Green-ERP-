@@ -35,16 +35,6 @@ interface EmpModalProps {
   onSuccess?: () => void;
 }
 
-// Positions that can be assigned to multiple branches
-const MULTI_BRANCH_POSITION_IDS = [4, 5, 6]; // RM, ZM, AGM
-// const POSITION_MAP: Record<string, string> = {
-//   "6": "AGM",
-//   "5": "ZM",
-//   "4": "RM",
-//   "3": "BM",
-//   "2": "TL",
-//   "1": "FA",
-// };
 
 const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
   const { branchId } = useParams<{ branchId: string }>();
@@ -53,19 +43,19 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
   const [currentBranch, setCurrentBranch] = useState<Branch | null>(null);
   const [allBranches, setAllBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(false);
-  const [branchDropdownOpen, setBranchDropdownOpen] = useState(false);
 
   const [profilePicFile, setProfilePicFile] = useState<File | null>(null);
   const [profilePicPreview, setProfilePicPreview] = useState<string>("");
   const [uploadingPic, setUploadingPic] = useState(false);
 
-  const [positions, setPositions] = useState<{ id: number; title: string; rank: number }[]>([]);
+  const [positions, setPositions] = useState<{ id: number; title: string; rank: number; type: string; isProbation: boolean }[]>([]);
 
 
 
   useEffect(() => {
     getPositions().then(setPositions);
   }, []);
+
 
 
   useEffect(() => {
@@ -121,10 +111,23 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
     accNo: "",
     bank: "",
     bankBranch: "",
-    status: "PROBATION" as "PROBATION" | "PERMANENT",
+    status: "PROBATION" as "PROBATION" | "PERMANENT" | "MANAGEMENT",
     probationStartDate: "",
     profilePic: "",
   });
+
+  const canHaveMultipleBranches = (pos?: typeof positions[number]) => {
+    if (!pos) return false;
+
+    if (pos.type === "PROBATION") {
+      return pos.rank >= 4; // JRM+
+    }else if (pos.type === "PERMANENT") {
+    return pos.rank >= 16; // PERMANENT JRM+
+    }
+  };
+
+  const selectedPosition = positions.find(p => p.id === Number(formData.positionId));
+  const isMultiBranch = canHaveMultipleBranches(selectedPosition);
 
   // Fetch current branch info
   useEffect(() => {
@@ -178,18 +181,20 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
 
   }, [mode, initialData, branchId]);
 
-  const isMultiBranch = MULTI_BRANCH_POSITION_IDS.includes(Number(formData.positionId));
 
 
   // When position changes, reset to single branch if not multi-branch role
   const handlePositionChange = (value: string) => {
-    const isMulti = MULTI_BRANCH_POSITION_IDS.includes(Number(value));
+    const pos = positions.find(p => p.id === Number(value));
+    const isMulti = canHaveMultipleBranches(pos);
+
     setFormData((prev) => ({
       ...prev,
       positionId: value,
       branchIds: isMulti ? prev.branchIds : [Number(branchId)],
     }));
   };
+
 
   const toggleBranch = (id: number) => {
     setFormData((prev) => {
@@ -239,7 +244,7 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
 
       if (mode === "add") {
         const res = await createEmployee(payload);
-        if (!res.success) { toast.error(res.error ?? "Failed to add employee"); return; }
+        if (!res?.success) { toast.error(res?.error ?? "Failed to add employee"); return; }
         queryClient.invalidateQueries({ queryKey: ["employees"] });
         toast.success("Successfully Added Employee");
         onSuccess?.();
@@ -299,9 +304,9 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
 
   // ─── Render ────────────────────────────────────────────────
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6 overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6 py-6 overflow-y-auto">
       <div
-        className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden relative animate-in fade-in zoom-in duration-200 my-auto"
+        className="w-full max-w-3xl bg-white rounded-2xl shadow-2xl overflow-hidden relative animate-in fade-in zoom-in duration-200 my-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -361,7 +366,7 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                       placeholder="EMP-001"
                       value={formData.empNo}
                       onChange={(e) => setFormData({ ...formData, empNo: e.target.value })}
-                      required
+                      
                       className={inputStyles}
                     />
                   </div>
@@ -369,14 +374,14 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
 
 
                 <div className="w-full">
-                  <label className={labelStyles}>EPF Number <span className="text-red-400">*</span></label>
+                  <label className={labelStyles}>EPF Number </label>
                   <div className="relative">
                     <Hash className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
                     <input
                       placeholder="EPF-001"
                       value={formData.epfNo}
                       onChange={(e) => setFormData({ ...formData, epfNo: e.target.value })}
-                      required
+                      
                       className={inputStyles}
                     />
                   </div>
@@ -442,50 +447,33 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                   </div>
                 </div>
 
-                {/* Designation */}
-                <div>
-                  <label className={labelStyles}>Designation / Role <span className="text-red-400">*</span></label>
-                  <div className="relative">
-                    <Briefcase className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                    <select
-                      value={formData.positionId}
-                      onChange={(e) => handlePositionChange(e.target.value)}
-                      required
-                      className={inputStyles + " appearance-none pr-10"}
-                    >
-                      <option value="" disabled>Select Position</option>
-                      <option value="6">AGM</option>
-                      <option value="5">ZM</option>
-                      <option value="4">RM</option>
-                      <option value="3">BM</option>
-                      <option value="2">TL</option>
-                      <option value="1">FA</option>
-                    </select>
-                    <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-400">
-                      <ChevronDown className="w-4 h-4" />
-                    </div>
-                  </div>
-                </div>
 
-                {/* Employment Status */}
+
+                {/* Employment Status / Position Type */}
                 <div>
-                  <label className={labelStyles}>Employment Status</label>
+                  <label className={labelStyles}>Employment Type</label>
                   <div className="flex gap-2">
-                    {(["PROBATION", "PERMANENT"] as const).map((s) => (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, status: s })}
-                        className={`flex-1 py-2 rounded-lg text-xs font-black uppercase tracking-wider border transition-all ${formData.status === s
-                          ? s === "PERMANENT"
-                            ? "bg-emerald-600 text-white border-emerald-600"
-                            : "bg-amber-500 text-white border-amber-500"
-                          : "bg-white text-gray-400 border-gray-200 hover:border-gray-300"
-                          }`}
-                      >
-                        {s === "PERMANENT" ? "✓ Permanent" : "Probation"}
-                      </button>
-                    ))}
+                    {(["PROBATION", "PERMANENT", "MANAGEMENT"] as const).map((s) => {
+                      const isActive = formData.status === s;
+                      const activeStyle =
+                        s === "PERMANENT"
+                          ? "bg-emerald-600 text-white border-emerald-600"
+                          : s === "MANAGEMENT"
+                            ? "bg-blue-600 text-white border-blue-600"
+                            : "bg-amber-500 text-white border-amber-500";
+
+                      return (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, status: s, positionId: "" })} // reset position on type change
+                          className={`flex-1 py-2 px-2 rounded-lg text-xs font-black uppercase tracking-wider border transition-all
+            ${isActive ? activeStyle : "bg-white text-gray-400 border-gray-200 hover:border-gray-300"}`}
+                        >
+                          {s === "PERMANENT" ? "Permanent" : s === "MANAGEMENT" ? "Management" : "Probation"}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -505,24 +493,33 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                   </div>
                 )}
 
-                {/* ── BRANCH SECTION ── */}
-                <div className="md:col-span-2">
-                  {/* <label className={labelStyles}>
-                    {isMultiBranch ? "Assigned Branches" : "Assigned Branch"}
-                    {isMultiBranch && (
-                      <select
-                        value={formData.positionId}
-                        onChange={(e) => handlePositionChange(e.target.value)}
-                        required
-                        className={inputStyles + " appearance-none pr-10"}
-                      >
-                        <option value="" disabled>Select Position</option>
-                        {positions.map((p) => (
+                {/* Designation */}
+                <div>
+                  <label className={labelStyles} >
+                    Designation / Role <span className="text-red-400">*</span>
+                  </label>
+                  <div className="relative">
+                    <Briefcase className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                    <select
+                      value={formData.positionId}
+                      onChange={(e) => handlePositionChange(e.target.value)}
+                      required
+                      className={inputStyles + " appearance-none pr-10"}
+                    >
+                      <option value="" disabled>Select Position</option>
+                      {positions
+                        .filter(p => p.type === formData.status)
+                        .map(p => (
                           <option key={p.id} value={p.id}>{p.title}</option>
                         ))}
-                      </select>
-                    )}
-                  </label> */}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                  </div>
+                </div>
+
+                {/* ── BRANCH SECTION ── */}
+                <div className="md:col-span-2">
+
 
                   {!isMultiBranch ? (
                     /* Single branch — read-only display */

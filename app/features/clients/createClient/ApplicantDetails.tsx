@@ -7,25 +7,20 @@ import { getFinancialPlans } from "@/app/features/financial_plans/actions";
 import { Branch } from "@/app/types/branch";
 import { FinancialPlan } from "@/app/types/FinancialPlan";
 import { useEffect, useState } from "react";
-import { Field } from "../../hr/targets/components/shared";
 
 const ApplicantDetails = () => {
   const { form } = useFormContext();
-  const { register } = form;
+  const { register , reset} = form;
 
   const [branch, setBranch] = useState<Branch[] | null>(null);
-  const [selectedBranchId, setSelectedBranchId] = useState<number | null>(null);
-  const [branchDetails, setBranchDetails] = useState<Branch | null>(null);
   const [plans, setPlans] = useState<FinancialPlan[] | null>([]);
-
-  console.log(branch);
-  console.log(selectedBranchId);
 
   const fetchBranch = async () => {
     const branches = await getBranches();
     setBranch(branches);
   };
 
+  //fetch investment plans
   useEffect(() => {
     const fetchPlans = async () => {
       try {
@@ -37,15 +32,6 @@ const ApplicantDetails = () => {
     };
     fetchPlans();
   }, []);
-
-  useEffect(() => {
-    if (!selectedBranchId) return;
-    const fetchBranchDetails = async () => {
-      const data = await getBranchById(selectedBranchId);
-      setBranchDetails(data);
-    };
-    fetchBranchDetails();
-  }, [selectedBranchId]);
 
   useEffect(() => {
     fetchBranch();
@@ -114,16 +100,25 @@ const ApplicantDetails = () => {
               </div>
               <div>
                 <label className={labelClass}>Target Plan</label>
-                <select className={inputClass} {...register("investment.planId", { valueAsNumber: true })}>
+                <select className={inputClass} {...register("investment.planId", { setValueAs: (v) => (v === "" ? undefined : Number(v)) })}>
                   <option value="">Choose a Plan...</option>
                   {plans?.map((b) => <option value={b.id} key={b.id}>{b.name}</option>)}
                 </select>
               </div>
               <div>
                 <label className={labelClass}>Assigned Branch</label>
-                <select className={inputClass} {...register("applicant.branchId", { valueAsNumber: true })}>
+                <select
+                  className={inputClass}
+                  {...register("applicant.branchId", {
+                    setValueAs: (v) => (v === "" ? undefined : Number(v)),
+                  })}
+                >
                   <option value="">Choose a branch...</option>
-                  {branch?.map((b) => <option value={b.id} key={b.id}>{b.name}</option>)}
+                  {branch?.map((b) => (
+                    <option value={b.id} key={b.id}>
+                      {b.name}
+                    </option>
+                  ))}
                 </select>
               </div>
 

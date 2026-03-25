@@ -21,7 +21,7 @@ export interface FormData {
     investmentDate?: string;
     idFront?: string;
     idBack?: string;
-    paymentSlip?: string;   // <-- added
+    paymentSlip?: string;   
     proposal?: string;
     agreement?: string;
     signature?: string;

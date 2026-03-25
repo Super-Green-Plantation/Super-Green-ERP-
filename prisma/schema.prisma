@@ -33,13 +33,37 @@ model Branch {
 }
 
 enum Title {
+  // Management/Support
   ADMIN
+  HR
+  ACCOUNTS
+  IT
+
+  // Probation positions
+  FA          // probation FA
+  TL          // probation TL  
+  BM          // probation BM
+  RM          // probation RM
+  ZM          // probation ZM
+  P_AGM       // probation AGM
+
+  // Permanent positions
+  TRAINEE_FA
+  P_FA        // permanent FA
+  P_TL        // permanent TL
+  JBM
+  SBM
+  JRM
+  SRM
+  JZM
+  SZM
   AGM
-  ZM
-  RM
-  BM
-  TL
-  FA
+}
+
+enum PositionType {
+  PROBATION
+  PERMANENT
+  MANAGEMENT
 }
 
 model Position {
@@ -52,6 +76,12 @@ model Position {
   updatedAt       DateTime         @updatedAt
   positionTargets PositionTarget[]
   salary          PositionSalary?
+  
+  type         PositionType @default(PROBATION)
+
+  isProbation Boolean @default(false)
+  isManagement Boolean @default(false) // ← excludes from ORC chain
+
 }
 
 model CommissionRate {
@@ -80,6 +110,7 @@ model MemberBranch {
 enum EmployeeStatus {
   PROBATION
   PERMANENT
+  MANAGEMENT
 }
 
 model PermanentEvaluation {

@@ -436,15 +436,15 @@ export async function updateClient(id: number, formData: any) {
 }
 
 // Delete client
-export async function deleteClient(nic: string) {
+export async function deleteClient(id: number) {
   try {
     const [currentUser, existingClient] = await Promise.all([
       getCurrentUserWithRole(),
-      prisma.client.findUnique({ where: { nic } }),
+      prisma.client.findUnique({ where: { id } }),
     ]);
 
     const res = await prisma.client.delete({
-      where: { nic },
+      where: { id },
     });
 
     revalidatePath("/features/clients");

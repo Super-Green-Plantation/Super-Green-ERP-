@@ -6,7 +6,7 @@ import { getCurrentUserWithRole } from "@/lib/getCurrentUserWithRole";
 import { logActivity } from "@/lib/logActivity";
 import { getUpperMembers } from "@/lib/member";
 import { prisma } from "@/lib/prisma";
-import { ActivityAction, ActivityEntity } from "@prisma/client";
+import { ActivityAction, ActivityEntity, Prisma } from "@prisma/client";
 import { supabaseAdmin } from "@/prisma/seed";
 import { revalidatePath } from "next/cache";
 
@@ -42,7 +42,7 @@ interface EmpData {
   confirmation?: string;
   remark?: string;
 
-  status: "PROBATION" | "PERMANENT";
+  status: "PROBATION" | "PERMANENT" | "MANAGEMENT";
   probationStartDate: Date | null;
 
   // Banking
@@ -51,16 +51,41 @@ interface EmpData {
   bankBranch?: string;
   profilePic?: string;
 }
+
+const generateEmpNo = async (tx: any) => {
+  const lastEmp = await tx.member.findFirst({
+    orderBy: { id: "desc" },
+    select: { empNo: true },
+  });
+
+  if (!lastEmp || !lastEmp.empNo) {
+    return "EMP001";
+  }
+
+  const match = lastEmp.empNo.match(/\d+$/);
+
+  if (!match) {
+    return "EMP001";
+  }
+
+  const newEmpNo = lastEmp.empNo.replace(
+    /\d+$/,
+    (m: string) => String(Number(m) + 1).padStart(m.length, "0")
+  );
+
+  return newEmpNo;
+};
+
 export async function createEmployee(data: EmpData) {
   let supabaseUserId: string | null = null;
-  console.log(data);
+  let tempPassword: string | null = null;
 
   try {
     const currentUser = await getCurrentUserWithRole();
 
-    // ── WITH EMAIL: create Supabase user + User record + Member ──────────────
-    if (data.email) {
-      const tempPassword = generateTempPassword();
+    // ── STEP 1: Create Supabase user (ONLY if email exists) ──────────────
+    if (data.email && data.email.trim() !== "") {
+      tempPassword = generateTempPassword();
 
       const { data: authData, error: authError } =
         await supabaseAdmin.auth.admin.createUser({
@@ -75,133 +100,102 @@ export async function createEmployee(data: EmpData) {
       }
 
       supabaseUserId = authData.user.id;
+    }
 
-      const member = await prisma.$transaction(async (tx) => {
+    // ── STEP 2: DB Transaction ───────────────────────────────────────────
+    const result = await prisma.$transaction(async (tx) => {
+      const genEmpNo = await generateEmpNo(tx);
+
+      const empNo =
+        data.empNo && data.empNo.trim() !== ""
+          ? data.empNo
+          : genEmpNo;
+
+      // Create user record ONLY if Supabase user exists
+      if (supabaseUserId) {
         await tx.user.create({
           data: {
-            id: supabaseUserId!,
+            id: supabaseUserId,
             name: data.nameWithInitials,
-            email: data.email,
+            email: data.email!,
             role: "EMPLOYEE",
             branchId: data.branchIds[0],
           },
         });
+      }
 
-        return tx.member.create({
-          data: {
-            userId: supabaseUserId!,
-            email: data.email,
-            phone: data.phone || null,
-            phone2: data.phone2 || null,
-            empNo: data.empNo,
-            epfNo: data.epfNo,
-            totalCommission: data.totalCommission,
-            positionId: data.positionId,
-            nameWithInitials: data.nameWithInitials || null,
-            nic: data.nic || null,
-            dob: data.dob ? new Date(data.dob) : null,
-            gender: data.gender || null,
-            civilStatus: data.civilStatus || null,
-            address: data.address || null,
-            reportingPerson: data.reportingPerson || null,
-            dateOfJoin: data.dateOfJoin ? new Date(data.dateOfJoin) : null,
-            appointmentLetter: data.appointmentLetter || null,
-            confirmation: data.confirmation || null,
-            remark: data.remark || null,
-            accNo: data.accNo || null,
-            bank: data.bank || null,
-            bankBranch: data.bankBranch || null,
-            status: data.status,
-            branches: {
-              create: data.branchIds.map((branchId) => ({ branchId })),
-            },
-            probationStartDate: data.probationStartDate
-              ? new Date(data.probationStartDate)
-              : null,
-            profilePic: data.profilePic
+      const member = await tx.member.create({
+        data: {
+          userId: supabaseUserId,
+          empNo,
+          email: data.email || null,
+          phone: data.phone || null,
+          phone2: data.phone2 || null,
+          epfNo: data.epfNo || null,
+          totalCommission: data.totalCommission,
+          positionId: data.positionId,
+          nameWithInitials: data.nameWithInitials || null,
+          nic: data.nic || null,
+          dob: data.dob ? new Date(data.dob) : null,
+          gender: data.gender || null,
+          civilStatus: data.civilStatus || null,
+          address: data.address || null,
+          reportingPerson: data.reportingPerson || null,
+          dateOfJoin: data.dateOfJoin ? new Date(data.dateOfJoin) : null,
+          appointmentLetter: data.appointmentLetter || null,
+          confirmation: data.confirmation || null,
+          remark: data.remark || null,
+          accNo: data.accNo || null,
+          bank: data.bank || null,
+          bankBranch: data.bankBranch || null,
+          status: data.status,
+          branches: {
+            create: data.branchIds.map((branchId) => ({ branchId })),
           },
-        });
+          probationStartDate: data.probationStartDate
+            ? new Date(data.probationStartDate)
+            : null,
+          profilePic: data.profilePic,
+        },
       });
 
-      // Send welcome email (non-fatal)
+      return member;
+    });
+
+    // ── STEP 3: Send email (non-blocking) ────────────────────────────────
+    if (data.email && tempPassword) {
       try {
         await sendWelcomeEmail({
           to: data.email,
           name: data.nameWithInitials,
-          empNo: data.empNo,
+          empNo: result.empNo,
           tempPassword,
         });
-      } catch (emailErr) {
-        console.warn("Welcome email send failed:", emailErr);
+      } catch (e) {
+        console.warn("Welcome email failed:", e);
       }
-
-      revalidatePath("/features/employees");
-      revalidatePath(`/features/branches/employees/${data.branchIds[0]}`);
-
-      void logActivity({
-        action: ActivityAction.CREATE,
-        entity: ActivityEntity.MEMBER,
-        entityId: member.id,
-        performedById: currentUser?.member?.id ?? 0,
-        branchId: data.branchIds[0],
-        metadata: { empNo: member.empNo, name: member.nameWithInitials },
-      });
-
-      return { success: true, member };
     }
 
-    // ── WITHOUT EMAIL: create Member only, no Supabase/User record ───────────
-    const member = await prisma.member.create({
-      data: {
-        nameWithInitials: data.nameWithInitials,
-        phone: data.phone || null,
-        phone2: data.phone2 || null,
-        empNo: data.empNo,
-        epfNo: data.epfNo,
-        totalCommission: data.totalCommission,
-        positionId: data.positionId,
-        nic: data.nic || null,
-        dob: data.dob ? new Date(data.dob) : null,
-        gender: data.gender || null,
-        civilStatus: data.civilStatus || null,
-        address: data.address || null,
-        reportingPerson: data.reportingPerson || null,
-        dateOfJoin: data.dateOfJoin ? new Date(data.dateOfJoin) : null,
-        appointmentLetter: data.appointmentLetter || null,
-        confirmation: data.confirmation || null,
-        remark: data.remark || null,
-        accNo: data.accNo || null,
-        bank: data.bank || null,
-        status: data.status,
-        bankBranch: data.bankBranch || null,
-        branches: {
-          create: data.branchIds.map((branchId) => ({ branchId })),
-        },
-        probationStartDate: data.probationStartDate
-          ? new Date(data.probationStartDate)
-          : null,
-        profilePic: data.profilePic
-      },
-    });
-
-    revalidatePath("/features/employees");
+    // ── STEP 4: Revalidate + log ─────────────────────────────────────────
     revalidatePath(`/features/branches/employees/${data.branchIds[0]}`);
+
 
     void logActivity({
       action: ActivityAction.CREATE,
       entity: ActivityEntity.MEMBER,
-      entityId: member.id,
+      entityId: result.id,
       performedById: currentUser?.member?.id ?? 0,
       branchId: data.branchIds[0],
-      metadata: { empNo: member.empNo, name: member.nameWithInitials },
+      metadata: { empNo: result.empNo, name: result.nameWithInitials },
     });
 
-    return { success: true, member };
+
+    return { success: true, member: result };
 
   } catch (err) {
     console.error("Error creating employee:", err);
 
-    // Rollback Supabase user if DB failed
+    // ── Rollback Supabase user if DB failed ──────────────────────────────
     if (supabaseUserId) {
       await supabaseAdmin.auth.admin
         .deleteUser(supabaseUserId)
@@ -210,7 +204,10 @@ export async function createEmployee(data: EmpData) {
 
     return {
       success: false,
-      error: err instanceof Error ? err.message : "Server error — employee creation failed",
+      error:
+        err instanceof Error
+          ? err.message
+          : "Server error — employee creation failed",
     };
   }
 }
@@ -433,7 +430,6 @@ export async function updateEmployee(memberId: number, data: EmpData) {
       },
     });
 
-    revalidatePath("/features/employees");
 
     void logActivity({
       action: ActivityAction.UPDATE,
@@ -458,17 +454,50 @@ export async function updateEmployee(memberId: number, data: EmpData) {
     });
 
     return { success: true, member: updated };
-  } catch (error) {
-    console.error("Error updating employee:", error);
+  } catch (err) {
+    console.error("Error updating employee:", err);
 
+    let message = "Failed to update employee";
+
+    // ✅ 1. Handle Supabase Auth errors
+    if (err instanceof Error) {
+      const msg = err.message.toLowerCase();
+
+      if (msg.includes("already been registered")) {
+        message = "Email already exists";
+      } else if (msg.includes("invalid email")) {
+        message = "Invalid email address";
+      }
+    }
+
+    // ✅ 2. Handle Prisma errors
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      if (err.code === "P2002") {
+        const rawMessage =
+          (err.meta as any)?.driverAdapterError?.cause?.originalMessage || "";
+
+        const msg = rawMessage.toLowerCase();
+
+        if (msg.includes("empno")) {
+          message = "Employee ID already exists";
+        } else if (msg.includes("email")) {
+          message = "Email already exists";
+        } else {
+          message = "Duplicate value detected";
+        }
+      }
+    }
+
+    // ✅ rollback if needed
     if (supabaseUserId) {
       await supabaseAdmin.auth.admin
         .deleteUser(supabaseUserId)
         .catch((e) => console.error("Rollback failed:", e));
     }
 
-    return { success: false, error: "Failed to update employee" };
+    return { success: false, error: message };
   }
+
 }
 // Get member details for profile page
 export async function getMemberDetails(id: number) {
@@ -535,7 +564,7 @@ export async function deleteEmployee(id: number) {
   }
 }
 
-export async function toggleEmployeeStatus(id: number, currentStatus: "PROBATION" | "PERMANENT") {
+export async function toggleEmployeeStatus(id: number, currentStatus: "PROBATION" | "PERMANENT" | "MANAGEMENT") {
   const newStatus = currentStatus === "PROBATION" ? "PERMANENT" : "PROBATION";
   const currentUser = await getCurrentUserWithRole();
 
@@ -599,7 +628,7 @@ export async function uploadProfilePic(file: File, empNo: string) {
 export async function getPositions() {
   return prisma.position.findMany({
     orderBy: { rank: "desc" },
-    select: { id: true, title: true, rank: true },
+    select: { id: true, title: true, rank: true, type: true, isProbation: true },
   });
 }
 
