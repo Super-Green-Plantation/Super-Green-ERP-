@@ -52,7 +52,6 @@ const DashboardPage = () => {
 
   return (
     <div className="max-w-7xl mx-auto min-h-screen bg-transparent p-4 sm:p-8">
-      {/* Premium Header */}
       {/* Premium Minimal Header */}
       <header className="flex flex-col sm:flex-row items-center justify-between mb-8 sm:mb-10 gap-6">
         <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-start">
@@ -89,9 +88,9 @@ const DashboardPage = () => {
         <div className="flex-1 space-y-10 overflow-hidden">
 
           {/* Employee-Centric Getting Started Hero */}
-          <div className="relative rounded-[2.5rem] sm:rounded-[3rem] overflow-hidden p-6 sm:p-16 flex flex-col justify-center min-h-80 sm:min-h-105 border border-white/10 shadow-2xl group animate-in fade-in slide-in-from-bottom-10 duration-1000">
+          <div className="relative rounded-[2.5rem] sm:rounded-[3rem] overflow-hidden p-6 sm:p-16 flex flex-col justify-center min-h-80 sm:min-h-105 border border-white/10  group animate-in fade-in slide-in-from-bottom-10 duration-1000">
             {/* Soft Mesh Background */}
-            <div className="absolute inset-0 bg-[#002A24] animate-pulse opacity-20">
+            <div className="absolute inset-0 bg-[#002A24]opacity-20">
               <div className="absolute top-[-20%] left-[-10%] w-[80%] h-[80%] bg-[#004D40] rounded-full blur-[100px] opacity-70"></div>
               <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-[#00BFA5] rounded-full blur-[100px] opacity-40"></div>
               <div className="absolute inset-0 bg-white/2 mix-blend-overlay"></div>
@@ -101,7 +100,7 @@ const DashboardPage = () => {
               <div className="max-w-xl">
                 <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl px-4 py-1.5 inline-flex items-center gap-3 mb-8 animate-pulse">
                   <div className="relative flex h-2 w-2 pt-0.5">
-                    <div className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 "></div>
+                    <div className=" absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 "></div>
                     <div className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500 border border-emerald-400/50 "></div>
                   </div>
                   <span className="text-white text-[10px] font-bold uppercase tracking-widest">Systems Online</span>
