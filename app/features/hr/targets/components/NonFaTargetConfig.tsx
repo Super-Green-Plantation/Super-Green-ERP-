@@ -34,10 +34,10 @@ export default function NonFaTargetConfig({
         return (
           <div key={period} className="space-y-4 space-x-0">
             <div className="flex items-center gap-2">
-              <span className={`px-3 py-1 rounded-lg text-[11px] font-black uppercase tracking-widest border
+              <span className={`px-4 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-[0.2em] border
                 ${period === 1
-                  ? "bg-blue-50 text-blue-700 border-blue-200"
-                  : "bg-violet-50 text-violet-700 border-violet-200"
+                  ? "bg-blue-500/10 text-blue-600 border-blue-500/20"
+                  : "bg-violet-500/10 text-violet-600 border-violet-500/20"
                 }`}
               >
                 Period {period} — {period === 1 ? "First 3 Months" : "Second 3 Months"}

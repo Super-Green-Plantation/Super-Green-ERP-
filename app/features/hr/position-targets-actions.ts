@@ -10,6 +10,7 @@ export async function getPositions() {
   const positions = await prisma.position.findMany({
     orderBy: { rank: "asc" },
     include: {
+
       positionTargets: {
         orderBy: [{ periodNumber: "asc" }, { monthNumber: "asc" }],
       },
@@ -51,16 +52,22 @@ export async function upsertPositionTargets(
 
     await Promise.all(
       targets.map((t) => {
-        const { periodNumber, monthNumber, ...updateData } = t;
+        const { id, periodNumber, monthNumber, ...updateData } = t as any;
+
         return prisma.positionTarget.upsert({
           where: {
             positionId_periodNumber_monthNumber: {
               positionId,
-              periodNumber: t.periodNumber,
-              monthNumber: t.monthNumber,
+              periodNumber,
+              monthNumber,
             },
           },
-          create: { positionId, ...t },
+          create: {
+            positionId,
+            periodNumber,
+            monthNumber,
+            ...updateData, // ✅ safe now
+          },
           update: updateData,
         });
       })

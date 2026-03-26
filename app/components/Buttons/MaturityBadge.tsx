@@ -41,10 +41,10 @@ export const MaturityBadge = ({ investments }: { investments: any[] }) => {
         />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-0.5">
+        <p className="text-[10px] font-bold uppercase tracking-widest opacity-60 mb-0.5">
           {isOverdue ? "Matured" : "Maturity Countdown"}
         </p>
-        <p className="text-sm font-black truncate">
+        <p className="text-sm font-bold truncate">
           {isOverdue
             ? `Matured ${Math.abs(nearest.daysLeft)} days ago`
             : nearest.daysLeft === 0

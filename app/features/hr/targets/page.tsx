@@ -210,12 +210,12 @@ export default function PositionTargetsPage() {
     <div className="max-w-7xl mx-auto sm:space-y-8 space-y-2 sm:p-4 md:p-8 min-h-screen">
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border">
         <div className="flex items-center gap-4">
           
           <div>
             <Heading>Position Targets</Heading>
-            <p className="text-sm text-slate-500 font-medium mt-0.5">
+            <p className="text-sm text-muted-foreground font-medium mt-0.5">
               Configure probation-period monthly targets and bonuses per position.
             </p>
           </div>
@@ -224,7 +224,7 @@ export default function PositionTargetsPage() {
 
           <Link
             href="/features/hr/salary"
-            className="px-5 py-3 text-xs font-black uppercase tracking-widest text-white bg-slate-900 rounded-xl hover:bg-slate-700 transition-all"
+            className="px-5 py-3 text-xs font-bold uppercase tracking-widest text-primary-foreground bg-primary rounded-xl transition-all hover:opacity-90 shadow-xl shadow-primary/10 active:scale-95"
           >
             Permanent Config
           </Link>

@@ -27,7 +27,7 @@ export default function MemberCard({ member }: Props) {
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
               Total Earned
             </p>
-            <p className="text-sm font-black text-emerald-600">
+            <p className="text-sm font-bold text-emerald-600">
               Rs. {member.totalCommission?.toLocaleString()}
             </p>
           </div>

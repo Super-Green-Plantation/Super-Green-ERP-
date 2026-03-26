@@ -53,7 +53,7 @@ const CommissionReceipt = ({ data }: { data: any }) => {
           <div className="space-y-4">
             <div className="inline-flex items-center gap-2 px-2 py-1 bg-black text-white rounded-xs">
               <ShieldCheck className="w-4 h-4" />
-              <span className="text-[10px] font-black uppercase tracking-widest">
+              <span className="text-[10px] font-bold uppercase tracking-widest">
                 Secure Payout
               </span>
             </div>
@@ -92,7 +92,7 @@ const CommissionReceipt = ({ data }: { data: any }) => {
         {/* The Breakdown */}
         <div className="p-8 space-y-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-black uppercase tracking-widest text-gray-400">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400">
               Distribution Logic
             </h3>
             <span className="text-[10px] font-medium px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full">
@@ -143,7 +143,7 @@ const CommissionReceipt = ({ data }: { data: any }) => {
               <div className="flex items-center gap-2 text-emerald-400">
                 <Fingerprint className="w-6 h-6" />
                 <div className="leading-none">
-                  <p className="text-[8px] font-black uppercase tracking-[0.2em]">
+                  <p className="text-[8px] font-bold uppercase tracking-[0.2em]">
                     Auth Signature
                   </p>
                   <p className="text-[10px] font-mono text-white opacity-50 uppercase">

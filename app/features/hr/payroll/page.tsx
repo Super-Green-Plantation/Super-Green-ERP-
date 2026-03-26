@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import {
   Loader2, Play, RefreshCw, AlertTriangle, CheckCircle2,
-  ChevronDown, TrendingUp, Banknote, Car, Percent
+  ChevronDown, TrendingUp, Banknote, Car, Percent, Users
 } from "lucide-react";
 import { getBranches } from "@/app/features/branches/actions";
 import { toast } from "sonner";
@@ -126,7 +126,7 @@ export default function PayrollPage() {
         <Heading>
           Monthly Payroll
         </Heading>
-        <p className="text-sm text-slate-400 mt-1">
+        <p className="text-sm text-muted-foreground mt-2 font-medium max-w-2xl">
           Enter volume achieved per employee and run payroll for the selected month.
         </p>
       </div>
@@ -135,7 +135,7 @@ export default function PayrollPage() {
       <div className="flex flex-wrap gap-3">
         <div className="relative">
           <select
-            className="appearance-none pl-4 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 cursor-pointer"
+            className="appearance-none pl-4 pr-10 py-3 bg-card border border-border rounded-xl text-sm font-bold text-foreground outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 cursor-pointer shadow-sm transition-all"
             value={selectedBranchId ?? ""}
             onChange={(e) => setSelectedBranchId(Number(e.target.value))}
           >
@@ -143,12 +143,12 @@ export default function PayrollPage() {
               <option key={b.id} value={b.id}>{b.name}</option>
             ))}
           </select>
-          <ChevronDown className="absolute right-3 top-3 w-4 h-4 text-slate-400 pointer-events-none" />
+          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
         </div>
 
         <div className="relative">
           <select
-            className="appearance-none pl-4 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 cursor-pointer"
+            className="appearance-none pl-4 pr-10 py-3 bg-card border border-border rounded-xl text-sm font-bold text-foreground outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 cursor-pointer shadow-sm transition-all"
             value={month}
             onChange={(e) => setMonth(Number(e.target.value))}
           >
@@ -156,12 +156,12 @@ export default function PayrollPage() {
               <option key={i + 1} value={i + 1}>{m}</option>
             ))}
           </select>
-          <ChevronDown className="absolute right-3 top-3 w-4 h-4 text-slate-400 pointer-events-none" />
+          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
         </div>
 
         <div className="relative">
           <select
-            className="appearance-none pl-4 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 cursor-pointer"
+            className="appearance-none pl-4 pr-10 py-3 bg-card border border-border rounded-xl text-sm font-bold text-foreground outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 cursor-pointer shadow-sm transition-all"
             value={year}
             onChange={(e) => setYear(Number(e.target.value))}
           >
@@ -169,35 +169,33 @@ export default function PayrollPage() {
               <option key={y} value={y}>{y}</option>
             ))}
           </select>
-          <ChevronDown className="absolute right-3 top-3 w-4 h-4 text-slate-400 pointer-events-none" />
+          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
         </div>
 
         <button
           onClick={handleRefreshPreview}
           disabled={loadingPreview}
-          className="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 text-sm font-bold rounded-xl transition-all"
+          className="flex items-center gap-2 px-6 py-3 bg-card border border-border hover:bg-muted text-foreground text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-50"
         >
           {loadingPreview
             ? <Loader2 className="w-4 h-4 animate-spin" />
             : <RefreshCw className="w-4 h-4" />
           }
-          Refresh Preview
+          Refresh
         </button>
       </div>
 
       {/* Warnings */}
       {alreadyProcessedCount > 0 && (
-        <div className="flex items-center gap-2 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl text-sm font-medium text-amber-700">
+        <div className="flex items-center gap-3 px-5 py-3.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-sm font-bold text-amber-600 uppercase tracking-tight">
           <AlertTriangle className="w-4 h-4 shrink-0" />
-          {alreadyProcessedCount} employee{alreadyProcessedCount > 1 ? "s" : ""} already have payroll for this month.
-          Use "Force Re-run" to overwrite.
+          <span>{alreadyProcessedCount} employee{alreadyProcessedCount > 1 ? "s" : ""} already processed — use "Force Re-run" to overwrite.</span>
         </div>
       )}
       {unconfiguredCount > 0 && (
-        <div className="flex items-center gap-2 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm font-medium text-red-700">
+        <div className="flex items-center gap-3 px-5 py-3.5 bg-destructive/10 border border-destructive/20 rounded-xl text-sm font-bold text-destructive uppercase tracking-tight">
           <AlertTriangle className="w-4 h-4 shrink-0" />
-          {unconfiguredCount} employee{unconfiguredCount > 1 ? "s" : ""} have no salary config — they will be skipped.
-          Configure positions in the Salary Config page first.
+          <span>{unconfiguredCount} employee{unconfiguredCount > 1 ? "s" : ""} missing salary configuration.</span>
         </div>
       )}
 
@@ -205,72 +203,79 @@ export default function PayrollPage() {
       {preview.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           {[
-            { label: "Total Gross", value: fmt(totalGross), icon: Banknote, color: "text-blue-600" },
-            { label: "Total Net Pay", value: fmt(totalNet), icon: TrendingUp, color: "text-emerald-600" },
+            { label: "Total Gross", value: fmt(totalGross), icon: Banknote, color: "text-primary" },
+            { label: "Total Net Pay", value: fmt(totalNet), icon: TrendingUp, color: "text-green-600" },
             { label: "EPF (Employee)", value: fmt(totalEpfEmployee), icon: Percent, color: "text-amber-600" },
             { label: "EPF (Employer)", value: fmt(totalEpfEmployer), icon: Percent, color: "text-orange-600" },
-            { label: "ETF (Employer)", value: fmt(totalEtf), icon: Car, color: "text-violet-600" },
+            { label: "ETF (Employer)", value: fmt(totalEtf), icon: Car, color: "text-muted-foreground" },
           ].map(({ label, value, icon: Icon, color }) => (
-            <div key={label} className="bg-white border border-slate-100 rounded-xl p-4 shadow-sm">
-              <Icon className={`w-4 h-4 mb-2 ${color}`} />
-              <p className="text-lg font-black text-slate-800">{value}</p>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mt-0.5">{label}</p>
+            <div key={label} className="bg-card border border-border rounded-2xl p-5 shadow-sm">
+              <div className={`p-2 w-fit rounded-lg bg-muted mb-3 ${color}`}>
+                <Icon className="w-4 h-4" />
+              </div>
+              <p className="text-xl font-bold text-foreground tabular-nums tracking-tight">{value}</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mt-1 opacity-70">{label}</p>
             </div>
           ))}
         </div>
       )}
 
       {/* Table */}
-      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+      <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
         {loadingPreview ? (
           <div className="flex items-center justify-center h-48">
             <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
           </div>
         ) : preview.length === 0 ? (
-          <div className="flex items-center justify-center h-48 text-sm text-slate-400">
-            No employees found for this branch.
+          <div className="flex flex-col items-center justify-center h-64 text-sm text-muted-foreground gap-4">
+            <Users size={48} strokeWidth={1} className="opacity-20" />
+            <p className="font-bold uppercase tracking-[0.2em] text-xs">No employees found for this branch</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50/50">
-                  <th className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Employee</th>
-                  <th className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Position</th>
-                  <th className="text-right px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Volume Achieved</th>
-                  <th className="text-right px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Basic</th>
-                  <th className="text-right px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Incentive</th>
-                  <th className="text-right px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Allowance</th>
-                  <th className="text-right px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Commission</th>
-                  <th className="text-right px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">EPF (emp)</th>
-                  <th className="text-right px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Net Pay</th>
-                  <th className="px-4 py-3 text-[10px] font-black uppercase tracking-widest text-slate-400">Status</th>
+                  <th className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Employee</th>
+                  <th className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Position</th>
+                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Volume Achieved</th>
+                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Basic</th>
+                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Incentive</th>
+                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Allowance</th>
+                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Commission</th>
+                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">EPF (emp)</th>
+                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Net Pay</th>
+                  <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-50">
+              <tbody className="divide-y divide-border">
                 {preview.map((row) => (
-                  <tr key={row.memberId} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="px-4 py-3">
-                      <p className="font-bold text-slate-700">{row.name}</p>
-                      <p className="text-[11px] text-slate-400">{row.empNo}</p>
+                  <tr key={row.memberId} className="hover:bg-muted/30 transition-colors">
+                    <td className="px-5 py-4">
+                      <p className="font-bold text-foreground text-sm leading-tight">{row.name}</p>
+                      <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-tighter mt-0.5">{row.empNo}</p>
                     </td>
-                    <td className="px-4 py-3">
-                      <span className="text-xs font-bold text-slate-500">{row.position}</span>
-                      <span className={`ml-2 text-[10px] font-black px-1.5 py-0.5 rounded-full ${row.status === "PERMANENT"
-                          ? "bg-emerald-50 text-emerald-600"
-                          : "bg-amber-50 text-amber-600"
-                        }`}>
-                        {row.status === "PERMANENT" ? "Perm" : "Prob"}
-                      </span>
+                    <td className="px-5 py-4">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-xs font-bold text-muted-foreground">{row.position}</span>
+                        <div className="flex">
+                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider ${row.status === "PERMANENT"
+                              ? "bg-green-500/10 text-green-600 border-green-500/20"
+                              : "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                            }`}>
+                            {row.status === "PERMANENT" ? "Permanent" : "Probation"}
+                          </span>
+                        </div>
+                      </div>
                     </td>
 
                     {/* Editable volume input */}
-                    <td className="px-4 py-3 text-right">
+                    <td className="px-5 py-4 text-right">
                       <input
                         type="number"
                         value={volumes[row.memberId] ?? 0}
                         onChange={(e) => handleVolumeChange(row.memberId, Number(e.target.value))}
-                        className="w-32 text-right px-2 py-1 border border-slate-200 rounded-lg text-sm font-semibold text-slate-700 focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                        className="w-32 text-right px-3 py-2 bg-muted/30 border border-border rounded-xl text-sm font-bold text-foreground focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all outline-none"
                       />
                     </td>
 
@@ -280,41 +285,41 @@ export default function PayrollPage() {
                       </td>
                     ) : (
                       <>
-                        <td className="px-4 py-3 text-right text-xs font-semibold text-slate-600">
+                        <td className="px-5 py-4 text-right text-xs font-bold text-muted-foreground">
                           {fmt(row.breakdown?.basicSalaryPermanent ?? 0)}
                         </td>
-                        <td className="px-4 py-3 text-right text-xs font-semibold">
-                          <span className={row.breakdown?.incentiveHit ? "text-emerald-600 font-bold" : "text-slate-400"}>
+                        <td className="px-5 py-4 text-right text-xs font-bold">
+                          <span className={row.breakdown?.incentiveHit ? "text-green-600" : "text-muted-foreground/40"}>
                             {fmt(row.breakdown?.incentiveEarned ?? 0)}
                             {row.breakdown?.incentiveHit && <CheckCircle2 className="inline w-3 h-3 ml-1" />}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-right text-xs font-semibold">
-                          <span className={row.breakdown?.allowanceHit ? "text-blue-600 font-bold" : "text-slate-400"}>
+                        <td className="px-5 py-4 text-right text-xs font-bold">
+                          <span className={row.breakdown?.allowanceHit ? "text-primary" : "text-muted-foreground/40"}>
                             {fmt(row.breakdown?.allowanceEarned ?? 0)}
                             {row.breakdown?.allowanceHit && <CheckCircle2 className="inline w-3 h-3 ml-1" />}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-right text-xs font-semibold text-violet-600">
+                        <td className="px-5 py-4 text-right text-xs font-bold text-primary">
                           {fmt(row.breakdown?.commissionEarned ?? 0)}
                         </td>
-                        <td className="px-4 py-3 text-right text-xs font-semibold text-red-500">
+                        <td className="px-5 py-4 text-right text-xs font-bold text-destructive">
                           -{fmt(row.breakdown?.epfDeduction ?? 0)}
                         </td>
-                        <td className="px-4 py-3 text-right text-sm font-black text-slate-800">
+                        <td className="px-5 py-4 text-right text-sm font-bold text-foreground">
                           {fmt(row.breakdown?.netPay ?? 0)}
                         </td>
                       </>
                     )}
 
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-4 text-center">
                       {row.alreadyProcessed ? (
-                        <span className="text-[10px] font-black text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full">
-                          Processed
+                        <span className="text-[10px] font-bold text-green-600 bg-green-500/10 border border-green-500/20 px-3 py-1 rounded-full uppercase tracking-tight">
+                          Done
                         </span>
                       ) : (
-                        <span className="text-[10px] font-black text-slate-400 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-full">
-                          Pending
+                        <span className="text-[10px] font-bold text-muted-foreground/50 bg-muted border border-border px-3 py-1 rounded-full uppercase tracking-tight">
+                          Wait
                         </span>
                       )}
                     </td>
@@ -328,21 +333,21 @@ export default function PayrollPage() {
 
       {/* Action Buttons */}
       {preview.length > 0 && (
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col sm:flex-row gap-4 pt-4">
           <button
             onClick={() => handleRunPayroll(false)}
             disabled={running}
-            className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 hover:bg-slate-700 disabled:bg-slate-400 text-white text-sm font-black uppercase tracking-widest rounded-xl transition-all active:scale-95"
+            className="flex-1 flex items-center justify-center gap-2 px-8 py-4 bg-primary text-primary-foreground text-xs font-bold uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-95 disabled:opacity-50 hover:opacity-90 shadow-xl shadow-primary/20"
           >
-            {running ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-            Run Payroll (skip processed)
+            {running ? <Loader2 className="w-5 h-5 animate-spin" /> : <Play className="w-5 h-5 fill-current" />}
+            Run Standard Batch
           </button>
           <button
             onClick={() => handleRunPayroll(true)}
             disabled={running}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white text-sm font-black uppercase tracking-widest rounded-xl transition-all active:scale-95"
+            className="flex items-center justify-center gap-2 px-8 py-4 bg-destructive/10 text-destructive text-xs font-bold uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-95 border border-destructive/20 hover:bg-destructive/20"
           >
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw className="w-5 h-5" />
             Force Re-run All
           </button>
         </div>

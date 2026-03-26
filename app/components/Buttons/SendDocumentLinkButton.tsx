@@ -40,7 +40,7 @@ export default function SendDocumentLinkButton({ clientId }: { clientId: number 
       <button
         onClick={handleGenerate}
         disabled={loading}
-        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 hover:bg-violet-600 disabled:bg-slate-400 text-white text-[11px] font-black uppercase tracking-[0.15em] rounded-xl transition-all shadow-lg active:scale-95 border border-white/5"
+        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 hover:bg-violet-600 disabled:bg-slate-400 text-white text-[11px] font-bold uppercase tracking-[0.15em] rounded-xl transition-all shadow-lg active:scale-95 border border-white/5"
       >
         {loading ? (
           <><Loader2 className="w-4 h-4 animate-spin" /> Generating...</>

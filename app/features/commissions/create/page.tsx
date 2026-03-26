@@ -265,7 +265,7 @@ const Page = () => {
 
                 <div className=" overflow-hidden">
                   <div className="p-4 border-b border-gray-50 bg-gray-50/50">
-                    <h3 className="text-xs font-black uppercase tracking-widest text-gray-500">
+                    <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500">
                       Eligible Members
                     </h3>
                   </div>
@@ -307,7 +307,7 @@ const Page = () => {
                       onClick={handleProcess}
                       disabled={!selectedEmpNo || !selectedInvestmentId || processing}
                     >
-                      <div className="relative z-10 flex items-center justify-center gap-3 font-black uppercase tracking-widest">
+                      <div className="relative z-10 flex items-center justify-center gap-3 font-bold uppercase tracking-widest">
                         {processing ? (
                           <>
                             <Loader2 className="h-5 w-5 animate-spin" />

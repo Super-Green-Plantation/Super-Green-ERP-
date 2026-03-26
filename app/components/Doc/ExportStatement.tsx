@@ -6,9 +6,10 @@ import { FileBarChart, Loader2 } from "lucide-react";
 interface ExportButtonProps {
   data: any;
   exportFn: (data: any, secondaryData?: any) => void;
-  secondaryData?: any; // Useful for passing the 'commissions' array separately
+  secondaryData?: any;
   label?: string;
   variant?: "white" | "dark";
+  className?: string;
 }
 
 const ExportButton = ({ 
@@ -16,7 +17,8 @@ const ExportButton = ({
   exportFn, 
   secondaryData, 
   label = "Export Report",
-  variant = "white" 
+  variant = "white",
+  className = ""
 }: ExportButtonProps) => {
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -46,9 +48,10 @@ const ExportButton = ({
       onClick={handleExport}
       className={`
         flex items-center justify-center gap-2 px-5 py-3 
-        text-[10px] font-black uppercase tracking-widest rounded-xl border 
+        text-[10px] font-bold uppercase tracking-widest rounded-xl border 
         transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed
         ${themes[variant]}
+        ${className}
       `}
     >
       {isGenerating ? (

@@ -17,41 +17,41 @@ const MonthRow = React.memo(({ row, isSynced, onUpdate, onSyncToggle }: MonthRow
   const sourceMonthLabel = row.periodNumber === 1 ? 1 : 4;
 
   return (
-    <div className="p-4 bg-slate-50/50 rounded-xl border border-slate-100 space-y-5">
+    <div className="p-6 bg-card rounded-2xl border border-border space-y-6 shadow-sm">
 
       {/* Month badge + sync checkbox */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 bg-slate-900 rounded-lg flex items-center justify-center text-xs font-black text-white">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-primary rounded-xl flex items-center justify-center text-xs font-bold text-primary-foreground shadow-lg shadow-primary/20">
             {row.monthNumber}
           </div>
-          <span className="text-xs font-bold text-slate-500">Month {row.monthNumber}</span>
+          <span className="text-sm font-bold text-foreground uppercase tracking-tight">Month {row.monthNumber}</span>
         </div>
 
         {row.monthNumber > 1 && (
           <label className="flex items-center gap-2 cursor-pointer group">
             <div
-              className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-all
+              className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all
                 ${isSynced
-                  ? "bg-slate-900 border-slate-900"
-                  : "bg-white border-slate-300 group-hover:border-slate-400"
+                  ? "bg-primary border-primary"
+                  : "bg-muted border-border group-hover:border-primary/50"
                 }`}
               onClick={() => onSyncToggle(!isSynced)}
             >
               {isSynced && (
-                <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <svg className="w-3 h-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               )}
             </div>
-            <span className="text-[10px] font-bold text-slate-400 group-hover:text-slate-600 transition-colors">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest group-hover:text-primary transition-colors">
               Same as Month {sourceMonthLabel}
             </span>
           </label>
         )}
       </div>
 
-      <div className={`space-y-5 ${isSynced ? "opacity-50 pointer-events-none" : ""}`}>
+      <div className={`space-y-8 ${isSynced ? "opacity-30 pointer-events-none grayscale" : ""}`}>
 
         <Section icon={<TrendingUp className="w-4 h-4" />} title="Volume Target">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

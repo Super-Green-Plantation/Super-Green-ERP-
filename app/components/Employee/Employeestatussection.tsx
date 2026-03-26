@@ -48,8 +48,8 @@ function StatPill({ label, value, highlight = false }: {
 }) {
     return (
         <div className={`rounded-xl p-3 border ${highlight ? "bg-emerald-50 border-emerald-100" : "bg-slate-50 border-slate-100"}`}>
-            <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">{label}</p>
-            <p className={`text-sm font-black ${highlight ? "text-emerald-600" : "text-slate-700"}`}>{value}</p>
+            <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1">{label}</p>
+            <p className={`text-sm font-bold ${highlight ? "text-emerald-600" : "text-slate-700"}`}>{value}</p>
         </div>
     );
 }
@@ -93,7 +93,7 @@ function ProbationStatus({ data, status, onToggle, toggling }: {
             <div className="flex flex-wrap items-center gap-2">
                 <button
                     onClick={onToggle} disabled={toggling}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 border text-[11px] font-black uppercase tracking-wider rounded-full transition-all hover:opacity-80 active:scale-95 ${status === "PERMANENT"
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 border text-[11px] font-bold uppercase tracking-wider rounded-full transition-all hover:opacity-80 active:scale-95 ${status === "PERMANENT"
                         ? "bg-emerald-50 border-emerald-200 text-emerald-700"
                         : "bg-amber-50 border-amber-200 text-amber-700"
                         }`}
@@ -106,7 +106,7 @@ function ProbationStatus({ data, status, onToggle, toggling }: {
                     }
                     {status === "PERMANENT" ? "Permanent" : "Probation"}
                 </button>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-100 text-blue-600 text-[11px] font-black uppercase tracking-wider rounded-full">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-100 text-blue-600 text-[11px] font-bold uppercase tracking-wider rounded-full">
                     Period {periodNumber} — Month {monthInPeriod}
                 </span>
                 <span className="text-xs text-slate-400 font-medium">
@@ -130,26 +130,26 @@ function ProbationStatus({ data, status, onToggle, toggling }: {
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <Target className="w-4 h-4 text-blue-500" />
-                            <span className="text-xs font-black text-slate-600 uppercase tracking-wider">
+                            <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">
                                 This Month's Target
                             </span>
                         </div>
                         {evaluation ? (
                             targetHit ? (
-                                <span className="flex items-center gap-1 text-[10px] font-black text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
+                                <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
                                     <CheckCircle2 className="w-3 h-3" /> Target Hit
                                 </span>
                             ) : partialHit ? (
-                                <span className="text-[10px] font-black text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full">
+                                <span className="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full">
                                     Partial
                                 </span>
                             ) : (
-                                <span className="text-[10px] font-black text-slate-400 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-full">
+                                <span className="text-[10px] font-bold text-slate-400 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-full">
                                     In Progress
                                 </span>
                             )
                         ) : (
-                            <span className="text-[10px] font-black text-slate-300 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-full">
+                            <span className="text-[10px] font-bold text-slate-300 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-full">
                                 Not Evaluated
                             </span>
                         )}
@@ -238,7 +238,7 @@ function PermanentStatus({ data, status, onToggle, toggling }: {
             <div className="flex flex-wrap items-center gap-2">
                 <button
                     onClick={onToggle} disabled={toggling}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 border text-[11px] font-black uppercase tracking-wider rounded-full transition-all hover:opacity-80 active:scale-95 ${status === "PERMANENT"
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 border text-[11px] font-bold uppercase tracking-wider rounded-full transition-all hover:opacity-80 active:scale-95 ${status === "PERMANENT"
                         ? "bg-emerald-50 border-emerald-200 text-emerald-700"
                         : "bg-amber-50 border-amber-200 text-amber-700"
                         }`}
@@ -266,7 +266,7 @@ function PermanentStatus({ data, status, onToggle, toggling }: {
             <div className="bg-white border border-slate-100 rounded-xl p-4 space-y-3">
                 <div className="flex items-center gap-2">
                     <Target className="w-4 h-4 text-emerald-500" />
-                    <span className="text-xs font-black text-slate-600 uppercase tracking-wider">
+                    <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">
                         This Month
                     </span>
                 </div>
@@ -296,7 +296,7 @@ function PermanentStatus({ data, status, onToggle, toggling }: {
                 {currentPayroll && (
                     <div className="pt-2 border-t border-slate-100 flex justify-between items-center">
                         <span className="text-xs text-slate-400 font-medium">Net Pay this month</span>
-                        <span className="text-sm font-black text-slate-800">{fmt(netPay)}</span>
+                        <span className="text-sm font-bold text-slate-800">{fmt(netPay)}</span>
                     </div>
                 )}
             </div>
@@ -306,7 +306,7 @@ function PermanentStatus({ data, status, onToggle, toggling }: {
                 <div className="bg-white border border-slate-100 rounded-xl overflow-hidden">
                     <div className="px-4 py-3 border-b border-slate-50 flex items-center gap-2">
                         <Banknote className="w-4 h-4 text-violet-500" />
-                        <span className="text-xs font-black text-slate-600 uppercase tracking-wider">
+                        <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">
                             Payroll History
                         </span>
                     </div>
@@ -330,7 +330,7 @@ function PermanentStatus({ data, status, onToggle, toggling }: {
                                     {p.allowanceHit && (
                                         <Car className="w-3.5 h-3.5 text-blue-500" />
                                     )}
-                                    <span className="text-xs font-black text-slate-700">{fmt(p.netPay)}</span>
+                                    <span className="text-xs font-bold text-slate-700">{fmt(p.netPay)}</span>
                                 </div>
                             </div>
                         ))}
@@ -383,7 +383,7 @@ export default function EmployeeStatusSection({
         <section className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="px-4 sm:px-6 py-3.5 border-b border-gray-50 flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-blue-500 shrink-0" />
-                <h2 className="font-black text-gray-800 text-xs uppercase tracking-widest">
+                <h2 className="font-bold text-gray-800 text-xs uppercase tracking-widest">
                     Employment Status & Performance
                 </h2>
             </div>

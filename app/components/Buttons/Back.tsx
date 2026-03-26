@@ -7,9 +7,9 @@ const Back = () => {
     <div>
       <button
         onClick={() => router.back()}
-        className="p-2 hover:bg-white rounded-xl border border-gray-200 transition-all active:scale-95"
+        className="p-2 hover:bg-muted rounded-xl border border-border transition-all active:scale-95 text-foreground"
       >
-        <ArrowLeft className="w-5 h-5 text-gray-600" />
+        <ArrowLeft className="w-5 h-5" />
       </button>
     </div>
   );

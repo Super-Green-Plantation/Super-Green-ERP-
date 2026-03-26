@@ -216,6 +216,7 @@ export async function saveClient(data: {
           address: applicant.address,
           investmentAmount: Number(applicant.investmentAmount),
           branchId: applicant.branchId,
+          proposalFormNo: applicant.proposalFormNo || null,
           signature: applicant.signature,
           idFront: applicant.idFront,
           idBack: applicant.idBack,
@@ -328,6 +329,7 @@ export async function updateClient(id: number, formData: any) {
         address: formData.applicant.address || null,
         drivingLicense: formData.applicant.drivingLicense || null,
         passportNo: formData.applicant.passportNo || null,
+        proposalFormNo: formData.applicant.proposalFormNo || null,
         phoneLand: formData.applicant.phoneLand || null,
         idFront: formData.applicant.idFront || null,
         idBack: formData.applicant.idBack || null,
@@ -711,4 +713,24 @@ export async function saveUploadedDocuments(
   });
 
   return { success: true };
+}
+
+
+export async function searchClients(searchText: string) {
+  const dbUser = await getCurrentUserWithRole();
+  if (!dbUser) throw new Error("User not found");
+
+  const client = await prisma.client.findFirst({
+    where: {
+      OR: [{ fullName: { contains: searchText } },
+      { nic: { contains: searchText } },
+      { proposalFormNo: { contains: searchText } }],
+
+      ...(dbUser.role === "ADMIN" || dbUser.role === "HR" || dbUser.role === "DEV"
+        ? {}
+        : { branchId: Number(dbUser.branchId) }),
+    }
+
+  })
+  return client;
 }

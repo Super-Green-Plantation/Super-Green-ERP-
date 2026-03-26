@@ -33,22 +33,22 @@ const MaturityBadge = ({ maturityDate, isMatured }: {
   const days = getDaysUntilMaturity(maturityDate);
 
   if (isMatured || days < 0) return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-50 text-red-600 border border-red-100 rounded-full text-[10px] font-black uppercase">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-50 text-red-600 border border-red-100 rounded-full text-[10px] font-bold uppercase">
       Matured
     </span>
   );
   if (days === 0) return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 text-amber-600 border border-amber-100 rounded-full text-[10px] font-black uppercase">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 text-amber-600 border border-amber-100 rounded-full text-[10px] font-bold uppercase">
       Today
     </span>
   );
   if (days <= 30) return (
-    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-[10px] font-black">
+    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-[10px] font-bold">
       <AlertCircle className="w-2.5 h-2.5" />{days}d left
     </span>
   );
   return (
-    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-full text-[10px] font-black">
+    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-full text-[10px] font-bold">
       {days}d left
     </span>
   );
@@ -75,7 +75,7 @@ export default function InvestmentsPage() {
             <BanknoteArrowUp className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight">Investments</h1>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Investments</h1>
             <p className="text-sm text-slate-500 font-medium mt-0.5">
               {total} total investments
             </p>
@@ -85,14 +85,14 @@ export default function InvestmentsPage() {
           {investments.length > 0 && (
             <button
               onClick={() => generateInvestmentsReportPDF(investments)}
-              className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-emerald-600 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all active:scale-95"
+              className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-emerald-600 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all active:scale-95"
             >
               <Download className="w-4 h-4 text-emerald-400" /> Export
             </button>
           )}
           <Link
             href="/features/investments/create"
-            className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-blue-600 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-slate-900/20 active:scale-95"
+            className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-blue-600 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-slate-900/20 active:scale-95"
           >
             <BanknoteArrowUp className="w-4 h-4" /> New Investment
           </Link>
@@ -105,7 +105,7 @@ export default function InvestmentsPage() {
           <div className="p-4 bg-slate-50 rounded-2xl w-fit mx-auto mb-4">
             <Wallet className="w-10 h-10 text-slate-200" />
           </div>
-          <h3 className="text-sm font-black text-slate-600 uppercase tracking-widest mb-2">
+          <h3 className="text-sm font-bold text-slate-600 uppercase tracking-widest mb-2">
             No investments yet
           </h3>
           <p className="text-xs text-slate-400 font-medium mb-6">
@@ -113,7 +113,7 @@ export default function InvestmentsPage() {
           </p>
           <Link
             href="/features/investments/create"
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-blue-600 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all active:scale-95"
+            className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-blue-600 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all active:scale-95"
           >
             <BanknoteArrowUp className="w-4 h-4" /> Create Investment
           </Link>
@@ -125,8 +125,8 @@ export default function InvestmentsPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-slate-50/50 border-b border-slate-200">
-                  {["Ref", "Client", "Plan", "Amount", "Inv. Date", "Maturity", "Advisor", "Actions"].map(h => (
-                    <th key={h} className={`px-5 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500 ${h === "Actions" ? "text-center" : ""}`}>
+                  {["Proposal No.", "Client", "Plan", "Amount", "Inv. Date", "Maturity", "Advisor", "Actions"].map(h => (
+                    <th key={h} className={`px-5 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-500 ${h === "Actions" ? "text-center" : ""}`}>
                       {h}
                     </th>
                   ))}
@@ -138,7 +138,7 @@ export default function InvestmentsPage() {
 
                     <td className="px-5 py-4">
                       <span className="text-[11px] font-bold text-slate-400 font-mono">
-                        {inv.refNumber ?? `#${inv.id}`}
+                        {inv.client?.proposalFormNo ?? `#${inv.id}`}
                       </span>
                     </td>
 
@@ -168,7 +168,7 @@ export default function InvestmentsPage() {
                     </td>
 
                     <td className="px-5 py-4">
-                      <p className="text-sm font-black text-slate-800">
+                      <p className="text-sm font-bold text-slate-800">
                         Rs. {fmt(inv.amount)}
                       </p>
                     </td>
@@ -210,7 +210,7 @@ export default function InvestmentsPage() {
                     <td className="px-5 py-4 text-center">
                       <Link
                         href={`/features/clients/${inv.clientId}`}
-                        className="inline-flex items-center gap-1.5 text-slate-400 hover:text-blue-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 transition-all rounded-xl px-3 py-1.5 text-[11px] font-black uppercase tracking-tight"
+                        className="inline-flex items-center gap-1.5 text-slate-400 hover:text-blue-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 transition-all rounded-xl px-3 py-1.5 text-[11px] font-bold uppercase tracking-tight"
                       >
                         View <ExternalLink className="w-3 h-3" />
                       </Link>

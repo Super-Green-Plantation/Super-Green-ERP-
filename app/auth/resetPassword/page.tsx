@@ -52,7 +52,7 @@ export default function ForgotPassword() {
           <div className="inline-flex overflow-hidden items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-2xl shadow-white/5 mb-6">
             <Image src="/logo.jpeg" alt="Logo" width={64} height={60} className="object-cover" />
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tighter uppercase">
+          <h1 className="text-2xl font-bold text-white tracking-tighter uppercase">
             Reset Access
           </h1>
           <p className="text-[11px] font-bold text-slate-500 uppercase tracking-[0.3em] mt-2">
@@ -71,7 +71,7 @@ export default function ForgotPassword() {
 
             {/* Email Field */}
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
                 Authorized Email
               </label>
               <div className="relative group">
@@ -93,7 +93,7 @@ export default function ForgotPassword() {
             <button
               type="submit"
               disabled={loading || email === ""}
-              className="group relative w-full bg-white hover:bg-slate-100 disabled:bg-slate-800 disabled:text-slate-500 text-slate-950 rounded-2xl py-4 text-[11px] font-black uppercase tracking-[0.2em] transition-all shadow-xl shadow-white/5 active:scale-[0.98] flex items-center justify-center gap-2 overflow-hidden"
+              className="group relative w-full bg-white hover:bg-slate-100 disabled:bg-slate-800 disabled:text-slate-500 text-slate-950 rounded-2xl py-4 text-[11px] font-bold uppercase tracking-[0.2em] transition-all shadow-xl shadow-white/5 active:scale-[0.98] flex items-center justify-center gap-2 overflow-hidden"
             >
               {loading ? (
                 <Loader2 size={16} className="animate-spin" />
@@ -109,7 +109,7 @@ export default function ForgotPassword() {
             <div className="text-center pt-2">
               <Link 
                 href="/auth/signin" 
-                className="inline-flex items-center gap-2 text-[10px] font-black text-slate-500 hover:text-white uppercase tracking-widest transition-colors"
+                className="inline-flex items-center gap-2 text-[10px] font-bold text-slate-500 hover:text-white uppercase tracking-widest transition-colors"
               >
                 <ArrowLeft size={12} />
                 Back to Authentication

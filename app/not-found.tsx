@@ -12,7 +12,7 @@ export default function NotFound() {
           <div className="bg-blue-50 p-6 rounded-3xl inline-block ring-1 ring-blue-100">
             <FileQuestion className="w-16 h-16 text-blue-600 animate-pulse" />
           </div>
-          <span className="absolute -bottom-2 -right-2 bg-white px-3 py-1 rounded-full text-xs font-black text-gray-400 border border-gray-100 shadow-sm">
+          <span className="absolute -bottom-2 -right-2 bg-white px-3 py-1 rounded-full text-xs font-bold text-gray-400 border border-gray-100 shadow-sm">
             ERROR 404
           </span>
         </div>

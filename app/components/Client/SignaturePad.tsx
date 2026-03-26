@@ -62,11 +62,11 @@ export default function SignaturePad() {
 
         <div className="absolute top-2 sm:right-4 right-6 pointer-events-none">
           {confirmed ? (
-            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-green-500">
+            <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-green-500">
               ✓ Signature confirmed
             </span>
           ) : (
-            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 opacity-50">
+            <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-gray-400 opacity-50">
               Sign inside the box
             </span>
           )}
@@ -78,7 +78,7 @@ export default function SignaturePad() {
           <button
             type="button"
             onClick={clear}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 hover:bg-red-50 hover:text-red-600 hover:border-red-100 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 hover:bg-red-50 hover:text-red-600 hover:border-red-100 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all"
           >
             <Eraser className="w-3 h-3" />
             Clear
@@ -88,7 +88,7 @@ export default function SignaturePad() {
             type="button"
             onClick={saveSignature}
             disabled={saving}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 disabled:opacity-50 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+            className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 disabled:opacity-50 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all"
           >
             {saving ? (
               <>

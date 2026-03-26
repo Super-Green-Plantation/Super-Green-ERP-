@@ -119,7 +119,7 @@ const UpdateDocsModal = ({ isOpen, onClose, onSave }: UpdateDocsModalProps) => {
               <div className="p-1.5 bg-blue-50 rounded-lg">
                 <CloudLightning size={16} className="text-blue-600" />
               </div>
-              <h2 className="text-xl font-black text-slate-900 tracking-tighter">
+              <h2 className="text-xl font-bold text-slate-900 tracking-tighter">
                 Update KYC Vault
               </h2>
             </div>
@@ -145,10 +145,10 @@ const UpdateDocsModal = ({ isOpen, onClose, onSave }: UpdateDocsModalProps) => {
 
               return (
                 <div key={doc.id} className="group relative">
-                  <label className="block mb-2 text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">
+                  <label className="block mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">
                     {doc.label}
                   </label>
-                  <div className="relative flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50 group-hover:bg-white group-hover:border-blue-400 transition-all cursor-pointer min-h-[140px]">
+                  <div className="relative flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50 group-hover:bg-white group-hover:border-blue-400 transition-all cursor-pointer min-h-35">
                     <input
                       type="file"
                       accept="image/*,application/pdf"
@@ -162,7 +162,7 @@ const UpdateDocsModal = ({ isOpen, onClose, onSave }: UpdateDocsModalProps) => {
                         {isPDF ? (
                           <div className="flex flex-col items-center gap-1">
                             <FileText className="w-10 h-10 text-slate-400" />
-                            <p className="text-[10px] text-slate-500 font-medium truncate max-w-[140px]">
+                            <p className="text-[10px] text-slate-500 font-medium truncate max-w-35">
                               {file.name}
                             </p>
                           </div>
@@ -204,7 +204,7 @@ const UpdateDocsModal = ({ isOpen, onClose, onSave }: UpdateDocsModalProps) => {
           {/* Warning */}
           <div className="mt-6 p-4 bg-orange-50 border border-orange-100 rounded-2xl flex gap-3">
             <div className="w-5 h-5 rounded-full bg-orange-500 text-white flex items-center justify-center shrink-0">
-              <span className="text-[10px] font-black">!</span>
+              <span className="text-[10px] font-bold">!</span>
             </div>
             <p className="text-[11px] font-bold text-orange-700 leading-relaxed">
               Uploading new documents will replace the current files in the secure vault. This action is permanent.
@@ -216,14 +216,14 @@ const UpdateDocsModal = ({ isOpen, onClose, onSave }: UpdateDocsModalProps) => {
         <div className="px-8 py-6 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3">
           <button
             onClick={onClose}
-            className="px-6 py-3 text-[11px] font-black uppercase tracking-widest text-slate-500 hover:text-slate-900 transition-colors"
+            className="px-6 py-3 text-[11px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-900 transition-colors"
           >
             Cancel
           </button>
           <button
             disabled={isUploading}
             onClick={handleUpdate}
-            className="flex items-center gap-2 px-8 py-3.5 bg-slate-900 hover:bg-blue-600 disabled:bg-slate-400 text-white rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] transition-all shadow-xl shadow-slate-200 active:scale-95"
+            className="flex items-center gap-2 px-8 py-3.5 bg-slate-900 hover:bg-blue-600 disabled:bg-slate-400 text-white rounded-2xl text-[11px] font-bold uppercase tracking-[0.15em] transition-all shadow-xl shadow-slate-200 active:scale-95"
           >
             {isUploading ? (
               <>

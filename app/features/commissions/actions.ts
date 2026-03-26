@@ -13,6 +13,75 @@ function generateCommissionRef() {
   return `COM-${Date.now()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
 }
 
+export async function getCommissionStats() {
+  try {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    
+    const last7Days = new Array(7).fill(0).map((_, i) => {
+      const d = new Date();
+      d.setDate(now.getDate() - (6 - i));
+      d.setHours(0, 0, 0, 0);
+      return d;
+    });
+
+    const [
+      totalSum,
+      monthlySum,
+      count,
+      heatmapRaw,
+      recentCommissions
+    ] = await Promise.all([
+      prisma.commission.aggregate({
+        _sum: { amount: true },
+      }),
+      prisma.commission.aggregate({
+        _sum: { amount: true },
+        where: {
+          createdAt: { gte: startOfMonth }
+        }
+      }),
+      prisma.commission.count(),
+      prisma.commission.groupBy({
+        by: ['createdAt'],
+        _count: { id: true },
+        where: {
+          createdAt: { gte: last7Days[0] }
+        }
+      }),
+      prisma.commission.findMany({
+        take: 5,
+        orderBy: { createdAt: "desc" },
+        include: {
+          member: true,
+          investment: {
+            include: { client: true, plan: true }
+          },
+          Branch: true
+        }
+      })
+    ]);
+
+    const heatmap = last7Days.map(date => {
+      const match = heatmapRaw.find(d => 
+        new Date(d.createdAt).toDateString() === date.toDateString()
+      );
+      return match ? match._count.id : 0;
+    });
+
+    return {
+      totalSum: totalSum._sum.amount || 0,
+      monthlySum: monthlySum._sum.amount || 0,
+      count,
+      heatmap,
+      recentCommissions: serializeData(recentCommissions)
+    };
+  } catch (error) {
+    console.error("Error fetching commission stats:", error);
+    throw new Error("Failed to fetch commission stats");
+  }
+}
+
 // Get employee commissions
 export async function getEmployeeCommissions(empNo: number) {
   try {
@@ -86,7 +155,7 @@ export async function processCommissions(data: {
 
     const uplines = await getUplineChain(advisor.position.rank, branchId);
 
-    
+
     const result = await prisma.$transaction(async (tx) => {
       const createdCommissions: any[] = [];
 
@@ -108,34 +177,33 @@ export async function processCommissions(data: {
         return serializeData({ alreadyProcessed: true, investment, commissions: existingCommissions });
       }
 
+      console.log(advisor);
 
       if (!advisor.position) throw new ApiError("POSITION_MISSING", "Advisor has no position");
-      if (!advisor.position.salary) throw new ApiError("SALARY_CONFIG_MISSING", "No salary config for position");
+
+      // Only require salary config for permanent employees
+      if (advisor.status !== "PROBATION" && !advisor.position.salary) {
+        throw new ApiError("SALARY_CONFIG_MISSING", "No salary config for position");
+      }
 
       const now = new Date();
       const year = now.getFullYear();
       const month = now.getMonth() + 1;
 
-      // Get current month's accumulated volume BEFORE this investment
       const currentPayroll = await tx.monthlyPayroll.findUnique({
-        where: {
-          memberId_year_month: {
-            memberId: advisor.id,
-            year,
-            month,
-          },
-        },
+        where: { memberId_year_month: { memberId: advisor.id, year, month } },
       });
 
       const volumeBefore = Number(currentPayroll?.volumeAchieved ?? 0);
       const volumeAfter = volumeBefore + investment.amount;
-      const { commThreshold } = advisor.position.salary;
+      const commThreshold = Number(advisor.position.salary?.commThreshold ?? 500000);
 
-      // commRate is determined by status and whether total volume (after this investment) crosses the threshold
       const commRate =
         advisor.status === "PROBATION"
           ? volumeAfter < commThreshold ? 0.07 : 0.10
-          : volumeAfter < commThreshold ? 0.05 : 0.08;
+          : volumeAfter < commThreshold
+            ? Number(advisor.position.salary?.commRateLow ?? 0.05)
+            : Number(advisor.position.salary?.commRateHigh ?? 0.08);
 
       const personalAmount = investment.amount * commRate;
 
@@ -191,7 +259,7 @@ export async function processCommissions(data: {
       createdCommissions.push(uplineRecord);
 
       // Upline commissions — ORC rate from position.salary.orcRate
-      
+
       for (const upline of uplines) {
         if (!upline.position?.orc) continue;
 

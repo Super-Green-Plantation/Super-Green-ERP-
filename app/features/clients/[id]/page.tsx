@@ -156,11 +156,11 @@ console.log(id);
           <Back />
           <div>
 
-            <h2 className="text-lg font-bold text-gray-800">
-              Application Details
+            <h2 className="text-xl font-black text-foreground uppercase tracking-tight">
+              Application Profile
             </h2>
-            <p className="text-sm text-gray-500 font-medium">
-              Ref ID: {formData?.investment.refNumber}
+            <p className="text-sm text-muted-foreground font-medium mt-1">
+              Ref ID: <span className="font-mono text-primary">{formData?.investment.refNumber}</span>
             </p>
           </div>
         </div>
@@ -172,10 +172,10 @@ console.log(id);
               {/* Update Button */}
               <button
                 onClick={() => setShowUpdateModel(true)}
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 hover:bg-blue-600 text-white text-[11px] font-black uppercase tracking-[0.15em] rounded-xl transition-all shadow-lg shadow-slate-900/20 active:scale-95 border border-white/5"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-[0.2em] rounded-xl transition-all shadow-xl shadow-primary/20 active:scale-95 hover:opacity-90"
               >
-                <Pen className="w-4 h-4 text-blue-400" />
-                <span>Update</span>
+                <Pen className="w-4 h-4 fill-current" />
+                <span>Update Profile</span>
               </button>
 
               {/* Download PDF Button */}
@@ -184,9 +184,9 @@ console.log(id);
                   proposalRef.current,
                   `Proposal_${formData?.applicant?.fullName?.replace(/\s+/g, '_')}`
                 )}
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 hover:bg-emerald-600 text-white text-[11px] font-black uppercase tracking-[0.15em] rounded-xl transition-all shadow-lg active:scale-95 border border-white/5"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-xl transition-all shadow-xl shadow-green-500/20 active:scale-95 hover:opacity-90"
               >
-                <Download className="w-4 h-4 text-emerald-400" />
+                <Download className="w-4 h-4" />
                 <span>Download PDF</span>
               </button>
 
@@ -204,10 +204,10 @@ console.log(id);
         {/* Left Column: Applicant & Investment */}
         <div className="lg:col-span-2 space-y-8">
           {/* Section: Applicant */}
-          <section className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-6 py-4 bg-blue-50/50 border-b border-gray-100 flex items-center gap-3">
-              <User className="w-5 h-5 text-blue-600" />
-              <h2 className="font-bold text-gray-800">Applicant Information</h2>
+          <section className="bg-card rounded-3xl shadow-sm border border-border overflow-hidden">
+            <div className="px-6 py-5 bg-primary/5 border-b border-border flex items-center gap-3">
+              <User className="w-5 h-5 text-primary" />
+              <h2 className="text-[11px] font-black uppercase tracking-widest text-foreground">Applicant Information</h2>
             </div>
             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
               <DetailItem
@@ -261,10 +261,10 @@ console.log(id);
           </section>
 
           {/* Section: Beneficiary */}
-          <section className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-6 py-4 bg-green-50/50 border-b border-gray-100 flex items-center gap-3">
+          <section className="bg-card rounded-3xl shadow-sm border border-border overflow-hidden">
+            <div className="px-6 py-5 bg-green-500/10 border-b border-border flex items-center gap-3">
               <HeartHandshake className="w-5 h-5 text-green-600" />
-              <h2 className="font-bold text-gray-800">
+              <h2 className="text-[11px] font-black uppercase tracking-widest text-foreground">
                 Beneficiary Information
               </h2>
             </div>
@@ -292,10 +292,10 @@ console.log(id);
           </section>
 
           {/* Section: Nominee */}
-          <section className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
+          <section className="bg-card rounded-3xl shadow-sm border border-border overflow-hidden">
+            <div className="px-6 py-5 bg-purple-500/10 border-b border-border flex items-center gap-3">
               <User className="w-5 h-5 text-purple-600" />
-              <h2 className="font-bold text-gray-800">Nominee Info</h2>
+              <h2 className="text-[11px] font-black uppercase tracking-widest text-foreground">Nominee Info</h2>
             </div>
             <div className="p-6 space-y-4">
               <DetailItem label="Name" value={formData?.nominee.fullName} />
@@ -317,20 +317,19 @@ console.log(id);
         {/* Right Column: Documents & Investment Plan */}
         <div className="space-y-8">
           {/* Compliance & KYC Documents */}
-          <section className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <section className="bg-card rounded-3xl shadow-sm border border-border overflow-hidden">
 
             <SendDocumentLinkButton clientId={Number(id)} />
 
-            <div className="px-6 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">
+            <div className="px-6 py-5 bg-muted/30 border-b border-border flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-white rounded-lg border border-slate-200 shadow-sm">
-                  <ShieldCheck className="w-5 h-5 text-blue-600" />
+                <div className="p-2 bg-card rounded-lg border border-border shadow-sm">
+                  <ShieldCheck className="w-5 h-5 text-primary" />
                 </div>
-                <h2 className="text-[11px] font-black uppercase tracking-widest text-slate-700">
-                  Documents
+                <h2 className="text-[11px] font-black uppercase tracking-[0.2em] text-foreground">
+                  KYC Documents
                 </h2>
               </div>
-
             </div>
 
             <div className="p-6">
@@ -370,15 +369,15 @@ console.log(id);
                 />
 
                 {/* Signature */}
-                <div className="pt-4 border-t border-slate-100">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
+                <div className="pt-6 border-t border-border">
+                  <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-widest mb-4 ml-1">
                     Verified Digital Signature
                   </p>
-                  <div className="bg-slate-50 rounded-2xl p-6 border border-dashed border-slate-200 flex items-center justify-center group hover:bg-white hover:border-blue-300 transition-all cursor-crosshair">
+                  <div className="bg-muted/30 rounded-2xl p-8 border border-dashed border-border flex items-center justify-center group hover:bg-card hover:border-primary/50 transition-all cursor-crosshair shadow-inner">
                     <img
                       src={formData?.applicant.signature || null}
                       alt="Signature"
-                      className="max-h-20 object-contain mix-blend-multiply opacity-80 group-hover:opacity-100 transition-opacity"
+                      className="max-h-20 object-contain mix-blend-multiply opacity-80 group-hover:opacity-100 transition-opacity dark:invert"
                     />
                   </div>
                 </div>
@@ -386,15 +385,15 @@ console.log(id);
             </div>
 
             {/* Refined Action Footer */}
-            <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100">
+            <div className="px-6 py-5 bg-muted/30 border-t border-border">
               <button
                 onClick={() => setDocShowUpdateModel(true)}
-                className="group relative flex items-center justify-center gap-3 w-full px-6 py-3.5 
-          bg-slate-900 hover:bg-slate-800 text-white rounded-xl
-          text-[11px] font-black uppercase tracking-[0.15em] 
-          transition-all shadow-xl shadow-slate-200 active:scale-[0.98] active:shadow-none"
+                className="group relative flex items-center justify-center gap-3 w-full px-6 py-4 
+          bg-foreground text-background hover:opacity-90 rounded-2xl
+          text-[10px] font-black uppercase tracking-[0.2em] 
+          transition-all active:scale-[0.98] shadow-xl shadow-foreground/5"
               >
-                Update Documents
+                Verify & Update Docs
               </button>
             </div>
           </section>
@@ -484,18 +483,18 @@ console.log(id);
         />
       ) : null}
 
-      <div className="w-full p-4 border border-red-100 bg-red-50/30 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="w-full p-6 border border-destructive/20 bg-destructive/5 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-6 shadow-sm">
         <div>
-          <h4 className="text-red-800 font-bold text-sm">Terminate Application</h4>
-          <p className="text-red-600/70 text-xs">Once deleted, this data is gone forever.</p>
+          <h4 className="text-destructive font-black text-[13px] uppercase tracking-wider">Terminate Application</h4>
+          <p className="text-muted-foreground/60 text-[10px] font-bold uppercase tracking-tight mt-1">Once deleted, this data is gone forever from the ecosystem.</p>
         </div>
 
         <button
           onClick={() => setDeleteDialog(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 active:scale-95 transition-all text-sm font-bold"
+          className="flex items-center gap-2 px-8 py-3 bg-destructive/10 text-destructive border border-destructive/20 rounded-2xl hover:bg-destructive hover:text-destructive-foreground active:scale-95 transition-all text-[10px] font-black uppercase tracking-widest shadow-lg shadow-destructive/5"
         >
           <Trash2 className="w-4 h-4" />
-          Delete Permanent
+          Delete Profile
         </button>
 
         <ConfirmDialog

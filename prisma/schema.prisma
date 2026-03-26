@@ -130,29 +130,6 @@ model PermanentEvaluation {
   @@unique([memberId, year, month])
 }
 
-model PositionSalary {
-  id         Int      @id @default(autoincrement())
-  positionId Int      @unique
-  position   Position @relation(fields: [positionId], references: [id])
-
-  monthlyTarget   Float // e.g. 3_000_000
-  incentiveAmount Float // paid at 100% target
-  allowanceAmount Float // paid at 75% target
-  commRateLow     Float // e.g. 0.05 for probation=0.07
-  commRateHigh    Float // e.g. 0.08 for probation=0.10
-  commThreshold   Float @default(500000)
-
-  epfEmployee Float @default(0.08)
-  epfEmployer Float @default(0.12)
-  etfEmployer Float @default(0.03)
-
-  allowanceThresholdProbation Float @default(0.75)
-  allowanceThresholdPermanent Float @default(1.0)
-
-  basicSalaryPermanent Float @default(0)
-  basicSalaryProbation Float @default(0)
-}
-
 model MonthlyPayroll {
   id       Int    @id @default(autoincrement())
   memberId Int
@@ -182,6 +159,29 @@ model MonthlyPayroll {
   createdAt DateTime @default(now())
 
   @@unique([memberId, year, month])
+}
+
+model PositionSalary {
+  id         Int      @id @default(autoincrement())
+  positionId Int      @unique
+  position   Position @relation(fields: [positionId], references: [id])
+
+  monthlyTarget   Float // e.g. 3_000_000
+  incentiveAmount Float // paid at 100% target
+  allowanceAmount Float // paid at 75% target
+  commRateLow     Float // e.g. 0.05 for probation=0.07
+  commRateHigh    Float // e.g. 0.08 for probation=0.10
+  commThreshold   Float @default(500000)
+
+  epfEmployee Float @default(0.08)
+  epfEmployer Float @default(0.12)
+  etfEmployer Float @default(0.03)
+
+  allowanceThresholdProbation Float @default(0.75)
+  allowanceThresholdPermanent Float @default(1.0)
+
+  basicSalaryPermanent Float @default(0)
+  basicSalaryProbation Float @default(0)
 }
 
 //many side ekata foreign key eka / Parent has an array
@@ -398,6 +398,7 @@ model Client {
   createdAt             DateTime                @default(now())
   updatedAt             DateTime                @updatedAt
   ClientDocumentRequest ClientDocumentRequest[]
+  proposalFormNo     String?                 @unique
 }
 
 model Commission {

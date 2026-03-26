@@ -20,7 +20,7 @@ function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }
   return (
     <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
       <span className="text-slate-500">{icon}</span>
-      <h3 className="text-xs font-black text-slate-600 uppercase tracking-widest">{title}</h3>
+      <h3 className="text-xs font-bold text-slate-600 uppercase tracking-widest">{title}</h3>
     </div>
   );
 }
@@ -105,7 +105,7 @@ function ModeToggle({
           key={mode}
           type="button"
           onClick={() => onChange(mode)}
-          className={`px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all
+          className={`px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all
             ${value === mode ? active : "text-slate-500 hover:text-slate-700"}`}
         >
           {mode === "none" ? "Skip" : mode === "existing" ? "Use Existing" : "Add New"}
@@ -184,7 +184,7 @@ export default function CreateInvestmentForm({ onSuccess }: { onSuccess?: () => 
           <BanknoteArrowUp className="w-6 h-6 text-white" />
         </div>
         <div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">Create Investment</h1>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Create Investment</h1>
           <p className="text-sm text-slate-500 font-medium mt-0.5">Add a new investment for an existing client.</p>
         </div>
         <div className="ml-auto">
@@ -361,7 +361,7 @@ export default function CreateInvestmentForm({ onSuccess }: { onSuccess?: () => 
           type="button"
           onClick={handleSubmit}
           disabled={loading}
-          className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 hover:bg-slate-700 disabled:bg-slate-400 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 shadow-lg shadow-slate-900/20"
+          className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 hover:bg-slate-700 disabled:bg-slate-400 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all active:scale-95 shadow-lg shadow-slate-900/20"
         >
           {loading
             ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating...</>

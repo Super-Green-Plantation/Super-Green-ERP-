@@ -40,7 +40,7 @@ const Commission = () => {
         {canAdd && (
           <Link
             href="/features/commissions/create"
-            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 hover:bg-blue-600 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-xl shadow-slate-200 active:scale-95 mb-5"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 hover:bg-blue-600 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-xl shadow-slate-200 active:scale-95 mb-5"
           >
             <Plus className="w-4 h-4" /> Create Commission
           </Link>

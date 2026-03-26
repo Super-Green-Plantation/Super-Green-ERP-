@@ -40,19 +40,19 @@ const YEARS = [currentYear - 1, currentYear, currentYear + 1];
 
 const StatusBadge = ({ status }: { status: string }) =>
   status === "PERMANENT" ? (
-    <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full text-[10px] font-black uppercase">Permanent</span>
+    <span className="px-3 py-1 bg-green-500/10 text-green-600 border border-green-500/20 rounded-full text-[10px] font-bold uppercase tracking-wider">Permanent</span>
   ) : (
-    <span className="px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-[10px] font-black uppercase">Probation</span>
+    <span className="px-3 py-1 bg-amber-500/10 text-amber-600 border border-amber-500/20 rounded-full text-[10px] font-bold uppercase tracking-wider">Probation</span>
   );
 
 const VolumeBar = ({ achieved, target }: { achieved: number; target: number }) => {
   const pct = Math.min((achieved / target) * 100, 100);
   return (
-    <div className="space-y-1 w-full">
-      <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-        <div className={`h-full rounded-full transition-all ${pct >= 100 ? "bg-emerald-500" : "bg-blue-400"}`} style={{ width: `${pct}%` }} />
+    <div className="space-y-1.5 w-full">
+      <div className="h-2 bg-muted rounded-full overflow-hidden shadow-inner">
+        <div className={`h-full rounded-full transition-all duration-500 ${pct >= 100 ? "bg-green-600" : "bg-primary"}`} style={{ width: `${pct}%` }} />
       </div>
-      <p className="text-[10px] font-bold text-slate-400">{pct.toFixed(0)}% of target</p>
+      <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-tighter">{pct.toFixed(0)}% of target</p>
     </div>
   );
 };
@@ -105,22 +105,22 @@ export default function EvaluationsPage() {
     <div className="max-w-6xl mx-auto sm:px-10 space-y-6">
 
       {/* Header */}
-      <div className="flex items-center gap-4 pb-6 border-b border-slate-100">
+      <div className="flex items-center gap-4 pb-8 border-b border-border">
         
-        <div>
+        <div className="w-full">
           <Heading>Monthly Evaluations</Heading>
-          <p className="text-sm text-slate-500 font-medium mt-0.5">Run probation target evaluations by branch and month.</p>
+          <p className="text-sm text-muted-foreground font-medium mt-2 max-w-2xl">Run probation target evaluations by branch and month to process bonuses.</p>
         </div>
       </div>
 
       {/* Controls */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 space-y-4">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="bg-card rounded-3xl border border-border shadow-sm p-6 space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
           <div>
-            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Branch</label>
+            <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2.5 ml-1">Select Branch</label>
             <div className="relative">
-              <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <select value={selectedBranchId ?? ""} onChange={(e) => { setSelectedBranchId(Number(e.target.value)); setPreviews([]); setRan(false); }} className="w-full pl-9 pr-8 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-800 appearance-none focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all">
+              <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground opacity-50" />
+              <select value={selectedBranchId ?? ""} onChange={(e) => { setSelectedBranchId(Number(e.target.value)); setPreviews([]); setRan(false); }} className="w-full pl-11 pr-10 py-3 bg-muted/30 border border-border rounded-xl text-sm font-bold text-foreground appearance-none focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/50 transition-all cursor-pointer shadow-sm">
                 <option value="" disabled>Select branch...</option>
                 {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
               </select>
@@ -128,39 +128,39 @@ export default function EvaluationsPage() {
             </div>
           </div>
           <div>
-            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Month</label>
+            <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2.5 ml-1">Evaluation Month</label>
             <div className="relative">
-              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <select value={selectedMonth} onChange={(e) => { setSelectedMonth(Number(e.target.value)); setPreviews([]); setRan(false); }} className="w-full pl-9 pr-8 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-800 appearance-none focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all">
+              <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground opacity-50" />
+              <select value={selectedMonth} onChange={(e) => { setSelectedMonth(Number(e.target.value)); setPreviews([]); setRan(false); }} className="w-full pl-11 pr-10 py-3 bg-muted/30 border border-border rounded-xl text-sm font-bold text-foreground appearance-none focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/50 transition-all cursor-pointer shadow-sm">
                 {MONTHS.map((m, i) => <option key={i + 1} value={i + 1}>{m}</option>)}
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
             </div>
           </div>
           <div>
-            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Year</label>
+            <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2.5 ml-1">Fiscal Year</label>
             <div className="relative">
-              <select value={selectedYear} onChange={(e) => { setSelectedYear(Number(e.target.value)); setPreviews([]); setRan(false); }} className="w-full px-3 pr-8 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-800 appearance-none focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 transition-all">
+              <select value={selectedYear} onChange={(e) => { setSelectedYear(Number(e.target.value)); setPreviews([]); setRan(false); }} className="w-full px-4 pr-10 py-3 bg-muted/30 border border-border rounded-xl text-sm font-bold text-foreground appearance-none focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/50 transition-all cursor-pointer shadow-sm">
                 {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
             </div>
           </div>
         </div>
 
         {/* Preview button + filter tabs */}
-        <div className="sm:flex flex-wrap items-center gap-3 ">
-          <button onClick={handlePreview} disabled={!selectedBranchId || loadingPreview} className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-700 disabled:bg-slate-300 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all active:scale-95">
-            {loadingPreview ? <><Loader2 className="w-4 h-4 animate-spin" /> Loading...</> : <><Users className="w-4 h-4" /> Preview Employees</>}
+        <div className="sm:flex flex-wrap items-center gap-4 ">
+          <button onClick={handlePreview} disabled={!selectedBranchId || loadingPreview} className="flex items-center gap-2 px-8 py-3 bg-primary text-primary-foreground text-xs font-bold uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-95 disabled:opacity-50 hover:opacity-90 shadow-xl shadow-primary/10">
+            {loadingPreview ? <><Loader2 className="w-4 h-4 animate-spin" /> Fetching...</> : <><Users className="w-4 h-4" /> Preview List</>}
           </button>
 
           {previews.length > 0 && (
-            <div className="sm:flex sm:items-center gap-1 p-1 bg-slate-100 rounded-xl">
+            <div className="sm:flex sm:items-center gap-1 p-1 bg-muted rounded-2xl border border-border/50 shadow-inner">
               {(["ALL", "PROBATION", "PERMANENT"] as const).map((f) => (
                 <button
                   key={f}
                   onClick={() => setFilter(f)}
-                  className={`px-3 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all ${filter === f ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                  className={`px-4 py-2 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all duration-300 ${filter === f ? "bg-card text-foreground shadow-md" : "text-muted-foreground hover:text-foreground opacity-60"
                     }`}
                 >
                   {f === "ALL" ? `All (${previews.length})` : f === "PROBATION" ? `Probation (${probationCount})` : `Permanent (${permanentCount})`}
@@ -178,60 +178,60 @@ export default function EvaluationsPage() {
           {/* Summary */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
-              { label: "Total Employees", value: previews.length, icon: <Users className="w-4 h-4 text-slate-500" />, color: "bg-slate-50 border-slate-100" },
-              { label: "On Probation", value: probationCount, icon: <AlertCircle className="w-4 h-4 text-amber-500" />, color: "bg-amber-50 border-amber-100" },
-              { label: "Targets Hit", value: `${targetHitCount} / ${probationCount}`, icon: <CheckCircle2 className="w-4 h-4 text-emerald-500" />, color: "bg-emerald-50 border-emerald-100" },
-              { label: "Total Bonuses", value: `Rs. ${fmt(totalPayout)}`, icon: <Award className="w-4 h-4 text-blue-500" />, color: "bg-blue-50 border-blue-100" },
+              { label: "Total Employees", value: previews.length, icon: <Users className="w-4 h-4 text-muted-foreground" />, color: "bg-card border-border" },
+              { label: "On Probation", value: probationCount, icon: <AlertCircle className="w-4 h-4 text-amber-600" />, color: "bg-amber-500/10 border-amber-500/20" },
+              { label: "Targets Hit", value: `${targetHitCount} / ${probationCount}`, icon: <CheckCircle2 className="w-4 h-4 text-green-600" />, color: "bg-green-500/10 border-green-500/20" },
+              { label: "Total Bonuses", value: `Rs. ${fmt(totalPayout)}`, icon: <Award className="w-4 h-4 text-primary" />, color: "bg-primary/5 border-primary/20" },
             ].map((s) => (
-              <div key={s.label} className={`p-4 rounded-xl border ${s.color} flex items-center gap-3`}>
-                <div className="p-2 bg-white rounded-lg shadow-sm shrink-0">{s.icon}</div>
+              <div key={s.label} className={`p-5 rounded-3xl border ${s.color} flex items-center gap-4 shadow-sm`}>
+                <div className="p-2.5 bg-card rounded-xl shadow-sm shrink-0 border border-border/50">{s.icon}</div>
                 <div className="min-w-0">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-wide truncate">{s.label}</p>
-                  <p className="text-sm font-black text-slate-800 truncate">{s.value}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest truncate mb-0.5">{s.label}</p>
+                  <p className="text-sm font-bold text-foreground truncate">{s.value}</p>
                 </div>
               </div>
             ))}
           </div>
 
           {alreadyEvaluatedCount > 0 && !ran && (
-            <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-              <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-              <p className="text-xs font-bold text-amber-800">
-                {alreadyEvaluatedCount} employee{alreadyEvaluatedCount > 1 ? "s" : ""} already evaluated this month. Running again will skip them. Use <span className="font-black">Force Re-run</span> to overwrite.
+            <div className="flex items-start gap-4 p-5 bg-amber-500/10 border border-amber-500/20 rounded-2xl">
+              <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <p className="text-xs font-bold text-amber-700 leading-relaxed uppercase tracking-tight">
+                {alreadyEvaluatedCount} employee{alreadyEvaluatedCount > 1 ? "s" : ""} already evaluated. Use <span className="font-bold underline underline-offset-2 decoration-2">Force Re-run</span> to overwrite existing records.
               </p>
             </div>
           )}
 
           {/* Table */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">
+          <div className="bg-card rounded-3xl border border-border shadow-sm overflow-hidden">
+            <div className="px-6 py-5 border-b border-border bg-muted/30 flex items-center justify-between">
+              <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">
                 {MONTHS[selectedMonth - 1]} {selectedYear} — {branches.find(b => b.id === selectedBranchId)?.name}
               </h3>
-              <span className="text-xs text-slate-400 font-bold">{filtered.length} employees</span>
+              <span className="text-[10px] font-bold text-primary bg-primary/10 px-3 py-1 rounded-full uppercase tracking-tighter">{filtered.length} employees found</span>
             </div>
 
             {/* Desktop */}
             <div className="hidden sm:block overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="bg-slate-50 border-b border-slate-100">
-                    {["Employee", "Position", "Status", "Volume vs Target", "Bonus", "Excess", "Total Payout", ""].map((h) => (
-                      <th key={h} className="px-4 py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">{h}</th>
+                  <tr className="bg-muted border-b border-border">
+                    {["Employee", "Position", "Status", "Volume Progress", "Bonus", "Excess", "Payout", "Status"].map((h) => (
+                      <th key={h} className="px-5 py-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest whitespace-nowrap first:pl-6 last:pr-6">{h}</th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-50">
+                <tbody className="divide-y divide-border">
                   {filtered.map((p) => (
-                    <tr key={p.memberId} className={`transition-colors ${p.alreadyEvaluated ? "bg-slate-50/50" : "hover:bg-blue-50/20"}`}>
-                      <td className="px-4 py-4">
-                        <p className="text-sm font-bold text-slate-800">{p.name}</p>
-                        <p className="text-[10px] text-slate-400 font-medium">#{p.empNo}</p>
+                    <tr key={p.memberId} className={`transition-colors h-20 ${p.alreadyEvaluated ? "bg-muted/30" : "hover:bg-muted/50"}`}>
+                      <td className="px-5 py-4 pl-6">
+                        <p className="text-sm font-bold text-foreground leading-tight">{p.name}</p>
+                        <p className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-tighter mt-1">#{p.empNo}</p>
                       </td>
-                      <td className="px-4 py-4">
-                        <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md text-[10px] font-black uppercase">{p.positionTitle}</span>
+                      <td className="px-5 py-4">
+                        <span className="px-2.5 py-1 bg-muted border border-border rounded-lg text-[9px] font-bold uppercase text-foreground/70">{p.positionTitle}</span>
                       </td>
-                      <td className="px-4 py-4"><StatusBadge status={p.status} /></td>
+                      <td className="px-5 py-4"><StatusBadge status={p.status} /></td>
 
                       {/* Volume column — single, filtered by status */}
                       <td className="px-4 py-4 min-w-40">
@@ -252,17 +252,21 @@ export default function EvaluationsPage() {
                         )}
                       </td>
 
-                      <td className="px-4 py-4">
-                        {p.bonusEarned > 0 ? <span className="text-sm font-black text-emerald-600">+{fmt(p.bonusEarned)}</span> : <span className="text-slate-300">—</span>}
+                      <td className="px-5 py-4">
+                        {p.bonusEarned > 0 ? <span className="text-sm font-bold text-green-600">+{fmt(p.bonusEarned)}</span> : <span className="text-muted-foreground/20">—</span>}
                       </td>
-                      <td className="px-4 py-4">
-                        {p.excessBonus > 0 ? <span className="text-sm font-black text-violet-600">+{fmt(p.excessBonus)}</span> : <span className="text-slate-300">—</span>}
+                      <td className="px-5 py-4">
+                        {p.excessBonus > 0 ? <span className="text-sm font-bold text-primary">+{fmt(p.excessBonus)}</span> : <span className="text-muted-foreground/20">—</span>}
                       </td>
-                      <td className="px-4 py-4">
-                        {p.totalPayout > 0 ? <span className="text-sm font-black text-blue-700">Rs. {fmt(p.totalPayout)}</span> : <span className="text-slate-300">—</span>}
+                      <td className="px-5 py-4">
+                        {p.totalPayout > 0 ? <span className="text-sm font-bold text-foreground tabular-nums">Rs. {fmt(p.totalPayout)}</span> : <span className="text-muted-foreground/20">—</span>}
                       </td>
-                      <td className="px-4 py-4">
-                        {p.alreadyEvaluated && <span className="flex items-center gap-1 text-[10px] font-black text-slate-400"><SkipForward className="w-3 h-3" /> Done</span>}
+                      <td className="px-5 py-4 pr-6">
+                        {p.alreadyEvaluated ? (
+                          <span className="flex items-center gap-1.5 text-[9px] font-bold text-green-600 uppercase tracking-widest"><CheckCircle2 className="w-3.5 h-3.5" /> Evaluated</span>
+                        ) : (
+                          <span className="flex items-center gap-1.5 text-[9px] font-bold text-muted-foreground/40 uppercase tracking-widest">Pending</span>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -285,8 +289,8 @@ export default function EvaluationsPage() {
                   {p.status === "PERMANENT" && p.volumeAchieved > 0 && <p className="text-xs text-slate-500 font-semibold">Volume: Rs. {fmt(p.volumeAchieved)}</p>}
                   {p.totalPayout > 0 && (
                     <div className="flex gap-3 text-xs">
-                      {p.bonusEarned > 0 && <span className="text-emerald-600 font-black">Bonus: +{fmt(p.bonusEarned)}</span>}
-                      {p.excessBonus > 0 && <span className="text-violet-600 font-black">Excess: +{fmt(p.excessBonus)}</span>}
+                      {p.bonusEarned > 0 && <span className="text-emerald-600 font-bold">Bonus: +{fmt(p.bonusEarned)}</span>}
+                      {p.excessBonus > 0 && <span className="text-violet-600 font-bold">Excess: +{fmt(p.excessBonus)}</span>}
                     </div>
                   )}
                 </div>
@@ -295,23 +299,23 @@ export default function EvaluationsPage() {
           </div>
 
           {/* Actions */}
-          <div className="flex flex-col sm:flex-row gap-3 pt-2">
-            <button onClick={() => handleRun(false)} disabled={running} className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all active:scale-95 shadow-lg shadow-blue-500/20">
-              {running ? <><Loader2 className="w-4 h-4 animate-spin" /> Running...</> : <><Play className="w-4 h-4" /> Run Evaluation</>}
+          <div className="flex flex-col sm:flex-row gap-4 pt-4">
+            <button onClick={() => handleRun(false)} disabled={running} className="flex-1 flex items-center justify-center gap-3 px-8 py-4 bg-primary text-primary-foreground text-sm font-bold uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-95 shadow-xl shadow-primary/20 hover:opacity-90 disabled:opacity-50">
+              {running ? <><Loader2 className="w-5 h-5 animate-spin" /> Processing...</> : <><Play className="w-5 h-5 fill-current" /> Run Evaluation Batch</>}
             </button>
             {alreadyEvaluatedCount > 0 && (
-              <button onClick={() => handleRun(true)} disabled={running} className="flex items-center justify-center gap-2 px-6 py-3 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-700 text-xs font-black uppercase tracking-widest rounded-xl transition-all active:scale-95">
-                <RotateCcw className="w-4 h-4" /> Force Re-run All
+              <button onClick={() => handleRun(true)} disabled={running} className="flex items-center justify-center gap-3 px-8 py-4 bg-destructive/10 border border-destructive/20 text-destructive text-sm font-bold uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-95 hover:bg-destructive/20">
+                <RotateCcw className="w-5 h-5" /> Force Re-run
               </button>
             )}
           </div>
 
           {ran && (
-            <div className="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl animate-in fade-in duration-300">
-              <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+            <div className="flex items-center gap-4 p-5 bg-green-500/10 border border-green-500/20 rounded-2xl animate-in zoom-in-95 duration-500">
+              <CheckCircle2 className="w-8 h-8 text-green-600 shrink-0" />
               <div>
-                <p className="text-sm font-black text-emerald-800">Evaluation complete</p>
-                <p className="text-xs text-emerald-600 font-medium">Records saved for {MONTHS[selectedMonth - 1]} {selectedYear}. Total bonuses: Rs. {fmt(totalPayout)}</p>
+                <p className="text-sm font-bold text-green-600 uppercase tracking-widest">Process Synchronized</p>
+                <p className="text-xs text-muted-foreground font-bold mt-1">Records successfully saved for {MONTHS[selectedMonth - 1]} {selectedYear}. Total payout: Rs. {fmt(totalPayout)}</p>
               </div>
             </div>
           )}
@@ -319,9 +323,9 @@ export default function EvaluationsPage() {
       )}
 
       {!loadingPreview && previews.length === 0 && selectedBranchId && (
-        <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed border-slate-100 rounded-2xl">
-          <div className="p-4 bg-slate-50 rounded-2xl mb-4"><TrendingUp className="w-8 h-8 text-slate-300" /></div>
-          <p className="text-sm font-bold text-slate-400">Click "Preview Employees" to load results</p>
+        <div className="flex flex-col items-center justify-center py-32 border-2 border-dashed border-border rounded-[2rem] bg-muted/20">
+          <div className="p-6 bg-card rounded-3xl mb-6 shadow-sm"><TrendingUp className="w-10 h-10 text-muted-foreground opacity-20" /></div>
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.3em] opacity-40">Select options and click Preview</p>
         </div>
       )}
     </div>

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getCommissionDetails } from "../features/commissions/actions";
+import { getCommissionDetails, getCommissionStats } from "../features/commissions/actions";
 
 export const useCommission = () => {
   return useQuery({
@@ -9,5 +9,14 @@ export const useCommission = () => {
     retry: 1,
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,
+  });
+};
+
+export const useCommissionStats = () => {
+  return useQuery({
+    queryKey: ["commissionStats"],
+    queryFn: getCommissionStats,
+    staleTime: 1000 * 60 * 5,
+    retry: 1,
   });
 };

@@ -32,6 +32,7 @@ const UpdateClientModal = ({
       address: "",
       drivingLicense: "",
       passportNo: "",
+      proposalFormNo: "",
       phoneLand: "",
       ...initialData.applicant,
       investmentAmount: initialData?.applicant?.investmentAmount
@@ -103,29 +104,32 @@ const UpdateClientModal = ({
     onClose();
   };
 
+  console.log("datttttttttttt",formData);
+  
+
   const inputClass =
-    "w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all";
+    "w-full bg-muted/30 border border-border rounded-xl px-4 py-3 text-sm font-bold text-foreground focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all placeholder:text-muted-foreground/30";
   const labelClass =
-    "block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 ml-1";
+    "block text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em] mb-2 ml-1";
 
   return (
-    <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white w-full max-w-4xl max-h-[90vh] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+      <div className="bg-card w-full max-w-4xl max-h-[90vh] rounded-[2.5rem] shadow-2xl border border-border overflow-hidden flex flex-col scale-in-center">
         {/* Header */}
-        <div className="px-8 py-6 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
+        <div className="px-10 py-8 border-b border-border flex justify-between items-center bg-card sticky top-0 z-10">
           <div>
-            <h2 className="text-xl font-black text-gray-900 tracking-tight">
-              Modify Investment Record
+            <h2 className="text-2xl font-bold text-foreground uppercase tracking-tight">
+              Update Client Profile
             </h2>
-            <p className="text-xs text-gray-500">
-              Update client profile and beneficiary links
+            <p className="text-xs text-muted-foreground font-medium mt-1">
+              Refined data management for enterprise records
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-3 hover:bg-muted rounded-full transition-all text-muted-foreground hover:text-foreground border border-transparent hover:border-border"
           >
-            <X className="w-5 h-5 text-gray-400" />
+            <X className="w-6 h-6" />
           </button>
         </div>
 
@@ -135,11 +139,11 @@ const UpdateClientModal = ({
           className="overflow-y-auto p-8 space-y-10"
         >
           {/* Personal Info */}
-          <div className="space-y-6">
-            <div className="flex items-center gap-2 pb-2 border-b border-gray-50">
-              <User className="w-4 h-4 text-blue-600" />
-              <h3 className="text-xs font-black uppercase tracking-widest text-gray-800">
-                Personal Information
+          <div className="space-y-8">
+            <div className="flex items-center gap-3 pb-3 border-b border-border">
+              <User className="w-5 h-5 text-primary" />
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-foreground">
+                Applicant Information
               </h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -196,8 +200,8 @@ const UpdateClientModal = ({
               </div>
               <div>
                 <label className={labelClass}>Mobile Phone</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-bold border-r pr-2">
+                <div className="flex items-center h-full">
+                  <span className="h-full flex items-center px-4 bg-muted border border-r-0 border-border rounded-l-xl text-muted-foreground text-sm font-bold">
                     +94
                   </span>
                   <input
@@ -205,15 +209,15 @@ const UpdateClientModal = ({
                     onChange={(e) =>
                       handleChange("applicant", "phoneMobile", e.target.value)
                     }
-                    className={`${inputClass} pl-14`}
+                    className={`${inputClass} rounded-l-none`}
                     placeholder="7XXXXXXXX"
                   />
                 </div>
               </div>
               <div>
                 <label className={labelClass}>Land Phone</label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-bold border-r pr-2">
+                <div className="flex items-center h-full">
+                  <span className="h-full flex items-center px-4 bg-muted border border-r-0 border-border rounded-l-xl text-muted-foreground text-sm font-bold">
                     +94
                   </span>
                   <input
@@ -221,7 +225,7 @@ const UpdateClientModal = ({
                     onChange={(e) =>
                       handleChange("applicant", "phoneLand", e.target.value)
                     }
-                    className={`${inputClass} pl-14`}
+                    className={`${inputClass} rounded-l-none`}
                     placeholder="1XXXXXXXX"
                   />
                 </div>
@@ -247,18 +251,31 @@ const UpdateClientModal = ({
                   className={inputClass}
                 />
               </div>
+
+              <div className="md:col-span-3">
+                <label className={labelClass}>Proposal Form Number</label>
+                <input
+                  type="text"
+                  value={formData.applicant.proposalFormNo}
+                  onChange={(e) =>
+                    handleChange("applicant", "proposalFormNo", e.target.value)
+                  }
+                  className={inputClass}
+                />
+              </div>
+
             </div>
           </div>
 
           {/* Financial Configuration */}
-          <div className="space-y-6 bg-blue-50/50 p-6 rounded-2xl border border-blue-100">
-            <div className="flex items-center gap-2">
-              <Briefcase className="w-4 h-4 text-blue-600" />
-              <h3 className="text-xs font-black uppercase tracking-widest text-gray-800">
-                Financial Configuration
+          <div className="space-y-8 bg-primary/5 p-8 rounded-3xl border border-primary/10">
+            <div className="flex items-center gap-3">
+              <Briefcase className="w-5 h-5 text-primary" />
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-foreground">
+                Portfolio Configuration
               </h3>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
                 <label className={labelClass}>Select Investment Plan</label>
                 <select
@@ -295,11 +312,11 @@ const UpdateClientModal = ({
           </div>
 
           {/* Beneficiary */}
-          <div className="space-y-6">
-            <div className="flex items-center gap-2 pb-2 border-b border-gray-50">
-              <Landmark className="w-4 h-4 text-emerald-600" />
-              <h3 className="text-xs font-black uppercase tracking-widest text-gray-800">
-                Beneficiary (Bank Details)
+          <div className="space-y-8">
+            <div className="flex items-center gap-3 pb-3 border-b border-border">
+              <Landmark className="w-5 h-5 text-emerald-600" />
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-foreground">
+                Beneficiary Banking
               </h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -357,11 +374,11 @@ const UpdateClientModal = ({
           </div>
 
           {/* Nominee */}
-          <div className="space-y-6">
-            <div className="flex items-center gap-2 pb-2 border-b border-gray-50">
-              <Users className="w-4 h-4 text-purple-600" />
-              <h3 className="text-xs font-black uppercase tracking-widest text-gray-800">
-                Nominee Information
+          <div className="space-y-8">
+            <div className="flex items-center gap-3 pb-3 border-b border-border">
+              <Users className="w-5 h-5 text-purple-600" />
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-foreground">
+                Nominee Registry
               </h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -406,19 +423,19 @@ const UpdateClientModal = ({
         </form>
 
         {/* Footer */}
-        <div className="px-8 py-6 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
+        <div className="px-10 py-8 border-t border-border bg-muted/30 flex justify-end gap-4">
           <button
             type="button"
             onClick={onClose}
-            className="px-6 py-2 rounded-xl text-sm font-bold text-gray-500 hover:bg-gray-200 transition-all"
+            className="px-8 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:bg-muted transition-all border border-transparent hover:border-border"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
-            className="px-8 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-all flex items-center gap-2"
+            className="px-10 py-3 bg-primary text-primary-foreground rounded-2xl text-[10px] font-bold uppercase tracking-widest shadow-xl shadow-primary/20 hover:opacity-90 transition-all flex items-center gap-2.5 active:scale-95"
           >
-            <Save className="w-4 h-4" /> Save Changes
+            <Save className="w-4 h-4" /> Finalize Changes
           </button>
         </div>
       </div>

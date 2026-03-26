@@ -34,7 +34,7 @@ export default function BranchStaffPanel({
             />
           </svg>
         </div>
-        <h2 className="text-sm font-black uppercase tracking-widest text-gray-700">
+        <h2 className="text-sm font-bold uppercase tracking-widest text-gray-700">
           Branch & Staff
         </h2>
       </div>

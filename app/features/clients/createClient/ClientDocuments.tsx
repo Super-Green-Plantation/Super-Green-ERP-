@@ -77,7 +77,7 @@ const DocumentUploadSection = ({ pendingFilesRef }: DocumentUploadSectionProps) 
             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10">
               <div className="flex flex-col items-center text-white scale-90 group-hover:scale-100 transition-transform">
                 <UploadCloud className="w-6 h-6 mb-1" />
-                <span className="text-[10px] font-black uppercase tracking-tighter">Replace File</span>
+                <span className="text-[10px] font-bold uppercase tracking-tighter">Replace File</span>
               </div>
             </div>
           </div>
@@ -106,7 +106,7 @@ const DocumentUploadSection = ({ pendingFilesRef }: DocumentUploadSectionProps) 
           <ShieldCheck className="w-5 h-5 text-white" />
         </div>
         <div>
-          <h3 className="text-sm font-black uppercase tracking-widest text-gray-900">
+          <h3 className="text-sm font-bold uppercase tracking-widest text-gray-900">
             Document Compliance
           </h3>
           <p className="text-xs text-gray-500 font-medium">
@@ -120,7 +120,7 @@ const DocumentUploadSection = ({ pendingFilesRef }: DocumentUploadSectionProps) 
         <p className="text-[11px] leading-relaxed text-amber-800 font-medium italic">
           Files must be under 5MB. Select your files below — they will be securely uploaded when you click <strong>Register Client</strong>.
           {selectedCount > 0 && (
-            <span className="ml-1 text-blue-700 not-italic font-black">
+            <span className="ml-1 text-blue-700 not-italic font-bold">
               {selectedCount} file{selectedCount > 1 ? "s" : ""} ready.
             </span>
           )}
@@ -129,7 +129,7 @@ const DocumentUploadSection = ({ pendingFilesRef }: DocumentUploadSectionProps) 
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="space-y-4">
-          <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
+          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
             <ImageIcon className="w-3 h-3" /> Identity (NIC/DL/Passport)
           </label>
           <div className="grid grid-cols-2 gap-4">
@@ -138,7 +138,7 @@ const DocumentUploadSection = ({ pendingFilesRef }: DocumentUploadSectionProps) 
           </div>
         </div>
         <div className="space-y-4">
-          <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
+          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
             <FileText className="w-3 h-3" /> Mandatory Paperwork
           </label>
           <div className="grid lg:grid-cols-3 gap-4">

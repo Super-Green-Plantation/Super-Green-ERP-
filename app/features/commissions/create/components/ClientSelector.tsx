@@ -18,7 +18,7 @@ const ClientSelector = ({
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
       </svg>
     </div>
-    <h2 className="text-sm font-black uppercase tracking-widest text-gray-700">
+    <h2 className="text-sm font-bold uppercase tracking-widest text-gray-700">
       Client Details
     </h2>
   </div>

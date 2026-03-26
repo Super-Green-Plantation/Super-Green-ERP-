@@ -1,58 +1,87 @@
 "use server"
 
-import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/client";
 import { redirect } from "next/navigation";
-
+import { getCurrentUserWithRole } from "@/lib/getCurrentUserWithRole";
+import { serializeData } from "@/app/utils/serializers";
+import { prisma } from "@/lib/prisma";
 
 export async function getDashboardStats() {
   try {
+    const now = new Date();
+    const last7Days = new Array(7).fill(0).map((_, i) => {
+      const d = new Date();
+      d.setDate(now.getDate() - (6 - i));
+      d.setHours(0, 0, 0, 0);
+      return d;
+    });
+
     const [
       investmentSum,
       totCommissionPayout,
       totProfit,
-      getAllInvestment,
+      recentInvestments,
       totClients,
       totMembers,
-      totBranchs
+      totBranches,
+      keyPersonnel,
+      currentUser,
+      heatmapDataRaw
     ] = await Promise.all([
       prisma.investment.aggregate({
-        _sum: {
-          amount: true,
-        },
+        _sum: { amount: true },
       }),
       prisma.profit.aggregate({
-        _sum: {
-          commissionPayout: true,
-        },
+        _sum: { commissionPayout: true },
       }),
       prisma.profit.aggregate({
-        _sum: {
-          totalProfit: true,
-        },
+        _sum: { totalProfit: true },
       }),
       prisma.investment.findMany({
-        // include: {
-        //   // advisor: {
-        //   //   include: {
-        //   //     branches: true,
-        //   //     position: true,
-        //   //   },
-        //   // },
-        //   advisor: {
-        //     include: {
-        //       branches: { include: { branch: true } },
-        //       position: true
-        //     }
-        //   },
-        //   client: true,
-        // },
-        // orderBy: { investmentDate: "desc" },
+        take: 5,
+        orderBy: { investmentDate: "desc" },
+        include: {
+          client: true,
+          advisor: {
+            include: {
+              position: true,
+              branches: { select: { branchId: true } }
+            },
+          },
+        },
       }),
       prisma.client.count(),
       prisma.member.count(),
       prisma.branch.count(),
+      prisma.member.findMany({
+        take: 3,
+        orderBy: {
+          position: { rank: "desc" },
+        },
+        include: {
+          position: true,
+          branches: { select: { branchId: true } }
+        },
+      }),
+      getCurrentUserWithRole(),
+      prisma.investment.groupBy({
+        by: ['investmentDate'],
+        _count: { id: true },
+        where: {
+          investmentDate: {
+            gte: last7Days[0],
+          },
+        },
+      }),
     ]);
+
+    // Map heatmap data to last 7 days
+    const heatmap = last7Days.map(date => {
+      const match = heatmapDataRaw.find(d => 
+        new Date(d.investmentDate).toDateString() === date.toDateString()
+      );
+      return match ? match._count.id : 0;
+    });
 
     return {
       totProfit,
@@ -60,8 +89,11 @@ export async function getDashboardStats() {
       investmentSum,
       totClients,
       totMembers,
-      totBranchs,
-      getAllInvestment,
+      totBranches,
+      recentInvestments: serializeData(recentInvestments),
+      keyPersonnel: serializeData(keyPersonnel),
+      user: serializeData(currentUser),
+      heatmap,
     };
   } catch (error) {
     console.error("Error fetching dashboard stats:", error);

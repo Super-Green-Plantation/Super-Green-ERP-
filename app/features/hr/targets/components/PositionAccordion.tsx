@@ -7,6 +7,7 @@ import FaTargetConfig from "./FaTargetConfig";
 import NonFaTargetConfig from "./NonFaTargetConfig";
 import { Position } from "@/app/types/Position";
 import { PositionWithTargets } from "@/app/types/PositionWithTargets";
+import { useState } from "react";
 
 interface PositionAccordionProps {
   position: PositionWithTargets;
@@ -32,79 +33,88 @@ interface PositionAccordionProps {
 
 export default function PositionAccordion({
   position, isExpanded, isSaving, edit, syncedMonths, syncKey,
-  onToggle, onSave, onUpdateRow, onUpdateFa, onUpdateOrc, onSyncToggle,onUpdateAfter6Month
+  onToggle, onSave, onUpdateRow, onUpdateFa, onUpdateOrc, onSyncToggle, onUpdateAfter6Month
 }: PositionAccordionProps) {
   const isFa = position.rank === 1;
   const rankColor = RANK_COLORS[position.rank] ?? RANK_COLORS[1];
   const hasTargets = position.positionTargets?.length > 0;
+  const [probation, setProbation] = useState(position.isProbation);
+  console.log(position);
 
   return (
-    <div className={`bg-white rounded-2xl border transition-all duration-200 overflow-hidden
-      ${isExpanded ? "border-slate-300 shadow-md" : "border-slate-100 shadow-sm"}`}
-    >
-      {/* Header */}
-      <div
-        role="button" tabIndex={0}
-        onClick={onToggle}
-        onKeyDown={(e) => e.key === "Enter" && onToggle()}
-        className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50/50 transition-colors cursor-pointer"
-      >
-        <div className="sm:flex items-center gap-3">
-          <span className={`px-3 py-1 mb-2 rounded-lg text-xs font-black border uppercase tracking-wider ${rankColor}`}>
-            {position.title}
-          </span>
-          <span className="text-xs text-slate-400 font-bold pl-2">Rank {position.rank}</span>
-          {hasTargets && (
-            <span className="flex items-center gap-1 text-[10px] mt-2 font-black text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
-              <CheckCircle2 className="w-3 h-3" /> Configured
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-3">
-          {isExpanded && (
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); onSave(); }}
-              disabled={isSaving}
-              className="flex items-center gap-2 px-4 py-1.5 bg-slate-900 hover:bg-slate-700 disabled:bg-slate-400 text-white text-[11px] font-black uppercase tracking-widest rounded-lg transition-all active:scale-95"
-            >
-              {isSaving
-                ? <><Loader2 className="w-3 h-3 animate-spin" /> Saving...</>
-                : <><Save className="w-3 h-3" /> Save</>
+    <>{probation && (
+      <div>
+        <div className={`bg-card rounded-2xl border transition-all duration-300 overflow-hidden
+      ${isExpanded ? "border-primary/30 shadow-xl" : "border-border shadow-sm"}`}
+        >
+          {/* Header */}
+          <div
+            role="button" tabIndex={0}
+            onClick={onToggle}
+            onKeyDown={(e) => e.key === "Enter" && onToggle()}
+            className="w-full flex items-center justify-between px-6 py-5 hover:bg-muted/30 transition-colors cursor-pointer"
+          >
+            <div className="sm:flex items-center gap-4">
+              <span className={`px-4 py-1.5 rounded-xl text-[10px] font-bold border uppercase tracking-widest ${rankColor}`}>
+                {position.title}
+              </span>
+              <span className="text-[10px] text-muted-foreground/60 font-bold uppercase tracking-tighter">Rank {position.rank}</span>
+              {hasTargets && (
+                <span className="flex items-center gap-1.5 text-[10px] font-bold text-green-600 bg-green-500/10 border border-green-500/20 px-3 py-1 rounded-full uppercase tracking-tight">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Configured
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-3">
+              {isExpanded && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onSave(); }}
+                  disabled={isSaving}
+                  className="flex items-center gap-2 px-5 py-2 bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-[0.2em] rounded-xl transition-all active:scale-95 disabled:opacity-50 hover:opacity-90 shadow-lg shadow-primary/10"
+                >
+                  {isSaving
+                    ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...</>
+                    : <><Save className="w-3.5 h-3.5" /> Save Changes</>
+                  }
+                </button>
+              )}
+              {isExpanded
+                ? <ChevronDown className="w-4 h-4 text-slate-400" />
+                : <ChevronRight className="w-4 h-4 text-slate-400" />
               }
-            </button>
+            </div>
+          </div>
+
+          {/* Body */}
+          {isExpanded && edit && (
+            <div className="border-t border-border px-6 pb-8 pt-8 bg-card">
+              {isFa ? (
+                <FaTargetConfig
+                  fa={edit.fa}
+                  positionId={position.id}
+                  onUpdate={onUpdateFa}
+                />
+              ) : (
+                <NonFaTargetConfig
+                  positionId={position.id}
+                  edit={edit}
+                  syncedMonths={syncedMonths}
+                  syncKey={syncKey}
+                  onUpdateRow={onUpdateRow}
+                  onSyncToggle={onSyncToggle}
+                  onUpdateOrc={onUpdateOrc}
+                  after6MonthTarget={edit.after6MonthTarget}
+                  onUpdateAfter6Month={onUpdateAfter6Month}
+                />
+              )}
+            </div>
           )}
-          {isExpanded
-            ? <ChevronDown className="w-4 h-4 text-slate-400" />
-            : <ChevronRight className="w-4 h-4 text-slate-400" />
-          }
         </div>
       </div>
+    )}
+    </>
 
-      {/* Body */}
-      {isExpanded && edit && (
-        <div className="border-t border-slate-100 px-5 pb-6 pt-5">
-          {isFa ? (
-            <FaTargetConfig
-              fa={edit.fa}
-              positionId={position.id}
-              onUpdate={onUpdateFa}
-            />
-          ) : (
-            <NonFaTargetConfig
-              positionId={position.id}
-              edit={edit}
-              syncedMonths={syncedMonths}
-              syncKey={syncKey}
-              onUpdateRow={onUpdateRow}
-              onSyncToggle={onSyncToggle}
-              onUpdateOrc={onUpdateOrc}
-              after6MonthTarget={edit.after6MonthTarget}
-              onUpdateAfter6Month={onUpdateAfter6Month}
-            />
-          )}
-        </div>
-      )}
-    </div>
+
   );
 }

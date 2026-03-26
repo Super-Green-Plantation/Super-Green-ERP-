@@ -53,7 +53,7 @@ const SubField = ({
 
 // ─── Shared company header (re-used on both pages) ───────────────────────────
 
-const CompanyHeader = ({ refNumber }: { refNumber?: string }) => (
+const CompanyHeader = ({ data }: { data?: any }) => (
   <>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
       <div>
@@ -68,11 +68,11 @@ const CompanyHeader = ({ refNumber }: { refNumber?: string }) => (
         </div>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
-        <img src="/logo.jpeg" alt="Logo" style={{ width: '75px', height: '82px', objectFit: 'contain' }} />
+        <img src="/logo.png" alt="Logo" style={{ width: '75px', height: '82px', objectFit: 'contain' }} />
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '10px' }}>
           <span style={{ fontWeight: 'bold', whiteSpace: 'nowrap' }}>P/No :</span>
           <span style={{ color: '#cc0000', fontWeight: 'bold', fontSize: '14px' }}>
-            {refNumber || '0152'}
+            {data?.applicant.proposalFormNo}
           </span>
         </div>
       </div>
@@ -123,6 +123,9 @@ export const ProposalTemplate = React.forwardRef(({ data, plan }: any, ref: any)
   const b = data?.beneficiary ?? {};
   const n = data?.nominee ?? {};
 
+  console.log("===========",data);
+  
+
   const investmentDate = a.investmentDate ?? '';
   const investmentRate = a.investmentRate ?? plan?.rate ?? '';
   const monthlyReturn  = a.monthlyReturn  ?? plan?.monthlyReturn  ?? '';
@@ -136,7 +139,7 @@ export const ProposalTemplate = React.forwardRef(({ data, plan }: any, ref: any)
           ║  PAGE 1 — Applicant + Beneficiary        ║
           ╚═══════════════════════════════════════════╝ */}
       <Page>
-        <CompanyHeader refNumber={data?.investment?.refNumber} />
+        <CompanyHeader data={data} />
 
         {/* ── APPLICANT BOX ── */}
         <div style={{ border: '1px solid #000', paddingBottom: '10px', marginTop: '6px' }}>
@@ -265,7 +268,7 @@ export const ProposalTemplate = React.forwardRef(({ data, plan }: any, ref: any)
           ║  PAGE 2 — Nominee Details                ║
           ╚═══════════════════════════════════════════╝ */}
       <Page>
-        <CompanyHeader refNumber={data?.investment?.refNumber} />
+        <CompanyHeader data={data} />
 
         {/* ── NOMINEE BOX — 2 columns ── */}
         <div style={{ border: '1px solid #000', marginTop: '6px' }}>

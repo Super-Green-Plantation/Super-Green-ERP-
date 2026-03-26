@@ -108,8 +108,8 @@ const Sidebar = ({ role, loading, isCollapsed, setIsCollapsed, onNavigate }: Sid
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         className={`flex-1 overflow-y-auto
           fixed left-0 top-0 h-screen
-          bg-gray-900 text-gray-100
-          border-r border-gray-800
+          bg-sidebar text-sidebar-foreground
+          border-r border-sidebar-border
           transition-all duration-300
           z-50
           ${isCollapsed ? "w-20" : "w-64"}
@@ -118,8 +118,8 @@ const Sidebar = ({ role, loading, isCollapsed, setIsCollapsed, onNavigate }: Sid
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-6 overflow-hidden">
           {!isCollapsed && (
-            <span className="flex text-xl font-black tracking-tighter text-white whitespace-nowrap animate-in fade-in duration-500">
-              <div className="mr-3 overflow-hidden rounded-full bg-white flex items-center justify-center">
+            <span className="flex text-xl font-bold tracking-tighter text-sidebar-foreground whitespace-nowrap animate-in fade-in duration-500">
+              <div className="mr-3 overflow-hidden rounded-full bg-card flex items-center justify-center">
                 <Image
                   src="/logo.png"
                   alt="logo"
@@ -128,12 +128,12 @@ const Sidebar = ({ role, loading, isCollapsed, setIsCollapsed, onNavigate }: Sid
                   className="object-cover h-8 w-8"
                 />
               </div>
-              <span className="text-green-500 mr-2">SGP</span> ERP
+              <span className="text-primary mr-2">SGP</span> ERP
             </span>
           )}
           <button
             onClick={toggleSidebar}
-            className={`p-2 rounded-xl bg-gray-800 hover:bg-gray-700 transition-colors ${isCollapsed ? "mx-auto" : ""}`}
+            className={`p-2 rounded-xl bg-sidebar-accent hover:bg-sidebar-accent/80 transition-colors ${isCollapsed ? "mx-auto" : ""}`}
           >
             {isCollapsed ? <Menu size={20} /> : <ChevronLeft size={20} />}
           </button>
@@ -169,15 +169,15 @@ const Sidebar = ({ role, loading, isCollapsed, setIsCollapsed, onNavigate }: Sid
                   transition-all duration-200
                   group
                   ${isActive
-                    ? "bg-gray-600 text-white shadow-lg shadow-blue-900/20"
-                    : "text-gray-400 hover:bg-gray-800 hover:text-white"
+                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                   }
                 `}
               >
                 <div className="shrink-0">
                   <Icon
                     size={22}
-                    className={isActive ? "text-white" : "group-hover:text-blue-400"}
+                    className={isActive ? "text-primary-foreground" : "group-hover:text-primary"}
                   />
                 </div>
                 {!isCollapsed && (
@@ -191,12 +191,12 @@ const Sidebar = ({ role, loading, isCollapsed, setIsCollapsed, onNavigate }: Sid
         </nav>
 
         {/* Logout */}
-        <div className="p-4 border-t border-gray-800 bg-gray-900/50">
+        <div className="p-4 border-t border-sidebar-border bg-sidebar">
           <form action={logout}>
             <button
               type="submit"
               title={isCollapsed ? "Logout" : ""}
-              className="flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-bold text-gray-400 hover:bg-red-500/10 hover:text-red-500 transition-all group w-full text-left"
+              className="flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-bold text-sidebar-foreground/70 hover:bg-destructive/10 hover:text-destructive transition-all group w-full text-left"
             >
               <div className="shrink-0">
                 <LogOut size={22} className="group-hover:rotate-12 transition-transform" />

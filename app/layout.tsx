@@ -1,7 +1,19 @@
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import Toast from "./Toast";
+import { Inter, Manrope } from "next/font/google";
 
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const manrope = Manrope({
+  subsets: ["latin"],
+  variable: "--font-manrope",
+  display: "swap",
+});
 
 export default function RootLayout({
   children,
@@ -9,11 +21,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${inter.variable} ${manrope.variable}`}>
       <head>
         <link rel="icon" href="/logo.png" />
       </head>
-      <body className="antialiased">
+      <body className="antialiased font-sans">
         <Analytics />
         <Toast>{children}</Toast>
       </body>

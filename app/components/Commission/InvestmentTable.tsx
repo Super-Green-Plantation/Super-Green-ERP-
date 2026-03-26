@@ -52,12 +52,12 @@ useEffect(() => {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-50/50 border-b border-slate-200">
-              <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">Trace ID</th>
-              <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">Branch Name</th>
-              <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">Member / Client</th>
-              <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">Plan Type</th>
-              <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">Amount</th>
-              <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500 text-right">View</th>
+              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-500">Trace ID</th>
+              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-500">Branch Name</th>
+              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-500">Member / Client</th>
+              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-500">Plan Type</th>
+              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-500">Amount</th>
+              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-500 text-right">View</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 relative min-h-50">
@@ -100,14 +100,14 @@ useEffect(() => {
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-black bg-blue-50 text-blue-600 border border-blue-100 uppercase tracking-tight">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[10px] font-bold bg-blue-50 text-blue-600 border border-blue-100 uppercase tracking-tight">
                     {item.investment.plan?.name || "N/A"}
                   </span>
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-baseline gap-1">
                     <span className="text-[10px] font-bold text-emerald-500 uppercase">Rs.</span>
-                    <span className="text-sm font-black text-slate-900 tabular-nums">
+                    <span className="text-sm font-bold text-slate-900 tabular-nums">
                       {item.amount.toLocaleString()}
                     </span>
                   </div>

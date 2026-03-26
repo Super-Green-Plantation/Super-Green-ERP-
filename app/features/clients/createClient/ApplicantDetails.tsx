@@ -10,7 +10,7 @@ import { useEffect, useState } from "react";
 
 const ApplicantDetails = () => {
   const { form } = useFormContext();
-  const { register , reset} = form;
+  const { register } = form;
 
   const [branch, setBranch] = useState<Branch[] | null>(null);
   const [plans, setPlans] = useState<FinancialPlan[] | null>([]);
@@ -38,12 +38,12 @@ const ApplicantDetails = () => {
   }, []);
 
   const inputClass = "bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 focus:bg-white outline-none transition-all w-full";
-  const labelClass = "text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1 ml-1";
+  const labelClass = "text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1 ml-1";
 
   return (
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
       <div className="px-8 py-5 bg-gray-50/50 border-b border-gray-100 flex items-center gap-2">
-        <h2 className="text-xs font-black uppercase tracking-widest text-gray-800">Primary Applicant Information</h2>
+        <h2 className="text-xs font-bold uppercase tracking-widest text-gray-800">Primary Applicant Information</h2>
       </div>
 
       <div className="sm:p-8 p-4">
@@ -91,8 +91,13 @@ const ApplicantDetails = () => {
             <input type="text" {...register("applicant.address")} className={inputClass} />
           </div>
 
+          <div className="md:col-span-2">
+            <label className={labelClass}>Proposal Form Number</label>
+            <input required type="text" {...register("applicant.proposalFormNo")} className={inputClass} />
+          </div>
+
           <div className="md:col-span-2 p-4 bg-blue-50/50 rounded-2xl border border-blue-100 space-y-4">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-blue-600">Financial Selection</h3>
+            <h3 className="text-[10px] font-bold uppercase tracking-widest text-blue-600">Financial Selection</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className={labelClass}>Investment Amount (LKR)</label>

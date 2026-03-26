@@ -34,12 +34,12 @@ export default function Pagination({
   };
 
   return (
-    <div className="flex items-center justify-between px-6 py-4 border-t border-slate-100 bg-white">
+    <div className="rounded-full flex items-center justify-between px-6 py-4 border-t border-border bg-card">
       {/* Info */}
-      <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+      <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
         Page{" "}
-        <span className="text-slate-700">{currentPage}</span> of{" "}
-        <span className="text-slate-700">{totalPages}</span>
+        <span className="text-foreground">{currentPage}</span> of{" "}
+        <span className="text-foreground">{totalPages}</span>
       </p>
 
       {/* Controls */}
@@ -48,7 +48,7 @@ export default function Pagination({
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1 || isLoading}
-          className="p-2 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           aria-label="Previous page"
         >
           <ChevronLeft size={16} />
@@ -59,7 +59,7 @@ export default function Pagination({
           page === "..." ? (
             <span
               key={`ellipsis-${i}`}
-              className="px-2 text-slate-300 text-xs font-bold select-none"
+              className="px-2 text-muted-foreground/30 text-xs font-bold select-none"
             >
               …
             </span>
@@ -68,10 +68,10 @@ export default function Pagination({
               key={page}
               onClick={() => onPageChange(page as number)}
               disabled={isLoading}
-              className={`min-w-8 h-8 px-2 rounded-lg text-xs font-black transition-all ${
+              className={`min-w-8 h-8 px-2 rounded-lg text-xs font-bold transition-all ${
                 currentPage === page
-                  ? "bg-slate-900 text-white shadow-sm"
-                  : "text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
               }`}
             >
               {page}
@@ -83,7 +83,7 @@ export default function Pagination({
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages || isLoading}
-          className="p-2 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-all"
           aria-label="Next page"
         >
           <ChevronRight size={16} />

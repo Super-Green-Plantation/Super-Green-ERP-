@@ -75,53 +75,51 @@ const BranchModal = ({
       onClick={onClose}
     >
       <div
-        className="w-[90%] max-w-md bg-white rounded-lg p-6 relative"
+        className="w-[90%] max-w-md bg-card rounded-2xl p-8 relative border border-border shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
+          className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
         >
           ✕
         </button>
 
-        <h2 className="text-xl font-semibold mb-4">
+        <h2 className="text-xl font-bold text-foreground tracking-tight mb-6">
           {mode === "add" ? "Add New Branch" : "Update Branch"}
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">
+            <label className="block text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
               Branch Name
             </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full border rounded-lg px-3 py-2"
+              className="w-full bg-muted/30 border border-border rounded-xl px-4 py-3 text-sm font-bold text-foreground placeholder:text-muted-foreground/50 focus:ring-2 focus:ring-primary/10 transition-all outline-none"
               disabled={loading}
+              placeholder="Enter branch name"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Location</label>
+            <label className="block text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Location</label>
             <input
               type="text"
               value={location}
               onChange={(e) => setLocation(e.target.value)}
-              className="w-full border rounded-lg px-3 py-2"
+              className="w-full bg-muted/30 border border-border rounded-xl px-4 py-3 text-sm font-bold text-foreground placeholder:text-muted-foreground/50 focus:ring-2 focus:ring-primary/10 transition-all outline-none"
               disabled={loading}
+              placeholder="Enter branch location"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className={`w-full text-white py-2 rounded-lg font-semibold ${
-              mode === "add"
-                ? "bg-blue-500 hover:bg-blue-600"
-                : "bg-green-500 hover:bg-green-600"
-            }`}
+            className="w-full bg-primary text-primary-foreground py-4 rounded-xl font-bold uppercase tracking-[0.2em] text-xs transition-all active:scale-95 disabled:opacity-50 hover:opacity-90 shadow-xl shadow-primary/10"
           >
             {loading ? (
               <div className="flex justify-center items-center gap-2">

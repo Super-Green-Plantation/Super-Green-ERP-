@@ -11,7 +11,7 @@ interface DataTableProps<T> {
 
 export function DataTable<T>({ columns, data, actions }: DataTableProps<T>) {
   return (
-    <table>
+    <table className="w-full">
       <thead>
         <tr>
           {columns.map((col, i) => (

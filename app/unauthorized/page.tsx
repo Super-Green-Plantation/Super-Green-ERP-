@@ -21,7 +21,7 @@ export default function UnauthorizedPage() {
 
         {/* Text Content */}
         <div className="space-y-3">
-          <h1 className="text-4xl font-black text-slate-900 tracking-tight">
+          <h1 className="text-4xl font-bold text-slate-900 tracking-tight">
             Access Denied
           </h1>
           <p className="text-slate-500 font-medium leading-relaxed">
@@ -50,7 +50,7 @@ export default function UnauthorizedPage() {
         </div>
 
         {/* Status Code Footer */}
-        <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-300 pt-8">
+        <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-slate-300 pt-8">
           Error Code: 403 Forbidden
         </p>
       </div>

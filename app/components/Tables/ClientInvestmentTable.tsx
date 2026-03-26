@@ -4,37 +4,37 @@ import { Briefcase, Calendar } from 'lucide-react';
 const ClientInvestmentTable = ({ investments }: { investments: any }) => {
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-gray-100 shadow-sm">
-      <table className="w-full text-left">
+    <div className="overflow-x-auto rounded-xl border border-border shadow-sm">
+      <table className="w-full text-left bg-card text-card-foreground">
         <thead>
-          <tr className="bg-gray-50 border-b border-gray-100">
-            <th className="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+          <tr className="bg-muted/30 border-b border-border">
+            <th className="px-6 py-5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
               Investment Details
             </th>
-            <th className="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+            <th className="px-6 py-5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
               Status
             </th>
-            <th className="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">
+            <th className="px-6 py-5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest text-right">
               Ref Number
             </th>
-            <th className="px-6 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">
+            <th className="px-6 py-5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest text-right">
               Amount
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-50 bg-white">
+        <tbody className="divide-y divide-border bg-card">
           {(investments || []).map((item: any) => (
-            <tr key={item.id} className="hover:bg-blue-50/20 transition-all">
+            <tr key={item.id} className="hover:bg-muted/20 transition-all border-b border-border last:border-0">
               <td className="px-6 py-5">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
+                  <div className="p-2 bg-primary/10 rounded-lg text-primary">
                     <Briefcase className="w-4 h-4" />
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-gray-900">
+                    <p className="text-sm font-bold text-foreground">
                       ID: {item.refNumber || item.id}
                     </p>
-                    <p className="text-[10px] text-gray-400 font-medium flex items-center gap-1">
+                    <p className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
                       {new Date(item.investmentDate).toLocaleDateString(undefined, {
                         year: 'numeric',
@@ -46,20 +46,20 @@ const ClientInvestmentTable = ({ investments }: { investments: any }) => {
                 </div>
               </td>
               <td className="px-6 py-5">
-                <span className={`px-2.5 py-1 text-[9px] font-black rounded-md tracking-tighter uppercase ${
+                <span className={`px-2.5 py-1 text-[9px] font-bold rounded-md tracking-tighter uppercase ${
                   item.commissionsProcessed 
-                    ? "bg-green-100 text-green-700" 
-                    : "bg-amber-100 text-amber-700"
+                    ? "bg-green-500/10 text-green-600" 
+                    : "bg-amber-500/10 text-amber-600"
                 }`}>
                   {item.commissionsProcessed ? "Processed" : "Pending"}
                 </span>
               </td>
-              <td className="px-6 py-5 text-right font-medium text-gray-400 text-xs text-nowrap">
+              <td className="px-6 py-5 text-right font-medium text-muted-foreground text-xs text-nowrap">
                 {item.refNumber || "N/A"}
               </td>
               <td className="px-6 py-5 text-right">
-                <p className="text-base font-black text-gray-900">
-                  <span className="text-[10px] mr-1 text-gray-400 font-normal text-nowrap">Rs.</span>
+                <p className="text-base font-bold text-foreground">
+                  <span className="text-[10px] mr-1 text-muted-foreground font-normal text-nowrap">Rs.</span>
                   {item.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </p>
               </td>
@@ -67,16 +67,16 @@ const ClientInvestmentTable = ({ investments }: { investments: any }) => {
           ))}
         </tbody>
         <tfoot>
-          <tr className="bg-gray-900 text-white">
+          <tr className="bg-primary text-primary-foreground">
             <td
               colSpan={3}
-              className="px-6 py-6 text-right text-[10px] font-black uppercase tracking-widest"
+              className="px-6 py-6 text-right text-[10px] font-bold uppercase tracking-widest"
             >
               Total Portfolio Value
             </td>
             <td className="px-6 py-6 text-right">
-              <p className="text-2xl font-black">
-                <span className="text-xs mr-1 font-medium text-gray-400">
+              <p className="text-2xl font-bold">
+                <span className="text-xs mr-1 font-medium opacity-70">
                   Rs.
                 </span>
                 {(investments || []).reduce((sum: number, inv: any) => sum + (Number(inv.amount) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}

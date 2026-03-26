@@ -71,39 +71,39 @@ const BranchTable = ({ data, isLoading, onRefresh }: BranchTableProps) => {
   if (isLoading) return <Loading />
 
   return (
-    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+    <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
       <div className="flex justify-end  items-center">
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-slate-50/50 border-b border-slate-200">
-              <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
+            <tr className="bg-muted/30 border-b border-border">
+              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                 Code
               </th>
-              <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
+              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                 Branch Name
               </th>
-              <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
+              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                 Location
               </th>
-              <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
+              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                 Total Employees
               </th>
-              <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500 text-center">
+              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground text-center">
                 Action
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-border">
             {paginatedData?.map((branch: Branch) => (
               <tr
                 key={branch.id}
-                className="hover:bg-slate-50/80 transition-colors group"
+                className="hover:bg-muted/30 transition-colors group"
               >
                 {/* ID Column */}
                 <td className="px-6 py-4">
-                  <span className="text-xs font-bold text-slate-400 tabular-nums">
+                  <span className="text-xs font-bold text-muted-foreground tabular-nums">
                     #{branch.id.toString().padStart(3, "0")}
                   </span>
                 </td>
@@ -111,10 +111,10 @@ const BranchTable = ({ data, isLoading, onRefresh }: BranchTableProps) => {
                 {/* Branch Name */}
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center border border-orange-100 group-hover:bg-orange-100 transition-colors">
+                    <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center border border-primary/20 group-hover:bg-primary/20 transition-colors">
                       <MapPin size={16} />
                     </div>
-                    <span className="text-sm font-semibold text-slate-900 tracking-tight">
+                    <span className="text-sm font-semibold text-foreground tracking-tight">
                       {branch.name}
                     </span>
                   </div>
@@ -122,16 +122,16 @@ const BranchTable = ({ data, isLoading, onRefresh }: BranchTableProps) => {
 
                 {/* Location Column */}
                 <td className="px-6 py-4">
-                  <div className="flex items-center gap-1.5 text-sm font-bold text-slate-600">
+                  <div className="flex items-center gap-1.5 text-sm font-bold text-muted-foreground">
                     {branch.location}
                   </div>
                 </td>
 
                 {/* Team Size Column */}
-                <td className="px-6 py-4">
-                  <div className="flex items-center text-center justify-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
-                    <span className="text-[11px] font-black uppercase tracking-tight">
-                      {branch.members?.length || 0} Staff Members
+                <td className="px-6 py-4 text-center">
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-500/10 text-green-600 border border-green-500/20">
+                    <span className="text-[11px] font-bold uppercase tracking-tight">
+                      {branch.members?.length || 0} Staff
                     </span>
                   </div>
                 </td>
@@ -141,7 +141,7 @@ const BranchTable = ({ data, isLoading, onRefresh }: BranchTableProps) => {
                   <div className="flex items-center justify-center gap-2">
                     <button
                       onClick={() => handelUpdate(branch)}
-                      className="p-2 text-slate-400 hover:text-blue-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-xl transition-all"
+                      className="p-2 text-muted-foreground hover:text-primary hover:bg-card hover:shadow-sm border border-transparent hover:border-border rounded-xl transition-all"
                       title="Edit Branch"
                     >
                       <Pen size={18} />
@@ -149,15 +149,13 @@ const BranchTable = ({ data, isLoading, onRefresh }: BranchTableProps) => {
 
                     <button
                       onClick={() => handleDeleteClick(branch.id)}
-                      className="p-2 text-slate-400 hover:text-rose-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-xl transition-all"
+                      className="p-2 text-muted-foreground hover:text-destructive hover:bg-card hover:shadow-sm border border-transparent hover:border-border rounded-xl transition-all"
                       title="Delete Branch"
                     >
                       <Trash2 size={18} />
                     </button>
 
-
-
-                    <div className="h-4 w-px bg-slate-200 mx-1" />
+                    <div className="h-4 w-px bg-border mx-1" />
                   </div>
                 </td>
               </tr>
@@ -167,10 +165,10 @@ const BranchTable = ({ data, isLoading, onRefresh }: BranchTableProps) => {
 
         {(!data || data.length === 0) && (
           <div className="py-20 flex flex-col items-center justify-center">
-            <div className="p-4 bg-slate-50 rounded-full text-slate-200 mb-4">
+            <div className="p-4 bg-muted rounded-full text-muted-foreground/30 mb-4">
               <MapPin size={32} />
             </div>
-            <p className="text-sm font-bold text-slate-400 italic">
+            <p className="text-sm font-bold text-muted-foreground italic">
               No registered branches found
             </p>
           </div>

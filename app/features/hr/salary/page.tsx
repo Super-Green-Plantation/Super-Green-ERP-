@@ -24,25 +24,24 @@ type SalaryForm = {
   monthlyTarget: number;
   incentiveAmount: number;
   allowanceAmount: number;
-  orcRatePermanent: number;   // ← add this
-  commRateLow: number;     // e.g. 0.05
-  commRateHigh: number;    // e.g. 0.08
-  commThreshold: number;   // e.g. 500000
-  epfEmployee: number;     // 0.08
-  epfEmployer: number;     // 0.12
-  etfEmployer: number;     // 0.03
-  allowanceThresholdPermanent: number; // e.g. 1.0 (100% of target)
-  allowanceThresholdProbation: number; // e.g. 0.75 (75% of target)
+  orcRatePermanent: number;
+  commRateLow: number;
+  commRateHigh: number;
+  commThreshold: number;
+  epfEmployee: number;
+  epfEmployer: number;
+  etfEmployer: number;
+  allowanceThresholdPermanent: number;
+  allowanceThresholdProbation: number;
 };
 
 const DEFAULT_FORM: SalaryForm = {
   basicSalaryPermanent: 0,
-  orcRatePermanent: 0,   // ← default to 0
+  orcRatePermanent: 0,
   basicSalaryProbation: 0,
   monthlyTarget: 0,
   incentiveAmount: 0,
   allowanceAmount: 0,
-  // remove orcRate
   commRateLow: 0.05,
   commRateHigh: 0.08,
   commThreshold: 500000,
@@ -62,7 +61,6 @@ const fmt = (n: number) =>
       ? `${(n / 1000).toFixed(0)}K`
       : String(n);
 
-// for fields stored as whole % in form state (ORC, EPF, commRate)
 const pctDisplay = (n: number) => `${n.toFixed(2)}%`;
 
 // ─── Field component ──────────────────────────────────────────────────────────
@@ -78,13 +76,13 @@ function Field({
   hint?: string;
 }) {
   return (
-    <div>
-      <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+    <div className="space-y-3">
+      <label className="block text-[11px] font-extrabold uppercase tracking-[0.15em] text-muted-foreground/60 ml-1">
         {label}
       </label>
-      <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100 transition-all bg-white">
+      <div className="input-prefix-container bg-muted/20">
         {prefix && (
-          <span className="px-3 py-2 text-xs font-bold text-slate-400 bg-slate-50 border-r border-slate-200">
+          <span className="input-prefix">
             {prefix}
           </span>
         )}
@@ -93,15 +91,15 @@ function Field({
           step="any"
           value={value}
           onChange={(e) => onChange(Number(e.target.value))}
-          className="flex-1 px-3 py-2 text-sm font-semibold text-slate-700 outline-none bg-white"
+          className="input-field"
         />
         {suffix && (
-          <span className="px-3 py-2 text-xs font-bold text-slate-400 bg-slate-50 border-l border-slate-200">
+          <span className="input-prefix border-l border-r-0">
             {suffix}
           </span>
         )}
       </div>
-      {hint && <p className="text-[10px] text-slate-400 mt-1">{hint}</p>}
+      {hint && <p className="text-[10px] text-muted-foreground/50 font-bold mt-2 ml-1 italic">{hint}</p>}
     </div>
   );
 }
@@ -115,12 +113,9 @@ export default function SalaryConfigPage() {
   const [savingId, setSavingId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Load all positions + existing salary configs
   useEffect(() => {
     getPositionSalaries().then((data: any) => {
       setPositions(data);
-
-      // Pre-fill forms: use existing config if available, else defaults
       const initial: Record<number, SalaryForm> = {};
       for (const p of data) {
         initial[p.id] = p.salary
@@ -130,7 +125,7 @@ export default function SalaryConfigPage() {
             monthlyTarget: p.salary.monthlyTarget ?? 0,
             incentiveAmount: p.salary.incentiveAmount ?? 0,
             allowanceAmount: p.salary.allowanceAmount ?? 0,
-            orcRatePermanent: (p.orc?.ratePermanent ?? 0) * 100,  // ← from CommissionRate
+            orcRatePermanent: (p.orc?.ratePermanent ?? 0) * 100,
             commRateLow: p.salary.commRateLow ?? 0.05,
             commRateHigh: p.salary.commRateHigh ?? 0.08,
             commThreshold: p.salary.commThreshold ?? 500000,
@@ -143,11 +138,8 @@ export default function SalaryConfigPage() {
           : { ...DEFAULT_FORM };
       }
       setForms(initial);
-
-      // Auto-expand first unconfigured position
       const first = data.find((p: any) => !p.salary);
       if (first) setExpandedId(first.id);
-
       setLoading(false);
     });
   }, []);
@@ -165,7 +157,6 @@ export default function SalaryConfigPage() {
       const result = await upsertPositionSalary({ positionId, ...forms[positionId] });
       if (result.success) {
         toast.success("Salary config saved");
-        // Mark as configured in local state
         setPositions((prev) =>
           prev.map((p) =>
             p.id === positionId ? { ...p, salary: forms[positionId] } : p
@@ -179,236 +170,235 @@ export default function SalaryConfigPage() {
     }
   };
 
-  if (loading) return <Loading/>
+  if (loading) return <Loading />
 
   return (
-    <div className="max-w-7xl mx-auto sm:space-y-8 space-y-2 sm:p-4 md:p-8 min-h-screen ">
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex gap-3 items-center">
+    <div className="max-w-[1400px] mx-auto sm:space-y-10 space-y-4 p-4 sm:p-10 min-h-screen">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 border-b border-border/50 pb-10 mb-6">
+        <div className="flex gap-6 items-center">
           <Back />
-          <h1 className="text-xl font-black text-slate-800 uppercase tracking-tight">
-            Salary Configuration
-          </h1>
+          <div>
+            <h1 className="text-3xl font-extrabold text-foreground uppercase tracking-tight leading-none mb-2">
+              Financial Architecture
+            </h1>
+            <p className="text-sm text-muted-foreground font-bold tracking-tight opacity-70">
+              Configure basic salary, growth targets, and commission structures per role.
+            </p>
+          </div>
         </div>
-
-        <p className="text-sm text-slate-400 mt-1">
-          Configure basic salary, targets, incentives, allowances and commission rates per position.
-        </p>
       </div>
 
-      {positions.map((position) => {
-        const isExpanded = expandedId === position.id;
-        const isConfigured = !!position.salary;
-        const isSaving = savingId === position.id;
-        const form = forms[position.id] ?? DEFAULT_FORM;
+      <div className="grid grid-cols-1 gap-6">
+        {positions.filter(p => !p.isProbation && !p.isManagement).map((position) => {
+          const isExpanded = expandedId === position.id;
+          const isConfigured = !!position.salary;
+          const isSaving = savingId === position.id;
+          const form = forms[position.id] ?? DEFAULT_FORM;
 
-        return (
-          <div
-            key={position.id}
-            className="my-3 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm"
-          >
-            {/* Accordion Header */}
+          return (
             <div
-              role="button"
-              tabIndex={0}
-              onClick={() => setExpandedId(isExpanded ? null : position.id)}
-              onKeyDown={(e) => e.key === "Enter" && setExpandedId(isExpanded ? null : position.id)}
-              className="w-full flex items-center justify-between px-5 py-4 hover:bg-slate-50/50 transition-colors cursor-pointer"
+              key={position.id}
+              className={`group bg-card border ${isExpanded ? 'border-primary shadow-xl shadow-primary/5' : 'border-border'} rounded-[2.5rem] overflow-hidden transition-all duration-500`}
             >
-              <div className=" sm:flex space-y-3 items-center gap-3">
-                <div className="flex items-center gap-3 justify-between">
-                   <span className="px-3 py-1 rounded-lg text-xs font-black border uppercase tracking-wider bg-slate-100 text-slate-600 border-slate-200">
-                  {position.title}
-                </span>
-                <span className="text-xs text-slate-400 font-bold">Rank {position.rank}</span>
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => setExpandedId(isExpanded ? null : position.id)}
+                onKeyDown={(e) => e.key === "Enter" && setExpandedId(isExpanded ? null : position.id)}
+                className={`w-full flex items-center justify-between px-8 py-6 hover:bg-muted/30 transition-all cursor-pointer ${isExpanded ? 'bg-muted/10' : ''}`}
+              >
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                  <div className="flex items-center gap-4">
+                    <span className={`px-4 py-2 rounded-2xl text-[11px] font-extrabold uppercase tracking-widest ${isConfigured ? 'bg-primary/10 text-primary border border-primary/20' : 'bg-muted text-muted-foreground border border-border'}`}>
+                      {position.title}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground/40 font-extrabold uppercase tracking-[0.2em]">Rank {position.rank}</span>
+                  </div>
+
+                  {isConfigured && (
+                    <div className="flex items-center gap-4 border-l border-border/50 pl-6 h-6">
+                      <span className="flex items-center gap-2 text-[10px] font-extrabold text-accent uppercase tracking-wider">
+                        <CheckCircle2 className="w-4 h-4" /> ACTIVE STRUCTURE
+                      </span>
+                      <span className="hidden md:inline text-[10px] text-muted-foreground font-bold uppercase tracking-tighter opacity-40">
+                        Base: Rs.{fmt(position.salary.basicSalaryPermanent)} · Plan: Rs.{fmt(position.salary.monthlyTarget)}
+                      </span>
+                    </div>
+                  )}
                 </div>
-               
-               
 
-                {isConfigured && (
-                  <span className="flex items-center gap-1 text-[10px] font-black text-emerald-600 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
-                    <CheckCircle2 className="w-3 h-3" /> Configured
-                  </span>
-                )}
-
-                {isConfigured && (
-                  <span className="text-[10px] text-slate-400 font-medium">
-                    Basic: Rs.{fmt(position.salary.basicSalaryPermanent)} · Target: Rs.{fmt(position.salary.monthlyTarget)}
-                  </span>
-                )}
+                <div className="flex items-center gap-6">
+                  {isExpanded && (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); handleSave(position.id); }}
+                      disabled={isSaving}
+                      className="hidden sm:flex items-center gap-3 px-8 py-4 bg-primary text-primary-foreground text-[10px] font-extrabold uppercase tracking-[0.2em] rounded-2xl transition-all hover:shadow-2xl hover:translate-y-[-2px] active:translate-y-0 disabled:opacity-50"
+                    >
+                      {isSaving
+                        ? <><Loader2 className="w-4 h-4 animate-spin" /> Committing...</>
+                        : <><Save className="w-4 h-4" /> Save Configuration</>
+                      }
+                    </button>
+                  )}
+                  <div className={`w-10 h-10 rounded-2xl border border-border flex items-center justify-center transition-transform duration-500 ${isExpanded ? 'rotate-180 bg-primary text-white border-primary' : 'bg-card text-muted-foreground'}`}>
+                    <ChevronDown className="w-5 h-5" />
+                  </div>
+                </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                {isExpanded && (
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); handleSave(position.id); }}
-                    disabled={isSaving}
-                    className="flex items-center gap-2 px-4 py-1.5 bg-slate-900 hover:bg-slate-700 disabled:bg-slate-400 text-white text-[11px] font-black uppercase tracking-widest rounded-lg transition-all active:scale-95"
-                  >
-                    {isSaving
-                      ? <><Loader2 className="w-3 h-3 animate-spin" /> Saving...</>
-                      : <><Save className="w-3 h-3" /> Save</>
-                    }
-                  </button>
-                )}
-                {isExpanded
-                  ? <ChevronDown className="w-4 h-4 text-slate-400" />
-                  : <ChevronRight className="w-4 h-4 text-slate-400" />
-                }
-              </div>
+              {isExpanded && (
+                <div className="px-10 pb-12 border-t border-border/50 space-y-12 pt-12 animate-in slide-in-from-top-4 duration-500">
+
+                  {/* Basic & Target */}
+                  <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-10">
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/10">
+                           <Banknote className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-extrabold uppercase tracking-widest text-foreground">Retainer & Growth</h3>
+                          <p className="text-[10px] text-muted-foreground font-bold leading-tight">Monthly fixed pay and operational target.</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <Field
+                        label="Standard Monthly Salary (Rs.)"
+                        value={form.basicSalaryPermanent}
+                        onChange={(v) => setField(position.id, "basicSalaryPermanent", v)}
+                        prefix="Rs."
+                        hint="Fixed component paid irrespective of performance."
+                      />
+                      <Field
+                        label="Operational Target (Rs.)"
+                        value={form.monthlyTarget}
+                        onChange={(v) => setField(position.id, "monthlyTarget", v)}
+                        prefix="Rs."
+                        hint={`Current threshold: ${fmt(form.monthlyTarget)} PKR`}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Incentive & Allowance */}
+                  <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-10">
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-3 rounded-2xl bg-accent/10 text-accent border border-accent/10">
+                           <Target className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-extrabold uppercase tracking-widest text-foreground">Performance Bonuses</h3>
+                          <p className="text-[10px] text-muted-foreground font-bold leading-tight">Additional payouts upon reaching milestones.</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <Field
+                        label="Success Incentive (100% Target)"
+                        value={form.incentiveAmount}
+                        onChange={(v) => setField(position.id, "incentiveAmount", v)}
+                        prefix="Rs."
+                        hint="One-time bonus for full target completion."
+                      />
+                      <Field
+                        label="Logistics & Mobility Allowance"
+                        value={form.allowanceAmount}
+                        onChange={(v) => setField(position.id, "allowanceAmount", v)}
+                        prefix="Rs."
+                        hint="Fixed fuel and vehicle support subsidy."
+                      />
+                    </div>
+                  </div>
+
+                  {/* Commission */}
+                  <div className="space-y-10">
+                    <div className="flex items-center gap-3">
+                      <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/10">
+                         <TrendingUp className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-extrabold uppercase tracking-widest text-foreground">Revenue Scaling Model</h3>
+                        <p className="text-[10px] text-muted-foreground font-bold leading-tight">Tiered commission based on sales volume.</p>
+                      </div>
+                    </div>
+                    
+                    <div className="vibrant-alert">
+                       Alert: These rates apply to <span className="text-accent underline underline-offset-4">Permanent</span> staff. Probation tiers are locked at 7% / 10%.
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <Field
+                        label="Tier 1: Below Threshold"
+                        value={form.commRateLow}
+                        onChange={(v) => setField(position.id, "commRateLow", v)}
+                        suffix="%×100"
+                        hint={`Effective: ${pctDisplay(form.commRateLow)}`}
+                      />
+                      <Field
+                        label="Tier 2: Above Threshold"
+                        value={form.commRateHigh}
+                        onChange={(v) => setField(position.id, "commRateHigh", v)}
+                        suffix="%×100"
+                        hint={`Effective: ${pctDisplay(form.commRateHigh)}`}
+                      />
+                      <Field
+                        label="Volume Pivot Point (Rs.)"
+                        value={form.commThreshold}
+                        onChange={(v) => setField(position.id, "commThreshold", v)}
+                        prefix="Rs."
+                        hint={`Tier bridge at: ${fmt(form.commThreshold)}`}
+                      />
+                    </div>
+                  </div>
+
+                  {/* ORC & Statutory */}
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 pt-6 border-t border-border/30">
+                    <div className="space-y-8">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Percent className="w-5 h-5 text-primary" />
+                        <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-foreground">Hierarchy Override (ORC)</span>
+                      </div>
+                      <Field
+                        label="Overriding Rate (Decimal)"
+                        value={form.orcRatePermanent}
+                        onChange={(v) => setField(position.id, "orcRatePermanent", v)}
+                        suffix="%×100"
+                        hint={`Currently: ${pctDisplay(form.orcRatePermanent)}`}
+                      />
+                    </div>
+                    
+                    <div className="space-y-8">
+                       <div className="flex items-center gap-2 mb-2">
+                        <Car className="w-5 h-5 text-muted-foreground/30" />
+                        <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-foreground">Statutory & EPF Structure</span>
+                      </div>
+                      <div className="grid grid-cols-3 gap-4">
+                        <Field label="EPF (Emp)" value={form.epfEmployee} onChange={(v) => setField(position.id, "epfEmployee", v)} suffix="%" />
+                        <Field label="EPF (Comp)" value={form.epfEmployer} onChange={(v) => setField(position.id, "epfEmployer", v)} suffix="%" />
+                        <Field label="ETF (Comp)" value={form.etfEmployer} onChange={(v) => setField(position.id, "etfEmployer", v)} suffix="%" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex sm:hidden">
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); handleSave(position.id); }}
+                      disabled={isSaving}
+                      className="w-full flex items-center justify-center gap-3 px-8 py-5 bg-primary text-primary-foreground text-[10px] font-extrabold uppercase tracking-[0.2em] rounded-2xl"
+                    >
+                      {isSaving ? 'Saving...' : 'Save Configuration'}
+                    </button>
+                  </div>
+
+                </div>
+              )}
             </div>
-
-            {/* Expanded Form */}
-            {isExpanded && (
-              <div className="px-5 pb-6 border-t border-slate-100 space-y-6 pt-5">
-
-                {/* Basic & Target */}
-                <div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <Banknote className="w-4 h-4 text-blue-500" />
-                    <span className="text-xs font-black uppercase tracking-widest text-slate-500">
-                      Basic Salary & Target
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Field
-                      label="Basic Salary (Rs.)"
-                      value={form.basicSalaryPermanent}
-                      onChange={(v) => setField(position.id, "basicSalaryPermanent", v)}
-                      prefix="Rs."
-                      hint="Fixed monthly salary before deductions"
-                    />
-                    <Field
-                      label="Monthly Target (Rs.)"
-                      value={form.monthlyTarget}
-                      onChange={(v) => setField(position.id, "monthlyTarget", v)}
-                      prefix="Rs."
-                      hint={`Currently: ${fmt(form.monthlyTarget)}`}
-                    />
-                  </div>
-                </div>
-
-                {/* Incentive & Allowance */}
-                <div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <Target className="w-4 h-4 text-emerald-500" />
-                    <span className="text-xs font-black uppercase tracking-widest text-slate-500">
-                      Performance Pay
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Field
-                      label="Incentive Amount (100% target)"
-                      value={form.incentiveAmount}
-                      onChange={(v) => setField(position.id, "incentiveAmount", v)}
-                      prefix="Rs."
-                      hint="Paid when full target is achieved"
-                    />
-                    <Field
-                      label="Vehicle & Fuel Allowance (75% target)"
-                      value={form.allowanceAmount}
-                      onChange={(v) => setField(position.id, "allowanceAmount", v)}
-                      prefix="Rs."
-                      hint="Paid when 75% of target is achieved"
-                    />
-                  </div>
-                </div>
-
-                {/* Commission */}
-                <div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <TrendingUp className="w-4 h-4 text-violet-500" />
-                    <span className="text-xs font-black uppercase tracking-widest text-slate-500">
-                      Commission Rates
-                    </span>
-                  </div>
-                  <div className="p-3 bg-amber-50 border border-amber-100 rounded-lg mb-3 text-xs text-amber-700 font-medium">
-                    These rates apply to <strong>Permanent</strong> employees. Probation employees automatically use 7% / 10%.
-                  </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <Field
-                      label="Rate below threshold"
-                      value={form.commRateLow}
-                      onChange={(v) => setField(position.id, "commRateLow", v)}
-                      suffix="%×100"
-                      hint={`Currently: ${pctDisplay (form.commRateLow)}`}
-                    />
-                    <Field
-                      label="Rate above threshold"
-                      value={form.commRateHigh}
-                      onChange={(v) => setField(position.id, "commRateHigh", v)}
-                      suffix="%×100"
-                      hint={`Currently: ${pctDisplay (form.commRateHigh)}`}
-                    />
-                    <Field
-                      label="Volume threshold (Rs.)"
-                      value={form.commThreshold}
-                      onChange={(v) => setField(position.id, "commThreshold", v)}
-                      prefix="Rs."
-                      hint={`Currently: ${fmt(form.commThreshold)}`}
-                    />
-                  </div>
-                </div>
-
-                {/* ORC */}
-                <div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <Percent className="w-4 h-4 text-orange-500" />
-                    <span className="text-xs font-black uppercase tracking-widest text-slate-500">
-                      ORC Rate
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <Field
-                      label="ORC Rate (decimal)"
-                      value={form.orcRatePermanent}
-                      onChange={(v) => setField(position.id, "orcRatePermanent", v)}
-                      suffix="%×100"
-                      hint={`Currently: ${pctDisplay (form.orcRatePermanent)} — 0 if not applicable`}
-                    />
-                  </div>
-                </div>
-
-                {/* EPF / ETF */}
-                <div>
-                  <div className="flex items-center gap-2 mb-3">
-                    <Car className="w-4 h-4 text-slate-400" />
-                    <span className="text-xs font-black uppercase tracking-widest text-slate-500">
-                      EPF / ETF (on basic salary only)
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <Field
-                      label="EPF — Employee"
-                      value={form.epfEmployee}
-                      onChange={(v) => setField(position.id, "epfEmployee", v)}
-                      suffix="%×100"
-                      hint={`Deducted from pay: ${pctDisplay (form.epfEmployee)}`}
-                    />
-                    <Field
-                      label="EPF — Employer"
-                      value={form.epfEmployer}
-                      onChange={(v) => setField(position.id, "epfEmployer", v)}
-                      suffix="%×100"
-                      hint={`Employer cost: ${pctDisplay (form.epfEmployer)}`}
-                    />
-                    <Field
-                      label="ETF — Employer"
-                      value={form.etfEmployer}
-                      onChange={(v) => setField(position.id, "etfEmployer", v)}
-                      suffix="%×100"
-                      hint={`Employer cost: ${pctDisplay (form.etfEmployer)}`}
-                    />
-                  </div>
-                </div>
-
-              </div>
-            )}
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }

@@ -58,10 +58,10 @@ const Page = () => {
       {/* Header */}
       <div>
         <Heading>
-          Manage Employees
+          Branch Employees
         </Heading>
-        <p className="text-sm text-gray-500 mt-1">
-          Select a branch to view and manage employees
+        <p className="text-sm text-muted-foreground font-medium mt-2 max-w-2xl">
+          Select a branch to view and manage team members and their profiles.
         </p>
       </div>
 
@@ -75,28 +75,31 @@ const Page = () => {
           >
             <div
               className="
-                rounded-xl border border-blue-200/60
-                bg-blue-50 p-5
-                transition
-                hover:bg-blue-100
-                hover:border-blue-400
-                hover:shadow-md
+                rounded-3xl border border-border
+                bg-card p-6
+                transition-all duration-300
+                hover:bg-muted/50
+                hover:border-primary/50
+                hover:shadow-xl hover:shadow-primary/5
+                group-active:scale-[0.98]
               "
             >
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-blue-500 text-white">
-                  <Users size={18} />
+              <div className="flex items-center gap-4">
+                <div className="h-12 w-12 flex items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 shrink-0">
+                  <Users size={20} />
                 </div>
 
-                <div>
-                  <h3 className="font-semibold text-lg group-hover:text-blue-700">
+                <div className="min-w-0">
+                  <h3 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors truncate">
                     {branch.name}
                   </h3>
-                  <p className="text-sm text-gray-500">
-                    {branch.members.length} employees
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Click to Manage employees
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest bg-muted px-2 py-0.5 rounded-lg border border-border/50">
+                      {branch.members.length} Staff
+                    </span>
+                  </div>
+                  <p className="text-[10px] font-bold text-primary uppercase tracking-[0.15em] mt-3 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
+                    Manage Team →
                   </p>
                 </div>
               </div>

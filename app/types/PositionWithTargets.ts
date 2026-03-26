@@ -10,6 +10,7 @@ export interface PositionWithTargets {
   id: number;
   title: string;
   rank: number;
+  isProbation: boolean;
   orc: {
     ratePermanent: number;
     rateNonPermanent: number;

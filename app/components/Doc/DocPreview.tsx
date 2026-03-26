@@ -51,7 +51,7 @@ export const DocPreview = ({
 
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
         {isPDF ? (
           <FileCheck className="w-3 h-3" />
         ) : (

@@ -1,24 +1,6 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-
-
-/**
- * getEmployeePerformance
- * ----------------------
- * Fetches all data needed for the employment status section on the
- * EmployeeDetailsPage. Handles both PROBATION and PERMANENT employees.
- *
- * For PROBATION:
- *  - probationStartDate, monthsElapsed, current period (1 or 2), month in period
- *  - current month's PositionTarget (full target, bonus amounts)
- *  - current month's MonthlyEvaluation (volumeAchieved, bonusEarned, targetHit)
- *
- * For PERMANENT:
- *  - PositionSalary config (monthlyTarget, incentiveAmount, allowanceAmount)
- *  - current month's MonthlyPayroll (volumeAchieved, incentiveEarned, allowanceEarned)
- *  - last 6 months of MonthlyPayroll history
- */
 export async function getEmployeePerformance(memberId: number) {
   const now = new Date();
   const currentYear = now.getFullYear();

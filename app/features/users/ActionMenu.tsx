@@ -100,11 +100,11 @@ export const ActionMenu = ({ userId, currentRole, email }: { userId: string; cur
         <div
             ref={menuRef}   // ← add this
             style={{ top: menuPos.top, left: menuPos.left }}
-            className="fixed w-48 bg-white shadow-xl rounded-xl border border-slate-200 z-9999 overflow-hidden"
+            className="fixed w-48 bg-card shadow-xl rounded-xl border border-border z-9999 overflow-hidden"
         >
             {/* Update Role — expands inline */}
             <button
-                className="w-full text-left px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors flex items-center justify-between"
+                className="w-full text-left px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted transition-colors flex items-center justify-between"
                 onClick={() => setShowRoles((v) => !v)}
                 disabled={loadingAction === 'role'}
             >
@@ -114,31 +114,31 @@ export const ActionMenu = ({ userId, currentRole, email }: { userId: string; cur
                 </span>
                 <ChevronRight
                     size={14}
-                    className={`text-slate-400 transition-transform duration-200 ${showRoles ? 'rotate-90' : ''}`}
+                    className={`text-muted-foreground transition-transform duration-200 ${showRoles ? 'rotate-90' : ''}`}
                 />
             </button>
 
             {/* Inline role list */}
             {showRoles && (
-                <div className="border-t border-slate-100 bg-slate-50">
+                <div className="border-t border-border bg-muted/50">
                     {Object.values(Role).map((role) => (
                         <button
                             key={role}
                             onClick={() => handleRoleChange(role)}
-                            className="w-full text-left px-5 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors flex items-center justify-between uppercase tracking-tight"
+                            className="w-full text-left px-5 py-2 text-xs font-bold text-muted-foreground hover:bg-muted transition-colors flex items-center justify-between uppercase tracking-tight"
                         >
                             {role.replace('_', ' ')}
-                            {role === currentRole && <Check size={12} className="text-emerald-500" />}
+                            {role === currentRole && <Check size={12} className="text-green-500" />}
                         </button>
                     ))}
                 </div>
             )}
 
-            <div className="border-t border-slate-100" />
+            <div className="border-t border-border" />
 
             {/* Reset Password */}
             <button
-                className="w-full text-left px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2 disabled:opacity-50"
+                className="w-full text-left px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted transition-colors flex items-center gap-2 disabled:opacity-50"
                 onClick={handleResetPassword}
                 disabled={loadingAction === 'reset'}
             >
@@ -148,7 +148,7 @@ export const ActionMenu = ({ userId, currentRole, email }: { userId: string; cur
 
             {/* delete user */}
             <button
-                className="w-full text-left px-4 py-2.5 text-sm font-semibold text-red-700 bg-red-100 transition-colors flex items-center gap-2 disabled:opacity-50"
+                className="w-full text-left px-4 py-2.5 text-sm font-semibold text-destructive hover:bg-destructive/10 transition-colors flex items-center gap-2 disabled:opacity-50"
                 onClick={()=>handleDeleteUser(userId)}
             >
                 Delete User
@@ -161,7 +161,7 @@ export const ActionMenu = ({ userId, currentRole, email }: { userId: string; cur
             <button
                 ref={buttonRef}
                 onClick={() => setOpen((v) => !v)}
-                className="p-2 text-slate-400 hover:text-slate-900 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-xl transition-all"
+                className="p-2 text-muted-foreground hover:text-foreground hover:bg-card hover:shadow-sm border border-transparent hover:border-border rounded-xl transition-all"
             >
                 <MoreVertical size={18} />
             </button>

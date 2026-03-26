@@ -47,7 +47,7 @@ const Page = () => {
         <Heading>
           Branch Network
         </Heading>
-        <p className="text-sm font-bold text-slate-900">
+        <p className="text-sm font-bold text-foreground">
           Total Branches : {loading ? "-" : totalBranches}
         </p>
       </div>
@@ -62,7 +62,7 @@ const Page = () => {
 
         <button
           onClick={() => setShowAddModal(true)}
-          className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 hover:bg-blue-600 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-xl shadow-slate-200 active:scale-95"
+          className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-xl shadow-primary/10 active:scale-95 hover:opacity-90"
         >
           <Plus className="w-4 h-4" />
           Add Branch
@@ -76,13 +76,13 @@ const Page = () => {
 
 
         {/* Search */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-100 shadow-sm flex items-center">
+        <div className="lg:col-span-2  border-2 p-0 border-teal-800 rounded-full shadow-sm flex items-center">
           <div className="relative w-full">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               type="text"
               placeholder="Search branch"
-              className="w-full bg-slate-50/50 border-none rounded-xl pl-11 pr-4 py-3 text-sm font-bold text-slate-700 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500/10 transition-all outline-none"
+              className="w-full bg-muted/30 border-none rounded-xl pl-11 pr-4 py-3 text-sm font-bold text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/10 transition-all outline-none"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -95,7 +95,7 @@ const Page = () => {
         {loading ? (
           <div className="flex flex-col items-center justify-center h-64 gap-4">
             <Loading />
-            <p className="text-xs font-black text-slate-400 uppercase tracking-widest animate-pulse">
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest animate-pulse">
               Loading Branch Network...
             </p>
           </div>

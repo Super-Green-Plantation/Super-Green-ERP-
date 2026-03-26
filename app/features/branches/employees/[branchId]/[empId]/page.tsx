@@ -18,6 +18,14 @@ import {
   Phone,
   Trash2,
   User,
+  Star,
+  ShieldCheck,
+  TrendingUp,
+  Wallet,
+  ArrowRight,
+  Lock,
+  CheckCircle2,
+  ShieldAlert
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -30,43 +38,18 @@ import EmployeeStatusSection from "@/app/components/Employee/Employeestatussecti
 import Loading from "@/app/components/Status/Loading";
 import Image from "next/image";
 
-interface EmployeeDetailsPageProps {
-  empId?: number;
-  readOnly?: boolean;
-}
+import { getEmployeePerformance } from "./getEmployeePerfomance";
 
-const FormField = ({
-  label,
-  value,
-  icon,
-}: {
-  label: string;
-  value?: string | number | null;
-  icon?: React.ReactNode;
-}) => (
-  <div>
-    <p className="text-[9px] font-black text-gray-400 uppercase tracking-[0.15em] mb-1.5 flex items-center gap-1">
-      {icon && <span className="text-gray-300">{icon}</span>}
-      {label}
-    </p>
-    <p className={`text-sm font-semibold ${value ? "text-gray-800" : "text-gray-300"}`}>
-      {value ?? "—"}
-    </p>
-  </div>
-);
-
-
-const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: EmployeeDetailsPageProps) => {
+const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: number; readOnly?: boolean }) => {
   const params = useParams();
   const resolvedEmpId = propEmpId ?? Number(params.empId);
-  const branchId = params.branchId;
-
+  
   const [employee, setEmployee] = useState<Member | null>(null);
+  const [performance, setPerformance] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [allCommission, setAllCommission] = useState();
   const [openModel, setModelOpen] = useState(false);
   const [orc, setOrc] = useState(0);
-  console.log(employee);
 
   useEffect(() => {
     if (employee?.status === "PERMANENT") {
@@ -74,16 +57,17 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: EmployeeDet
     } else if (employee?.status === "PROBATION") {
       setOrc(employee.position?.orc?.rateNonPermanent * 100 || 0);
     }
-
-  }, [employee])
-
-  if (!resolvedEmpId) return null;
+  }, [employee]);
 
   const fetchMember = async () => {
     setLoading(true);
     try {
       const data = await getMemberDetails(resolvedEmpId);
       setEmployee(data.res as Member);
+      
+      // Fetch performance data
+      const perfData = await getEmployeePerformance(resolvedEmpId);
+      setPerformance(perfData);
     } catch (err) {
       console.error("Failed to fetch employee", err);
     } finally {
@@ -92,244 +76,227 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: EmployeeDet
   };
 
   useEffect(() => {
-    fetchMember();
+    if (resolvedEmpId) {
+      fetchMember();
+      const fetchAll = async () => {
+        const res = await getEmployeeCommissions(resolvedEmpId);
+        setAllCommission(res.commissions as any);
+      };
+      fetchAll();
+    }
   }, [resolvedEmpId]);
 
-  useEffect(() => {
-    const fetchAllCommission = async () => {
-      const res = await getEmployeeCommissions(resolvedEmpId);
-      setAllCommission(res.commissions as any);
-    };
-    fetchAllCommission();
-  }, [resolvedEmpId]);
-
-  if (loading) return <Loading />
-
+  if (loading) return <Loading />;
   if (!employee) return null;
 
-  const primaryBranch = employee.branches?.[0]?.branch;
+  // Calculate target progress
+  let targetValue = 0;
+  let achievedValue = 0;
+  let targetLabel = "Monthly Target";
 
-  const labelStyles = "text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] mb-1.5";
-  const cardStyles = "bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden";
+  if (performance?.status === "PROBATION") {
+    targetValue = performance.target?.targetAmount || 0;
+    achievedValue = performance.evaluation?.volumeAchieved || 0;
+    targetLabel = `Probation Target (P${performance.periodNumber} M${performance.monthInPeriod})`;
+  } else if (performance?.status === "PERMANENT") {
+    targetValue = performance.salary?.monthlyTarget || 0;
+    achievedValue = performance.currentPayroll?.volumeAchieved || 0;
+  }
+
+  const progressPercentage = targetValue > 0 ? Math.min(Math.round((achievedValue / targetValue) * 100), 100) : 0;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6 pb-20">
-
-      {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-6">
-        <div className="flex items-center gap-3 sm:gap-5 min-w-0">
-          {!readOnly && <Back />}
-          <div className=" shrink-0 flex items-center rounded-full justify-center shadow-lg shadow-blue-200">
-
-            {employee.profilePic ? (
-              <Image
-                src={employee.profilePic}
-                alt={employee.nameWithInitials ?? "Profile"}
-                width={40}
-                height={40}
-                className="w-10 h-10 rounded-full object-cover"
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                <User className="w-5 h-5 text-gray-400" />
+    <main className="max-w-7xl mx-auto min-h-screen bg-background p-4 sm:p-8 space-y-8 animate-in fade-in duration-700">
+      
+      {/* ── Premium Hero Section: Glassmorphic Profile ── */}
+      <section className="relative h-72 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-primary/10 border border-white/10 group">
+        <div className="absolute inset-0 bg-linear-to-br from-primary/95 via-primary to-primary-container z-0" />
+        <div className="absolute top-0 right-0 w-125 h-125 bg-secondary/10 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+        
+        <div className="relative h-full flex items-end p-8 sm:p-12 z-10">
+          <div className="flex flex-col sm:flex-row items-center sm:items-end gap-8 w-full">
+            
+            <div className="relative group shrink-0">
+              <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-3xl overflow-hidden border-4 border-white/20 shadow-2xl relative">
+                {employee.profilePic ? (
+                  <Image
+                    src={employee.profilePic}
+                    alt={employee.nameWithInitials ?? "Profile"}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-white/10 flex items-center justify-center">
+                    <User className="w-16 h-16 text-white/50" />
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          <div className="min-w-0">
-            <h1 className="text-xl sm:text-3xl font-black text-gray-900 tracking-tight truncate">
-              {employee.nameWithInitials}
-            </h1>
-            <p className="text-xs text-gray-400 font-bold uppercase tracking-widest flex items-center gap-1.5 mt-0.5">
-              <Hash className="w-3 h-3 shrink-0" />
-              <span className="truncate">{employee.empNo} • {employee.position?.title}</span>
-            </p>
-          </div>
-        </div>
-
-        <div className="flex gap-2 shrink-0">
-          {!readOnly && (
-            <button
-              onClick={() => setModelOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-xl text-xs font-bold hover:bg-gray-800 transition-all shadow-md active:scale-95"
-            >
-              <Pen className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Edit Profile</span>
-              <span className="sm:hidden">Edit</span>
-            </button>
-          )}
-          <ExportButton
-            data={{ ...employee, allCommission }}
-            exportFn={generateEmployeeCommissionPDF}
-          />
-        </div>
-      </div>
-
-      {/* ── Financial card (mobile: full width, desktop: right column) ── */}
-      <div className="block lg:hidden">
-        <section className="bg-slate-900 rounded-2xl p-5 text-white relative overflow-hidden border border-white/5 shadow-xl">
-          <div className="absolute -right-6 -top-6 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="relative z-10 flex items-start justify-between gap-4">
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] mb-1">
-                Designation
-              </p>
-              <h3 className="text-xl font-semibold tracking-tighter leading-tight truncate">
-                {employee.position?.title}
-              </h3>
-              <p className="text-sm text-gray-400 mt-1">Branch - {employee.branches[0]?.branch?.name || "N/A"}</p>
-            </div>
-            <div className="p-2.5 bg-white/5 rounded-xl border border-white/10 shrink-0">
-              <Briefcase className="w-4 h-4 text-blue-400" />
-            </div>
-          </div>
-
-          <div className="relative z-10 mt-4 grid sm:grid-cols-2 gap-3 text-center">
-            <div className="p-2 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
-              <p className="text-[9px] text-emerald-400 uppercase font-semibold mb-0.5">Earned</p>
-              <p className="text-sm font-semibold text-emerald-400">
-                {employee.totalCommission?.toLocaleString()}
-              </p>
-            </div>
-
-            <div className="p-2 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
-              <p className="text-[9px] text-emerald-400 uppercase font-semibold mb-0.5">Status</p>
-              <p className="text-sm font-semibold text-emerald-400">
-                {employee.status}
-              </p>
-
-            </div>
-
-            <div className="p-2 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
-              <p className="text-[9px] text-emerald-400 uppercase font-semibold mb-0.5">ORC </p>
-              <p className="text-sm font-semibold text-emerald-400">
-                {orc || "N/A"} %
-              </p>
-            </div>
-
-          </div>
-        </section>
-      </div>
-
-      {/* ── Main grid ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        {/* Left column */}
-        <div className="lg:col-span-2 space-y-6">
-
-          {/* ── General Identity ── */}
-          <section className={cardStyles}>
-            <div className="px-4 sm:px-6 py-3.5 border-b border-gray-100 flex items-center gap-2">
-              <BadgeInfo className="w-4 h-4 text-blue-500 shrink-0" />
-              <h2 className="font-black text-gray-800 text-xs uppercase tracking-widest">General Identity</h2>
-            </div>
-
-            <div className="divide-y divide-dashed divide-gray-100">
-              {/* Name & Codes */}
-              <div className="px-4 sm:px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <FormField label="Official Name" value={employee.nameWithInitials} icon={<User className="w-3.5 h-3.5" />} />
-                <FormField label="Employee Code" value={employee.empNo} icon={<Hash className="w-3.5 h-3.5" />} />
-                <FormField label="EPF Number" value={employee.epfNo} icon={<Hash className="w-3.5 h-3.5" />} />
+              <div className="absolute -bottom-2 -right-2 bg-secondary p-2.5 rounded-2xl shadow-lg border-4 border-primary">
+                 <ShieldCheck className="w-5 h-5 text-white" />
               </div>
+            </div>
 
-              {/* Contact */}
-              <div className="px-4 sm:px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <FormField label="Email Address" value={employee.email} icon={<Mail className="w-3.5 h-3.5" />} />
-                <FormField label="Phone Line 1" value={employee.phone} icon={<Phone className="w-3.5 h-3.5" />} />
-                <FormField label="Phone Line 2" value={employee.phone2} icon={<Phone className="w-3.5 h-3.5" />} />
-              </div>
-
-              {/* Personal */}
-              <div className="px-4 sm:px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <FormField label="NIC" value={employee.nic} icon={<CreditCard className="w-3.5 h-3.5" />} />
-                <FormField label="Gender" value={employee.gender} />
-                <FormField label="Civil Status" value={employee.civilStatus} />
-              </div>
-
-              {/* DOB */}
-              <div className="px-4 sm:px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <FormField
-                  label="Date of Birth"
-                  value={employee.dob ? new Date(employee.dob).toLocaleDateString() : null}
-                  icon={<Calendar className="w-3.5 h-3.5" />}
-                />
-                <div className="sm:col-span-2">
-                  <FormField label="Address" value={employee.address} icon={<MapPin className="w-3.5 h-3.5" />} />
+            <div className="flex-1 flex flex-col sm:flex-row justify-between items-center sm:items-end w-full gap-6">
+              <div className="text-center sm:text-left">
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mb-2">
+                  <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight font-heading">
+                    {employee.nameWithInitials}
+                  </h1>
+                  {!readOnly && (
+                    <button 
+                      onClick={() => setModelOpen(true)}
+                      className="p-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-white transition-all backdrop-blur-md border border-white/10 shadow-sm"
+                    >
+                      <Pen className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+                <p className="text-emerald-100/70 font-bold text-lg flex items-center gap-2 justify-center sm:justify-start">
+                  <Briefcase className="w-5 h-5 text-secondary" />
+                  {employee.position?.title || "Department Lead"} • {employee.branches?.[0]?.branch?.name || "HQ"}
+                </p>
+                <div className="flex items-center justify-center sm:justify-start gap-3 mt-4">
+                  <span className="px-4 py-1.5 bg-white/5 backdrop-blur-md rounded-full text-[10px] font-bold text-white uppercase tracking-[0.2em] border border-white/5">
+                    {employee.status || "PROBATION"}
+                  </span>
+                  <span className="px-4 py-1.5 bg-secondary/20 backdrop-blur-md rounded-full text-[10px] font-bold text-secondary uppercase tracking-[0.2em] border border-secondary/10">
+                    ID: {employee.empNo}
+                  </span>
                 </div>
               </div>
-            </div>
-          </section>
 
-          {/* ── Branch Assignment ── */}
-          {/* <section className={cardStyles}>
-            <div className="px-4 sm:px-6 py-3.5 border-b border-gray-100 flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-orange-500 shrink-0" />
-              <h2 className="font-black text-gray-800 text-xs uppercase tracking-widest">Branch Assignment</h2>
+    
+              
             </div>
+          </div>
+        </div>
+      </section>
 
-            <div className="divide-y divide-dashed divide-gray-100">
-              <div className="px-4 sm:px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {employee.branches?.map((mb: any) => (
-                  <div key={mb.id} className="flex items-start gap-3 justify-between">
-                    <div className="mt-0.5 p-1.5 bg-orange-50 rounded-lg shrink-0">
-                      <MapPin className="w-3 h-3 text-orange-400" />
-                    </div>
-                    <div className="flex gap-4">
-                      <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">
-                        {mb.branch.name}
-                      </p>
-                      <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-black uppercase
-              ${mb.branch.status === "Active" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"}`}
-                      >
-                        <div className={`w-1.5 h-1.5 rounded-full ${mb.branch.status === "Active" ? "bg-emerald-500" : "bg-red-500"}`} />
-                        {mb.branch.status}
-                      </div>
-                      <p className="text-[10px] text-gray-400 mt-0.5">{mb.branch.location}</p>
-                    </div>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        {/* ── Main Column: Calibration ── */}
+        <div className="lg:col-span-8 space-y-8">
+          
+          {/* Real-time Performance Calibration */}
+          <section className="bg-card/50 backdrop-blur-md rounded-[2.5rem] p-8 sm:p-10 border border-border/50 shadow-sm">
+             <div className="flex items-center justify-between mb-8">
+                <h3 className="text-2xl font-bold text-foreground flex items-center gap-4">
+                   <TrendingUp className="w-7 h-7 text-primary" />
+                   Performance Calibration
+                </h3>
+             </div>
+             
+             <div className="space-y-10">
+                {/* Main Volume Progress */}
+                <div className="space-y-4">
+                  <div className="flex justify-between items-end">
+                     <div>
+                       <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">{targetLabel}</span>
+                       <p className="text-xs text-primary font-bold mt-1">Goal: {targetValue.toLocaleString()}</p>
+                     </div>
+                     <div className="text-right">
+                       <span className="text-2xl font-bold text-primary">{achievedValue.toLocaleString()}</span>
+                       <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1">Achieved Volume</p>
+                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          </section> */}
+                  <div className="h-4 w-full bg-muted/20 rounded-full overflow-hidden border border-border/30">
+                     <div 
+                       className={`h-full bg-teal-700 rounded-full shadow-lg shadow-secondary/10 transition-all duration-1000 ease-out`}
+                       style={{ width: `${progressPercentage}%` }}
+                     />
+                  </div>
+                  <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                     <span>0% Start</span>
+                     <span>{progressPercentage}% Progress</span>
+                     <span>100% Target</span>
+                  </div>
+                </div>
 
-          {/* ── Employment & Banking ── */}
-          <section className={cardStyles}>
-            <div className="px-4 sm:px-6 py-3.5 border-b border-gray-100 flex items-center gap-2">
-              <Briefcase className="w-4 h-4 text-violet-500 shrink-0" />
-              <h2 className="font-black text-gray-800 text-xs uppercase tracking-widest">Employment & Banking</h2>
-            </div>
-
-            <div className="divide-y divide-dashed divide-gray-100">
-              {/* Employment */}
-              <div className="px-4 sm:px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <FormField
-                  label="Date of Join"
-                  value={employee.dateOfJoin ? new Date(employee.dateOfJoin).toLocaleDateString() : null}
-                  icon={<Calendar className="w-3.5 h-3.5" />}
-                />
-                <FormField
-                  label="Probation Start"
-                  value={employee.probationStartDate ? new Date(employee.probationStartDate).toLocaleDateString() : null}
-                  icon={<Calendar className="w-3.5 h-3.5" />}
-                />
-                <FormField label="Reporting Person" value={employee.reportingPerson} icon={<User className="w-3.5 h-3.5" />} />
-              </div>
-
-              {/* Docs */}
-              <div className="px-4 sm:px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <FormField label="Appointment Letter" value={employee.appointmentLetter} icon={<FileText className="w-3.5 h-3.5" />} />
-                <FormField label="Confirmation Ref" value={employee.confirmation} icon={<FileText className="w-3.5 h-3.5" />} />
-                <FormField label="Remark" value={employee.remark} />
-              </div>
-
-              {/* Banking */}
-              <div className="px-4 sm:px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <FormField label="Account No." value={employee.accNo} icon={<CreditCard className="w-3.5 h-3.5" />} />
-                <FormField label="Bank" value={employee.bank} />
-                <FormField label="Bank Branch" value={employee.bankBranch} icon={<MapPin className="w-3.5 h-3.5" />} />
-              </div>
-            </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-border/30">
+                    <div className="p-6 bg-primary/5 rounded-2xl border border-primary/10">
+                       <p className="text-[10px] font-bold text-primary/60 uppercase tracking-widest mb-1">Status Calibration</p>
+                       <p className="text-lg font-bold text-primary">{employee.status}</p>
+                       <p className="text-xs text-muted-foreground mt-1">Current employment lifecycle phase.</p>
+                    </div>
+                    <div className="p-6 bg-secondary/5 rounded-2xl border border-secondary/10">
+                       <p className="text-[10px] font-bold text-secondary/60 uppercase tracking-widest mb-1">Overriding Rate (ORC)</p>
+                       <p className="text-lg font-bold text-secondary">{orc}% Yield</p>
+                       <p className="text-xs text-muted-foreground mt-1">Strategic yield on branch performance.</p>
+                    </div>
+                </div>
+             </div>
           </section>
 
+          {/* Detailed Info Blocks (Identity & Banking) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <section className="bg-card/30 backdrop-blur-sm rounded-[2rem] p-8 border border-border/40">
+              <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-[0.3em] mb-8 border-b border-border/40 pb-4 flex items-center gap-2">
+                <BadgeInfo className="w-4 h-4" /> Identity & Contact
+              </h4>
+              <div className="space-y-6">
+                <DetailItem label="Official Name" value={employee.nameWithInitials} icon={<User className="w-4 h-4 text-primary" />} />
+                <DetailItem label="Email Address" value={employee.email} icon={<Mail className="w-4 h-4 text-primary" />} />
+                <DetailItem label="Phone Line" value={employee.phone} icon={<Phone className="w-4 h-4 text-primary" />} />
+                <DetailItem label="Address" value={employee.address} icon={<MapPin className="w-4 h-4 text-primary" />} />
+              </div>
+            </section>
+
+            <section className="bg-card/30 backdrop-blur-sm rounded-[2rem] p-8 border border-border/40">
+              <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-[0.3em] mb-8 border-b border-border/40 pb-4 flex items-center gap-2">
+                <CreditCard className="w-4 h-4" /> Banking & Finance
+              </h4>
+              <div className="space-y-6">
+                <DetailItem label="Account Number" value={employee.accNo} icon={<Hash className="w-4 h-4 text-primary" />} />
+                <DetailItem label="Primary Bank" value={employee.bank} icon={<Briefcase className="w-4 h-4 text-primary" />} />
+                <DetailItem label="Bank Branch" value={employee.bankBranch} icon={<MapPin className="w-4 h-4 text-primary" />} />
+                <DetailItem label="EPF Registration" value={employee.epfNo} icon={<FileText className="w-4 h-4 text-primary" />} />
+              </div>
+            </section>
+          </div>
+        </div>
+
+        {/* ── Sidebar Column ── */}
+        <aside className="lg:col-span-4 space-y-8">
+          
+          {/* High-Fidelity Payroll Summary */}
+          <section className="bg-primary rounded-[2.5rem] p-8 text-white shadow-2xl shadow-primary/20 relative overflow-hidden group">
+             <div className="absolute top-0 right-0 p-8 bg-secondary/10 rounded-full blur-[60px] pointer-events-none group-hover:scale-110 transition-transform duration-700" />
+             <div className="relative z-10">
+                <div className="flex justify-between items-start mb-10">
+                   <div>
+                      <p className="text-emerald-100/40 text-[10px] font-bold uppercase tracking-[0.3em] mb-2">Total Earned YTD</p>
+                      <p className="text-4xl font-bold font-heading leading-none">
+                         <span className="text-sm font-medium opacity-60 mr-1.5">Rs.</span>
+                         {employee.totalCommission?.toLocaleString()}
+                      </p>
+                   </div>
+                   <div className="p-4 bg-white/10 rounded-[1.5rem] border border-white/10 backdrop-blur-md">
+                      <Wallet className="w-6 h-6 text-secondary" />
+                   </div>
+                </div>
+
+                <div className="space-y-6">
+                   <div className="flex justify-between items-center bg-white/5 p-5 rounded-2xl border border-white/5">
+                      <div>
+                         <p className="text-emerald-100/40 text-[9px] font-bold uppercase tracking-widest mb-1">Rank Seniority</p>
+                         <p className="text-lg font-bold">Level {employee.position?.rank || 1}</p>
+                      </div>
+                      <div className="text-right">
+                         <p className="text-emerald-100/40 text-[9px] font-bold uppercase tracking-widest mb-1">ORC Yield</p>
+                         <p className="text-lg font-bold text-secondary">{orc}%</p>
+                      </div>
+                   </div>
+
+                   <ExportButton 
+                     data={{ ...employee, allCommission }} 
+                     exportFn={generateEmployeeCommissionPDF} 
+                     className="w-full bg-white/10 hover:bg-white/20 text-white rounded-[1.5rem] py-4 font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-3 border border-white/5 transition-all shadow-lg active:scale-95"
+                   />
+                </div>
+             </div>
+          </section>
+
+          {/* Employment Cycle Section */}
           <EmployeeStatusSection
             memberId={employee.id}
             status={employee.status}
@@ -337,157 +304,53 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: EmployeeDet
               setEmployee((prev) => prev ? { ...prev, status: newStatus } : prev)
             }
           />
-
-          {/* Employment details */}
-          {(employee.dateOfJoin || employee.reportingPerson || employee.accNo) && (
-            <section className={cardStyles}>
-              <div className="px-4 sm:px-6 py-3.5 border-b border-gray-50 flex items-center gap-2">
-                <Briefcase className="w-4 h-4 text-violet-500 shrink-0" />
-                <h2 className="font-black text-gray-800 text-xs uppercase tracking-widest">
-                  Employment & Banking
-                </h2>
-              </div>
-              <div className="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-x-10 sm:gap-y-7">
-                {employee.dateOfJoin && (
-                  <DetailItem label="Date of Join" value={new Date(employee.dateOfJoin).toLocaleDateString()} icon={<Calendar className="w-3.5 h-3.5" />} />
-                )}
-                {employee.reportingPerson && (
-                  <DetailItem label="Reporting Person" value={employee.reportingPerson} icon={<User className="w-3.5 h-3.5" />} />
-                )}
-                {employee.accNo && (
-                  <DetailItem label="Account No." value={employee.accNo} />
-                )}
-                {employee.bank && (
-                  <DetailItem label="Bank" value={employee.bank} />
-                )}
-                {employee.bankBranch && (
-                  <DetailItem label="Bank Branch" value={employee.bankBranch} />
-                )}
-                {employee.remark && (
-                  <div className="sm:col-span-2">
-                    <DetailItem label="Remark" value={employee.remark} />
-                  </div>
-                )}
-              </div>
-            </section>
-          )}
-        </div>
-
-        {/* Right column — hidden on mobile (shown above instead) */}
-        <div className="hidden lg:flex flex-col gap-6">
-          <section className="bg-slate-900 rounded-[2rem] p-7 text-white relative overflow-hidden border border-white/5 shadow-2xl">
-            <div className="absolute -right-6 -top-6 p-8 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="relative z-10">
-              <div className="flex justify-between items-start mb-8">
-                <div>
-                  <p className="text-[10px] font-semibold text-blue-400 uppercase tracking-[0.2em] mb-2">
-                    Current Designation
-                  </p>
-                  <h3 className="text-3xl font-semibold tracking-tighter leading-none">
-                    {employee.position?.title}
-                  </h3>
-                </div>
-                <div className="p-3 bg-white/5 rounded-2xl border border-white/10">
-                  <Briefcase className="w-5 h-5 text-blue-400" />
-                </div>
-              </div>
-
-              <div className="space-y-4 mb-8">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-400 font-medium">Rank Seniority</span>
-                  <span className="font-semibold text-blue-400">Level {employee.position?.rank}</span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-400 font-medium">ORC Overriding</span>
-                  <span className="font-semibold">{orc}%</span>
-                </div>
-              </div>
-
-              <div className="p-4 bg-white/5 rounded-2xl border border-white/5">
-                <p className="text-[10px] text-gray-500 uppercase font-black mb-1">Total Commission Earned</p>
-                <p className="text-2xl font-black text-emerald-400 tabular-nums">
-                  <span className="text-xs mr-1 font-medium">Rs.</span>
-                  {employee.totalCommission?.toLocaleString()}
-                </p>
-              </div>
-            </div>
-          </section>
-
-          {/* Timeline */}
-          <section className="bg-gray-50 rounded-2xl p-5 border border-gray-100 flex items-center gap-4">
-            <div className="p-3 bg-white rounded-xl shadow-sm shrink-0">
-              <Calendar className="w-5 h-5 text-gray-400" />
-            </div>
-            <div className="flex-1 grid grid-cols-2 gap-4">
-              <div>
-                <p className={labelStyles}>Onboarded</p>
-                <p className="text-[11px] font-bold text-gray-700">
-                  {new Date(employee.createdAt).toLocaleDateString()}
-                </p>
-              </div>
-              {/* <div>
-                <p className={labelStyles}>Last Sync</p>
-                <p className="text-[11px] font-bold text-gray-700">
-                  {new Date(employee.updatedAt).toLocaleDateString()}
-                </p>
-              </div> */}
-            </div>
-          </section>
-        </div>
+        </aside>
       </div>
 
-      {/* Timeline — mobile only */}
-      <section className="lg:hidden bg-gray-50 rounded-2xl p-4 border border-gray-100 flex items-center gap-4">
-        <div className="p-2.5 bg-white rounded-xl shadow-sm shrink-0">
-          <Calendar className="w-4 h-4 text-gray-400" />
+      {/* ── Financial Statement Feed ── */}
+      <section className="pt-12 border-t border-border/50">
+        <div className="flex flex-col sm:flex-row items-center justify-between mb-10 gap-4">
+           <div>
+              <h3 className="text-4xl font-bold text-foreground tracking-tight font-heading">Financial Pulse</h3>
+              <p className="text-muted-foreground font-medium">Archival record of commission cycles and distributions.</p>
+           </div>
+           {!readOnly && <Back />}
         </div>
-        <div className="grid grid-cols-2 gap-4 flex-1">
-          <div>
-            <p className={labelStyles}>Onboarded</p>
-            <p className="text-[11px] font-bold text-gray-700">
-              {new Date(employee.createdAt).toLocaleDateString()}
-            </p>
-          </div>
-          {/* <div>
-            <p className={labelStyles}>Last Sync</p>
-            <p className="text-[11px] font-bold text-gray-700">
-              {new Date(employee.updatedAt).toLocaleDateString()}
-            </p>
-          </div> */}
-        </div>
-      </section>
-
-      {/* ── Financial History ── */}
-      <div className="pt-6">
-        <div className="flex items-center gap-4 mb-6">
-          <div className="h-px bg-gray-100 flex-1" />
-          <h3 className="text-[10px] font-black text-gray-300 uppercase tracking-[0.4em] shrink-0">
-            Financial History
-          </h3>
-          <div className="h-px bg-gray-100 flex-1" />
-        </div>
+        
         {allCommission && (
-          <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <div className="bg-card/30 rounded-[3rem] p-2 sm:p-6 border border-border/40 backdrop-blur-sm animate-in fade-in slide-in-from-bottom-10 duration-1000">
             <CommissionStatementPage data={allCommission} />
           </div>
         )}
-      </div>
+      </section>
 
-      {/* ── Danger Zone ── */}
+      {/* ── Identity Audit Details ── */}
+      <section className="bg-primary/5 rounded-[2.5rem] p-8 sm:p-12 border border-primary/5">
+        <h4 className="text-xs font-bold text-primary/40 uppercase tracking-[0.5em] mb-10 text-center">Identity Audit Archives</h4>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+           <DetailItem label="EPF Registry" value={employee.epfNo} />
+           <DetailItem label="NIC Reference" value={employee.nic} />
+           <DetailItem label="Onboarding Date" value={new Date(employee.createdAt).toLocaleDateString()} />
+           <DetailItem label="Designation Entry" value={employee.position?.title} />
+        </div>
+      </section>
+
+      {/* ── Termination Protocol (Danger Zone) ── */}
       {!readOnly && (
-        <div className="pt-8 border-t border-gray-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 opacity-60 hover:opacity-100 transition-opacity">
-          <div>
-            <h4 className="text-xs font-black text-gray-900 uppercase tracking-widest">Danger Zone</h4>
-            <p className="text-xs text-gray-500 font-medium mt-1">
-              Permanently remove employee records from the core database.
+        <div className="pt-12 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-8 opacity-40 hover:opacity-100 transition-all duration-500 py-10">
+          <div className="text-center sm:text-left">
+            <h4 className="text-sm font-bold text-foreground uppercase tracking-widest">Protocol Override</h4>
+            <p className="text-xs text-muted-foreground font-medium mt-1 uppercase tracking-wider">
+              Permanent archival extraction from core enterprise records.
             </p>
           </div>
-          <button className="flex items-center gap-2 px-5 py-2.5 bg-red-50 text-red-600 border border-red-100 rounded-xl text-xs font-black uppercase hover:bg-red-600 hover:text-white transition-all shrink-0">
-            <Trash2 className="w-4 h-4" /> Terminate Record
+          <button className="flex items-center gap-3 px-8 py-4 bg-red-600 text-white rounded-[1.5rem] text-xs font-bold uppercase tracking-widest shadow-xl shadow-red-600/20 hover:scale-105 transition-all">
+            <Trash2 className="w-4 h-4" /> Execute Record Termination
           </button>
         </div>
       )}
 
+      {/* Edit Modal */}
       {!readOnly && openModel && (
         <EmpModal
           mode="edit"
@@ -496,7 +359,7 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: EmployeeDet
           onSuccess={fetchMember}
         />
       )}
-    </div>
+    </main>
   );
 };
 

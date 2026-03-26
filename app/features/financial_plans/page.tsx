@@ -90,14 +90,14 @@ export default function Page() {
             Financial Plans
           </Heading>
 
-          <p className="text-gray-500 mt-1">
+          <p className="text-muted-foreground mt-1 text-sm font-medium">
             Manage company financial products and terms
           </p>
         </div>
         {canAdd && (
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 hover:bg-blue-600 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-xl shadow-slate-200 active:scale-95"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-xl shadow-primary/10 active:scale-95 hover:opacity-90"
           >
             <Plus size={17} /> Add Financial Plan
           </button>
@@ -110,14 +110,14 @@ export default function Page() {
           plans.map((plan: any) => (
             <div
               key={plan.id}
-              className="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-300 overflow-hidden group"
+              className="bg-card rounded-2xl shadow-sm border border-border hover:shadow-xl transition-all duration-300 overflow-hidden group"
             >
               <div className="p-3  sm:p-6">
                 <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">
+                  <h3 className="text-xl font-bold text-foreground mb-2 tracking-tight">
                     {plan.name}
                   </h3>
-                  <span className="bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full uppercase">
+                  <span className="bg-green-500/10 text-green-600 text-[10px] font-bold px-3 py-1 rounded-full uppercase border border-green-500/20">
                     {plan.status}
                   </span>
                 </div>
@@ -127,65 +127,65 @@ export default function Page() {
                   {plan.description}
                 </p> */}
 
-                <div className="flex flex-col gap-3 mb-6 bg-gray-50 p-4 rounded-xl">
+                <div className="flex flex-col gap-3 mb-6 bg-muted/50 p-4 rounded-xl border border-border">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Clock size={18} className="text-blue-500" />
-                      <span className="text-sm font-semibold text-gray-500">
+                      <Clock size={16} className="text-primary opacity-70" />
+                      <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                         Duration
                       </span>
                     </div>
-                    <span className="text-sm font-bold text-gray-800">
+                    <span className="text-sm font-bold text-foreground">
                       {plan.duration}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <TrendingUp size={18} className="text-green-500" />
-                      <span className="text-sm font-semibold text-gray-500">
+                      <TrendingUp size={16} className="text-green-500 opacity-70" />
+                      <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                         Interest Rate
                       </span>
                     </div>
-                    <span className="text-sm font-bold text-gray-800">
+                    <span className="text-sm font-bold text-foreground">
                       {plan.rate}%
                     </span>
                   </div>
 
                   {plan.investment && (
-                    <div className="flex items-center justify-between border-t border-gray-200 pt-2 mt-1">
+                    <div className="flex items-center justify-between border-t border-border pt-3 mt-1">
                       <div className="flex items-center gap-2">
                         <CircleDollarSign
-                          size={18}
-                          className="text-purple-500"
+                          size={16}
+                          className="text-amber-500 opacity-70"
                         />
-                        <span className="text-sm font-semibold text-gray-500">
+                        <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
                           Min. Investment
                         </span>
                       </div>
-                      <span className="text-sm font-bold text-gray-800">
+                      <span className="text-sm font-bold text-foreground">
                         Rs. {Number(plan.investment).toLocaleString()}
                       </span>
                     </div>
                   )}
                 </div>
 
-                <div className="flex gap-3 ">
+                <div className="flex gap-3 mt-auto">
                   {canEdit && (
                     <button
                       onClick={() => handleEditClick(plan)}
-                      className="flex-1 flex items-center justify-center gap-2 text-sm font-bold text-gray-600 hover:text-blue-600 hover:bg-blue-50 py-2.5 rounded-lg transition-all border border-transparent hover:border-blue-100"
+                      className="flex-1 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-primary hover:bg-muted py-3 rounded-xl transition-all border border-transparent hover:border-border"
                     >
-                      <Edit2 size={16} /> Edit
+                      <Edit2 size={14} /> Edit
                     </button>
                   )}
 
                   {canDelete && (
                     <button
                       onClick={() => handleDeleteClick(plan.id)}
-                      className="flex-1 flex items-center justify-center gap-2 text-sm font-bold text-red-500 hover:bg-red-50 py-2.5 rounded-lg transition-all border border-transparent hover:border-red-100"
+                      className="flex-1 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest text-destructive hover:bg-destructive/10 py-3 rounded-xl transition-all border border-transparent hover:border-destructive/20"
                     >
-                      <Trash2 size={16} /> Delete
+                      <Trash2 size={14} /> Delete
                     </button>
                   )}
                 </div>
@@ -196,8 +196,9 @@ export default function Page() {
             </div>
           ))
         ) : (
-          <div className="col-span-full text-center py-20 text-gray-400 border-2 border-dashed rounded-2xl">
-            No financial plans found.
+          <div className="col-span-full text-center py-24 text-muted-foreground/30 border-2 border-dashed border-border rounded-2xl flex flex-col items-center gap-4">
+            <CircleDollarSign size={48} strokeWidth={1} className="opacity-20" />
+            <p className="text-sm font-bold uppercase tracking-[0.2em]">No financial plans found</p>
           </div>
         )}
       </div>

@@ -89,7 +89,7 @@ const Page = () => {
               <div className="w-full lg:w-1/3">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <h2 className="text-sm font-black uppercase tracking-widest text-slate-700">
+                    <h2 className="text-sm font-bold uppercase tracking-widest text-slate-700">
                       {selectedPlan.name}
                     </h2>
                   </div>
@@ -97,7 +97,7 @@ const Page = () => {
                   {/* Unselect Button inside the Calculator */}
                   <button
                     onClick={() => { setSelectedId(null); setSelectedPlan(null); }}
-                    className="bg-red-100 flex items-center justify-center px-1 py-1 rounded-md text-[10px] font-black text-slate-400 hover:text-rose-500 uppercase tracking-tighter transition-colors"
+                    className="bg-red-100 flex items-center justify-center px-1 py-1 rounded-md text-[10px] font-bold text-slate-400 hover:text-rose-500 uppercase tracking-tighter transition-colors"
                   >
                     <X size={20} className="inline text-red-400" />
                   </button>
@@ -117,14 +117,14 @@ const Page = () => {
               {/* Right: Results Grid */}
               <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
                 <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 flex flex-col justify-center">
-                  <p className="text-[10px] text-emerald-600 font-black uppercase tracking-widest mb-1">Monthly Yield</p>
+                  <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest mb-1">Monthly Yield</p>
                   <p className="text-md font-semibold text-emerald-700 tabular-nums">
                     {formatLKR(monthlyReturn)}
                   </p>
                 </div>
 
                 <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 flex flex-col justify-center">
-                  <p className="text-[10px] text-blue-600 font-black uppercase tracking-widest mb-1">Yearly Yield</p>
+                  <p className="text-[10px] text-blue-600 font-bold uppercase tracking-widest mb-1">Yearly Yield</p>
                   <p className="text-md font-semibold text-blue-700 tabular-nums">
                     {formatLKR(yearlyReturn)}
                   </p>

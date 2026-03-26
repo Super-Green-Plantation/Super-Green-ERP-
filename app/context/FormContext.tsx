@@ -25,6 +25,7 @@ export interface FormData {
     proposal?: string;
     agreement?: string;
     signature?: string;
+    proposalFormNo?: string;
   };
   investment: {
     planId?: string;

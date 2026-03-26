@@ -118,7 +118,7 @@ const { reset, resetField } = form;
         type="button"
         disabled={loading}
         className={`
-          w-full py-4 px-6 rounded-2xl font-black uppercase tracking-widest text-sm transition-all duration-300
+          w-full py-4 px-6 rounded-2xl font-bold uppercase tracking-widest text-sm transition-all duration-300
           flex items-center justify-center gap-3
           ${loading
             ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"

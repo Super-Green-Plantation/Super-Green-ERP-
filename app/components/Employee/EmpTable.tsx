@@ -129,59 +129,59 @@ const EmpTable = ({ onEdit, onRefresh, branchId, searchQuery }: EmpTableProps) =
 
 
   return (
-    <div className="w-full bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+    <div className="w-full bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-slate-50/50 border-b border-slate-200">
-              <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
+            <tr className="bg-muted/30 border-b border-border">
+              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                 Emp No
               </th>
-              <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
+              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                 Employee Name
               </th>
-              <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
+              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                 Position
               </th>
-              <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500">
+              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                 Contact
               </th>
               {canEdit && (
-                <th className="px-6 py-4 text-[11px] font-black uppercase tracking-wider text-slate-500 text-center">
+                <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground text-center">
                   Actions
                 </th>
               )}
 
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-border">
             {pageEmployees?.map((e: any) => (
               <tr
                 key={e.id}
-                className="hover:bg-slate-50/80 transition-colors group"
+                className="hover:bg-muted/30 transition-colors group"
               >
                 <td className="px-6 py-4">
-                  <span className="text-xs font-bold text-slate-400 tabular-nums">
+                  <span className="text-xs font-bold text-muted-foreground tabular-nums">
                     #{e.empNo}
                   </span>
                 </td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-3">
 
-                    <span className="text-sm font-bold text-slate-900 leading-tight">
+                    <span className="text-sm font-bold text-foreground leading-tight">
                       {e.nameWithInitials}
                     </span>
                   </div>
                 </td>
                 <td className="px-6 py-4">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-bold bg-green-100 text-green-600 border border-green-100 uppercase tracking-tight">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-bold bg-green-500/10 text-green-600 border border-green-500/20 uppercase tracking-tight">
                     <Briefcase size={12} className="opacity-70" />
                     {e.position?.title || "N/A"}
                   </div>
                 </td>
-                <td className="px-6 py-4 text-slate-500">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-slate-600">
-                    <div className="w-6 h-6 rounded-md bg-slate-50 flex items-center justify-center text-slate-400">
+                <td className="px-6 py-4 text-muted-foreground font-semibold text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-md bg-muted flex items-center justify-center text-muted-foreground/50">
                       <Phone size={12} />
                     </div>
                     {e.phone ?? "-"}
@@ -192,21 +192,21 @@ const EmpTable = ({ onEdit, onRefresh, branchId, searchQuery }: EmpTableProps) =
                     <div className="flex items-center justify-center gap-2">
                       <button
                         onClick={() => onEdit(e)}
-                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-xl transition-all"
+                        className="p-2 text-muted-foreground hover:text-primary hover:bg-card hover:shadow-sm border border-transparent hover:border-border rounded-xl transition-all"
                         title="Edit"
                       >
                         <Pen size={16} />
                       </button>
                       <button
                         onClick={() => handleDeleteClick(e.id)}
-                        className="p-2 text-slate-400 hover:text-rose-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 rounded-xl transition-all"
+                        className="p-2 text-muted-foreground hover:text-destructive hover:bg-card hover:shadow-sm border border-transparent hover:border-border rounded-xl transition-all"
                         title="Delete"
                       >
                         <Trash2 size={16} />
                       </button>
                       <Link
                         href={`/features/branches/employees/${branchId}/${e.id}`}
-                        className="ml-2 px-4 py-2 text-[10px] font-black uppercase tracking-tighter text-slate-600 bg-slate-50 border border-slate-200 rounded-xl hover:bg-white hover:shadow-md hover:text-blue-600 transition-all flex items-center gap-1.5 active:scale-95"
+                        className="ml-2 px-4 py-2 text-[10px] font-bold uppercase tracking-tighter text-foreground bg-muted border border-border rounded-xl hover:bg-card hover:shadow-md hover:text-primary transition-all flex items-center gap-1.5 active:scale-95"
                       >
                         Profile
                         <ExternalLink size={12} />
@@ -222,10 +222,10 @@ const EmpTable = ({ onEdit, onRefresh, branchId, searchQuery }: EmpTableProps) =
 
         {allEmployees.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16">
-            <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 mb-3">
+            <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center text-muted-foreground/30 mb-3">
               <User size={24} />
             </div>
-            <p className="text-sm font-bold text-slate-400 italic">
+            <p className="text-sm font-bold text-muted-foreground italic">
               No employees found in records
             </p>
           </div>

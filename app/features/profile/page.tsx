@@ -51,10 +51,10 @@ export default async function Profile() {
             </div>
 
             <div className="w-full md:w-auto bg-slate-950 border border-blue-500/30 rounded-2xl md:rounded-3xl p-6 min-w-50 text-center shadow-2xl relative">
-              <p className="text-[11px] font-black text-blue-400 uppercase tracking-[0.3em] mb-2">
+              <p className="text-[11px] font-bold text-blue-400 uppercase tracking-[0.3em] mb-2">
                 Total Commission
               </p>
-              <span className="text-xl font-black text-white tracking-tight">
+              <span className="text-xl font-bold text-white tracking-tight">
                 <span className="text-blue-500 mr-1">LKR</span>
                 {member?.totalCommission?.toLocaleString() || "0"}
               </span>

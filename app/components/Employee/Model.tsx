@@ -291,47 +291,47 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
 
   // ─── Styles ────────────────────────────────────────────────
   const inputStyles =
-    "w-full pl-10 pr-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm";
+    "w-full pl-10 pr-4 py-3 bg-muted/30 border border-border rounded-xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-sm font-bold text-foreground placeholder:text-muted-foreground/30";
   const inputStylesNoIcon =
-    "w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm";
+    "w-full px-4 py-3 bg-muted/30 border border-border rounded-xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-sm font-bold text-foreground placeholder:text-muted-foreground/30";
   const labelStyles =
-    "block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 ml-1";
+    "block text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em] mb-2 ml-1";
   const tabBtn = (active: boolean) =>
-    `px-4 py-2 text-sm font-medium rounded-lg transition-colors ${active
-      ? "bg-blue-600 text-white shadow-sm"
-      : "text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+    `px-6 py-2.5 text-[11px] font-bold uppercase tracking-widest rounded-xl transition-all ${active
+      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+      : "text-muted-foreground hover:bg-muted hover:text-foreground"
     }`;
 
   // ─── Render ────────────────────────────────────────────────
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6 py-6 overflow-y-auto">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm px-6 py-6 overflow-y-auto animate-in fade-in duration-300">
       <div
-        className="w-full max-w-3xl bg-white rounded-2xl shadow-2xl overflow-hidden relative animate-in fade-in zoom-in duration-200 my-auto"
+        className="w-full max-w-3xl bg-card rounded-[2.5rem] shadow-2xl border border-border overflow-hidden relative scale-in-center my-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-          <h2 className="text-xl font-bold text-gray-800">
-            {mode === "add" ? "Create New Employee" : "Edit Employee Details"}
+        <div className="px-8 py-6 border-b border-border flex justify-between items-center bg-muted/20">
+          <h2 className="text-xl font-bold text-foreground uppercase tracking-tight">
+            {mode === "add" ? "Register Team Member" : "Update Profile Records"}
           </h2>
           <button
             onClick={onClose}
-            className="p-1.5 hover:bg-gray-200 rounded-full text-gray-400 hover:text-gray-600 transition-colors"
+            className="p-2 hover:bg-muted rounded-full text-muted-foreground hover:text-foreground transition-all border border-transparent hover:border-border"
           >
-            <X className="w-5 h-5" />
+            <X className="w-6 h-6" />
           </button>
         </div>
 
         {/* Tab Navigation */}
-        <div className="px-6 pt-4 flex gap-2 border-b border-gray-100 pb-3">
+        <div className="px-8 pt-6 flex gap-3 border-b border-border pb-4 bg-muted/10">
           <button type="button" className={tabBtn(activeTab === "basic")} onClick={() => setActiveTab("basic")}>
-            Basic Info
+            Identity
           </button>
           <button type="button" className={tabBtn(activeTab === "personal")} onClick={() => setActiveTab("personal")}>
-            Personal
+            Bio Data
           </button>
           <button type="button" className={tabBtn(activeTab === "employment")} onClick={() => setActiveTab("employment")}>
-            Employment & Bank
+            Employment
           </button>
         </div>
 
@@ -467,7 +467,7 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                           key={s}
                           type="button"
                           onClick={() => setFormData({ ...formData, status: s, positionId: "" })} // reset position on type change
-                          className={`flex-1 py-2 px-2 rounded-lg text-xs font-black uppercase tracking-wider border transition-all
+                          className={`flex-1 py-2 px-2 rounded-lg text-xs font-bold uppercase tracking-wider border transition-all
             ${isActive ? activeStyle : "bg-white text-gray-400 border-gray-200 hover:border-gray-300"}`}
                         >
                           {s === "PERMANENT" ? "Permanent" : s === "MANAGEMENT" ? "Management" : "Probation"}
@@ -670,15 +670,15 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
 
                 {/* Address */}
                 <div className="md:col-span-2">
-                  <label className={labelStyles}>Address</label>
+                  <label className={labelStyles}>Residential Address</label>
                   <div className="relative">
-                    <MapPin className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                    <MapPin className="absolute left-4 top-4 w-4 h-4 text-muted-foreground/50" />
                     <textarea
-                      placeholder="No. XX, Street, City"
+                      placeholder="e.g. No. 123, Galle Road, Colombo 03"
                       value={formData.address}
                       onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                      rows={2}
-                      className="w-full pl-10 pr-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm resize-none"
+                      rows={3}
+                      className="w-full pl-12 pr-4 py-3 bg-muted/30 border border-border rounded-2xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-sm font-bold text-foreground resize-none placeholder:text-muted-foreground/30"
                     />
                   </div>
                 </div>
@@ -842,9 +842,9 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
 
                 {/* Bank */}
                 <div>
-                  <label className={labelStyles}>Bank</label>
+                  <label className={labelStyles}>Bank Name</label>
                   <div className="relative">
-                    <Building2 className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                    <Building2 className="absolute left-3 top-3 w-4 h-4 text-muted-foreground/50" />
                     <input
                       placeholder="e.g. Commercial Bank"
                       value={formData.bank}
@@ -858,9 +858,9 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                 <div className="md:col-span-2">
                   <label className={labelStyles}>Bank Branch</label>
                   <div className="relative">
-                    <MapPin className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                    <MapPin className="absolute left-3 top-3 w-4 h-4 text-muted-foreground/50" />
                     <input
-                      placeholder="e.g. Colombo 03"
+                      placeholder="e.g. Colombo 03 / Head Office"
                       value={formData.bankBranch}
                       onChange={(e) => setFormData({ ...formData, bankBranch: e.target.value })}
                       className={inputStyles}
@@ -872,26 +872,30 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
           </div>
 
           {/* Footer */}
-          <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3 sm:items-center">
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white py-2 rounded-lg font-bold shadow-lg shadow-blue-500/20 flex items-center justify-center transition-all active:scale-95"
-            >
-              {loading ? (
-                <Spinner className="w-5 h-5" />
-              ) : mode === "add" ? (
-                "Create Employee"
-              ) : (
-                "Save Changes"
-              )}
-            </button>
+          <div className="px-8 py-8 border-t border-border bg-muted/20 flex justify-end gap-4">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+              className="px-8 py-3 rounded-2xl text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:bg-muted transition-all border border-transparent hover:border-border"
             >
               Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-10 py-3 bg-primary text-primary-foreground rounded-2xl text-[10px] font-bold uppercase tracking-widest shadow-xl shadow-primary/20 hover:opacity-90 transition-all flex items-center gap-2.5 active:scale-95 disabled:opacity-50"
+            >
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <Spinner className="w-4 h-4 border-white/30 border-t-white" />
+                  <span>Processing...</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Check className="w-4 h-4" />
+                  <span>{mode === "add" ? "Register Employee" : "Save Changes"}</span>
+                </div>
+              )}
             </button>
           </div>
         </form>
