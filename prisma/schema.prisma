@@ -40,17 +40,17 @@ enum Title {
   IT
 
   // Probation positions
-  FA          // probation FA
-  TL          // probation TL  
-  BM          // probation BM
-  RM          // probation RM
-  ZM          // probation ZM
-  P_AGM       // probation AGM
+  FA // probation FA
+  TL // probation TL  
+  BM // probation BM
+  RM // probation RM
+  ZM // probation ZM
+  P_AGM // probation AGM
 
   // Permanent positions
   TRAINEE_FA
-  P_FA        // permanent FA
-  P_TL        // permanent TL
+  P_FA // permanent FA
+  P_TL // permanent TL
   JBM
   SBM
   JRM
@@ -76,12 +76,11 @@ model Position {
   updatedAt       DateTime         @updatedAt
   positionTargets PositionTarget[]
   salary          PositionSalary?
-  
-  type         PositionType @default(PROBATION)
 
-  isProbation Boolean @default(false)
+  type PositionType @default(PROBATION)
+
+  isProbation  Boolean @default(false)
   isManagement Boolean @default(false) // ← excludes from ORC chain
-
 }
 
 model CommissionRate {
@@ -186,28 +185,28 @@ model PositionSalary {
 
 //many side ekata foreign key eka / Parent has an array
 model Member {
-  id                Int       @id @default(autoincrement())
-  nameWithInitials  String?
-  email             String?   @unique
-  empNo             String    @unique
-  epfNo             String?
-  phone             String?
-  phone2            String?
-  nic               String?
-  dob               DateTime?
-  gender            String?
-  civilStatus       String?
-  address           String?
-  reportingPerson   String?
-  dateOfJoin        DateTime?
-  appointmentLetter String?
-  confirmation      String?
-  remark            String?
-  accNo             String?
-  bank              String?
-  bankBranch        String?
-  totalCommission   Float     @default(0)
-  profilePic        String?
+  id                     Int       @id @default(autoincrement())
+  nameWithInitials       String?
+  email                  String?   @unique
+  empNo                  String    @unique
+  epfNo                  String?
+  phone                  String?
+  phone2                 String?
+  nic                    String?
+  dob                    DateTime?
+  gender                 String?
+  civilStatus            String?
+  address                String?
+  reportingPerson        String?
+  dateOfJoin             DateTime?
+  appointmentLetter      String?
+  confirmation           String?
+  remark                 String?
+  accNo                  String?
+  bank                   String?
+  bankBranch             String?
+  totalCommission        Float     @default(0)
+  profilePic             String?
   lastClientRegisteredAt DateTime?
 
   userId String? @unique @db.Uuid
@@ -224,6 +223,7 @@ model Member {
   advisorInvestments Investment[]   @relation("AdvisorInvestments")
   activityLog        ActivityLog[]
   clients            Client[]
+  createdClients     Client[]       @relation("CreatedByMember")
 
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
@@ -399,7 +399,10 @@ model Client {
   createdAt             DateTime                @default(now())
   updatedAt             DateTime                @updatedAt
   ClientDocumentRequest ClientDocumentRequest[]
-  proposalFormNo     String?                 @unique
+  proposalFormNo        String?                 @unique
+
+  createdById Int?
+  createdBy   Member? @relation("CreatedByMember", fields: [createdById], references: [id])
 }
 
 model Commission {

@@ -25,14 +25,27 @@ export async function getAccessibleClients(page = 1, pageSize = 10) {
       whereCondition = {};
       break;
 
+    case "EMPLOYEE": {
+      // ✅ ONLY their own clients
+      if (!dbUser.member?.id) {
+        throw new Error("Member not found for user");
+      }
+
+      whereCondition = {
+        createdById: dbUser.member.id,
+      };
+      break;
+    }
+
     case "BRANCH_MANAGER":
     case "REGIONAL_MANAGER":
-    case "AGM":
-    case "EMPLOYEE": {
-      // All roles get their branches from MemberBranch via member relation
-      const branchIds = dbUser.member?.branches?.map(mb => mb.branchId) ?? [];
+    case "AGM": {
+      const branchIds =
+        dbUser.member?.branches?.map((mb) => mb.branchId) ?? [];
 
-      if (branchIds.length === 0) throw new Error("No branches assigned to this user");
+      if (branchIds.length === 0) {
+        throw new Error("No branches assigned to this user");
+      }
 
       whereCondition = {
         branchId: { in: branchIds },
@@ -224,6 +237,7 @@ export async function saveClient(data: {
           proposal: applicant.proposal,
           agreement: applicant.agreement,
           memberId: member ? member.id : null,
+          createdById: currentUser?.member?.id ?? null,
         },
       });
 
