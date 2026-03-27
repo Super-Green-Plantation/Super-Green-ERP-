@@ -741,17 +741,61 @@ export async function searchClients(searchText: string) {
   const dbUser = await getCurrentUserWithRole();
   if (!dbUser) throw new Error("User not found");
 
-  const client = await prisma.client.findFirst({
-    where: {
-      OR: [{ fullName: { contains: searchText } },
-      { nic: { contains: searchText } },
-      { proposalFormNo: { contains: searchText } }],
+  let whereCondition: any = {
+    OR: [
+      { fullName: { contains: searchText, mode: "insensitive" } },
+      { nic: { contains: searchText, mode: "insensitive" } },
+      { proposalFormNo: { contains: searchText, mode: "insensitive" } },
+    ],
+  };
 
-      ...(dbUser.role === "ADMIN" || dbUser.role === "HR" || dbUser.role === "DEV"
-        ? {}
-        : { branchId: Number(dbUser.branchId) }),
+  switch (dbUser.role) {
+    case "ADMIN":
+    case "HR":
+    case "DEV":
+      // no extra filter
+      break;
+
+    case "EMPLOYEE": {
+      if (!dbUser.member?.id) {
+        throw new Error("Member not found");
+      }
+
+      whereCondition = {
+        ...whereCondition,
+        createdById: dbUser.member.id, // ✅ only their clients
+      };
+      break;
     }
 
-  })
+    case "BRANCH_MANAGER":
+    case "REGIONAL_MANAGER":
+    case "AGM": {
+      const branchIds =
+        dbUser.member?.branches?.map((mb) => mb.branchId) ?? [];
+
+      if (branchIds.length === 0) {
+        throw new Error("No branches assigned");
+      }
+
+      whereCondition = {
+        ...whereCondition,
+        branchId: { in: branchIds }, // ✅ branch-based access
+      };
+      break;
+    }
+
+    default:
+      throw new Error("Unauthorized role");
+  }
+
+  const client = await prisma.client.findFirst({
+    where: whereCondition,
+    include: {
+      branch: true,
+      investments: true,
+    },
+  });
+
   return client;
 }
