@@ -139,7 +139,7 @@
     @apply bg-muted/30;
   }
   th {
-    @apply p-5 text-left font-extrabold text-[11px] uppercase tracking-[0.1em] text-muted-foreground/60 border-b border-border;
+    @apply p-5 text-left font-extrabold text-[11px] uppercase tracking-widest text-muted-foreground/60 border-b border-border;
   }
   td {
     @apply p-5 border-b border-border/50 text-[15px] transition-colors;
@@ -168,7 +168,7 @@
   }
 
   .input-prefix {
-     @apply px-5 py-4 bg-muted/30 text-foreground font-bold text-[11px] border-r border-border min-w-[70px] flex items-center justify-center uppercase tracking-widest;
+     @apply px-5 py-4 bg-muted/30 text-foreground font-bold text-[11px] border-r border-border min-w-17.5 flex items-center justify-center uppercase tracking-widest;
   }
 
   .input-field {

@@ -7,9 +7,11 @@ import {
   Printer,
   ShieldCheck
 } from "lucide-react";
+import { useIsMounted } from "@/app/hooks/useIsMounted";
 type Commission = { amount: number };
 
 const CommissionReceipt = ({ data }: { data: any }) => {
+  const isMounted = useIsMounted();
   if (!data) return null;
   const { investment, commissions, alreadyProcessed } = data;
   const total = commissions.reduce(
@@ -76,7 +78,7 @@ const CommissionReceipt = ({ data }: { data: any }) => {
               Issue Date
             </p>
             <p className="text-sm font-semibold text-gray-900">
-              {new Date().toLocaleDateString("en-GB")}
+              {isMounted ? new Date().toLocaleDateString("en-GB") : "—"}
             </p>
           </div>
           <div className="text-right">
@@ -147,7 +149,7 @@ const CommissionReceipt = ({ data }: { data: any }) => {
                     Auth Signature
                   </p>
                   <p className="text-[10px] font-mono text-white opacity-50 uppercase">
-                    {Math.random().toString(36).substring(7)}
+                    {isMounted ? Math.random().toString(36).substring(7) : "......"}
                   </p>
                 </div>
               </div>

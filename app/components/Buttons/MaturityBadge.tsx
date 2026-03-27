@@ -1,4 +1,5 @@
 import { Calendar } from "lucide-react";
+import { useIsMounted } from "@/app/hooks/useIsMounted";
 
 const getDaysUntilMaturity = (maturityDate: string) => {
   const today = new Date();
@@ -8,6 +9,7 @@ const getDaysUntilMaturity = (maturityDate: string) => {
 };
 
 export const MaturityBadge = ({ investments }: { investments: any[] }) => {
+  const isMounted = useIsMounted();
   if (!investments?.length) return null;
 
   const upcoming = investments
@@ -45,19 +47,20 @@ export const MaturityBadge = ({ investments }: { investments: any[] }) => {
           {isOverdue ? "Matured" : "Maturity Countdown"}
         </p>
         <p className="text-sm font-bold truncate">
-          {isOverdue
-            ? `Matured ${Math.abs(nearest.daysLeft)} days ago`
-            : nearest.daysLeft === 0
-              ? "Matures today"
-              : `${nearest.daysLeft} days remaining`
-          }
+          {isMounted ? (
+            isOverdue
+              ? `Matured ${Math.abs(nearest.daysLeft)} days ago`
+              : nearest.daysLeft === 0
+                ? "Matures today"
+                : `${nearest.daysLeft} days remaining`
+          ) : "Calculating..."}
         </p>
       </div>
       <div className="text-right shrink-0">
         <p className="text-[10px] opacity-60 font-bold">
-          {new Date(nearest.maturityDate).toLocaleDateString("en-GB", {
+          {isMounted ? new Date(nearest.maturityDate).toLocaleDateString("en-GB", {
             day: "numeric", month: "short", year: "numeric"
-          })}
+          }) : "—"}
         </p>
         <p className="text-[10px] opacity-60 font-bold">{nearest.refNumber}</p>
       </div>

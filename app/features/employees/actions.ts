@@ -9,48 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { ActivityAction, ActivityEntity, Prisma } from "@prisma/client";
 import { supabaseAdmin } from "@/prisma/seed";
 import { revalidatePath } from "next/cache";
-
-interface EmpData {
-  // name: string;
-  empNo: string;
-  epfNo: string;
-  positionId: number;
-
-  // Replaces branchId — always at least one entry (the current branch)
-  branchIds: number[];
-
-  // Basic contact
-  email?: string;
-  phone?: string;
-  phone2?: string;
-  totalCommission: number;
-
-  // Name variants
-  nameWithInitials?: string;
-
-  // Personal
-  nic?: string;
-  dob?: string;
-  gender?: string;
-  civilStatus?: string;
-  address?: string;
-
-  // Employment
-  reportingPerson?: string;
-  dateOfJoin?: string;
-  appointmentLetter?: string;
-  confirmation?: string;
-  remark?: string;
-
-  status: "PROBATION" | "PERMANENT" | "MANAGEMENT";
-  probationStartDate: Date | null;
-
-  // Banking
-  accNo?: string;
-  bank?: string;
-  bankBranch?: string;
-  profilePic?: string;
-}
+import { EmpData } from "@/app/types/member";
 
 const generateEmpNo = async (tx: any) => {
   const lastEmp = await tx.member.findFirst({
@@ -123,7 +82,6 @@ export async function createEmployee(data: EmpData) {
           },
         });
       }
-
       const member = await tx.member.create({
         data: {
           userId: supabaseUserId,
@@ -152,12 +110,14 @@ export async function createEmployee(data: EmpData) {
           branches: {
             create: data.branchIds.map((branchId) => ({ branchId })),
           },
-          probationStartDate: data.probationStartDate
-            ? new Date(data.probationStartDate)
-            : null,
+          probationStartDate: data.probationStartDate,
+           
           profilePic: data.profilePic,
         },
       });
+
+
+
 
       return member;
     });

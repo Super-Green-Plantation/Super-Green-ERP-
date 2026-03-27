@@ -134,7 +134,7 @@ const CommissionStatementPage = ({ data }: { data: any }) => {
               {/* Month header — editorial style */}
               <div className="bg-primary/95 backdrop-blur-md p-6 sm:px-10 sm:py-7 rounded-[2rem] flex flex-col sm:flex-row items-center justify-between border border-white/10 shadow-xl mb-6 group/header">
                 <div className="flex items-center gap-5">
-                  <div className="w-10 h-10 rounded-[1rem] bg-secondary/10 flex items-center justify-center border border-secondary/20">
+                  <div className="w-10 h-10 rounded-3xl bg-secondary/10 flex items-center justify-center border border-secondary/20">
                     <Calendar className="w-5 h-5 text-secondary" />
                   </div>
                   <div className="text-center sm:text-left">
@@ -170,7 +170,7 @@ const CommissionStatementPage = ({ data }: { data: any }) => {
                         <tr key={item.id} className="hover:bg-primary/5 transition-all duration-300 group/row">
                           <td className="px-8 py-6">
                             <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 rounded-[1rem] bg-muted/50 flex items-center justify-center border border-border/50 group-hover/row:bg-primary/10 group-hover/row:border-primary/20 transition-all">
+                              <div className="w-10 h-10 rounded-3xl bg-muted/50 flex items-center justify-center border border-border/50 group-hover/row:bg-primary/10 group-hover/row:border-primary/20 transition-all">
                                 <UserCheck className="w-5 h-5 text-muted-foreground group-hover/row:text-primary" />
                               </div>
                               <div>
@@ -291,11 +291,11 @@ const CommissionStatementPage = ({ data }: { data: any }) => {
       {/* Footer Info */}
       <div className="mt-12 border-t border-border/50 pt-10 text-center px-4 sm:px-20 relative z-10">
         <div className="flex items-center justify-center gap-4 mb-6">
-           <div className="h-[1px] w-12 bg-border"></div>
+           <div className="h-px w-12 bg-border"></div>
            <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-[0.5em]">
              Confidential Enterprise Audit
            </p>
-           <div className="h-[1px] w-12 bg-border"></div>
+           <div className="h-px w-12 bg-border"></div>
         </div>
         <p className="text-[11px] leading-relaxed text-muted-foreground/80 font-medium italic max-w-2xl mx-auto">
           "The accuracy of this document is critical for enterprise transparency. This automated record 

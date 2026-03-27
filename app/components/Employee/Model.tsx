@@ -20,20 +20,16 @@ import {
   Check,
   Upload,
 } from "lucide-react";
-import { Member } from "@/app/types/member";
+import { EmpModalProps, Member } from "@/app/types/member";
 import { getBranchById, getBranches } from "@/app/features/branches/actions";
 import { useParams } from "next/navigation";
 import { Branch } from "@/app/types/branch";
 import { createEmployee, getPositions, getUplineMembers, updateEmployee, uploadProfilePic } from "@/app/features/employees/actions";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { inputStyles, inputStylesNoIcon, labelStyles, tabBtn } from "@/app/const/styles";
 
-interface EmpModalProps {
-  mode: "add" | "edit";
-  initialData?: Member;
-  onClose: () => void;
-  onSuccess?: () => void;
-}
+
 
 
 const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
@@ -47,33 +43,9 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
   const [profilePicFile, setProfilePicFile] = useState<File | null>(null);
   const [profilePicPreview, setProfilePicPreview] = useState<string>("");
   const [uploadingPic, setUploadingPic] = useState(false);
-
   const [positions, setPositions] = useState<{ id: number; title: string; rank: number; type: string; isProbation: boolean }[]>([]);
-
-
-
-  useEffect(() => {
-    getPositions().then(setPositions);
-  }, []);
-
-
-
-  useEffect(() => {
-    if (mode === "edit" && initialData?.profilePic) {
-      setProfilePicPreview(initialData.profilePic);
-    }
-  }, [mode, initialData]);
-
-  const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setProfilePicFile(file);
-    setProfilePicPreview(URL.createObjectURL(file));
-  };
-
-
-  // Active section tab for grouping the many fields
   const [activeTab, setActiveTab] = useState<"basic" | "personal" | "employment">("basic");
+  const [uplineSuggestions, setUplineSuggestions] = useState<{ id: number; nameWithInitials: string | null; empNo: string; position: { title: string } }[]>([]);
 
   const [formData, setFormData] = useState({
     // --- Core (required) ---
@@ -82,7 +54,7 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
     positionId: "",
 
     // --- Branch(es) ---
-    branchIds: [Number(branchId)], // always starts with current branch
+    branchIds: [Number(branchId)], // always startෆs with current branch
 
     // --- Basic contact ---
     email: "",
@@ -116,13 +88,31 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
     profilePic: "",
   });
 
+  useEffect(() => {
+    getPositions().then(setPositions);
+  }, []);
+
+
+  useEffect(() => {
+    if (mode === "edit" && initialData?.profilePic) {
+      setProfilePicPreview(initialData.profilePic);
+    }
+  }, [mode, initialData]);
+
+  const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setProfilePicFile(file);
+    setProfilePicPreview(URL.createObjectURL(file));
+  };
+
   const canHaveMultipleBranches = (pos?: typeof positions[number]) => {
     if (!pos) return false;
 
     if (pos.type === "PROBATION") {
       return pos.rank >= 4; // JRM+
-    }else if (pos.type === "PERMANENT") {
-    return pos.rank >= 16; // PERMANENT JRM+
+    } else if (pos.type === "PERMANENT") {
+      return pos.rank >= 16; // PERMANENT JRM+
     }
   };
 
@@ -172,7 +162,7 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
         bankBranch: initialData.bankBranch ?? "",
         status: initialData.status ?? "PROBATION",
         probationStartDate: initialData.probationStartDate
-          ? initialData.probationStartDate.toISOString().slice(0, 10)
+          ? initialData.probationStartDate.toString()
           : "",
       });
     }
@@ -181,9 +171,6 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
 
   }, [mode, initialData, branchId]);
 
-
-
-  // When position changes, reset to single branch if not multi-branch role
   const handlePositionChange = (value: string) => {
     const pos = positions.find(p => p.id === Number(value));
     const isMulti = canHaveMultipleBranches(pos);
@@ -194,7 +181,6 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
       branchIds: isMulti ? prev.branchIds : [Number(branchId)],
     }));
   };
-
 
   const toggleBranch = (id: number) => {
     setFormData((prev) => {
@@ -230,16 +216,17 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
         profilePicUrl = uploadRes.url;
       }
 
+      const toDateOnly = (dateStr: string) => {
+        const [year, month, day] = dateStr.split("-");
+        return new Date(Number(year), Number(month) - 1, Number(day));
+      };
+
       const payload = {
         ...formData,
         profilePic: profilePicUrl,
         positionId: Number(formData.positionId),
         branchIds: isMultiBranch ? formData.branchIds : [Number(branchId)],
-        probationStartDate: formData.status === "PROBATION"
-          ? mode === "edit" && formData.probationStartDate
-            ? new Date(formData.probationStartDate)
-            : (formData.dateOfJoin ? new Date(formData.dateOfJoin) : new Date())
-          : null,
+        probationStartDate: formData.probationStartDate
       };
 
       if (mode === "add") {
@@ -259,7 +246,6 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
       }
     } catch (err: any) {
       console.error(err);
-
       let msg = "Error saving employee details";
 
       if (err instanceof Error) {
@@ -278,7 +264,6 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
     }
   };
 
-  const [uplineSuggestions, setUplineSuggestions] = useState<{ id: number; nameWithInitials: string | null; empNo: string; position: { title: string } }[]>([]);
 
   useEffect(() => {
     if (!formData.positionId) return;
@@ -286,25 +271,16 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
       .then(setUplineSuggestions);
   }, [formData.positionId, formData.branchIds]);
 
+  const toInputDate = (date: string | Date | null) => {
+    if (!date) return "";
+    const d = new Date(date);
+    return d.toISOString().split("T")[0];
+  };
 
 
 
-  // ─── Styles ────────────────────────────────────────────────
-  const inputStyles =
-    "w-full pl-10 pr-4 py-3 bg-muted/30 border border-border rounded-xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-sm font-bold text-foreground placeholder:text-muted-foreground/30";
-  const inputStylesNoIcon =
-    "w-full px-4 py-3 bg-muted/30 border border-border rounded-xl focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all text-sm font-bold text-foreground placeholder:text-muted-foreground/30";
-  const labelStyles =
-    "block text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em] mb-2 ml-1";
-  const tabBtn = (active: boolean) =>
-    `px-6 py-2.5 text-[11px] font-bold uppercase tracking-widest rounded-xl transition-all ${active
-      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
-      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-    }`;
-
-  // ─── Render ────────────────────────────────────────────────
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm px-6 py-6 overflow-y-auto animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-background/80 backdrop-blur-sm px-6 py-6 overflow-y-auto animate-in fade-in duration-300">
       <div
         className="w-full max-w-3xl bg-card rounded-[2.5rem] shadow-2xl border border-border overflow-hidden relative scale-in-center my-auto"
         onClick={(e) => e.stopPropagation()}
@@ -366,7 +342,7 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                       placeholder="EMP-001"
                       value={formData.empNo}
                       onChange={(e) => setFormData({ ...formData, empNo: e.target.value })}
-                      
+
                       className={inputStyles}
                     />
                   </div>
@@ -381,7 +357,7 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                       placeholder="EPF-001"
                       value={formData.epfNo}
                       onChange={(e) => setFormData({ ...formData, epfNo: e.target.value })}
-                      
+
                       className={inputStyles}
                     />
                   </div>
@@ -447,8 +423,6 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                   </div>
                 </div>
 
-
-
                 {/* Employment Status / Position Type */}
                 <div>
                   <label className={labelStyles}>Employment Type</label>
@@ -485,8 +459,13 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                       <Calendar className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
                       <input
                         type="date"
-                        value={formData.probationStartDate}
-                        onChange={(e) => setFormData({ ...formData, probationStartDate: e.target.value })}
+                        value={formData.probationStartDate || ""}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            probationStartDate: e.target.value,
+                          })
+                        }
                         className={inputStyles}
                       />
                     </div>
@@ -519,8 +498,6 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
 
                 {/* ── BRANCH SECTION ── */}
                 <div className="md:col-span-2">
-
-
                   {!isMultiBranch ? (
                     /* Single branch — read-only display */
                     <div className="relative">

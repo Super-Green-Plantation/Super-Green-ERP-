@@ -208,12 +208,13 @@ model Member {
   bankBranch        String?
   totalCommission   Float     @default(0)
   profilePic        String?
+  lastClientRegisteredAt DateTime?
 
   userId String? @unique @db.Uuid
   user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   status             EmployeeStatus @default(PROBATION)
-  probationStartDate DateTime?
+  probationStartDate String?
 
   positionId Int
   position   Position @relation(fields: [positionId], references: [id])

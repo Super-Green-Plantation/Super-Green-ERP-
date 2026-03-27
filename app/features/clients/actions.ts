@@ -227,6 +227,13 @@ export async function saveClient(data: {
         },
       });
 
+      if (member) {
+        await tx.member.update({
+          where: { id: member.id },
+          data: { lastClientRegisteredAt: new Date() },
+        });
+      }
+
       // Create beneficiary linked to client
       let beneficiaryId: number | null = null;
       if (beneficiary?.fullName) {

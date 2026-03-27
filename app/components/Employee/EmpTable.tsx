@@ -1,9 +1,11 @@
 "use client";
 
-import { useEmployees } from "@/app/hooks/useEmployee";
+import Pagination from "@/app/components/Pagination";
 import { deleteEmployee } from "@/app/features/employees/actions";
+import { useEmployees } from "@/app/hooks/useEmployee";
 import { Member } from "@/app/types/member";
-import { Spinner } from "@/components/ui/spinner";
+import { PERMISSIONS } from "@/lib/auth/permissions";
+import { usePermission } from "@/lib/auth/usePermission";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Briefcase,
@@ -14,11 +16,10 @@ import {
   User,
 } from "lucide-react";
 import Link from "next/link";
-import { toast } from "sonner";
 import { useEffect, useMemo, useState } from "react";
-import Pagination from "@/app/components/Pagination";
-import { usePermission } from "@/lib/auth/usePermission";
-import { PERMISSIONS } from "@/lib/auth/permissions";
+import { toast } from "sonner";
+import Error from "../Status/Error";
+import Loading from "../Status/Loading";
 import ConfirmDialog from "../ui/ConfirmDialog";
 
 interface EmpTableProps {
@@ -119,17 +120,11 @@ const EmpTable = ({ onEdit, onRefresh, branchId, searchQuery }: EmpTableProps) =
 
   }, []);
 
-  if (isLoading)
-    return (
-      <div className="flex justify-center items-center my-20">
-        <Spinner />
-      </div>
-    );
-  if (isError) return <div>Error loading employees</div>;
-
+  if (isLoading) return <Loading/>
+  if (isError) return <Error/>
 
   return (
-    <div className="w-full bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+    <div className="w-full overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>

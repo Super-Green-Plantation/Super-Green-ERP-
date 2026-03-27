@@ -113,7 +113,7 @@ const UpdateClientModal = ({
     "block text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em] mb-2 ml-1";
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-100 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">
       <div className="bg-card w-full max-w-4xl max-h-[90vh] rounded-[2.5rem] shadow-2xl border border-border overflow-hidden flex flex-col scale-in-center">
         {/* Header */}
         <div className="px-10 py-8 border-b border-border flex justify-between items-center bg-card sticky top-0 z-10">

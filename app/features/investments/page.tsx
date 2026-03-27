@@ -1,16 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useInvestments } from "@/app/hooks/useInvestments";
 import Loading from "@/app/components/Status/Loading";
 import Error from "@/app/components/Status/Error";
 import Pagination from "@/app/components/Pagination";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useSessionUser } from "@/app/hooks/useSessionUser";
 import {
   BanknoteArrowUp, Calendar, Download,
   ExternalLink, TrendingUp, User, AlertCircle, Wallet,
 } from "lucide-react";
 import { generateInvestmentsReportPDF } from "@/app/utils/pdfGenerator";
+import { useIsMounted } from "@/app/hooks/useIsMounted";
 
 const fmt = (n: number) =>
   n >= 1_000_000
@@ -25,11 +28,12 @@ const getDaysUntilMaturity = (maturityDate: string) => {
   return Math.ceil((maturity.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 };
 
-const MaturityBadge = ({ maturityDate, isMatured }: {
+const MaturityBadge = ({ maturityDate, isMatured, isMounted }: {
   maturityDate?: string;
   isMatured?: boolean;
+  isMounted: boolean;
 }) => {
-  if (!maturityDate) return <span className="text-slate-300 text-xs">—</span>;
+  if (!maturityDate || !isMounted) return <span className="text-slate-300 text-xs">—</span>;
   const days = getDaysUntilMaturity(maturityDate);
 
   if (isMatured || days < 0) return (
@@ -55,10 +59,22 @@ const MaturityBadge = ({ maturityDate, isMatured }: {
 };
 
 export default function InvestmentsPage() {
+  const isMounted = useIsMounted();
+  const router = useRouter();
+  const { data: userData, isLoading: userLoading } = useSessionUser();
   const [currentPage, setCurrentPage] = useState(1);
   const { data, isLoading, isError } = useInvestments(currentPage);
 
-  if (isLoading) return <Loading />;
+  useEffect(() => {
+    if (!userLoading && userData) {
+      const isPrivileged = ["ADMIN", "HR", "DEV"].includes(userData.role);
+      if (!isPrivileged) {
+        router.push("/features/clients");
+      }
+    }
+  }, [userData, userLoading, router]);
+
+  if (isLoading || userLoading) return <Loading />;
   if (isError) return <Error />;
 
   const investments = data?.investments ?? [];
@@ -175,7 +191,7 @@ export default function InvestmentsPage() {
 
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600">
-                        {inv.investmentDate
+                        {inv.investmentDate && isMounted
                           ? new Date(inv.investmentDate).toLocaleDateString("en-GB", {
                               day: "numeric", month: "short", year: "numeric",
                             })
@@ -185,8 +201,8 @@ export default function InvestmentsPage() {
 
                     <td className="px-5 py-4">
                       <div className="space-y-1">
-                        <MaturityBadge maturityDate={inv.maturityDate} isMatured={inv.isMatured} />
-                        {inv.maturityDate && (
+                        <MaturityBadge maturityDate={inv.maturityDate} isMatured={inv.isMatured} isMounted={isMounted} />
+                        {inv.maturityDate && isMounted && (
                           <p className="text-[10px] text-slate-400 font-medium">
                             {new Date(inv.maturityDate).toLocaleDateString("en-GB", {
                               day: "numeric", month: "short", year: "numeric",

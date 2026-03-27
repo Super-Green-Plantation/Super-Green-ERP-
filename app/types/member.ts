@@ -13,9 +13,6 @@ export interface MemberBranch {
 
 export interface Member {
   id: number;
-
-  // --- Core (required) ---
-  // name: string;
   empNo: string;
   epfNo:string;
   position: Position;
@@ -57,7 +54,7 @@ export interface Member {
 
   // In formData initial state
   status: "PROBATION" | "PERMANENT" | "MANAGEMENT";
-  probationStartDate: "" | Date| null;
+  probationStartDate: string | null;
 
   // --- Timestamps ---
   createdAt: string | Date;
@@ -116,4 +113,53 @@ export interface CommissionRate {
 export interface EmployeesPage {
   emp: Member[];
   nextCursor: number | null;
+}
+
+export interface EmpModalProps {
+  mode: "add" | "edit";
+  initialData?: Member;
+  onClose: () => void;
+  onSuccess?: () => void;
+}
+
+export interface EmpData {
+  // name: string;
+  empNo: string;
+  epfNo: string;
+  positionId: number;
+
+  // Replaces branchId — always at least one entry (the current branch)
+  branchIds: number[];
+
+  // Basic contact
+  email?: string;
+  phone?: string;
+  phone2?: string;
+  totalCommission: number;
+
+  // Name variants
+  nameWithInitials?: string;
+
+  // Personal
+  nic?: string;
+  dob?: string;
+  gender?: string;
+  civilStatus?: string;
+  address?: string;
+
+  // Employment
+  reportingPerson?: string;
+  dateOfJoin?: string;
+  appointmentLetter?: string;
+  confirmation?: string;
+  remark?: string;
+
+  status: "PROBATION" | "PERMANENT" | "MANAGEMENT";
+  probationStartDate: string | null;
+
+  // Banking
+  accNo?: string;
+  bank?: string;
+  bankBranch?: string;
+  profilePic?: string;
 }

@@ -106,7 +106,7 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
   const progressPercentage = targetValue > 0 ? Math.min(Math.round((achievedValue / targetValue) * 100), 100) : 0;
 
   return (
-    <main className="max-w-7xl mx-auto min-h-screen bg-background p-4 sm:p-8 space-y-8 animate-in fade-in duration-700">
+    <main className=" max-w-7xl mx-auto min-h-screen  p-4 sm:p-8 space-y-8 animate-in fade-in duration-700">
       
       {/* ── Premium Hero Section: Glassmorphic Profile ── */}
       <section className="relative h-72 rounded-[2.5rem] overflow-hidden shadow-2xl shadow-primary/10 border border-white/10 group">
