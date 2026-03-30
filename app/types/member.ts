@@ -15,6 +15,7 @@ export interface Member {
   id: number;
   empNo: string;
   epfNo:string;
+  etfNo: string;
   position: Position;
 
   // --- Branch(es) ---
@@ -38,7 +39,7 @@ export interface Member {
   address: string | null;
 
   // --- Employment ---
-  reportingPerson: string | null;
+  reportingPersons?: string[];
   dateOfJoin: string | Date | null;
   appointmentLetter: string | null;
   confirmation: string | null;
@@ -148,7 +149,7 @@ export interface EmpData {
   address?: string;
 
   // Employment
-  reportingPerson?: string;
+  reportingPersons?: string[];
   dateOfJoin?: string;
   appointmentLetter?: string;
   confirmation?: string;
@@ -163,3 +164,40 @@ export interface EmpData {
   bankBranch?: string;
   profilePic?: string;
 }
+
+export type FormData = {
+  empNo: string;
+  epfNo: string;
+  etfNo: string;
+  positionId: string;
+  branchIds: number[];
+
+  email: string;
+  phone: string;
+  phone2: string;
+  totalCommission: number;
+
+  nameWithInitials: string;
+
+  nic: string;
+  dob: string;
+  gender: string;
+  civilStatus: string;
+  address: string;
+
+  reportingPersons: string[]; // ✅ important
+
+  dateOfJoin: string;
+  appointmentLetter: string;
+  confirmation: string;
+  remark: string;
+
+  accNo: string;
+  bank: string;
+  bankBranch: string;
+
+  status: "PROBATION" | "PERMANENT" | "MANAGEMENT";
+  probationStartDate: string;
+
+  profilePic: string;
+};

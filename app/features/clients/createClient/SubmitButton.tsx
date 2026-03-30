@@ -118,11 +118,11 @@ const { reset, resetField } = form;
         type="button"
         disabled={loading}
         className={`
-          w-full py-4 px-6 rounded-2xl font-bold uppercase tracking-widest text-sm transition-all duration-300
-          flex items-center justify-center gap-3
+          w-full py-5 px-6 rounded-[2rem] font-black uppercase tracking-[0.2em] text-xs transition-all duration-500
+          flex items-center justify-center gap-4
           ${loading
-            ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
-            : "bg-slate-900 hover:bg-blue-600 text-white shadow-xl shadow-slate-200 active:scale-95"
+            ? "bg-muted text-muted-foreground/30 cursor-not-allowed border border-border/50"
+            : "bg-foreground text-background hover:bg-primary hover:text-white shadow-2xl shadow-black/10 hover:shadow-primary/30 active:scale-95"
           }
         `}
       >
@@ -136,9 +136,10 @@ const { reset, resetField } = form;
         )}
       </button>
       {!loading && (
-        <p className="text-center text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em] mt-4">
-          Encrypted Secure Submission
-        </p>
+        <div className="text-center text-[9px] text-muted-foreground/40 font-black uppercase tracking-[0.3em] mt-6 flex items-center justify-center gap-2">
+          <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></div>
+          Secure End-to-End Encryption Active
+        </div>
       )}
     </div>
   );

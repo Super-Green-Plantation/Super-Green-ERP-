@@ -12,7 +12,6 @@ import { deleteClient, generateUploadUrl, updateClient, updateClientDocuments } 
 
 import { getFinancialPlanById } from "@/app/features/financial_plans/actions";
 import { useQueryClient } from "@tanstack/react-query";
-import { generateClientApplicationPDF } from "@/app/utils/pdfGenerator";
 import {
   Briefcase,
   Calendar,
@@ -37,6 +36,7 @@ import SendDocumentLinkButton from "@/app/components/Buttons/SendDocumentLinkBut
 import { DocPreview } from "@/app/components/Doc/DocPreview";
 import { MaturityBadge } from "@/app/components/Buttons/MaturityBadge";
 import ConfirmDialog from "@/app/components/ui/ConfirmDialog";
+import { generateClientApplicationPDF } from "@/app/pdf/ClientApplication";
 
 export default function ApplicationViewPage() {
   const queryClient = useQueryClient();

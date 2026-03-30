@@ -14,12 +14,12 @@ import {
   getInvestmentById,
 } from "@/app/features/investments/actions";
 import { DetailItem } from "@/app/components/DetailItem";
-import { generateInvestmentPDF } from "@/app/utils/pdfGenerator";
 import Loading from "@/app/components/Status/Loading";
 import Error from "@/app/components/Status/Error";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import ConfirmDialog from "@/app/components/ui/ConfirmDialog";
+import { generateInvestmentPDF } from "@/app/pdf/Commission";
 
 const InvestmentDetails = () => {
   const router = useRouter();

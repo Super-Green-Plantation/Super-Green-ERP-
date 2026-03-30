@@ -6,7 +6,6 @@ import EmpTable from "@/app/components/Employee/EmpTable";
 import EmpModal from "@/app/components/Employee/Model";
 import Heading from "@/app/components/Heading";
 import { Member } from "@/app/types/member";
-import { generateBranchEmployeePDF } from "@/app/utils/pdfGenerator";
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search } from "lucide-react";
 import { useParams } from "next/navigation";

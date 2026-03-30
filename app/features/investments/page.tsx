@@ -12,8 +12,8 @@ import {
   BanknoteArrowUp, Calendar, Download,
   ExternalLink, TrendingUp, User, AlertCircle, Wallet,
 } from "lucide-react";
-import { generateInvestmentsReportPDF } from "@/app/utils/pdfGenerator";
 import { useIsMounted } from "@/app/hooks/useIsMounted";
+import { generateInvestmentsReportPDF } from "@/app/pdf/InvestmentsReport";
 
 const fmt = (n: number) =>
   n >= 1_000_000

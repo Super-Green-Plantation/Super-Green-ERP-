@@ -6,7 +6,7 @@ import ExportButton from "@/app/components/Doc/ExportStatement";
 import Heading from "@/app/components/Heading";
 import Loading from "@/app/components/Status/Loading";
 import { getBranches } from "@/app/features/branches/actions";
-import { generateBranchNetworkPDF } from "@/app/utils/pdfGenerator";
+import { generateBranchNetworkPDF } from "@/app/pdf/BranchNetwork";
 import {
   Building2,
   Plus,

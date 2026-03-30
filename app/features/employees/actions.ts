@@ -98,7 +98,7 @@ export async function createEmployee(data: EmpData) {
           gender: data.gender || null,
           civilStatus: data.civilStatus || null,
           address: data.address || null,
-          reportingPerson: data.reportingPerson || null,
+          reportingPersons: data.reportingPersons ?? [],
           dateOfJoin: data.dateOfJoin ? new Date(data.dateOfJoin) : null,
           appointmentLetter: data.appointmentLetter || null,
           confirmation: data.confirmation || null,
@@ -111,7 +111,7 @@ export async function createEmployee(data: EmpData) {
             create: data.branchIds.map((branchId) => ({ branchId })),
           },
           probationStartDate: data.probationStartDate,
-           
+
           profilePic: data.profilePic,
         },
       });
@@ -214,7 +214,7 @@ export async function getEmployeesByBranch(
   };
 }
 // Get employee by code
-export async function getEmployeeByCode(empCode: string) {
+export async function getEmployeeByCode(empCode: string ) {
   try {
     const employee = await prisma.member.findUnique({
       where: { empNo: empCode },
@@ -227,6 +227,23 @@ export async function getEmployeeByCode(empCode: string) {
     return { employee };
   } catch (error) {
     console.error("Error fetching employee:", error);
+    throw error;
+  }
+}
+
+export async function getReportingPersons(empCodes: string[]) {
+  try {
+    const employees = await prisma.member.findMany({
+      where: {
+        empNo: { in: empCodes },
+        
+      },
+      include:{branches: true, position: true}
+    });
+
+    return { employees };
+  } catch (error) {
+    console.error("Error fetching employees:", error);
     throw error;
   }
 }
@@ -376,7 +393,7 @@ export async function updateEmployee(memberId: number, data: EmpData) {
         profilePic: data.profilePic,
 
         // Employment
-        reportingPerson: data.reportingPerson || null,
+        reportingPersons: data.reportingPersons?.map((name) => name) ?? [],
         dateOfJoin: data.dateOfJoin ? new Date(data.dateOfJoin) : null,
         appointmentLetter: data.appointmentLetter || null,
         confirmation: data.confirmation || null,

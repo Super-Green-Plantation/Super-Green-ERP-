@@ -20,7 +20,7 @@ import {
   Check,
   Upload,
 } from "lucide-react";
-import { EmpModalProps, Member } from "@/app/types/member";
+import { EmpModalProps, FormData, Member } from "@/app/types/member";
 import { getBranchById, getBranches } from "@/app/features/branches/actions";
 import { useParams } from "next/navigation";
 import { Branch } from "@/app/types/branch";
@@ -47,10 +47,11 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
   const [activeTab, setActiveTab] = useState<"basic" | "personal" | "employment">("basic");
   const [uplineSuggestions, setUplineSuggestions] = useState<{ id: number; nameWithInitials: string | null; empNo: string; position: { title: string } }[]>([]);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     // --- Core (required) ---
     empNo: "",
     epfNo: "",
+    etfNo: "",
     positionId: "",
 
     // --- Branch(es) ---
@@ -73,7 +74,7 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
     address: "",
 
     // --- Employment ---
-    reportingPerson: "",  // name / empNo of supervisor
+    reportingPersons: [],  // name / empNo of supervisor
     dateOfJoin: "",
     appointmentLetter: "", // file URL or ref
     confirmation: "",      // file URL or ref
@@ -140,6 +141,7 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
         nameWithInitials: initialData.nameWithInitials ?? "",
         empNo: initialData.empNo ?? "",
         epfNo: initialData.epfNo ?? "",
+        etfNo: initialData.etfNo ?? "",
         positionId: String(initialData.position?.id ?? ""),
         branchIds: existingBranchIds,
         email: initialData.email ?? "",
@@ -151,13 +153,13 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
         gender: initialData.gender ?? "",
         civilStatus: initialData.civilStatus ?? "",
         address: initialData.address ?? "",
-        reportingPerson: initialData.reportingPerson ?? "",
-        dateOfJoin: initialData.dateOfJoin ? initialData.dateOfJoin.toString().slice(0, 10) : "",
+        reportingPersons: initialData.reportingPersons ?? [],
         appointmentLetter: initialData.appointmentLetter ?? "",
         confirmation: initialData.confirmation ?? "",
         remark: initialData.remark ?? "",
         accNo: initialData.accNo ?? "",
         bank: initialData.bank ?? "",
+        dateOfJoin: initialData.dateOfJoin ? initialData.dateOfJoin.toString().slice(0, 10) : "",
         profilePic: "",
         bankBranch: initialData.bankBranch ?? "",
         status: initialData.status ?? "PROBATION",
@@ -198,6 +200,15 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
     });
   };
 
+  const toggleReportingPerson = (empNo: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      reportingPersons: prev.reportingPersons.includes(empNo)
+        ? prev.reportingPersons.filter((id) => id !== empNo)
+        : [...prev.reportingPersons, empNo],
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -215,11 +226,6 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
         }
         profilePicUrl = uploadRes.url;
       }
-
-      const toDateOnly = (dateStr: string) => {
-        const [year, month, day] = dateStr.split("-");
-        return new Date(Number(year), Number(month) - 1, Number(day));
-      };
 
       const payload = {
         ...formData,
@@ -349,20 +355,7 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                 </div>
 
 
-                <div className="w-full">
-                  <label className={labelStyles}>EPF Number </label>
-                  <div className="relative">
-                    <Hash className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                    <input
-                      placeholder="EPF-001"
-                      value={formData.epfNo}
-                      onChange={(e) => setFormData({ ...formData, epfNo: e.target.value })}
 
-                      className={inputStyles}
-                    />
-                  </div>
-
-                </div>
 
 
 
@@ -631,19 +624,7 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                   </div>
                 </div>
 
-                {/* Birthday reminder */}
-                <div>
-                  <label className={labelStyles}>Birthday (Reminder Date)</label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                    <input
-                      type="date"
-                      value={formData.dob}
-                      onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
-                      className={inputStyles}
-                    />
-                  </div>
-                </div>
+
 
                 {/* Address */}
                 <div className="md:col-span-2">
@@ -718,26 +699,48 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
 
                 {/* Reporting Person */}
                 <div className="md:col-span-2">
-                  <label className={labelStyles}>Reporting Person</label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                    <select
-                      value={formData.reportingPerson}
-                      onChange={(e) => setFormData({ ...formData, reportingPerson: e.target.value })}
-                      className={inputStyles + " appearance-none pr-10"}
-                    >
-                      <option value="">Select reporting person...</option>
-                      {uplineSuggestions.map((m) => (
-                        <option key={m.id} value={m.empNo}>
-                          {m.nameWithInitials} ({m.position.title} — {m.empNo})
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                  <label className={labelStyles}>Reporting Persons</label>
+
+                  <div className="border border-gray-200 rounded-lg p-3 bg-gray-50/50">
+                    <p className="text-xs text-gray-400 mb-2">
+                      Select one or more reporting persons.
+                    </p>
+
+                    <div className="flex flex-wrap gap-2">
+                      {uplineSuggestions.map((m) => {
+                        const empNo = String(m.empNo);
+                        const isSelected = formData.reportingPersons.includes(empNo);
+
+                        return (
+                          <button
+                            key={m.id}
+                            type="button"
+                            onClick={() => toggleReportingPerson(empNo)}
+                            className={`
+        inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all
+        ${isSelected
+                                ? "bg-blue-600 text-white border-blue-600"
+                                : "bg-white text-gray-600 border-gray-200"}
+      `}
+                          >
+                            {isSelected && <Check className="w-3 h-3" />}
+                            <User className="w-3 h-3" />
+                            {m.nameWithInitials}
+                          </button>
+                        );
+                      })}
+
+                      {uplineSuggestions.length === 0 && (
+                        <span className="text-xs text-gray-400">
+                          No higher-rank members found in selected branches.
+                        </span>
+                      )}
+                    </div>
+
+                    <p className="text-xs text-gray-400 mt-2">
+                      {formData.reportingPersons.length} selected
+                    </p>
                   </div>
-                  {uplineSuggestions.length === 0 && formData.positionId && (
-                    <p className="text-xs text-gray-400 mt-1">No higher-rank members found in selected branches.</p>
-                  )}
                 </div>
 
                 {/* Date of Join */}
@@ -754,8 +757,38 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                   </div>
                 </div>
 
+                <div className="w-full">
+                  <label className={labelStyles}>EPF Number </label>
+                  <div className="relative">
+                    <Hash className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                    <input
+                      placeholder="EPF-001"
+                      value={formData.epfNo}
+                      onChange={(e) => setFormData({ ...formData, epfNo: e.target.value })}
+
+                      className={inputStyles}
+                    />
+                  </div>
+
+                </div>
+
+                <div className="w-full">
+                  <label className={labelStyles}>ETF Number </label>
+                  <div className="relative">
+                    <Hash className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                    <input
+                      placeholder="ETF-001"
+                      value={formData.etfNo}
+                      onChange={(e) => setFormData({ ...formData, etfNo: e.target.value })}
+
+                      className={inputStyles}
+                    />
+                  </div>
+
+                </div>
+
                 {/* Appointment Letter ref */}
-                <div>
+                {/* <div>
                   <label className={labelStyles}>Appointment Letter Ref</label>
                   <div className="relative">
                     <FileText className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
@@ -766,10 +799,10 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                       className={inputStyles}
                     />
                   </div>
-                </div>
+                </div> */}
 
                 {/* Confirmation */}
-                <div>
+                {/* <div>
                   <label className={labelStyles}>Confirmation Ref</label>
                   <div className="relative">
                     <FileText className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
@@ -780,7 +813,7 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                       className={inputStyles}
                     />
                   </div>
-                </div>
+                </div> */}
 
                 {/* Remark */}
                 <div className="md:col-span-2">

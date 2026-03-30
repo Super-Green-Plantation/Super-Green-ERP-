@@ -16,33 +16,34 @@ const Page = () => {
   });
   return (
     <FormProvider>
-      <div className="max-w-7xl mx-auto sm:space-y-8 space-y-2 sm:p-4 md:p-8 min-h-screen">
+      <div className="max-w-7xl mx-auto sm:space-y-6 space-y-4 sm:p-4 md:p-8 min-h-screen">
         {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 pb-6">
-          <div className="sm:flex-col items-center gap-4">
-            <div className="flex gap-3">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-8 border-b border-border/50">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-4">
               <Back />
-              <Heading>
-                Create New Client
-              </Heading>
+              <h1 className="text-3xl sm:text-4xl font-black text-foreground tracking-tighter">
+                Register <span className="text-primary">New Client</span>
+              </h1>
             </div>
-            <p className="text-sm text-gray-500 font-medium">
-              Complete all sections to finalize client investment onboarding.
+            <p className="text-sm text-muted-foreground font-bold uppercase tracking-widest opacity-60">
+              Onboarding & Investment Verification Node
             </p>
           </div>
-
         </div>
 
         {/* Main Layout Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column: Primary Details */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-2 space-y-6">
             <ApplicantDetails />
-            <DocumentUploadSection pendingFilesRef={pendingFilesRef} />
+            <div className="bg-card/60 backdrop-blur-xl border border-border/50 rounded-[2rem] p-6 shadow-sm">
+               <DocumentUploadSection pendingFilesRef={pendingFilesRef} />
+            </div>
           </div>
 
           {/* Right Column: Supporting Details */}
-          <div className="lg:col-span-1 space-y-8">
+          <div className="lg:col-span-1 space-y-6">
             <BeneficiaryDetails />
             <NomineeDetails />
           </div>

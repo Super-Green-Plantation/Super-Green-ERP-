@@ -1,9 +1,3 @@
-
-/**
- * Recursively standardizes data by converting Decimal-like objects to numbers
- * and Dates to ISO strings (optional, but good for JSON serialization).
- * This is necessary because Next.js components cannot accept non-plain objects like Prisma Decimals.
- */
 export function serializeData(obj: any, visited = new WeakSet()): any {
   if (obj === null || obj === undefined) {
     return obj;

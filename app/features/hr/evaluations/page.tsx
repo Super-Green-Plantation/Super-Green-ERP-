@@ -216,7 +216,7 @@ export default function EvaluationsPage() {
               <table className="w-full text-left">
                 <thead>
                   <tr className="bg-muted border-b border-border">
-                    {["Employee", "Position", "Status", "Volume Progress", "Bonus", "Excess", "Payout", "Status"].map((h) => (
+                    {["Employee", "Position", "Status", "Volume Progress", "Bonus", "Excess", "Payout", "Eval Status"].map((h) => (
                       <th key={h} className="px-5 py-4 text-[10px] font-bold text-muted-foreground uppercase tracking-widest whitespace-nowrap first:pl-6 last:pr-6">{h}</th>
                     ))}
                   </tr>

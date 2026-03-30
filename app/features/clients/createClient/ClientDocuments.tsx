@@ -47,7 +47,7 @@ const DocumentUploadSection = ({ pendingFilesRef }: DocumentUploadSectionProps) 
     const isPDF = files[id]?.type === "application/pdf";
 
     return (
-      <div className="relative group rounded-2xl border-2 border-dashed h-48 overflow-hidden">
+      <div className="relative group rounded-3xl border-2 border-dashed border-border/50 h-40 overflow-hidden bg-card/40 hover:bg-card/80 transition-all duration-500">
         <input
           type="file"
           id={id}
@@ -100,51 +100,51 @@ const DocumentUploadSection = ({ pendingFilesRef }: DocumentUploadSectionProps) 
   const selectedCount = Object.values(files).filter(Boolean).length;
 
   return (
-    <div className="space-y-8 py-4">
-      <div className="flex items-center gap-3 border-b border-gray-100">
-        <div className="p-2 bg-blue-600 rounded-lg">
-          <ShieldCheck className="w-5 h-5 text-white" />
+    <div className="space-y-6">
+      <div className="flex items-center gap-4 border-b border-border/10 pb-4">
+        <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
+          <ShieldCheck className="w-6 h-6 text-primary" />
         </div>
         <div>
-          <h3 className="text-sm font-bold uppercase tracking-widest text-gray-900">
-            Document Compliance
+          <h3 className="text-xs font-black uppercase tracking-[0.25em] text-foreground opacity-80">
+            Document Compliance Node
           </h3>
-          <p className="text-xs text-gray-500 font-medium">
-            Documents will be uploaded automatically when you submit the form.
+          <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1 opacity-50">
+            Secure Automated Validation System
           </p>
         </div>
       </div>
 
-      <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 flex items-start gap-3">
-        <FileUp className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-        <p className="text-[11px] leading-relaxed text-amber-800 font-medium italic">
-          Files must be under 5MB. Select your files below — they will be securely uploaded when you click <strong>Register Client</strong>.
+      <div className="p-5 bg-accent/5 rounded-2xl border border-accent/10 flex items-start gap-4">
+        <UploadCloud className="w-5 h-5 text-accent shrink-0" />
+        <p className="text-[11px] leading-relaxed text-accent/80 font-bold uppercase tracking-tight">
+          Payload Limit: 5MB / Section. <span className="opacity-60 font-medium lowercase italic">Select your files below — they will be securely encrypted during the "Register Client" sequence.</span>
           {selectedCount > 0 && (
-            <span className="ml-1 text-blue-700 not-italic font-bold">
-              {selectedCount} file{selectedCount > 1 ? "s" : ""} ready.
+            <span className="ml-2 bg-primary text-primary-foreground px-2 py-0.5 rounded-lg text-[9px] font-black">
+              {selectedCount} READY
             </span>
           )}
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-4">
-          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
-            <ImageIcon className="w-3 h-3" /> Identity (NIC/DL/Passport)
+          <label className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.25em] flex items-center gap-2">
+            <ImageIcon className="w-3 h-3" /> Identification Metadata
           </label>
           <div className="grid grid-cols-2 gap-4">
-            <FileCard id="idFront" label="Front View" description="Photo or Scan" />
-            <FileCard id="idBack" label="Back View" description="Photo or Scan" />
+            <FileCard id="idFront" label="Front View" description="NIC / DL / Passport" />
+            <FileCard id="idBack" label="Back View" description="NIC / DL / Passport" />
           </div>
         </div>
         <div className="space-y-4">
-          <label className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] flex items-center gap-2">
-            <FileText className="w-3 h-3" /> Mandatory Paperwork
+          <label className="text-[10px] font-black text-muted-foreground/40 uppercase tracking-[0.25em] flex items-center gap-2">
+            <FileText className="w-3 h-3" /> Compliance Paperwork
           </label>
-          <div className="grid lg:grid-cols-3 gap-4">
-            <FileCard id="paySlip" label="Payment Slip" description="Payment Slip" />
-            <FileCard id="proposal" label="Proposal Form" description="Signed PDF/JPG" />
-            <FileCard id="agreement" label="Agreement" description="Legal Binding PDF" />
+          <div className="grid grid-cols-1 xs:grid-cols-3 gap-4">
+            <FileCard id="paySlip" label="Payout" description="Slip" />
+            <FileCard id="proposal" label="Proposal" description="Signed" />
+            <FileCard id="agreement" label="Legal" description="Binding" />
           </div>
         </div>
       </div>

@@ -190,6 +190,7 @@ model Member {
   email                  String?   @unique
   empNo                  String    @unique
   epfNo                  String?
+  etfNo                  String?
   phone                  String?
   phone2                 String?
   nic                    String?
@@ -197,7 +198,7 @@ model Member {
   gender                 String?
   civilStatus            String?
   address                String?
-  reportingPerson        String?
+  reportingPersons        String[]
   dateOfJoin             DateTime?
   appointmentLetter      String?
   confirmation           String?

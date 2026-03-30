@@ -79,7 +79,7 @@ export async function getPayrollPreview(
             0
         );
 
-        const normalizedSalary = {
+        const normalizedSalary = salary ? {
             ...salary,
             basicSalaryPermanent: Number(salary.basicSalaryPermanent),
             basicSalaryProbation: Number(salary.basicSalaryProbation),
@@ -95,20 +95,20 @@ export async function getPayrollPreview(
             etfEmployer: Number(salary.etfEmployer),
             allowanceThresholdPermanent: Number(salary.allowanceThresholdPermanent),
             allowanceThresholdProbation: Number(salary.allowanceThresholdProbation),
-        };
+        } : null;
 
         const orcRate = member.status === "PERMANENT"
-            ? Number(member.position.orc?.ratePermanent ?? 0)
-            : Number(member.position.orc?.rateNonPermanent ?? 0);
+            ? Number(member.position?.orc?.ratePermanent ?? 0)
+            : Number(member.position?.orc?.rateNonPermanent ?? 0);
 
-        const breakdown = calculatePayroll(
+        const breakdown = normalizedSalary ? calculatePayroll(
             normalizedSalary,
             actualCommissionEarned,
             member.status,
             volumeAchieved,
             0,        // orcVolume — wire up later
             orcRate,  // ← pass in
-        );
+        ) : null;
         return {
             memberId: member.id,
             name: member.nameWithInitials ?? member.name,
