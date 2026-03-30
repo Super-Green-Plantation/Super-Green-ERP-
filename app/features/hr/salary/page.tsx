@@ -256,7 +256,7 @@ export default function SalaryConfigPage() {
                       type="button"
                       onClick={(e) => { e.stopPropagation(); handleSave(position.id); }}
                       disabled={isSaving}
-                      className="hidden sm:flex items-center gap-3 px-8 py-4 bg-primary text-primary-foreground text-[10px] font-extrabold uppercase tracking-[0.2em] rounded-2xl transition-all hover:shadow-2xl hover:translate-y-[-2px] active:translate-y-0 disabled:opacity-50"
+                      className="hidden sm:flex items-center gap-3 px-8 py-4 bg-primary text-primary-foreground text-[10px] font-extrabold uppercase tracking-[0.2em] rounded-2xl transition-all hover:shadow-2xl hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50"
                     >
                       {isSaving
                         ? <><Loader2 className="w-4 h-4 animate-spin" /> Committing...</>

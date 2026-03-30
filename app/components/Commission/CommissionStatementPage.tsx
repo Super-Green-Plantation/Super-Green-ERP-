@@ -79,8 +79,8 @@ const CommissionStatementPage = ({ data }: { data: any }) => {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-8 sm:mb-12 relative z-10">
-        <div className="p-6 sm:p-10 bg-linear-to-br from-primary via-primary/95 to-[#00BFA5] rounded-[2rem] sm:rounded-[2.5rem] text-white relative overflow-hidden shadow-2xl shadow-primary/20 group/card transition-transform hover:scale-[1.02] duration-500">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-8 sm:mb-12 relative z-10">
+        <div className="p-6 sm:p-10 bg-linear-to-br from-primary/50 via-primary/95 to-[#00574b] rounded-[2rem] sm:rounded-[2.5rem] text-white relative overflow-hidden shadow-2xl shadow-primary/20 group/card transition-transform hover:scale-[1.02] duration-500">
           <Wallet className="absolute -right-8 -bottom-8 w-32 h-32 sm:w-40 sm:h-40 text-white/10 group-hover/card:scale-110 transition-transform duration-700" />
           <p className="text-[10px] font-bold text-white/50 uppercase tracking-[0.3em] mb-3 sm:mb-4">Total Earned</p>
           <h2 className="text-xl text-white sm:text-4xl lg:text-5xl font-extrabold tracking-tighter leading-none mb-2">
@@ -116,7 +116,7 @@ const CommissionStatementPage = ({ data }: { data: any }) => {
             <div key={`${year}-${month}`} className="animate-in fade-in slide-in-from-bottom-5 duration-700">
 
               {/* Month header — editorial style */}
-              <div className="bg-primary/95 backdrop-blur-md p-5 sm:px-8 sm:py-5 rounded-[2rem] flex flex-col sm:flex-row items-center justify-between border border-white/10 shadow-xl mb-4 group/header">
+              <div className="bg-primary dark:bg-primary/50 backdrop-blur-md p-5 sm:px-8 sm:py-5 rounded-[2rem] flex flex-col sm:flex-row items-center justify-between border border-white/10 shadow-xl mb-4 group/header">
                 <div className="flex items-center gap-5">
                   <div className="sm:text-left">
                     <span className="text-xl font-extrabold text-white tracking-tight">
@@ -207,7 +207,7 @@ const CommissionStatementPage = ({ data }: { data: any }) => {
       </div>
 
       {/* Grand Total Footer Card */}
-      <div className="mt-8 sm:mt-12 bg-primary rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-10 text-white shadow-2xl shadow-primary/30 relative overflow-hidden group/footer">
+      <div className="mt-8 sm:mt-12 bg-primary dark:bg-primary/50 rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-10 text-white shadow-2xl shadow-primary/30 relative overflow-hidden group/footer">
         <div className="absolute top-0 right-0 p-20 bg-white/10 rounded-full blur-[80px] pointer-events-none group-hover/footer:scale-125 transition-transform duration-1000" />
         <div className="relative z-10 flex flex-col sm:flex-row justify-between items-center gap-6 sm:gap-10">
           <div className="w-full sm:w-auto">

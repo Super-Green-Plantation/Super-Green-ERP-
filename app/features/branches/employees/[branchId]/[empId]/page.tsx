@@ -126,7 +126,7 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
 
       {/* ── Premium Hero Section: Glassmorphic Profile ── */}
       <section className="relative h-auto sm:h-72 rounded-[2.5rem] sm:rounded-[3.5rem] overflow-hidden shadow-2xl shadow-primary/10 border border-white/10 group">
-        <div className="absolute inset-0 bg-primary z-0" />
+        <div className="absolute inset-0 bg-slate-900 z-0" />
         <div className="absolute top-0 right-0 w-125 h-125 bg-secondary/10 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
         <div className="relative min-h-72 h-auto sm:h-full flex items-end p-8 sm:p-12 z-10">
@@ -181,11 +181,14 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
                   </span>
 
                   {/* Export Button - Full width on mobile, auto width on desktop */}
-                  <ExportButton
-                    data={{ ...employee, reportingPeople }}
-                    exportFn={generateEmployeeFullProfilePDF}
-                    className="w-full sm:w-auto sm:px-6 bg-white/10 hover:bg-white/20 text-white rounded-full py-3 sm:py-2 font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-3 border border-white/5 transition-all shadow-lg active:scale-95"
-                  />
+                  {!readOnly && (
+                    <ExportButton
+                      data={{ ...employee, reportingPeople }}
+                      exportFn={generateEmployeeFullProfilePDF}
+                      className="w-full sm:w-auto sm:px-6 bg-white/10 hover:bg-white/20 text-white rounded-full py-3 sm:py-2 font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-3 border border-white/5 transition-all shadow-lg active:scale-95"
+                    />
+                  )}
+
                 </div>
               </div>
             </div>
@@ -279,7 +282,7 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
         <aside className="lg:col-span-4 space-y-8">
 
           {/* High-Fidelity Payroll Summary */}
-          <section className="bg-primary rounded-[2.5rem] p-8 text-white shadow-2xl shadow-primary/20 relative overflow-hidden group">
+          <section className="bg-primary/80 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-primary/20 relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-8 bg-secondary/10 rounded-full blur-[60px] pointer-events-none group-hover:scale-110 transition-transform duration-700" />
             <div className="relative z-10">
               <div className="flex justify-between items-start mb-10">
@@ -306,18 +309,21 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
                     <p className="text-lg font-bold text-secondary">{orc}%</p>
                   </div>
                 </div>
+                {!readOnly && (
+                  <ExportButton
+                    data={{ ...employee, allCommission }}
+                    exportFn={generateEmployeeCommissionPDF}
+                    className="w-full bg-white/10 hover:bg-white/20 text-white rounded-[1.5rem] py-4 font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-3 border border-white/5 transition-all shadow-lg active:scale-95"
+                  />
+                )}
 
-                <ExportButton
-                  data={{ ...employee, allCommission }}
-                  exportFn={generateEmployeeCommissionPDF}
-                  className="w-full bg-white/10 hover:bg-white/20 text-white rounded-[1.5rem] py-4 font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-3 border border-white/5 transition-all shadow-lg active:scale-95"
-                />
               </div>
             </div>
           </section>
 
           {/* Employment Cycle Section */}
           <EmployeeStatusSection
+          readOnly={true}
             memberId={employee.id}
             status={employee.status}
             onStatusChange={(newStatus) =>
@@ -398,7 +404,7 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
               <button
                 onClick={() => setActiveTab("paysheets")}
                 className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === "paysheets"
-                  ? "bg-primary text-white shadow-md"
+                  ? "bg-primary/50 text-white shadow-md"
                   : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
                   }`}
               >
@@ -407,7 +413,7 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
               <button
                 onClick={() => setActiveTab("commissions")}
                 className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === "commissions"
-                  ? "bg-primary text-white shadow-md"
+                  ? "bg-primary/50 text-white shadow-md"
                   : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
                   }`}
               >

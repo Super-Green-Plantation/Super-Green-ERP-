@@ -56,11 +56,10 @@ function StatPill({ label, value, highlight = false }: {
 
 // ─── Probation Section ────────────────────────────────────────────────────────
 
-function ProbationStatus({ data, status, onToggle, toggling }: {
+function ProbationStatus({ data, status }: {
     data: any;
     status: "PROBATION" | "PERMANENT" | "MANAGEMENT";
-    onToggle: () => void;
-    toggling: boolean;
+
 }) {
     const {
         probationStartDate, monthsElapsed, periodNumber,
@@ -92,18 +91,13 @@ function ProbationStatus({ data, status, onToggle, toggling }: {
             {/* Status badge + period indicator */}
             <div className="flex flex-wrap items-center gap-2">
                 <button
-                    onClick={onToggle} disabled={toggling}
+
                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 border text-[11px] font-bold uppercase tracking-wider rounded-full transition-all hover:opacity-80 active:scale-95 ${status === "PERMANENT"
                         ? "bg-emerald-50 border-emerald-200 text-emerald-700"
                         : "bg-amber-50 border-amber-200 text-amber-700"
                         }`}
                 >
-                    {toggling
-                        ? <Loader2 className="w-3 h-3 animate-spin" />
-                        : status === "PERMANENT"
-                            ? <CheckCircle2 className="w-3 h-3" />
-                            : <Clock className="w-3 h-3" />
-                    }
+
                     {status === "PERMANENT" ? "Permanent" : "Probation"}
                 </button>
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-100 text-blue-600 text-[11px] font-bold uppercase tracking-wider rounded-full">
@@ -195,15 +189,14 @@ function ProbationStatus({ data, status, onToggle, toggling }: {
 
 // ─── Permanent Section ────────────────────────────────────────────────────────
 
-function PermanentStatus({ data, status, onToggle, toggling }: {
+function PermanentStatus({ data, status }: {
     data: any;
     status: "PROBATION" | "PERMANENT" | "MANAGEMENT";
-    onToggle: () => void;
-    toggling: boolean;
+
 }) {
 
     console.log(data);
-    
+
     const { salary, currentPayroll, payrollHistory } = data;
 
     if (!salary) {
@@ -236,21 +229,16 @@ function PermanentStatus({ data, status, onToggle, toggling }: {
         <div className="space-y-4">
             {/* Status badge */}
             <div className="flex flex-wrap items-center gap-2">
-                <button
-                    onClick={onToggle} disabled={toggling}
+                <span
+
                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 border text-[11px] font-bold uppercase tracking-wider rounded-full transition-all hover:opacity-80 active:scale-95 ${status === "PERMANENT"
                         ? "bg-emerald-50 border-emerald-200 text-emerald-700"
                         : "bg-amber-50 border-amber-200 text-amber-700"
                         }`}
                 >
-                    {toggling
-                        ? <Loader2 className="w-3 h-3 animate-spin" />
-                        : status === "PERMANENT"
-                            ? <CheckCircle2 className="w-3 h-3" />
-                            : <Clock className="w-3 h-3" />
-                    }
+
                     {status === "PERMANENT" ? "Permanent" : "Probation"}
-                </button>
+                </span>
                 {currentPayroll ? (
                     <span className="text-xs text-slate-400 font-medium">
                         Payroll processed for {MONTH_NAMES[currentPayroll.month]} {currentPayroll.year}
@@ -344,10 +332,12 @@ function PermanentStatus({ data, status, onToggle, toggling }: {
 // ─── Main Export ──────────────────────────────────────────────────────────────
 
 export default function EmployeeStatusSection({
+    readOnly,
     memberId,
     status,
     onStatusChange,
 }: {
+    readOnly: boolean;
     memberId: number;
     status: "PROBATION" | "PERMANENT" | "MANAGEMENT";
     onStatusChange?: (newStatus: "PROBATION" | "PERMANENT" | "MANAGEMENT") => void;
@@ -388,11 +378,21 @@ export default function EmployeeStatusSection({
                 </h2>
             </div>
             <div className="p-4 sm:p-6">
-                {data.status === "PROBATION" ? (
-                    <ProbationStatus data={data} status={status} onToggle={handleToggle} toggling={toggling} />
-                ) : (
-                    <PermanentStatus data={data} status={status} onToggle={handleToggle} toggling={toggling} />
-                )}
+                {
+                    data.status === "PROBATION" ? (
+                        <ProbationStatus data={data}
+                            status={status}
+
+                        />
+                    ) : (
+                        <PermanentStatus
+                            data={data}
+                            status={status}
+
+                        />
+                    )
+                }
+
             </div>
         </section>
     );

@@ -109,13 +109,7 @@ const PrivilegedView = ({ data, userName, userRole, achieved, target, percentage
 
             <div className="relative z-10 w-full">
               <div className="max-w-xl">
-                <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl px-4 py-1.5 inline-flex items-center gap-3 mb-8 animate-pulse">
-                  <div className="relative flex h-2 w-2 pt-0.5">
-                    <div className=" absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 "></div>
-                    <div className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500 border border-emerald-400/50 "></div>
-                  </div>
-                  <span className="text-white text-[10px] font-bold uppercase tracking-widest">Systems Online</span>
-                </div>
+               
 
                 <h1 className="text-4xl sm:text-6xl font-bold text-white leading-[1.05] tracking-tighter mb-6">
                   {isMounted ? (new Date().getHours() < 12 ? "Good Morning" : new Date().getHours() < 18 ? "Good Afternoon" : "Good Evening") : "Welcome back"}, <br />
@@ -195,10 +189,9 @@ const PrivilegedView = ({ data, userName, userRole, achieved, target, percentage
 
           {/* Editorial Recent Investments */}
           <section>
-            <div className="flex items-center justify-between mb-8 mt-4">
+            <div className="flex items-center justify-between mb-2 mt-2">
               <div>
                 <h2 className="text-2xl font-bold text-foreground tracking-tighter">Recent Financial Activity</h2>
-                <p className="text-sm text-muted-foreground mt-1">Live audit log of all incoming assets</p>
               </div>
               <Link href="/features/investments"
 
@@ -212,10 +205,10 @@ const PrivilegedView = ({ data, userName, userRole, achieved, target, percentage
                 <table className="w-full border-collapse min-w-175 md:min-w-0">
                   <thead>
                     <tr className="bg-muted/20 border-b border-border/50">
-                      <th className="p-8 text-[11px] font-bold text-muted-foreground/60 uppercase tracking-[0.15em] text-left">Source Entity</th>
-                      <th className="p-8 text-[11px] font-bold text-muted-foreground/60 uppercase tracking-[0.15em] text-left">Amount (Rs.)</th>
-                      <th className="p-8 text-[11px] font-bold text-muted-foreground/60 uppercase tracking-[0.15em] text-left">Advisor / Rank</th>
-                      <th className="p-8 text-[11px] font-bold text-muted-foreground/60 uppercase tracking-[0.15em] text-right">Action</th>
+                      <th className="p-5 text-[11px] font-bold text-muted-foreground/60 uppercase tracking-[0.15em] text-left">Client</th>
+                      <th className="p-5 text-[11px] font-bold text-muted-foreground/60 uppercase tracking-[0.15em] text-left">Amount (Rs.)</th>
+                      <th className="p-5 text-[11px] font-bold text-muted-foreground/60 uppercase tracking-[0.15em] text-left">Advisor / Rank</th>
+                      <th className="p-5 text-[11px] font-bold text-muted-foreground/60 uppercase tracking-[0.15em] text-right">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/20">

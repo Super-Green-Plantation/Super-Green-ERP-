@@ -24,7 +24,7 @@ export default function PaySheet({
 
   if (!payrolls || payrolls.length === 0) {
     return (
-      <div className="bg-card/30 backdrop-blur-md rounded-[2.5rem] p-12 border border-border/50 text-center flex flex-col items-center justify-center min-h-[400px]">
+      <div className="bg-card/30 backdrop-blur-md rounded-[2.5rem] p-12 border border-border/50 text-center flex flex-col items-center justify-center min-h-100">
         <ReceiptText className="w-12 h-12 text-muted-foreground/30 mb-4" />
         <h3 className="text-xl font-bold text-foreground">No Salary Slips Available</h3>
         <p className="text-sm text-muted-foreground mt-2">
@@ -162,7 +162,7 @@ export default function PaySheet({
           <div className="bg-muted/10 p-6 sm:p-8 border-t border-border/50">
              
              {/* Net Row */}
-             <div className="flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-6 p-6 sm:px-8 bg-primary text-white rounded-[2rem] shadow-2xl shadow-primary/20 relative overflow-hidden group mb-6 sm:mb-8">
+             <div className="flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-6 p-6 sm:px-8 bg-primary dark:bg-primary/50 text-white rounded-[2rem] shadow-2xl shadow-primary/20 relative overflow-hidden group mb-6 sm:mb-8">
                <div className="absolute top-0 right-0 p-8 bg-white/10 rounded-full blur-[60px] pointer-events-none group-hover:scale-110 transition-transform duration-700" />
                  <div className="relative z-10 w-full flex flex-col sm:flex-row justify-between items-center text-center sm:text-left">
                   <div>
@@ -210,7 +210,7 @@ const Row = ({ label, value }: { label: string; value: number }) => (
 
 const CompanyRow = ({ label, value }: { label: string; value: number }) => (
   <div className="p-4 sm:p-5 bg-card/50 rounded-2xl border border-border/40 flex justify-between items-center gap-4">
-    <p className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider max-w-[150px]">{label}</p>
+    <p className="text-[10px] sm:text-xs font-bold text-muted-foreground uppercase tracking-wider max-w-37.5">{label}</p>
     <p className="text-xs sm:text-sm font-bold text-foreground text-right tabular-nums whitespace-nowrap">
       Rs. {value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
     </p>

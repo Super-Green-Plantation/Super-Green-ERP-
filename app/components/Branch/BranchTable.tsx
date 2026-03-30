@@ -71,7 +71,7 @@ const BranchTable = ({ data, isLoading, onRefresh }: BranchTableProps) => {
   if (isLoading) return <Loading />
 
   return (
-    <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+    <div className="overflow-hidden">
       <div className="flex justify-end  items-center">
       </div>
       <div className="overflow-x-auto">

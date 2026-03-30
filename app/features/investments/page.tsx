@@ -158,11 +158,8 @@ export default function InvestmentsPage() {
                       </span>
                     </td>
 
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center shrink-0">
-                          <User className="w-3.5 h-3.5 text-blue-500" />
-                        </div>
+                    <td className="px-3 py-4">
+               
                         <div>
                           <p className="text-sm font-bold text-slate-900 leading-tight">
                             {inv.client?.fullName ?? "—"}
@@ -171,7 +168,6 @@ export default function InvestmentsPage() {
                             {inv.client?.nic ?? "No NIC"}
                           </p>
                         </div>
-                      </div>
                     </td>
 
                     <td className="px-5 py-4">

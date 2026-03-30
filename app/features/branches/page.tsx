@@ -8,7 +8,6 @@ import Loading from "@/app/components/Status/Loading";
 import { getBranches } from "@/app/features/branches/actions";
 import { generateBranchNetworkPDF } from "@/app/pdf/BranchNetwork";
 import {
-  Building2,
   Plus,
   Search
 } from "lucide-react";
@@ -44,48 +43,44 @@ const Page = () => {
     <div className="max-w-7xl mx-auto sm:space-y-8 space-y-2 sm:p-4 md:p-8 min-h-screen">
       <div className="md:flex justify-between">
         <div className="mb-5 ">
-        <Heading>
-          Branch Network
-        </Heading>
-        <p className="text-sm font-bold text-foreground">
-          Total Branches : {loading ? "-" : totalBranches}
-        </p>
+          <Heading>
+            Branch Network
+          </Heading>
+          <p className="text-sm font-bold text-foreground">
+            Total Branches : {loading ? "-" : totalBranches}
+          </p>
+        </div>
+
+
+        <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3 sm:items-center">
+          <ExportButton
+            data={branches}
+            exportFn={generateBranchNetworkPDF}
+            label="Network Report"
+          />
+
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-xl shadow-primary/10 active:scale-95 hover:opacity-90"
+          >
+            <Plus className="w-4 h-4" />
+            Add Branch
+          </button>
+        </div>
       </div>
 
-
-      <div className="flex flex-col space-y-3 sm:flex-row sm:space-y-0 sm:space-x-3 sm:items-center">
-        <ExportButton
-          data={branches}
-          exportFn={generateBranchNetworkPDF}
-          label="Network Report"
-        />
-
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-xl shadow-primary/10 active:scale-95 hover:opacity-90"
-        >
-          <Plus className="w-4 h-4" />
-          Add Branch
-        </button>
-      </div>
-      </div>
-      
-
-      {/* --- STATS & SEARCH BAR --- */}
-
-
-        {/* Search */}
-        <div className="lg:col-span-2  border-2 p-0 border-teal-800 rounded-full shadow-sm flex items-center">
-          <div className="relative w-full">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search branch"
-              className="w-full bg-muted/30 border-none rounded-xl pl-11 pr-4 py-3 text-sm font-bold text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/10 transition-all outline-none"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
+      {/* Search */}
+      <div className="lg:col-span-2  border-2 p-0 border-teal-800 rounded-full shadow-sm flex items-center">
+        <div className="relative w-full">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Search branch"
+            className="w-full bg-muted/30 border-none rounded-xl pl-11 pr-4 py-3 text-sm font-bold text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/10 transition-all outline-none"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
       </div>
 
       {/* --- TABLE SECTION --- */}

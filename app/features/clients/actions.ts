@@ -12,7 +12,7 @@ import crypto from "crypto"
 import nodemailer from "nodemailer";
 
 
-export async function getAccessibleClients(page = 1, pageSize = 10) {
+export async function getAccessibleClients(page = 1, pageSize = 10 ,searchText = "") {
   const dbUser = await getCurrentUserWithRole();
   if (!dbUser) throw new Error("User not found");
 
