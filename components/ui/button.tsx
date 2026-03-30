@@ -1,6 +1,10 @@
+"use client"
+
 import * as React from "react"
+import { useFormStatus } from "react-dom"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Slot } from "radix-ui"
+import { Loader2 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
@@ -43,22 +47,62 @@ function Button({
   variant = "default",
   size = "default",
   asChild = false,
+  isLoading,
+  disabled,
+  onClick,
+  children,
   ...props
 }: React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean
+    isLoading?: boolean
   }) {
-  const Comp = asChild ? Slot.Root : "button"
+  const { pending } = useFormStatus()
+  const [isLocalLoading, setIsLocalLoading] = React.useState(false)
+
+  const isActuallyLoading = isLoading || pending || isLocalLoading
+  const isDisabled = disabled || isActuallyLoading
+
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    if (onClick) {
+      const result = onClick(e) as unknown as Promise<void>
+      if (result instanceof Promise) {
+        setIsLocalLoading(true)
+        result.finally(() => setIsLocalLoading(false))
+      }
+    }
+  }
+
+  if (asChild) {
+    return (
+      <Slot.Root
+        data-slot="button"
+        data-variant={variant}
+        data-size={size}
+        className={cn(buttonVariants({ variant, size, className }), isActuallyLoading && "pointer-events-none opacity-50")}
+        onClick={handleClick}
+        {...props}
+      >
+        {children}
+      </Slot.Root>
+    )
+  }
 
   return (
-    <Comp
+    <button
       data-slot="button"
       data-variant={variant}
       data-size={size}
       className={cn(buttonVariants({ variant, size, className }))}
+      disabled={isDisabled}
+      onClick={handleClick}
       {...props}
-    />
+    >
+      {isActuallyLoading && <Loader2 className="h-4 w-4 animate-spin shrink-0" />}
+      {children}
+    </button>
   )
 }
 
 export { Button, buttonVariants }
+
