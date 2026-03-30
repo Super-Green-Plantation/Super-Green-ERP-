@@ -65,43 +65,65 @@ const pctDisplay = (n: number) => `${n.toFixed(2)}%`;
 
 // ─── Field component ──────────────────────────────────────────────────────────
 
-function Field({
-  label, value, onChange, prefix, suffix, hint,
+export const formatIndicator = (value: number): string => {
+    if (!value) return "";
+    if (value >= 10_000_000) return `${(value / 1_000_000).toFixed(1)}Cr`;
+    if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+    if (value >= 100_000) return `${(value / 100_000).toFixed(1)}L`;
+    if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K`;
+    return "";
+};
+
+export function Field({
+    label, value, onChange, prefix, suffix, hint, disabled = false,
 }: {
-  label: string;
-  value: number;
-  onChange: (v: number) => void;
-  prefix?: string;
-  suffix?: string;
-  hint?: string;
+    label: string;
+    value: number;
+    onChange: (v: number) => void;
+    prefix?: string;
+    suffix?: string;
+    hint?: string;
+    disabled?: boolean;
 }) {
-  return (
-    <div className="space-y-3">
-      <label className="block text-[11px] font-extrabold uppercase tracking-[0.15em] text-muted-foreground/60 ml-1">
-        {label}
-      </label>
-      <div className="input-prefix-container bg-muted/20">
-        {prefix && (
-          <span className="input-prefix">
-            {prefix}
-          </span>
-        )}
-        <input
-          type="number"
-          step="any"
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
-          className="input-field"
-        />
-        {suffix && (
-          <span className="input-prefix border-l border-r-0">
-            {suffix}
-          </span>
-        )}
-      </div>
-      {hint && <p className="text-[10px] text-muted-foreground/50 font-bold mt-2 ml-1 italic">{hint}</p>}
-    </div>
-  );
+    const indicator = prefix === "Rs." ? formatIndicator(value) : null;
+    return (
+        <div>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
+                {label}
+            </label>
+            <div className={`flex items-center border rounded-xl overflow-hidden transition-all bg-muted/30
+        ${disabled
+                    ? "border-border/50 bg-muted/10 opacity-50"
+                    : "border-border focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/10 shadow-sm"
+                }`}
+            >
+                {prefix && (
+                    <span className="px-3 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest shrink-0">
+                        {prefix}
+                    </span>
+                )}
+                <input
+                    type="number"
+                    step="any"
+                    value={value ?? 0}
+                    disabled={disabled}
+                    onChange={(e) => onChange(Number(e.target.value))}
+                    className="flex-1 px-4 py-2.5 text-sm font-bold text-foreground outline-none bg-transparent placeholder:text-muted-foreground/30 disabled:text-muted-foreground/50 min-w-0"
+                />
+                {indicator && (
+                    <span className="px-3 py-2 text-[10px] font-bold text-green-600 shrink-0">
+                        {indicator}
+                    </span>
+                )}
+                {suffix && (
+                    <span className="px-3 py-2 text-[10px] font-bold text-muted-foreground bg-muted border-l border-border uppercase tracking-widest shrink-0">
+                        {suffix}
+                    </span>
+                )}
+            </div>
+            {hint && <p className="text-[10px] text-muted-foreground/70 font-medium mt-1.5 ml-1">{hint}</p>}
+        </div>
+    );
 }
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -173,7 +195,7 @@ export default function SalaryConfigPage() {
   if (loading) return <Loading />
 
   return (
-    <div className="max-w-[1400px] mx-auto sm:space-y-10 space-y-4 p-4 sm:p-10 min-h-screen">
+    <div className="max-w-350 mx-auto sm:space-y-10 space-y-1 p-4 sm:p-10 min-h-screen">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 border-b border-border/50 pb-10 mb-6">
         <div className="flex gap-6 items-center">
           <Back />
@@ -198,14 +220,15 @@ export default function SalaryConfigPage() {
           return (
             <div
               key={position.id}
-              className={`group bg-card border ${isExpanded ? 'border-primary shadow-xl shadow-primary/5' : 'border-border'} rounded-[2.5rem] overflow-hidden transition-all duration-500`}
+              className={`bg-card rounded-2xl border transition-all duration-300 overflow-hidden
+      ${isExpanded ? "border-primary/30 shadow-xl" : "border-border shadow-sm"}`}
             >
               <div
                 role="button"
                 tabIndex={0}
                 onClick={() => setExpandedId(isExpanded ? null : position.id)}
                 onKeyDown={(e) => e.key === "Enter" && setExpandedId(isExpanded ? null : position.id)}
-                className={`w-full flex items-center justify-between px-8 py-6 hover:bg-muted/30 transition-all cursor-pointer ${isExpanded ? 'bg-muted/10' : ''}`}
+                className={`w-full flex items-center justify-between px-8 py-3 hover:bg-muted/30 transition-all cursor-pointer ${isExpanded ? 'bg-muted/10' : ''}`}
               >
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
                   <div className="flex items-center gap-4">
@@ -255,7 +278,7 @@ export default function SalaryConfigPage() {
                     <div className="space-y-4">
                       <div className="flex items-center gap-3">
                         <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/10">
-                           <Banknote className="w-6 h-6" />
+                          <Banknote className="w-6 h-6" />
                         </div>
                         <div>
                           <h3 className="text-sm font-extrabold uppercase tracking-widest text-foreground">Retainer & Growth</h3>
@@ -286,7 +309,7 @@ export default function SalaryConfigPage() {
                     <div className="space-y-4">
                       <div className="flex items-center gap-3">
                         <div className="p-3 rounded-2xl bg-accent/10 text-accent border border-accent/10">
-                           <Target className="w-6 h-6" />
+                          <Target className="w-6 h-6" />
                         </div>
                         <div>
                           <h3 className="text-sm font-extrabold uppercase tracking-widest text-foreground">Performance Bonuses</h3>
@@ -316,16 +339,16 @@ export default function SalaryConfigPage() {
                   <div className="space-y-10">
                     <div className="flex items-center gap-3">
                       <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/10">
-                         <TrendingUp className="w-6 h-6" />
+                        <TrendingUp className="w-6 h-6" />
                       </div>
                       <div>
                         <h3 className="text-sm font-extrabold uppercase tracking-widest text-foreground">Revenue Scaling Model</h3>
                         <p className="text-[10px] text-muted-foreground font-bold leading-tight">Tiered commission based on sales volume.</p>
                       </div>
                     </div>
-                    
+
                     <div className="vibrant-alert">
-                       Alert: These rates apply to <span className="text-accent underline underline-offset-4">Permanent</span> staff. Probation tiers are locked at 7% / 10%.
+                      Alert: These rates apply to <span className="text-accent underline underline-offset-4">Permanent</span> staff. Probation tiers are locked at 7% / 10%.
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -368,9 +391,9 @@ export default function SalaryConfigPage() {
                         hint={`Currently: ${pctDisplay(form.orcRatePermanent)}`}
                       />
                     </div>
-                    
+
                     <div className="space-y-8">
-                       <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center gap-2 mb-2">
                         <Car className="w-5 h-5 text-muted-foreground/30" />
                         <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-foreground">Statutory & EPF Structure</span>
                       </div>

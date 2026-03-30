@@ -72,7 +72,6 @@ const Page = () => {
       
 
       {/* --- STATS & SEARCH BAR --- */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
 
 
         {/* Search */}
@@ -87,7 +86,6 @@ const Page = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-        </div>
       </div>
 
       {/* --- TABLE SECTION --- */}
