@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/suspend-inactive",
+      "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/birthday-check",
+      "schedule": "0 1 * * *"
+    }
+  ]
+}
