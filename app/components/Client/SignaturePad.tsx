@@ -55,7 +55,7 @@ export default function SignaturePad() {
         >
           <SignatureCanvas
             ref={sigRef}
-            penColor="#1e293b"
+            penColor="#0041a8"
             canvasProps={{ className: "w-full h-40 cursor-crosshair" }}
           />
         </div>

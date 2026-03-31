@@ -4,7 +4,7 @@ import { Briefcase, Calendar } from 'lucide-react';
 const ClientInvestmentTable = ({ investments }: { investments: any }) => {
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-border shadow-sm">
+    <div className="overflow-x-auto rounded-xl">
       <table className="w-full text-left bg-card text-card-foreground">
         <thead>
           <tr className="bg-muted/30 border-b border-border">

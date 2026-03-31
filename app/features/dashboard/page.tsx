@@ -1,16 +1,20 @@
 "use client";
 import Error from "@/app/components/Status/Error";
 import Loading from "@/app/components/Status/Loading";
-import { useDashboard } from "@/app/hooks/useDashboard";
-import {
-  Bell, Mail, Search, ChevronRight, Play, TrendingUp, Users, MapPin,
-  Briefcase, Star, Plus, MoreHorizontal, User, LayoutGrid, Target, ShieldCheck
-} from "lucide-react";
-import Image from "next/image";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
-import { useState } from "react";
-import Link from "next/link";
+import { useDashboard } from "@/app/hooks/useDashboard";
 import { useIsMounted } from "@/app/hooks/useIsMounted";
+import {
+  ChevronRight,
+  LayoutGrid,
+  ShieldCheck,
+  Target,
+  TrendingUp, Users
+} from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { getClientRegistrationByBranch } from "./actions";
+import { ClientRegistrationChart } from "./sparkline";
 
 const DashboardPage = () => {
   const { data, isLoading, isError } = useDashboard();
@@ -36,7 +40,26 @@ const DashboardPage = () => {
   return <RestrictedView data={data} userName={userName} userRole={userRole} achieved={achieved} target={target} percentage={percentage} isMounted={isMounted} />;
 };
 
+// 1. Define the type (or import it from wherever you declared it)
+type ClientRegChartData = {
+  year: number;
+  month: number;
+  days: string[];
+  branches: {
+    branchId: number;
+    branchName: string;
+    daily: number[];
+    total: number;
+  }[];
+};
+
+// 2. Fix the useState — pass initialData as the default value
+
 const PrivilegedView = ({ data, userName, userRole, achieved, target, percentage, isMounted }: any) => {
+
+  const [chartData, setChartData] = useState<ClientRegChartData | null>(null);
+
+
   const modules = [
     {
       title: "Client Management Dashboard",
@@ -61,8 +84,17 @@ const PrivilegedView = ({ data, userName, userRole, achieved, target, percentage
     }
   ];
 
+  const fetchChartData = async () => {
+    const result = await getClientRegistrationByBranch();
+    setChartData(result);
+  };
+
+  useEffect(() => {
+    fetchChartData();
+  }, []);
+
   return (
-    <div className="max-w-7xl mx-auto min-h-screen bg-transparent p-4 sm:p-8">
+    <div className="max-w-7xl mx-auto min-h-screen bg-transparent  sm:p-8">
       {/* Premium Minimal Header */}
       <header className="flex flex-col sm:flex-row items-center justify-between mb-8 sm:mb-10 gap-6">
         <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-start">
@@ -102,27 +134,27 @@ const PrivilegedView = ({ data, userName, userRole, achieved, target, percentage
           <div className="relative rounded-[2.5rem] sm:rounded-[3rem] overflow-hidden p-6 sm:p-16 flex flex-col justify-center min-h-80 sm:min-h-105 border border-white/10  group animate-in fade-in slide-in-from-bottom-10 duration-1000">
             {/* Soft Mesh Background */}
             <div className="absolute inset-0 bg-[#002A24]opacity-20">
-              <div className="absolute top-[-20%] left-[-10%] w-[80%] h-[80%] bg-[#004D40] rounded-full blur-[100px] opacity-70"></div>
-              <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-[#00BFA5] rounded-full blur-[100px] opacity-40"></div>
+              <div className="absolute top-[-20%] left-[-10%] w-[80%] h-[80%] bg-[#00c7a6] rounded-full blur-[100px] opacity-70"></div>
+              <div className="absolute bottom-[-30%] right-[-30%] w-[60%] h-[60%] bg-[#017263] rounded-full blur-[100px] opacity-90"></div>
               <div className="absolute inset-0 bg-white/2 mix-blend-overlay"></div>
             </div>
 
             <div className="relative z-10 w-full">
               <div className="max-w-xl">
-               
+
 
                 <h1 className="text-4xl sm:text-6xl font-bold text-white leading-[1.05] tracking-tighter mb-6">
                   {isMounted ? (new Date().getHours() < 12 ? "Good Morning" : new Date().getHours() < 18 ? "Good Afternoon" : "Good Evening") : "Welcome back"}, <br />
                   <span className="text-accent">Let's Get Started.</span>
                 </h1>
 
-                <p className="text-white/70 text-base sm:text-lg max-w-md leading-relaxed mb-10 tracking-tight">
+                <p className="dark:text-white/70 text-base sm:text-lg max-w-md leading-relaxed mb-10 tracking-tight">
                   Welcome back to your workspace. Monitor your activities, track performance, and manage your modules with real-time enterprise intelligence.
                 </p>
 
                 <div className="flex flex-wrap items-center gap-4">
                   <Link href="/features/investments" className="bg-white text-[#002A24] px-8 py-4 rounded-2xl font-bold flex items-center gap-2 hover:bg-accent hover:text-white transition-all duration-300 shadow-xl">
-                    View My Modules <ChevronRight className="w-4 h-4" />
+                    Investments <ChevronRight className="w-4 h-4" />
                   </Link>
 
                 </div>
@@ -132,8 +164,21 @@ const PrivilegedView = ({ data, userName, userRole, achieved, target, percentage
             </div>
 
             <div className="absolute -bottom-10 -right-10 opacity-5 group-hover:scale-110 transition-transform duration-1000 hidden sm:block">
-              <ShieldCheck className="w-80 h-80 text-white" />
+              <ShieldCheck className="w-80 h-80 dark:text-white dark:opacity-100 opacity-70 " />
             </div>
+          </div>
+
+          <div className="border-t border-border/30 pt-4 mt-2 px-2">
+            <h2 className="text-2xl font-bold text-foreground tracking-tighter my-5">
+              Client registrations by branch
+            </h2>
+            {chartData ? (
+              <ClientRegistrationChart initialData={chartData} />
+            ) : (
+              <div className="h-48 flex items-center justify-center">
+                <span className="text-[11px] text-muted-foreground/40 uppercase tracking-widest">Loading...</span>
+              </div>
+            )}
           </div>
 
           {/* Floating KPI Cards */}
@@ -154,9 +199,9 @@ const PrivilegedView = ({ data, userName, userRole, achieved, target, percentage
             />
             <FloatingKpiCard
               icon={<LayoutGrid className="w-6 h-6 text-accent" />}
-              title="Network Nodes"
+              title="Branch Network"
               value={data.totMembers.toLocaleString()}
-              subValue="Global staff distribution"
+              subValue="Islan wide staff distribution"
               trend="neutral"
             />
           </div>
@@ -165,13 +210,13 @@ const PrivilegedView = ({ data, userName, userRole, achieved, target, percentage
           <section>
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h2 className="text-2xl font-bold text-foreground tracking-tighter">Core Enterprise Modules</h2>
+                <h2 className="text-2xl font-bold text-foreground tracking-tighter">Quick Navigation To Modules</h2>
                 <p className="text-sm text-muted-foreground mt-1">Direct access to mission-critical systems</p>
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {modules.map((mod, i) => (
-                <Link key={i} href={mod.href || "#"} className="group bg-card rounded-[2rem] p-4 shadow-sm hover:shadow-2xl transition-all duration-500 cursor-pointer border border-border/30 hover:-translate-y-2">
+                <Link key={i} href={mod.href || "#"} className="group bg-card rounded-[2rem] p-4 shadow-xs hover:shadow-xl transition-all duration-500 cursor-pointer border border-border/30 hover:-translate-y-2">
                   <div className="w-full h-40 rounded-[1.5rem] bg-muted mb-5 overflow-hidden relative">
                     <img src={mod.image} alt={mod.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                     <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
@@ -191,13 +236,8 @@ const PrivilegedView = ({ data, userName, userRole, achieved, target, percentage
           <section>
             <div className="flex items-center justify-between mb-2 mt-2">
               <div>
-                <h2 className="text-2xl font-bold text-foreground tracking-tighter">Recent Financial Activity</h2>
+                <h2 className="text-2xl font-bold text-foreground tracking-tighter">Recent Client Activity</h2>
               </div>
-              <Link href="/features/investments"
-
-                className="text-sm font-bold text-primary hover:text-accent transition-colors flex items-center gap-2 bg-primary/5 px-6 py-3 rounded-2xl border border-primary/10 tracking-tight">
-                VIEW FINANCIAL LEDGER <ChevronRight className="w-4 h-4" />
-              </Link>
             </div>
 
             <div className=" overflow-hidden shadow-sm">
@@ -241,9 +281,9 @@ const PrivilegedView = ({ data, userName, userRole, achieved, target, percentage
                           <td className="p-8">
                             <div className="flex flex-col">
                               <Link href={advisorHref} className="text-sm text-foreground font-bold tracking-tight hover:text-primary transition-colors truncate">
-                                {inv.advisor?.nameWithInitials || "Unknown Advisor"}
+                                {inv.advisor?.nameWithInitials || "Unassigned"}
                               </Link>
-                              <p className="text-[10px] text-muted-foreground font-bold mt-1 uppercase tracking-tighter">{inv.advisor?.position?.title || "Staff Agent"}</p>
+                              <p className="text-[10px] text-muted-foreground font-bold mt-1 uppercase tracking-tighter">{inv.advisor?.position?.title || "-"}</p>
                             </div>
                           </td>
                           <td className="p-8 text-right">
@@ -266,7 +306,7 @@ const PrivilegedView = ({ data, userName, userRole, achieved, target, percentage
         <aside className="w-full xl:w-95 flex flex-col gap-8">
 
           {/* High-Fidelity Stats Card */}
-          <div className="bg-card/60 backdrop-blur-xl rounded-[2.5rem] p-8 shadow-sm border border-border/50 relative overflow-hidden group text-card-foreground">
+          <div className="bg-card/60 backdrop-blur-xl rounded-[2.5rem] sm:p-8 p-5 shadow-sm border border-border/50 relative overflow-hidden group text-card-foreground">
             <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:rotate-12 transition-transform duration-700">
               <Target className="w-32 h-32 text-primary" />
             </div>
@@ -305,27 +345,9 @@ const PrivilegedView = ({ data, userName, userRole, achieved, target, percentage
               </div>
 
               <div className="text-center mt-10">
-                <h3 className="font-bold text-2xl text-foreground mb-2 leading-none">Welcome, {userName.split(' ')[0]} 🔥</h3>
+                <h3 className="font-bold text-2xl text-foreground mb-2 leading-none">Welcome, {userName.split(' ')[0]}</h3>
                 <p className="text-xs text-muted-foreground font-bold tracking-tight px-4">Your enterprise systems are operating at peak efficiency today.</p>
               </div>
-            </div>
-
-            {/* Real Data Heatmap */}
-            <div className="flex items-end justify-between h-32 gap-3 px-2 pt-4 border-t border-border/30">
-              {data.heatmap?.map((count: number, i: number) => (
-                <div key={i} className="w-full flex flex-col gap-3 items-center group/bar">
-                  <div className="relative w-full h-full flex items-end">
-                    <div
-                      className={`w-full rounded-xl transition-all duration-500 ${i === 6 ? 'bg-accent shadow-lg shadow-accent/20' : 'bg-primary/20 group-hover/bar:bg-primary/50'}`}
-                      style={{ height: `${Math.max((count / (Math.max(...data.heatmap) || 1)) * 100, 10)}%` }}
-                    ></div>
-                    {i === 6 && count > 0 && <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-accent ring-4 ring-accent/20 animate-pulse"></div>}
-                  </div>
-                  <span className={`text-[8px] font-bold uppercase tracking-tighter ${i === 6 ? 'text-accent' : 'text-muted-foreground/50'}`}>
-                    {isMounted ? ['M', 'T', 'W', 'T', 'F', 'S', 'S'][(new Date().getDay() + i + 1) % 7] : "--"}
-                  </span>
-                </div>
-              ))}
             </div>
           </div>
 
@@ -526,11 +548,8 @@ const RestrictedView = ({ data, userName, userRole, achieved, target, percentage
 function FloatingKpiCard({ icon, title, value, subValue, trend }: { icon: React.ReactNode, title: string, value: string, subValue: string, trend: 'up' | 'down' | 'neutral' }) {
   return (
     <div className="bg-card/60 backdrop-blur-xl border border-border/30 rounded-[2rem] p-6 flex flex-col shadow-sm group hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 relative overflow-hidden">
-      <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:scale-150 transition-transform duration-700">
-        {icon}
-      </div>
-      <div className={`w-14 h-14 rounded-2xl bg-muted/30 flex items-center justify-center shrink-0 mb-6 group-hover:bg-primary transition-all duration-500 shadow-inner border border-border/20`}>
-        <div className="group-hover:text-white group-hover:scale-110 transition-all duration-500 text-primary">
+      <div className={`w-14 h-14 rounded-2xl bg-muted/30 flex items-center justify-center shrink-0 mb-6 group-hover:text-white transition-all duration-500 shadow-inner border border-border/20`}>
+        <div className="group-hover:scale-110 transition-all duration-500 text-primary">
           {icon}
         </div>
       </div>
@@ -549,7 +568,7 @@ function FloatingKpiCard({ icon, title, value, subValue, trend }: { icon: React.
 
 
 function UserAvatar({ seed, className = "w-8 h-8" }: { seed: string, className?: string }) {
-  
+
   return (
     <img
       src={`https://api.dicebear.com/7.x/notionists/svg?seed=${seed}&backgroundColor=transparent`}

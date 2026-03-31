@@ -491,7 +491,7 @@ console.log(id);
 
         <button
           onClick={() => setDeleteDialog(true)}
-          className="flex items-center gap-2 px-8 py-3 bg-destructive/10 text-destructive border border-destructive/20 rounded-2xl hover:bg-destructive hover:text-destructive-foreground active:scale-95 transition-all text-[10px] font-black uppercase tracking-widest shadow-lg shadow-destructive/5"
+          className="flex items-center gap-2 px-8 py-3 bg-destructive/10 text-destructive border border-destructive/20 rounded-2xl hover:bg-destructive hover:text-white active:scale-95 transition-all text-[10px] font-black uppercase tracking-widest shadow-lg shadow-destructive/5"
         >
           <Trash2 className="w-4 h-4" />
           Delete Profile

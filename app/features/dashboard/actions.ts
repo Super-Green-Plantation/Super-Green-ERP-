@@ -109,3 +109,56 @@ export default async function Dashboard() {
   if (!user) redirect("/auth/signin")
 
 }
+
+
+// actions/dashboard.ts
+
+export async function getClientRegistrationByBranch(year?: number, month?: number) {
+  const now = new Date();
+  const y = year ?? now.getFullYear();
+  const m = month ?? now.getMonth(); // 0-indexed
+
+  const from = new Date(y, m, 1);
+  const to = new Date(y, m + 1, 0, 23, 59, 59); // last day of month
+
+  const branches = await prisma.branch.findMany({
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  });
+
+  const registrations = await prisma.client.groupBy({
+    by: ["branchId", "createdAt"],
+    where: { createdAt: { gte: from, lte: to } },
+    _count: { id: true },
+  });
+
+  // Build day array for the month
+  const daysInMonth = to.getDate();
+  const days = Array.from({ length: daysInMonth }, (_, i) => {
+    const d = new Date(y, m, i + 1);
+    return d.toISOString().slice(0, 10);
+  });
+
+  const branchData = branches.map((branch) => {
+    const dailyMap: Record<string, number> = {};
+    for (const reg of registrations) {
+      if (reg.branchId === branch.id) {
+        const day = new Date(reg.createdAt).toISOString().slice(0, 10);
+        dailyMap[day] = (dailyMap[day] || 0) + reg._count.id;
+      }
+    }
+    return {
+      branchId: branch.id,
+      branchName: branch.name,
+      daily: days.map((d) => dailyMap[d] ?? 0),
+      total: Object.values(dailyMap).reduce((a, b) => a + b, 0),
+    };
+  });
+
+  return {
+    year: y,
+    month: m,
+    days,           // ["2025-03-01", "2025-03-02", ...]
+    branches: branchData,
+  };
+}

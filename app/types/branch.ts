@@ -7,3 +7,10 @@ export interface Branch {
   status: string;
   members: Member[];
 }
+
+export type BranchSparklineData = {
+  branchId: string;
+  branchName: string;
+  sparkline: number[];
+  total: number;
+};
