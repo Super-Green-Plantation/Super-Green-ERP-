@@ -35,6 +35,8 @@ model Branch {
 enum Title {
   // Management/Support
   ADMIN
+  COO
+  GM
   HR
   ACCOUNTS
   IT
@@ -58,6 +60,8 @@ enum Title {
   JZM
   SZM
   AGM
+
+
 }
 
 enum PositionType {
