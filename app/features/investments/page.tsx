@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useIsMounted } from "@/app/hooks/useIsMounted";
 import { generateInvestmentsReportPDF } from "@/app/pdf/InvestmentsReport";
+import Heading from "@/app/components/Heading";
 
 const fmt = (n: number) =>
   n >= 1_000_000
@@ -91,8 +92,10 @@ export default function InvestmentsPage() {
             <BanknoteArrowUp className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Investments</h1>
-            <p className="text-sm text-slate-500 font-medium mt-0.5">
+            <Heading>
+            Investments
+            </Heading>
+            <p className="text-sm font-bold text-foreground">
               {total} total investments
             </p>
           </div>
@@ -136,70 +139,80 @@ export default function InvestmentsPage() {
         </div>
       ) : (
         /* Table */
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className=" overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-50/50 border-b border-slate-200">
+                {/* Header with better contrast using muted-foreground */}
+                <tr className="bg-muted/50 border-b border-border">
                   {["Proposal No.", "Client", "Plan", "Amount", "Inv. Date", "Maturity", "Advisor", "Actions"].map(h => (
-                    <th key={h} className={`px-5 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-500 ${h === "Actions" ? "text-center" : ""}`}>
+                    <th
+                      key={h}
+                      className={`px-5 py-4 text-[11px] font-extrabold uppercase tracking-widest text-muted-foreground ${h === "Actions" ? "text-center" : ""}`}
+                    >
                       {h}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
-                {investments.map((inv: any) => (
-                  <tr key={inv.id} className="hover:bg-slate-50/80 transition-colors group">
 
+              <tbody className="divide-y divide-border/60">
+                {investments.map((inv: any) => (
+                  <tr key={inv.id} className="hover:bg-muted/30 transition-colors group">
+
+                    {/* Proposal No - Mono font for data clarity */}
                     <td className="px-5 py-4">
-                      <span className="text-[11px] font-bold text-slate-400 font-mono">
+                      <span className="text-[11px] font-bold text-muted-foreground/80 font-mono tracking-tighter">
                         {inv.client?.proposalFormNo ?? `#${inv.id}`}
                       </span>
                     </td>
 
+                    {/* Client Info - High contrast name */}
                     <td className="px-3 py-4">
-               
-                        <div>
-                          <p className="text-sm font-bold text-slate-900 leading-tight">
-                            {inv.client?.fullName ?? "—"}
-                          </p>
-                          <p className="text-[10px] text-slate-400 font-medium">
-                            {inv.client?.nic ?? "No NIC"}
-                          </p>
-                        </div>
+                      <div>
+                        <p className="text-sm font-bold text-foreground leading-tight">
+                          {inv.client?.fullName ?? "—"}
+                        </p>
+                        <p className="text-[10px] text-muted-foreground font-semibold">
+                          {inv.client?.nic ?? "No NIC"}
+                        </p>
+                      </div>
                     </td>
 
+                    {/* Plan Info */}
                     <td className="px-5 py-4">
-                      <p className="text-xs font-bold text-slate-700">{inv.plan?.name ?? "—"}</p>
+                      <p className="text-xs font-bold text-foreground/90">{inv.plan?.name ?? "—"}</p>
                       {inv.plan && (
-                        <p className="text-[10px] text-slate-400 font-medium">
-                          {inv.plan.rate}% · {inv.plan.duration}mo
+                        <p className="text-[10px] text-accent font-bold">
+                          {inv.plan.rate}% <span className="text-muted-foreground/60">·</span> {inv.plan.duration}mo
                         </p>
                       )}
                     </td>
 
+                    {/* Amount - Boldest text for financial focus */}
                     <td className="px-5 py-4">
-                      <p className="text-sm font-bold text-slate-800">
+                      <p className="text-sm font-black text-foreground tabular-nums">
                         Rs. {fmt(inv.amount)}
                       </p>
                     </td>
 
+                    {/* Investment Date */}
                     <td className="px-5 py-4">
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600">
+                      <div className="text-xs font-bold text-muted-foreground/90">
                         {inv.investmentDate && isMounted
                           ? new Date(inv.investmentDate).toLocaleDateString("en-GB", {
-                              day: "numeric", month: "short", year: "numeric",
-                            })
+                            day: "numeric", month: "short", year: "numeric",
+                          })
                           : "—"}
                       </div>
                     </td>
 
+                    {/* Maturity Status */}
                     <td className="px-5 py-4">
                       <div className="space-y-1">
                         <MaturityBadge maturityDate={inv.maturityDate} isMatured={inv.isMatured} isMounted={isMounted} />
                         {inv.maturityDate && isMounted && (
-                          <p className="text-[10px] text-slate-400 font-medium">
+                          <p className="text-[10px] text-muted-foreground font-semibold">
                             {new Date(inv.maturityDate).toLocaleDateString("en-GB", {
                               day: "numeric", month: "short", year: "numeric",
                             })}
@@ -208,21 +221,23 @@ export default function InvestmentsPage() {
                       </div>
                     </td>
 
+                    {/* Advisor - Forest Green accents */}
                     <td className="px-5 py-4">
-                      <p className="text-xs font-bold text-slate-600">
+                      <p className="text-xs font-bold text-foreground/80">
                         {inv.advisor?.nameWithInitials ?? (
-                          <span className="text-slate-300">Unassigned</span>
+                          <span className="text-muted-foreground/40 italic">Unassigned</span>
                         )}
                       </p>
                       {inv.advisor && (
-                        <p className="text-[10px] text-slate-400">{inv.advisor.empNo}</p>
+                        <p className="text-[10px] text-primary font-bold">{inv.advisor.empNo}</p>
                       )}
                     </td>
 
+                    {/* Actions - Themed Button */}
                     <td className="px-5 py-4 text-center">
                       <Link
                         href={`/features/clients/${inv.clientId}`}
-                        className="inline-flex items-center gap-1.5 text-slate-400 hover:text-blue-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200 transition-all rounded-xl px-3 py-1.5 text-[11px] font-bold uppercase tracking-tight"
+                        className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-primary hover:bg-card hover:border-border border border-transparent shadow-sm transition-all rounded-xl px-3 py-1.5 text-[11px] font-bold uppercase tracking-tight"
                       >
                         View <ExternalLink className="w-3 h-3" />
                       </Link>
@@ -233,11 +248,14 @@ export default function InvestmentsPage() {
             </table>
           </div>
 
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={setCurrentPage}
-          />
+          {/* Pagination container with themed top border */}
+          <div className="border-t border-border bg-muted/20">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
+          </div>
         </div>
       )}
     </div>

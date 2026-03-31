@@ -35,3 +35,6 @@ NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY
 SUPABASE_SERVICE_ROLE_KEY
 NEXT_PUBLIC_APP_URL
+
+
+Invoke-WebRequest -Uri "https://super-green-erp.vercel.app/api/cron/birthday-check" -Headers @{ Authorization = "Bearer fsbgfvgvgbhdthvv5e6yvcer6tcw4e5ct" }

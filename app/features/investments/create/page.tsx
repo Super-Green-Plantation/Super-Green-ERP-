@@ -18,9 +18,9 @@ type NomineeMode = "existing" | "new" | "none";
 
 function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
   return (
-    <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
-      <span className="text-slate-500">{icon}</span>
-      <h3 className="text-xs font-bold text-slate-600 uppercase tracking-widest">{title}</h3>
+    <div className="flex items-center gap-2 pb-3 border-b border-border">
+      <span className="text-muted-foreground">{icon}</span>
+      <h3 className="text-xs font-black text-foreground uppercase tracking-widest">{title}</h3>
     </div>
   );
 }
@@ -37,13 +37,13 @@ function Field({
 }) {
   return (
     <div>
-      <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+      <label className="block text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1">
         {label}
       </label>
-      <div className={`flex items-center border rounded-lg overflow-hidden transition-all bg-white
+      <div className={`flex items-center border rounded-lg overflow-hidden transition-all bg-card
         ${disabled
-          ? "border-slate-100 bg-slate-50"
-          : "border-slate-200 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100"
+          ? "border-muted bg-muted/50"
+          : "border-border focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10"
         }`}
       >
         <input
@@ -52,7 +52,7 @@ function Field({
           disabled={disabled}
           placeholder={placeholder}
           onChange={e => onChange?.(e.target.value)}
-          className="flex-1 px-3 py-2 text-sm font-semibold text-slate-700 outline-none bg-transparent disabled:text-slate-400 disabled:bg-slate-50"
+          className="flex-1 px-3 py-2 text-sm font-semibold text-foreground outline-none bg-transparent disabled:text-muted-foreground"
         />
       </div>
     </div>
@@ -69,14 +69,14 @@ function SelectField({
 }) {
   return (
     <div>
-      <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
+      <label className="block text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1">
         {label}
       </label>
-      <div className="flex items-center border border-slate-200 rounded-lg overflow-hidden focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100 transition-all bg-white">
+      <div className="flex items-center overflow-hidden focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10 transition-all bg-card">
         <select
           value={value}
           onChange={e => onChange(e.target.value)}
-          className="flex-1 px-3 py-2 text-sm font-semibold text-slate-700 outline-none bg-white appearance-none"
+          className="flex-1 px-3 py-2 text-sm font-semibold text-foreground outline-none bg-transparent appearance-none"
         >
           {children}
         </select>
@@ -86,27 +86,23 @@ function SelectField({
 }
 
 function ModeToggle({
-  value, onChange, color = "slate",
+  value, onChange, color = "primary",
 }: {
   value: string;
   onChange: (v: any) => void;
-  color?: "slate" | "emerald" | "violet";
+  color?: string;
 }) {
-  const active = {
-    slate: "bg-slate-900 text-white",
-    emerald: "bg-emerald-600 text-white",
-    violet: "bg-violet-600 text-white",
-  }[color];
+  const active = "bg-primary text-primary-foreground";
 
   return (
-    <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-xl w-fit">
+    <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-xl w-fit border border-border">
       {(["none", "existing", "new"] as const).map(mode => (
         <button
           key={mode}
           type="button"
           onClick={() => onChange(mode)}
-          className={`px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all
-            ${value === mode ? active : "text-slate-500 hover:text-slate-700"}`}
+          className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all
+            ${value === mode ? active : "text-muted-foreground hover:text-foreground"}`}
         >
           {mode === "none" ? "Skip" : mode === "existing" ? "Use Existing" : "Add New"}
         </button>
@@ -176,201 +172,205 @@ export default function CreateInvestmentForm({ onSuccess }: { onSuccess?: () => 
   };
 
   return (
-    <div className="space-y-5 max-w-7xl mx-auto">
-
-      <div className="flex items-center gap-4 pb-6 border-b border-slate-100">
-          <Back />
-        <div className="p-3 bg-slate-900 rounded-2xl shadow-lg shadow-slate-900/20">
-          <BanknoteArrowUp className="w-6 h-6 text-white" />
+    <div className="space-y-6 max-w-5xl mx-auto pb-12">
+      {/* Header Section */}
+      <div className="flex items-center gap-5 pb-8 border-b border-border">
+        <Back />
+        <div className="p-3.5 bg-primary rounded-2xl shadow-xl shadow-primary/10">
+          <BanknoteArrowUp className="w-6 h-6 text-primary-foreground" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Create Investment</h1>
-          <p className="text-sm text-slate-500 font-medium mt-0.5">Add a new investment for an existing client.</p>
+          <h1 className="text-2xl font-black text-foreground tracking-tight">Create Investment</h1>
+          <p className="text-sm text-muted-foreground font-semibold mt-1">
+            Add a new investment for an existing client.
+          </p>
         </div>
-        <div className="ml-auto">
+      </div>
+
+      {/* Client Selection - Always Visible */}
+      <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
+        <div className="px-6 py-4 bg-muted/30 border-b border-border/60">
+          <SectionHeader
+            icon={<User className="w-4 h-4 text-primary" />}
+            title="Account Owner"
+          />
         </div>
-    </div>
-      {/* Client select */ }
-  <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-    <div className="px-5 py-4 border-b border-slate-100">
-      <SectionHeader icon={<User className="w-4 h-4" />} title="Client" />
-    </div>
-    <div className="px-5 py-4 space-y-4">
-      <SelectField label="Select Client *" value={selectedClient?.id?.toString() ?? ""} onChange={handleClientChange}>
-        <option value="" disabled>Choose a client...</option>
-        {clients.map(c => (
-          <option key={c.id} value={c.id}>
-            {c.fullName} ({c.nic ?? "no NIC"})
-          </option>
-        ))}
-      </SelectField>
+        <div className="p-6 space-y-4">
+          <SelectField
+            label="Select Client *"
+            value={selectedClient?.id?.toString() ?? ""}
+            onChange={handleClientChange}
+           
+          >
+            <option value="" disabled>Choose a client...</option>
+            {clients.map(c => (
+              <option key={c.id} value={c.id}>
+                {c.fullName} — {c.nic ?? "No NIC"}
+              </option>
+            ))}
+          </SelectField>
+
+          {selectedClient && (
+            <div className="animate-in fade-in slide-in-from-top-1 duration-300">
+              <Field
+                label="Assigned Branch"
+                value={selectedClient.branch?.name ?? "No Branch Assigned"}
+                disabled
+                
+              />
+            </div>
+          )}
+        </div>
+      </div>
 
       {selectedClient && (
-        <Field
-          label="Branch"
-          value={selectedClient.branch?.name ?? ""}
-          disabled
-        />
+        <div className="space-y-6 animate-in fade-in duration-500">
+          {/* Investment Details */}
+          <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
+            <div className="px-6 py-4 bg-muted/30 border-b border-border/60">
+              <SectionHeader
+                icon={<DollarSign className="w-4 h-4 text-accent" />}
+                title="Investment Parameters"
+              />
+            </div>
+            <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <SelectField label="Financial Plan (Optional)" value={planId} onChange={setPlanId}>
+                <option value="">Standard Growth Plan</option>
+                {plans.map(p => (
+                  <option key={p.id} value={p.id}>{p.name} ({p.rate}%)</option>
+                ))}
+              </SelectField>
+              <Field
+                label="Investment Amount (LKR) *"
+                value={amount}
+                onChange={setAmount}
+                placeholder="0.00"
+                type="number"
+                
+              />
+            </div>
+          </div>
+
+          {/* Beneficiary Selection */}
+          <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
+            <div className="px-6 py-4 bg-muted/30 border-b border-border/60">
+              <SectionHeader
+                icon={<Landmark className="w-4 h-4 text-primary" />}
+                title="Beneficiary"
+              />
+            </div>
+            <div className="p-6 space-y-5">
+              <ModeToggle value={beneficiaryMode} onChange={setBeneficiaryMode} color="primary" />
+
+              {beneficiaryMode === "existing" && (
+                <div className="grid grid-cols-1 gap-3">
+                  {selectedClient.beneficiaries?.length > 0 ? (
+                    selectedClient.beneficiaries.map((b: any) => (
+                      <div
+                        key={b.id}
+                        onClick={() => setSelectedBeneficiaryId(b.id)}
+                        className={`group flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all
+                        ${selectedBeneficiaryId === b.id
+                            ? "border-primary bg-primary/5 ring-1 ring-primary"
+                            : "border-border hover:border-primary/40 hover:bg-muted/30"
+                          }`}
+                      >
+                        <div>
+                          <p className={`text-sm font-black ${selectedBeneficiaryId === b.id ? "text-primary" : "text-foreground"}`}>
+                            {b.fullName}
+                          </p>
+                          <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-tight mt-1">
+                            {[b.relationship, b.bankName, b.accountNo].filter(Boolean).join(" • ")}
+                          </p>
+                        </div>
+                        {selectedBeneficiaryId === b.id && (
+                          <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center shadow-lg shadow-primary/20">
+                            <Check className="w-3.5 h-3.5 text-primary-foreground" />
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic font-medium">No saved beneficiaries found.</p>
+                  )}
+                </div>
+              )}
+
+              {beneficiaryMode === "new" && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-5 bg-muted/20 rounded-2xl border border-border/50">
+                  <div className="sm:col-span-2">
+                    <Field label="Full Name" value={newBeneficiary.fullName} onChange={v => setNewBeneficiary(p => ({ ...p, fullName: v }))} />
+                  </div>
+                  <Field label="Relationship" value={newBeneficiary.relationship} onChange={v => setNewBeneficiary(p => ({ ...p, relationship: v }))} />
+                  <Field label="Phone" value={newBeneficiary.phone} onChange={v => setNewBeneficiary(p => ({ ...p, phone: v }))} />
+                  <Field label="Bank Name" value={newBeneficiary.bankName} onChange={v => setNewBeneficiary(p => ({ ...p, bankName: v }))} />
+                  <Field label="Account No." value={newBeneficiary.accountNo} onChange={v => setNewBeneficiary(p => ({ ...p, accountNo: v }))} />
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Nominee Selection */}
+          <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
+            <div className="px-6 py-4 bg-muted/30 border-b border-border/60">
+              <SectionHeader
+                icon={<Users className="w-4 h-4 text-accent" />}
+                title="Nominee Details"
+              />
+            </div>
+            <div className="p-6 space-y-5">
+              <ModeToggle value={nomineeMode} onChange={setNomineeMode} color="accent" />
+
+              {nomineeMode === "existing" && (
+                <div className="grid grid-cols-1 gap-3">
+                  {selectedClient.nominees?.length > 0 ? (
+                    selectedClient.nominees.map((n: any) => (
+                      <div
+                        key={n.id}
+                        onClick={() => setSelectedNomineeId(n.id)}
+                        className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all
+                        ${selectedNomineeId === n.id
+                            ? "border-accent bg-accent/5 ring-1 ring-accent"
+                            : "border-border hover:border-accent/40 hover:bg-muted/30"
+                          }`}
+                      >
+                        <div>
+                          <p className={`text-sm font-black ${selectedNomineeId === n.id ? "text-accent" : "text-foreground"}`}>
+                            {n.fullName}
+                          </p>
+                          <p className="text-[11px] text-muted-foreground font-bold mt-1 uppercase tracking-tighter">
+                            {n.permanentAddress}
+                          </p>
+                        </div>
+                        {selectedNomineeId === n.id && (
+                          <div className="w-6 h-6 bg-accent rounded-full flex items-center justify-center shadow-lg shadow-accent/20">
+                            <Check className="w-3.5 h-3.5 text-accent-foreground" />
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-muted-foreground italic font-medium">No saved nominees found.</p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Final Action */}
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={loading}
+            className="w-full flex items-center justify-center gap-3 px-8 py-5 bg-primary hover:bg-primary/90 disabled:bg-muted-foreground/20 text-primary-foreground text-xs font-black uppercase tracking-[0.25em] rounded-2xl transition-all hover:shadow-2xl hover:shadow-primary/30 active:scale-[0.98]"
+          >
+            {loading
+              ? <><Loader2 className="w-5 h-5 animate-spin" /> Finalizing...</>
+              : <><Plus className="w-5 h-5" /> Confirm Investment</>
+            }
+          </button>
+        </div>
       )}
     </div>
-  </div>
-
-  {
-    selectedClient && (
-      <>
-        {/* Investment details */}
-        <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-100">
-            <SectionHeader icon={<DollarSign className="w-4 h-4 text-blue-500" />} title="Investment Details" />
-          </div>
-          <div className="px-5 py-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <SelectField label="Financial Plan (Optional)" value={planId} onChange={setPlanId}>
-              <option value="">Choose a plan...</option>
-              {plans.map(p => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </SelectField>
-            <Field
-              label="Investment Amount (LKR) *"
-              value={amount}
-              onChange={setAmount}
-              placeholder="e.g. 500000"
-              type="number"
-            />
-          </div>
-        </div>
-
-        {/* Beneficiary */}
-        <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-100">
-            <SectionHeader icon={<Landmark className="w-4 h-4 text-emerald-500" />} title="Beneficiary" />
-          </div>
-          <div className="px-5 py-4 space-y-4">
-            <ModeToggle value={beneficiaryMode} onChange={setBeneficiaryMode} color="emerald" />
-
-            {beneficiaryMode === "existing" && (
-              selectedClient.beneficiaries?.length > 0 ? (
-                <div className="space-y-2">
-                  {selectedClient.beneficiaries.map((b: any) => (
-                    <div
-                      key={b.id}
-                      onClick={() => setSelectedBeneficiaryId(b.id)}
-                      className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all
-                          ${selectedBeneficiaryId === b.id
-                          ? "border-emerald-300 bg-emerald-50/50"
-                          : "border-slate-200 hover:border-slate-300 hover:bg-slate-50/50"
-                        }`}
-                    >
-                      <div>
-                        <p className="text-sm font-bold text-slate-800">{b.fullName}</p>
-                        <p className="text-[10px] text-slate-400 font-medium mt-0.5">
-                          {[b.relationship, b.bankName, b.accountNo].filter(Boolean).join(" • ")}
-                        </p>
-                      </div>
-                      {selectedBeneficiaryId === b.id && (
-                        <div className="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center shrink-0">
-                          <Check className="w-3 h-3 text-white" />
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-slate-400 italic py-2">No existing beneficiaries for this client.</p>
-              )
-            )}
-
-            {beneficiaryMode === "new" && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-slate-50/50 rounded-xl border border-slate-100">
-                <div className="sm:col-span-2">
-                  <Field label="Full Name" value={newBeneficiary.fullName}
-                    onChange={v => setNewBeneficiary(p => ({ ...p, fullName: v }))} />
-                </div>
-                <Field label="Relationship" value={newBeneficiary.relationship}
-                  onChange={v => setNewBeneficiary(p => ({ ...p, relationship: v }))} />
-                <Field label="Phone" value={newBeneficiary.phone}
-                  onChange={v => setNewBeneficiary(p => ({ ...p, phone: v }))} />
-                <Field label="Bank Name" value={newBeneficiary.bankName}
-                  onChange={v => setNewBeneficiary(p => ({ ...p, bankName: v }))} />
-                <Field label="Account No." value={newBeneficiary.accountNo}
-                  onChange={v => setNewBeneficiary(p => ({ ...p, accountNo: v }))} />
-                <Field label="Bank Branch" value={newBeneficiary.bankBranch}
-                  onChange={v => setNewBeneficiary(p => ({ ...p, bankBranch: v }))} />
-                <Field label="NIC (Optional)" value={newBeneficiary.nic}
-                  onChange={v => setNewBeneficiary(p => ({ ...p, nic: v }))} />
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Nominee */}
-        <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-100">
-            <SectionHeader icon={<Users className="w-4 h-4 text-violet-500" />} title="Nominee" />
-          </div>
-          <div className="px-5 py-4 space-y-4">
-            <ModeToggle value={nomineeMode} onChange={setNomineeMode} color="violet" />
-
-            {nomineeMode === "existing" && (
-              selectedClient.nominees?.length > 0 ? (
-                <div className="space-y-2">
-                  {selectedClient.nominees.map((n: any) => (
-                    <div
-                      key={n.id}
-                      onClick={() => setSelectedNomineeId(n.id)}
-                      className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all
-                          ${selectedNomineeId === n.id
-                          ? "border-violet-300 bg-violet-50/50"
-                          : "border-slate-200 hover:border-slate-300 hover:bg-slate-50/50"
-                        }`}
-                    >
-                      <div>
-                        <p className="text-sm font-bold text-slate-800">{n.fullName}</p>
-                        <p className="text-[10px] text-slate-400 font-medium mt-0.5">{n.permanentAddress}</p>
-                      </div>
-                      {selectedNomineeId === n.id && (
-                        <div className="w-5 h-5 bg-violet-500 rounded-full flex items-center justify-center shrink-0">
-                          <Check className="w-3 h-3 text-white" />
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-xs text-slate-400 italic py-2">No existing nominees for this client.</p>
-              )
-            )}
-
-            {nomineeMode === "new" && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-slate-50/50 rounded-xl border border-slate-100">
-                <div className="sm:col-span-2">
-                  <Field label="Full Name" value={newNominee.fullName}
-                    onChange={v => setNewNominee(p => ({ ...p, fullName: v }))} />
-                </div>
-                <Field label="Permanent Address" value={newNominee.permanentAddress}
-                  onChange={v => setNewNominee(p => ({ ...p, permanentAddress: v }))} />
-                <Field label="Postal Address (Optional)" value={newNominee.postalAddress}
-                  onChange={v => setNewNominee(p => ({ ...p, postalAddress: v }))} />
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Submit */}
-        <button
-          type="button"
-          onClick={handleSubmit}
-          disabled={loading}
-          className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-slate-900 hover:bg-slate-700 disabled:bg-slate-400 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all active:scale-95 shadow-lg shadow-slate-900/20"
-        >
-          {loading
-            ? <><Loader2 className="w-4 h-4 animate-spin" /> Creating...</>
-            : <><Plus className="w-4 h-4" /> Create Investment</>
-          }
-        </button>
-      </>
-    )
-  }
-    </div >
   );
 }

@@ -8,7 +8,8 @@ import { Member } from "@/app/types/member";
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Search } from "lucide-react";
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getBranchById } from "../../actions";
 
 const Page = () => {
   const params = useParams();
@@ -18,6 +19,7 @@ const Page = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEmp, setSelectedEmp] = useState<Member | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [branch, setBranch] = useState<any | null>(null);
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ["employees", branchId] });
@@ -26,6 +28,15 @@ const Page = () => {
   if (!branchId || isNaN(branchId)) {
     return <div className="p-10 text-red-500 text-lg font-semibold">Branch ID missing</div>;
   }
+
+  const getBranch=async ()=>{
+    const branch = await getBranchById(branchId);
+    setBranch(branch);
+  }
+
+  useEffect(()=>{
+    getBranch();
+  },[branchId])
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 p-4 md:p-8 min-h-screen">
@@ -36,7 +47,7 @@ const Page = () => {
           <Back />
           <div className="h-12 w-px bg-border hidden md:block" />
           <div>
-            <Heading>Employees</Heading>
+            <Heading>{branch?.name + " Employees" || "Employees" }</Heading>
           </div>
         </div>
 
