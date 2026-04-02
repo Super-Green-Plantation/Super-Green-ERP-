@@ -5,7 +5,6 @@ import { deleteEmployee } from "@/app/features/employees/actions";
 import { useEmployees } from "@/app/hooks/useEmployee";
 import { Member } from "@/app/types/member";
 import { PERMISSIONS } from "@/lib/auth/permissions";
-import { usePermission } from "@/lib/auth/usePermission";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Briefcase,
@@ -21,6 +20,7 @@ import { toast } from "sonner";
 import Error from "../Status/Error";
 import Loading from "../Status/Loading";
 import ConfirmDialog from "../ui/ConfirmDialog";
+import { usePermission } from "@/app/hooks/usePermission";
 
 interface EmpTableProps {
   onEdit: (emp: Member) => void;
@@ -34,7 +34,7 @@ const EmpTable = ({ onEdit, onRefresh, branchId, searchQuery }: EmpTableProps) =
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
   const [userRole, setUserRole] = useState<string | null>(null);
-  const canEdit = usePermission(userRole, PERMISSIONS.UPDATE_FINANCIAL_PLAN);
+  const canEdit = usePermission(userRole, PERMISSIONS.UPDATE_EMPLOYEES);
 
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; branchId: number | null }>({
     open: false,

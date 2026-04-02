@@ -1,10 +1,10 @@
 "use client";
 
 import Heading from "@/app/components/Heading";
-import { Users } from "lucide-react";
+import { Search, Users } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getBranchById, getBranchesByMemberId } from "../actions";
+import { getBranchById, getBranchesByMemberId, searchEmployees } from "../actions";
 import { useBranches } from "@/app/hooks/useBranches";
 import Loading from "@/app/components/Status/Loading";
 import Error from "@/app/components/Status/Error";
@@ -19,6 +19,9 @@ const Page = () => {
   const { data: branches, isLoading: branchesLoading, error } = useBranches();
   const [dbUser, setDbUser] = useState<any>(null);
   const [branch, setBranch] = useState<any[]>([]);
+  const [searchText, setSearchText] = useState("");
+  const [results, setResults] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
   const getUser = async () => {
     const { dbUser } = await fetch("/api/me").then((res) => res.json());
@@ -50,6 +53,25 @@ const Page = () => {
     loadBranch();
   }, [dbUser, branches]);
 
+  useEffect(() => {
+    if (!searchText) {
+      setResults([]);
+      return;
+    }
+
+    const delay = setTimeout(async () => {
+      setLoading(true);
+      const res = await searchEmployees(searchText);
+      setResults(res ?? []);
+      setLoading(false);
+    }, 400); // debounce
+
+    console.log(results);
+    
+    return () => clearTimeout(delay);
+  }, [searchText]);
+
+
   if (branchesLoading) return <Loading />;
   if (error) return <Error />
 
@@ -63,6 +85,45 @@ const Page = () => {
         <p className="text-sm text-muted-foreground font-medium mt-2 max-w-2xl">
           Select a branch to view and manage team members and their profiles.
         </p>
+      </div>
+
+      <div className="relative w-full">
+        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+
+        <input
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          type="text"
+          placeholder="Search Employee NIC / Emp No."
+          className="w-full bg-transparent border-2 border-teal-800 rounded-full pl-11 pr-4 py-3 text-sm font-semibold outline-none"
+        />
+
+        {/* DROPDOWN */}
+        {searchText && (
+          <div className="absolute z-50 mt-2 w-full bg-white border border-border rounded-2xl shadow-xl max-h-72 overflow-y-auto">
+
+            {loading ? (
+              <div className="p-4 text-sm text-muted-foreground">Searching...</div>
+            ) : results.length === 0 ? (
+              <div className="p-4 text-sm text-muted-foreground">
+                No employees found
+              </div>
+            ) : (
+              results.map((emp) => (
+                <div
+                  key={emp.id}
+                  onClick={() => window.open(`/features/branches/employees/${emp?.branches[0]?.branchId}/${emp.id}`, "_blank")}
+                  className="px-4 py-3 hover:bg-muted cursor-pointer flex flex-col"
+                >
+                  <span className="text-sm font-bold">{emp.nameWithInitials}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {emp.empNo} • {emp.nic}
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+        )}
       </div>
 
       {/* Branch Cards */}

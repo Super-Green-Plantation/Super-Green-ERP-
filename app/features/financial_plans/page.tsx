@@ -7,7 +7,7 @@ import Error from "@/app/components/Status/Error";
 import Loading from "@/app/components/Status/Loading";
 import { usePlans } from "@/app/hooks/usePlans";
 import { PERMISSIONS } from "@/lib/auth/permissions";
-import { usePermission } from "@/lib/auth/usePermission";
+import { usePermission } from "@/app/hooks/usePermission";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   CircleDollarSign,

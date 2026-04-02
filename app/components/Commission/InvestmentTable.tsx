@@ -47,7 +47,7 @@ useEffect(() => {
   if (isError) return <Error />;
 
   return (
-    <div className="w-full bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+    <div className="w-full boverflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>

@@ -1,6 +1,6 @@
 // lib/auth/usePermission.ts
 "use client";
-import { Permission, hasAnyPermission } from "./permissions";
+import { Permission, hasAnyPermission } from "../../lib/auth/permissions";
 
 export function usePermission(role: string | null, permissions: Permission[] | Permission) {
   if (!role) return false;

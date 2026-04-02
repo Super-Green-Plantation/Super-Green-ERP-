@@ -3,7 +3,7 @@
 import InvestmentTable from "@/app/components/Commission/InvestmentTable";
 import Heading from "@/app/components/Heading";
 import { PERMISSIONS } from "@/lib/auth/permissions";
-import { usePermission } from "@/lib/auth/usePermission";
+import { usePermission } from "@/app/hooks/usePermission";
 import { Plus, Wallet } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";

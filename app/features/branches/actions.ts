@@ -222,3 +222,20 @@ export async function getBranchEmployees(branchId: number) {
     throw new Error("Failed to fetch branch employees");
   }
 }
+
+
+//search employee
+
+export async function searchEmployees(searchText: string) {
+  return prisma.member.findMany({
+    where: {
+      OR: [
+        { nic: { contains: searchText, mode: "insensitive" } },
+        { empNo: { contains: searchText, mode: "insensitive" } },
+        { nameWithInitials: { contains: searchText, mode: "insensitive" } },
+      ],
+    },
+    include:{branches:{include:{branch:true}}},
+    take: 10, // ✅ limit for dropdown
+  });
+}
