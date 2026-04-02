@@ -19,7 +19,7 @@ const Page = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedEmp, setSelectedEmp] = useState<Member | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [branch, setBranch] = useState<any | null>(null);
+  const [branch, setBranch] = useState<any | null>("");
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ["employees", branchId] });

@@ -37,14 +37,11 @@ const Page = () => {
 
     const loadBranch = async () => {
       if (["ADMIN", "HR", "DEV"].includes(dbUser.role)) {
-        // Admin roles see all branches
         setBranch(branches || []);
       } else if (dbUser.member?.id) {
-        // BM, RM, AGM, ZM, TL, FA — fetch branches from MemberBranch junction
         const memberBranches = await getBranchesByMemberId(dbUser.member.id);
         setBranch(memberBranches);
       } else if (dbUser.branchId) {
-        // Fallback: member record not linked yet, use User.branchId
         const singleBranch = await getBranchById(dbUser.branchId);
         setBranch([singleBranch]);
       }
@@ -64,7 +61,7 @@ const Page = () => {
       const res = await searchEmployees(searchText);
       setResults(res ?? []);
       setLoading(false);
-    }, 400); // debounce
+    }, 400); 
 
     console.log(results);
     
