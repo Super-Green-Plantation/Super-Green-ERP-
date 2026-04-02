@@ -3,13 +3,13 @@ import { NextRequest, NextResponse } from "next/server";
 import twilio from "twilio";
 
 export async function GET(req: NextRequest) {
-  // 🔐 Auth check
+  //  Auth check
   const authHeader = req.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // 📦 Fetch employees
+  //  Fetch employees
   const employees = await prisma.member.findMany({
     where: {
       dob: { not: null },
@@ -21,45 +21,55 @@ export async function GET(req: NextRequest) {
     },
   });
 
-  // 🕒 Current time (UTC-safe)
   const now = new Date();
 
-  // 📅 Next 7 days
-  const nextWeek = new Date(now);
-  nextWeek.setUTCDate(now.getUTCDate() + 7);
+  // Start of today (UTC midnight)
+  const todayStart = new Date(Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate()
+  ));
 
-  // 🎂 Filter upcoming birthdays
+  // End of day, 7 days from today
+  const weekEnd = new Date(Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate() + 7,
+    23, 59, 59, 999
+  ));
+
   const upcomingBirthdays = employees.filter((emp) => {
     if (!emp.dob) return false;
 
-    // ✅ Ensure proper parsing
     const dob = new Date(String(emp.dob).replace(" ", "T"));
-
     if (isNaN(dob.getTime())) return false;
 
-    // 🎯 Birthday in this year (UTC)
     let birthday = new Date(Date.UTC(
       now.getUTCFullYear(),
       dob.getUTCMonth(),
       dob.getUTCDate()
     ));
 
-    // 🔁 If already passed → move to next year
-    if (birthday < now) {
-      birthday.setUTCFullYear(now.getUTCFullYear() + 1);
+    // If this year's birthday is before today → check next year
+    if (birthday < todayStart) {
+      birthday = new Date(Date.UTC(
+        now.getUTCFullYear() + 1,
+        dob.getUTCMonth(),
+        dob.getUTCDate()
+      ));
     }
 
-    return birthday >= now && birthday <= nextWeek;
+    return birthday >= todayStart && birthday <= weekEnd;
   });
 
-  // 🚫 No birthdays
+  //  No birthdays
   if (upcomingBirthdays.length === 0) {
     return NextResponse.json({
       message: "No birthdays in next 7 days.",
     });
   }
 
-  // 📝 Build message
+  //  Build message
   const lines = upcomingBirthdays.map(
     (emp) => `• ${emp.nameWithInitials} — ${emp.phone ?? "No phone"}`
   );
@@ -69,7 +79,7 @@ export async function GET(req: NextRequest) {
     `Next 7 days (${upcomingBirthdays.length}):\n\n` +
     lines.join("\n");
 
-  // 📲 Send via Twilio
+  //Send via Twilio
   const client = twilio(
     process.env.TWILIO_ACCOUNT_SID!,
     process.env.TWILIO_AUTH_TOKEN!
@@ -81,7 +91,7 @@ export async function GET(req: NextRequest) {
     body: message,
   });
 
-  // ✅ Response
+  // Response
   return NextResponse.json({
     message: `Notified ${upcomingBirthdays.length} birthday(s).`,
     employees: upcomingBirthdays.map((e) => e.nameWithInitials),
