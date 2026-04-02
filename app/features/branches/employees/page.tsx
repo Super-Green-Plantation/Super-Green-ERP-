@@ -94,13 +94,13 @@ const Page = () => {
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
           type="text"
-          placeholder="Search Employee NIC / Emp No."
+          placeholder="Search by name, employee ID"
           className="w-full bg-transparent border-2 border-teal-800 rounded-full pl-11 pr-4 py-3 text-sm font-semibold outline-none"
         />
 
         {/* DROPDOWN */}
         {searchText && (
-          <div className="absolute z-50 mt-2 w-full bg-white border border-border rounded-2xl shadow-xl max-h-72 overflow-y-auto">
+          <div className="absolute z-50 mt-2 w-full dark:bg-teal-900 bg-white border border-border rounded-2xl shadow-xl max-h-72 overflow-y-auto">
 
             {loading ? (
               <div className="p-4 text-sm text-muted-foreground">Searching...</div>
