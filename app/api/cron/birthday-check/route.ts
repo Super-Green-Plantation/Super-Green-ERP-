@@ -38,30 +38,28 @@ export async function GET(req: NextRequest) {
     23, 59, 59, 999
   ));
 
-  const upcomingBirthdays = employees.filter((emp) => {
-    if (!emp.dob) return false;
+const upcomingBirthdays = employees.filter((emp) => {
+  if (!emp.dob) return false;
 
-    const dob = new Date(String(emp.dob).replace(" ", "T"));
-    if (isNaN(dob.getTime())) return false;
+  const dob = new Date(emp.dob as Date); // Prisma returns Date, not string
+  if (isNaN(dob.getTime())) return false;
 
-    let birthday = new Date(Date.UTC(
-      now.getUTCFullYear(),
+  let birthday = new Date(Date.UTC(
+    now.getUTCFullYear(),
+    dob.getUTCMonth(),
+    dob.getUTCDate()
+  ));
+
+  if (birthday < todayStart) {
+    birthday = new Date(Date.UTC(
+      now.getUTCFullYear() + 1,
       dob.getUTCMonth(),
       dob.getUTCDate()
     ));
+  }
 
-    // If this year's birthday is before today → check next year
-    if (birthday < todayStart) {
-      birthday = new Date(Date.UTC(
-        now.getUTCFullYear() + 1,
-        dob.getUTCMonth(),
-        dob.getUTCDate()
-      ));
-    }
-
-    return birthday >= todayStart && birthday <= weekEnd;
-  });
-
+  return birthday >= todayStart && birthday <= weekEnd;
+});
   //  No birthdays
   if (upcomingBirthdays.length === 0) {
     return NextResponse.json({
@@ -71,7 +69,7 @@ export async function GET(req: NextRequest) {
 
   //  Build message
   const lines = upcomingBirthdays.map(
-    (emp) => `• ${emp.nameWithInitials} — ${emp.phone ?? "No phone"}`
+    (emp) => `• ${emp.nameWithInitials} — ${emp.phone ?? "No phone"} - ${new Date(emp.dob as Date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
   );
 
   const message =

@@ -149,7 +149,9 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
         phone2: initialData.phone2 ?? "",
         totalCommission: initialData.totalCommission ?? 0,
         nic: initialData.nic ?? "",
-        dob: initialData.dob ? initialData.dob.toString().slice(0, 10) : "",
+        dob: initialData.dob
+          ? new Date(initialData.dob).toISOString().slice(0, 10)
+          : "",
         gender: initialData.gender ?? "",
         civilStatus: initialData.civilStatus ?? "",
         address: initialData.address ?? "",
@@ -159,17 +161,20 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
         remark: initialData.remark ?? "",
         accNo: initialData.accNo ?? "",
         bank: initialData.bank ?? "",
-        dateOfJoin: initialData.dateOfJoin ? initialData.dateOfJoin.toString().slice(0, 10) : "",
         profilePic: "",
         bankBranch: initialData.bankBranch ?? "",
         status: initialData.status ?? "PROBATION",
+        dateOfJoin: initialData.dateOfJoin
+          ? new Date(initialData.dateOfJoin).toISOString().slice(0, 10)
+          : "",
+
         probationStartDate: initialData.probationStartDate
-          ? initialData.probationStartDate.toString()
+          ? new Date(initialData.probationStartDate).toISOString().slice(0, 10)
           : "",
       });
     }
 
-    console.log("initialData dates:", initialData?.probationStartDate, initialData?.dateOfJoin);
+    console.log("initialData dates:", initialData?.dob);
 
   }, [mode, initialData, branchId]);
 
@@ -276,12 +281,6 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
     getUplineMembers(Number(formData.positionId), formData.branchIds)
       .then(setUplineSuggestions);
   }, [formData.positionId, formData.branchIds]);
-
-  const toInputDate = (date: string | Date | null) => {
-    if (!date) return "";
-    const d = new Date(date);
-    return d.toISOString().split("T")[0];
-  };
 
 
 
