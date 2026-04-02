@@ -7,7 +7,7 @@ const BeneficiaryDetails = () => {
   const { form } = useFormContext();
   const { register } = form;
 
-  const inputClass = "bg-background/50 border border-border/50 rounded-2xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:bg-background outline-none transition-all w-full placeholder:text-muted-foreground/30 font-medium";
+  const inputClass = "bg-background/50 border border-border/50 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:bg-background outline-none transition-all w-full placeholder:text-muted-foreground/30 font-medium";
   const labelClass = "text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-2 ml-1 block";
 
   return (

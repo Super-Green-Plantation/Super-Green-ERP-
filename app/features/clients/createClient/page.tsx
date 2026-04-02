@@ -23,12 +23,9 @@ const Page = () => {
             <div className="flex items-center gap-4">
               <Back />
               <h1 className="text-3xl sm:text-4xl font-black text-foreground tracking-tighter">
-                Register <span className="text-primary">New Client</span>
+                Register New Client
               </h1>
             </div>
-            <p className="text-sm text-muted-foreground font-bold uppercase tracking-widest opacity-60">
-              Onboarding & Investment Verification Node
-            </p>
           </div>
         </div>
 

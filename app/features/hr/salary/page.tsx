@@ -260,7 +260,7 @@ export default function SalaryConfigPage() {
                     >
                       {isSaving
                         ? <><Loader2 className="w-4 h-4 animate-spin" /> Committing...</>
-                        : <><Save className="w-4 h-4" /> Save Configuration</>
+                        : <><Save className="w-4 h-4" /> Save</>
                       }
                     </button>
                   )}
@@ -281,21 +281,20 @@ export default function SalaryConfigPage() {
                           <Banknote className="w-6 h-6" />
                         </div>
                         <div>
-                          <h3 className="text-sm font-extrabold uppercase tracking-widest text-foreground">Retainer & Growth</h3>
-                          <p className="text-[10px] text-muted-foreground font-bold leading-tight">Monthly fixed pay and operational target.</p>
+                          <h3 className="text-sm font-extrabold uppercase tracking-widest text-foreground">Basic Salary</h3>
                         </div>
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <Field
-                        label="Standard Monthly Salary (Rs.)"
+                        label="Monthly Salary (Rs.)"
                         value={form.basicSalaryPermanent}
                         onChange={(v) => setField(position.id, "basicSalaryPermanent", v)}
                         prefix="Rs."
                         hint="Fixed component paid irrespective of performance."
                       />
                       <Field
-                        label="Operational Target (Rs.)"
+                        label="Target (Rs.)"
                         value={form.monthlyTarget}
                         onChange={(v) => setField(position.id, "monthlyTarget", v)}
                         prefix="Rs."
@@ -313,20 +312,19 @@ export default function SalaryConfigPage() {
                         </div>
                         <div>
                           <h3 className="text-sm font-extrabold uppercase tracking-widest text-foreground">Performance Bonuses</h3>
-                          <p className="text-[10px] text-muted-foreground font-bold leading-tight">Additional payouts upon reaching milestones.</p>
                         </div>
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <Field
-                        label="Success Incentive (100% Target)"
+                        label="Incentive (100% Target)"
                         value={form.incentiveAmount}
                         onChange={(v) => setField(position.id, "incentiveAmount", v)}
                         prefix="Rs."
                         hint="One-time bonus for full target completion."
                       />
                       <Field
-                        label="Logistics & Mobility Allowance"
+                        label="Fuel Allowance"
                         value={form.allowanceAmount}
                         onChange={(v) => setField(position.id, "allowanceAmount", v)}
                         prefix="Rs."
@@ -337,15 +335,7 @@ export default function SalaryConfigPage() {
 
                   {/* Commission */}
                   <div className="space-y-10">
-                    <div className="flex items-center gap-3">
-                      <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/10">
-                        <TrendingUp className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-extrabold uppercase tracking-widest text-foreground">Revenue Scaling Model</h3>
-                        <p className="text-[10px] text-muted-foreground font-bold leading-tight">Tiered commission based on sales volume.</p>
-                      </div>
-                    </div>
+                   
 
                     <div className="vibrant-alert">
                       Alert: These rates apply to <span className="text-accent underline underline-offset-4">Permanent</span> staff. Probation tiers are locked at 7% / 10%.
@@ -367,7 +357,7 @@ export default function SalaryConfigPage() {
                         hint={`Effective: ${pctDisplay(form.commRateHigh)}`}
                       />
                       <Field
-                        label="Volume Pivot Point (Rs.)"
+                        label="Target Threshold (Rs.)"
                         value={form.commThreshold}
                         onChange={(v) => setField(position.id, "commThreshold", v)}
                         prefix="Rs."
@@ -384,7 +374,7 @@ export default function SalaryConfigPage() {
                         <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-foreground">Hierarchy Override (ORC)</span>
                       </div>
                       <Field
-                        label="Overriding Rate (Decimal)"
+                        label="ORC Rate"
                         value={form.orcRatePermanent}
                         onChange={(v) => setField(position.id, "orcRatePermanent", v)}
                         suffix="%×100"
@@ -395,9 +385,9 @@ export default function SalaryConfigPage() {
                     <div className="space-y-8">
                       <div className="flex items-center gap-2 mb-2">
                         <Car className="w-5 h-5 text-muted-foreground/30" />
-                        <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-foreground">Statutory & EPF Structure</span>
+                        <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-foreground">EPF Structure</span>
                       </div>
-                      <div className="grid grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 gap-4">
                         <Field label="EPF (Emp)" value={form.epfEmployee} onChange={(v) => setField(position.id, "epfEmployee", v)} suffix="%" />
                         <Field label="EPF (Comp)" value={form.epfEmployer} onChange={(v) => setField(position.id, "epfEmployer", v)} suffix="%" />
                         <Field label="ETF (Comp)" value={form.etfEmployer} onChange={(v) => setField(position.id, "etfEmployer", v)} suffix="%" />
@@ -412,7 +402,7 @@ export default function SalaryConfigPage() {
                       disabled={isSaving}
                       className="w-full flex items-center justify-center gap-3 px-8 py-5 bg-primary text-primary-foreground text-[10px] font-extrabold uppercase tracking-[0.2em] rounded-2xl"
                     >
-                      {isSaving ? 'Saving...' : 'Save Configuration'}
+                      {isSaving ? 'Saving...' : 'Save'}
                     </button>
                   </div>
 

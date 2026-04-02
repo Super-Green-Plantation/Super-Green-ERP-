@@ -37,13 +37,13 @@ const ApplicantDetails = () => {
     fetchBranch();
   }, []);
 
-  const inputClass = "bg-background/50 border border-border/50 rounded-2xl px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:bg-background outline-none transition-all w-full placeholder:text-muted-foreground/30 font-medium";
+  const inputClass = "bg-background/50 border border-border/50 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:bg-background outline-none transition-all w-full placeholder:text-muted-foreground/30 font-medium";
   const labelClass = "text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-2 ml-1 block";
 
   return (
     <div className="bg-card/60 backdrop-blur-xl rounded-[2.5rem] border border-border/50 shadow-sm overflow-hidden text-card-foreground">
       <div className="px-8 py-6 border-b border-border/30 flex items-center justify-between">
-        <h2 className="text-sm font-black uppercase tracking-[0.25em] text-foreground opacity-80">Primary Applicant Information</h2>
+        <h2 className="text-sm font-black uppercase tracking-[0.25em] text-foreground opacity-80">Applicant Information</h2>
         <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
       </div>
 
@@ -106,7 +106,7 @@ const ApplicantDetails = () => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className={labelClass}>Investment Amount (LKR)</label>
+                <label className={labelClass}>Investment Amount</label>
                 <input type="text" {...register("applicant.investmentAmount")} placeholder="0.00" className={`${inputClass} font-black text-primary text-lg`} />
               </div>
               <div>
