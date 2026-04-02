@@ -138,7 +138,7 @@ export function Field({
             <div className={`flex items-center border rounded-xl overflow-hidden transition-all bg-muted/30
         ${disabled
                     ? "border-border/50 bg-muted/10 opacity-50"
-                    : "border-border focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/10 shadow-sm"
+                    : " shadow-sm"
                 }`}
             >
                 {prefix && (

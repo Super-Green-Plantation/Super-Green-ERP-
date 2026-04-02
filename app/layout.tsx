@@ -1,20 +1,8 @@
 import { Analytics } from "@vercel/analytics/next";
+import NextTopLoader from "nextjs-toploader";
 import "./globals.css";
 import Toast from "./Toast";
-import { Inter, Manrope } from "next/font/google";
-import NextTopLoader from "nextjs-toploader";
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
-
-const manrope = Manrope({
-  subsets: ["latin"],
-  variable: "--font-manrope",
-  display: "swap",
-});
 
 export default function RootLayout({
   children,

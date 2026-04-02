@@ -12,8 +12,10 @@ export const useDeleteDoc = () => {
       // invalidate client data so UI refreshes
       queryClient.invalidateQueries({
         queryKey: ["client", variables.nic],
-        
+
       });
     },
+    gcTime: 1000 * 60 * 5,
+    retry: 3,
   });
 };

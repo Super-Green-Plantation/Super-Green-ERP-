@@ -10,9 +10,10 @@ export const useBranches = () => {
       const branches = await getBranches();
       return branches || [];
     },
-    staleTime: 1000 * 60 * 3, // 3 minutes cache
+    staleTime: 1000 * 60 * 5, // 5 minutes cache
     retry: 1,
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,
+    refetchOnMount: false,
   });
 };
