@@ -9,11 +9,11 @@ export async function GET(req: NextRequest) {
     }
 
     // Today's month and day in Sri Lanka time
-    const today = new Date(
-        new Date().toLocaleString("en-US", { timeZone: "Asia/Colombo" })
-    );
-    const month = today.getMonth() + 1; // 1–12
-    const day = today.getDate();
+    // const today = new Date(
+    //     new Date().toLocaleString("en-US", { timeZone: "Asia/Colombo" })
+    // );
+    // const month = today.getMonth() + 1; // 1–12
+    // const day = today.getDate();
 
     // Fetch employees whose birthday month/day matches today
     // birthDay is stored as a string e.g. "1990.04.01"
@@ -28,26 +28,51 @@ export async function GET(req: NextRequest) {
         },
     });
 
-    const todaysBirthdays = employees.filter((emp) => {
+    // Today (Sri Lanka time)
+    const today = new Date(
+        new Date().toLocaleString("en-US", { timeZone: "Asia/Colombo" })
+    );
+
+    // End date (next 7 days)
+    const nextWeek = new Date(today);
+    nextWeek.setDate(today.getDate() + 7);
+
+    const upcomingBirthdays = employees.filter((emp) => {
         if (!emp.dob) return false;
-        // Convert dob to Sri Lanka time
-        const dobSL = new Date(
-            new Date(emp.dob).toLocaleString("en-US", { timeZone: "Asia/Colombo" })
+
+        const dob = new Date(String(emp.dob).replace(" ", "T"));
+
+        // Create birthday in current year
+        const thisYearBirthday = new Date(
+            today.getFullYear(),
+            dob.getMonth(),
+            dob.getDate()
         );
-        return dobSL.getMonth() + 1 === month && dobSL.getDate() === day;
+
+        // Handle year wrap (Dec → Jan)
+        if (thisYearBirthday < today) {
+            thisYearBirthday.setFullYear(today.getFullYear() + 1);
+        }
+
+        return thisYearBirthday >= today && thisYearBirthday <= nextWeek;
     });
 
-    if (todaysBirthdays.length === 0) {
+    if (upcomingBirthdays.length === 0) {
         return NextResponse.json({ message: "No birthdays today." });
     }
 
     // Build message
-    const lines = todaysBirthdays.map(
+    if (upcomingBirthdays.length === 0) {
+        return NextResponse.json({ message: "No birthdays in next 7 days." });
+    }
+
+    const lines = upcomingBirthdays.map(
         (emp) => `• ${emp.nameWithInitials} — ${emp.phone ?? "No phone"}`
     );
+
     const message =
-        `🎂 *SGP Birthday Alert — ${today.toDateString()}*\n\n` +
-        `Today's birthdays (${todaysBirthdays.length}):\n\n` +
+        `🎂 *SGP Upcoming Birthdays*\n\n` +
+        `Next 7 days (${upcomingBirthdays.length}):\n\n` +
         lines.join("\n");
 
     // Send WhatsApp via Twilio
@@ -63,7 +88,7 @@ export async function GET(req: NextRequest) {
     });
 
     return NextResponse.json({
-        message: `Notified ${todaysBirthdays.length} birthday(s).`,
-        employees: todaysBirthdays.map((e) => e.nameWithInitials),
+        message: `Notified ${upcomingBirthdays.length} birthday(s).`,
+        employees: upcomingBirthdays.map((e) => e.nameWithInitials),
     });
 }

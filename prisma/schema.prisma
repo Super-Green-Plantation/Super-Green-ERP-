@@ -40,6 +40,7 @@ enum Title {
   HR
   ACCOUNTS
   IT
+  ABM
 
   // Probation positions
   FA // probation FA
@@ -231,7 +232,7 @@ model Member {
   createdClients     Client[]       @relation("CreatedByMember")
 
   createdAt            DateTime              @default(now())
-  updatedAt            DateTime              @updatedAt
+  updatedAt            DateTime ?
   monthlyEvaluations   MonthlyEvaluation[]
   permanentEvaluations PermanentEvaluation[]
   monthlyPayrolls      MonthlyPayroll[]
