@@ -8,7 +8,7 @@ import EmpModal from "@/app/components/Employee/Model";
 import PaySheet from "@/app/components/Employee/PaySheet";
 import Loading from "@/app/components/Status/Loading";
 import { getEmployeeCommissions } from "@/app/features/commissions/actions";
-import { getMemberDetails, getReportingPersons } from "@/app/features/employees/actions";
+import { deleteEmployee, getMemberDetails, getReportingPersons } from "@/app/features/employees/actions";
 import { getPayrollHistory } from "@/app/features/hr/payroll-action";
 import { Member } from "@/app/types/member";
 import {
@@ -22,21 +22,24 @@ import {
   Pen,
   Phone,
   Trash2,
-  User,
-  Wallet
+  User
 } from "lucide-react";
 import Image from "next/image";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { generateEmployeeCommissionPDF } from "@/app/pdf/EmployeeCommission";
 import { generateEmployeeFullProfilePDF } from "@/app/pdf/EmployeeProfile";
 import Link from "next/link";
 import { getEmployeePerformance } from "./getEmployeePerfomance";
+import ConfirmDialog from "@/app/components/ui/ConfirmDialog";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Router } from "next/router";
 
 const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: number; readOnly?: boolean }) => {
   const params = useParams();
   const resolvedEmpId = propEmpId ?? Number(params.empId);
+  const branchId = Number(params.branchId);
 
   const [employee, setEmployee] = useState<Member | null>(null);
   const [performance, setPerformance] = useState<any>(null);
@@ -48,6 +51,16 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
   const [orc, setOrc] = useState(0);
   const [reportingPeople, setReportingPeople] = useState<any[]>([]);
   const [isManagement, setIsManagement] = useState(false)
+
+    const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; branchId: number | null }>({
+    open: false,
+    branchId: null,
+  });
+
+    const queryClient = useQueryClient();
+
+    const router = useRouter();
+
 
   useEffect(() => {
     if (employee?.status === "PERMANENT") {
@@ -103,6 +116,30 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
   }, [employee]);
 
 
+
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => deleteEmployee(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["employees", branchId] });
+      toast.success("Employee deleted successfully");
+      
+    },
+    onError: () => {
+      toast.error("Failed to delete employee");
+    },
+  });
+
+   const handleDeleteClick = (branchId: number) => {
+    setDeleteDialog({ open: true, branchId });
+  };
+  
+    const handleDeleteConfirm = async () => {
+    if (!deleteDialog.branchId) return;
+    deleteMutation.mutate(deleteDialog.branchId);
+    router.push(`/features/branches/employees/${branchId}`);
+  };
+
   if (loading) return <Loading />;
   if (!employee) return null;
 
@@ -128,7 +165,7 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
 
       {/* ── Premium Hero Section: Glassmorphic Profile ── */}
       <section className="relative h-auto sm:h-72 rounded-[2.5rem] sm:rounded-[3.5rem] overflow-hidden shadow-2xl shadow-primary/10 border border-white/10 group">
-        <div className="absolute inset-0 bg-slate-900 z-0" />
+        <div className="absolute inset-0 dark:bg-teal-900 bg-teal-900 z-0" />
         <div className="absolute top-0 right-0 w-125 h-125 bg-secondary/10 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
         <div className="relative min-h-72 h-auto sm:h-full flex items-end p-8 sm:p-12 z-10">
@@ -287,7 +324,7 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
         <aside className="lg:col-span-4 space-y-8">
 
           {/* High-Fidelity Payroll Summary */}
-          {!isManagement && (
+          {/* {!isManagement && (
             <section className="bg-primary/80 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-primary/20 relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-8 bg-secondary/10 rounded-full blur-[60px] pointer-events-none group-hover:scale-110 transition-transform duration-700" />
               <div className="relative z-10">
@@ -299,22 +336,17 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
                       {employee.totalCommission?.toLocaleString()}
                     </p>
                   </div>
-                  <div className="sm:block hidden p-4 bg-white/10 rounded-[1.5rem] border border-white/10 backdrop-blur-md">
+                  <div className="md:block hidden p-4 bg-white/10 rounded-[1.5rem] border border-white/10 backdrop-blur-md">
                     <Wallet className="w-6 h-6 text-secondary" />
                   </div>
                 </div>
 
                 <div className="space-y-6">
-                  <div className="flex justify-between items-center bg-white/5 p-5 rounded-2xl border border-white/5">
-                    <div>
-                      <p className="text-emerald-100/40 text-[9px] font-bold uppercase tracking-widest mb-1">Rank Seniority</p>
-                      <p className="text-lg font-bold">Level {employee.position?.rank || 1}</p>
-                    </div>
+                   
                     <div className="text-right">
                       <p className="text-emerald-100/40 text-[9px] font-bold uppercase tracking-widest mb-1">ORC Yield</p>
                       <p className="text-lg font-bold text-secondary">{orc}%</p>
                     </div>
-                  </div>
                   {!readOnly && (
                     <ExportButton
                       data={{ ...employee, allCommission }}
@@ -326,7 +358,7 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
                 </div>
               </div>
             </section>
-          )}
+          )} */}
 
 
           {/* Employment Cycle Section */}
@@ -470,7 +502,9 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
                 Permanent delete extraction from core enterprise records.
               </p>
             </div>
-            <button className="flex items-center gap-3 px-8 py-4 bg-red-600 text-white rounded-[1.5rem] text-xs font-bold uppercase tracking-widest shadow-xl shadow-red-600/20 hover:scale-105 transition-all">
+            <button 
+            onClick={() => handleDeleteClick(Number(params.empId))}
+            className="flex items-center gap-3 px-8 py-4 bg-red-600 text-white rounded-[1.5rem] text-xs font-bold uppercase tracking-widest shadow-xl shadow-red-600/20 hover:scale-105 transition-all">
               <Trash2 className="w-4 h-4" /> Delete This Record
             </button>
           </div>
@@ -488,6 +522,17 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
           />
         )
       }
+
+      <ConfirmDialog
+              open={deleteDialog.open}
+              onClose={() => setDeleteDialog({ open: false, branchId: null })}
+              onConfirm={handleDeleteConfirm}
+              title="Delete Employee"
+              description="This will permanently delete this employee and all associated data. This action cannot be undone."
+              confirmLabel="Delete Employee"
+              cancelLabel="Keep it"
+              variant="danger"
+            />
     </main >
   );
 };
