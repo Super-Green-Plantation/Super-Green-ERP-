@@ -35,12 +35,17 @@ model Branch {
 enum Title {
   // Management/Support
   ADMIN
+  CHAIRMEN
   COO
   GM
   HR
-  ACCOUNTS
+  ACC
   IT
   ABM
+  PRO
+  OPM
+
+  CLEANING
 
   // Probation positions
   FA // probation FA
@@ -62,7 +67,7 @@ enum Title {
   SZM
   AGM
 
-
+  SE
 }
 
 enum PositionType {
@@ -214,6 +219,7 @@ model Member {
   totalCommission        Float     @default(0)
   profilePic             String?
   lastClientRegisteredAt DateTime?
+  isActive                Boolean   @default(true)
 
   userId String? @unique @db.Uuid
   user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)

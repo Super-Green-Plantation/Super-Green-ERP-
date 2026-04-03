@@ -123,18 +123,18 @@ export async function createEmployee(data: EmpData) {
     });
 
     // ── STEP 3: Send email (non-blocking) ────────────────────────────────
-    if (data.email && tempPassword) {
-      try {
-        await sendWelcomeEmail({
-          to: data.email,
-          name: data.nameWithInitials,
-          empNo: result.empNo,
-          tempPassword,
-        });
-      } catch (e) {
-        console.warn("Welcome email failed:", e);
-      }
-    }
+    // if (data.email && tempPassword) {
+    //   try {
+    //     await sendWelcomeEmail({
+    //       to: data.email,
+    //       name: data.nameWithInitials,
+    //       empNo: result.empNo,
+    //       tempPassword,
+    //     });
+    //   } catch (e) {
+    //     console.warn("Welcome email failed:", e);
+    //   }
+    // }
 
     // ── STEP 4: Revalidate + log ─────────────────────────────────────────
     revalidatePath(`/features/branches/employees/${data.branchIds[0]}`);
@@ -334,16 +334,16 @@ export async function updateEmployee(memberId: number, data: EmpData) {
 
         userId = authData.user.id;
 
-        try {
-          await sendWelcomeEmail({
-            to: data.email,
-            name: data.nameWithInitials ?? "",
-            empNo: data.empNo,
-            tempPassword,
-          });
-        } catch (e) {
-          console.warn("Welcome email failed:", e);
-        }
+        // try {
+        //   await sendWelcomeEmail({
+        //     to: data.email,
+        //     name: data.nameWithInitials ?? "",
+        //     empNo: data.empNo,
+        //     tempPassword,
+        //   });
+        // } catch (e) {
+        //   console.warn("Welcome email failed:", e);
+        // }
       } else if (emailChanged && existing.user?.id) {
         const { error } = await supabaseAdmin.auth.admin.updateUserById(
           existing.user.id,
