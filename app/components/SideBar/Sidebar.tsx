@@ -28,7 +28,7 @@ const links = [
   { name: "Evaluations", href: "/features/hr/evaluations", icon: ChartCandlestick, role: ["ADMIN", "HR", "DEV"] },
   { name: "Payroll", href: "/features/hr/payroll", icon: Nfc, role: ["ADMIN", "HR", "DEV"] },
   { name: "Financial Plans", href: "/features/financial_plans", icon: Landmark, role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "AGM"] },
-  { name: "Commissions", href: "/features/commissions", icon: Percent, role: ["ADMIN", "HR", "DEV", "BRANCH_MANAGER"] },
+  { name: "Commissions", href: "/features/commissions", icon: Percent, role: ["ADMIN", "HR", "DEV"] },
   { name: "Investments", href: "/features/investments", icon: BanknoteArrowUp, role: ["ADMIN", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "AGM"] },
   { name: "Calculations", href: "/features/calculations", icon: Calculator, role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "AGM"] },
   { name: "Clients", href: "/features/clients", icon: Users, role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "AGM"] },

@@ -393,12 +393,10 @@ export async function getCommissionDetails() {
 }
 
 
-// ── Helper: get full upline chain for an employee ─────────────────────────────
-// Walks up by rank — first within branch (FA→TL→BM), then cross-branch (RM→ZM→AGM)
 async function getUplineChain(advisorRank: number, branchId: number) {
-  // Step 1: find all members in the same branch with higher rank
   const branchUplines = await prisma.member.findMany({
     where: {
+      isActive: true,
       branches: { some: { branchId } },
       position: { rank: { gt: advisorRank } },
     },

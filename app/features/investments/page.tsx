@@ -68,7 +68,7 @@ export default function InvestmentsPage() {
 
   useEffect(() => {
     if (!userLoading && userData) {
-      const isPrivileged = ["ADMIN", "HR", "DEV"].includes(userData.role);
+      const isPrivileged = ["ADMIN", "HR", "DEV", "BRANCH_MANAGER"].includes(userData.role);
       if (!isPrivileged) {
         router.push("/features/clients");
       }

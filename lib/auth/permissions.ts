@@ -57,7 +57,7 @@ export const rolePermissions: Record<string, Permission[]> = {
 
         PERMISSIONS.VIEW_FINANCIAL_PLAN,
 
-        PERMISSIONS.VIEW_COMMISSIONS,
+        // PERMISSIONS.VIEW_COMMISSIONS,
 
         PERMISSIONS.VIEW_INVESTMENTS,
         PERMISSIONS.CREATE_INVESTMENTS,
