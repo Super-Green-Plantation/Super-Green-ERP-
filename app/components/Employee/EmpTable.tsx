@@ -141,11 +141,11 @@ const EmpTable = ({ onEdit, onRefresh, branchId, searchQuery }: EmpTableProps) =
               <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                 Contact
               </th>
-              {canEdit && (
+              
                 <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground text-center">
                   Actions
                 </th>
-              )}
+            
 
             </tr>
           </thead>
