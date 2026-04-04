@@ -4,7 +4,7 @@ SET session_replication_role = replica;
 -- PostgreSQL database dump
 --
 
--- \restrict 4Xbp1j0BkqRyMQDFuM3bP0e7cLGFw0Hz8ruqtZsomHQn6au41Uo7D1B56CeNYUU
+-- \restrict ODUmdLD493GT20XUTI4HvZBTOxsgJZVxleOEh8r0rAn8ZXDQcwzFc76ywz5rlgo
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -84,7 +84,7 @@ COPY "auth"."users" ("instance_id", "id", "aud", "role", "email", "encrypted_pas
 00000000-0000-0000-0000-000000000000	cf25ab02-53b9-4794-9d92-65a88cecfc53	authenticated	authenticated	nilnuwanlakiaya@gmail.com	$2a$10$2MjKYI0Z6lS4L7phnJrLb.q5piVp.xcrZqvwnPNhjpPsRdPoyFRf6	2026-04-03 08:33:00.558102+00	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-04-03 08:33:00.53593+00	2026-04-03 08:33:00.559075+00	\N	\N			\N		0	\N		\N	f	\N	f
 00000000-0000-0000-0000-000000000000	8a803552-99b9-4ae3-9898-1f1b9a9e0076	authenticated	authenticated	thilakarathna116@gmail.com	$2a$10$Qjbzz7njD8c/4tIhoX6WNOpR7wfoJfoPnMSHoMqMzzMJjsS4NAX.e	2026-04-03 08:37:15.151227+00	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-04-03 08:37:15.14664+00	2026-04-03 08:37:15.152199+00	\N	\N			\N		0	\N		\N	f	\N	f
 00000000-0000-0000-0000-000000000000	84da71fe-081c-4f4c-b222-fb2f67004de3	authenticated	authenticated	jayasundararathnayake61@gmail.com	$2a$10$/y6FjmPOed8xZLRqoQyaquDQut9VCCxTVMC7eGeI7OtQGH5wNwSnW	2026-04-03 08:29:53.075887+00	\N		\N	pkce_a03d057530c7a83acad1967d801f3a49851846a9af6dec5acdb79c24	2026-04-03 09:17:37.710683+00			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-04-03 08:29:53.066627+00	2026-04-03 09:17:38.677456+00	\N	\N			\N		0	\N		\N	f	\N	f
-00000000-0000-0000-0000-000000000000	4105f420-8ea6-4fb7-9072-c5ac991c0376	authenticated	authenticated	admin@company.com	$2a$10$miL9g7CGS6dgJ4HkQfaqNetNXmoif4ADmviuPMFbjxhaWwFVqLKQm	2026-04-03 05:11:25.496685+00	\N		\N		\N			\N	2026-04-03 10:24:53.53192+00	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-04-03 05:11:25.472892+00	2026-04-03 10:24:53.551031+00	\N	\N			\N		0	\N		\N	f	\N	f
+00000000-0000-0000-0000-000000000000	4105f420-8ea6-4fb7-9072-c5ac991c0376	authenticated	authenticated	admin@company.com	$2a$10$miL9g7CGS6dgJ4HkQfaqNetNXmoif4ADmviuPMFbjxhaWwFVqLKQm	2026-04-03 05:11:25.496685+00	\N		\N		\N			\N	2026-04-03 12:07:30.209384+00	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-04-03 05:11:25.472892+00	2026-04-03 12:07:30.285359+00	\N	\N			\N		0	\N		\N	f	\N	f
 00000000-0000-0000-0000-000000000000	8a52678d-18b9-4694-b1e4-aa4250cbc506	authenticated	authenticated	kavindipalika@gmail.com	$2a$10$XMu8I1P3er2gPt/BoRFB/.BismzR5n06103/WHuI0BIwnxOg.nYm.	2026-04-03 05:20:59.003409+00	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-04-03 05:20:58.978548+00	2026-04-03 05:20:59.005486+00	\N	\N			\N		0	\N		\N	f	\N	f
 \.
 
@@ -143,6 +143,7 @@ e681ae47-8936-4b9f-85af-ea3e67f666cd	2edd04f2-a7b0-4efc-865f-673ca6b434c8	2026-0
 0d41a693-89e7-443b-81ae-a13cd069b89b	2edd04f2-a7b0-4efc-865f-673ca6b434c8	2026-04-03 09:12:54.183832+00	2026-04-03 10:11:21.194156+00	\N	aal1	\N	2026-04-03 10:11:21.19405	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36	112.134.153.49	\N	\N	\N	\N	\N
 ff23b973-a78d-4b77-8839-2c97c01dbb71	4105f420-8ea6-4fb7-9072-c5ac991c0376	2026-04-03 09:20:11.618758+00	2026-04-03 10:18:36.388302+00	\N	aal1	\N	2026-04-03 10:18:36.388212	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36	112.134.153.49	\N	\N	\N	\N	\N
 b71f48f2-8f7f-406f-a944-e60efda51dd0	4105f420-8ea6-4fb7-9072-c5ac991c0376	2026-04-03 10:24:53.532026+00	2026-04-03 10:24:53.532026+00	\N	aal1	\N	\N	node	3.239.47.68	\N	\N	\N	\N	\N
+30ff9c36-8a0f-4a59-911f-7e405e33b0a2	4105f420-8ea6-4fb7-9072-c5ac991c0376	2026-04-03 12:07:30.209479+00	2026-04-03 12:07:30.209479+00	\N	aal1	\N	\N	node	44.192.57.26	\N	\N	\N	\N	\N
 \.
 
 
@@ -155,6 +156,7 @@ e681ae47-8936-4b9f-85af-ea3e67f666cd	2026-04-03 09:12:27.737952+00	2026-04-03 09
 0d41a693-89e7-443b-81ae-a13cd069b89b	2026-04-03 09:12:54.209511+00	2026-04-03 09:12:54.209511+00	password	7448bb77-043c-436e-8326-36b003504ba6
 ff23b973-a78d-4b77-8839-2c97c01dbb71	2026-04-03 09:20:11.63152+00	2026-04-03 09:20:11.63152+00	password	5488469a-14ae-4604-9ded-4a54818e7f9e
 b71f48f2-8f7f-406f-a944-e60efda51dd0	2026-04-03 10:24:53.551686+00	2026-04-03 10:24:53.551686+00	password	8ccc385b-1a22-4d98-80e4-8a5b28a09321
+30ff9c36-8a0f-4a59-911f-7e405e33b0a2	2026-04-03 12:07:30.292622+00	2026-04-03 12:07:30.292622+00	password	7d6e1290-f86a-44e3-a43e-f749856a5b37
 \.
 
 
@@ -218,6 +220,7 @@ COPY "auth"."refresh_tokens" ("instance_id", "id", "token", "user_id", "revoked"
 00000000-0000-0000-0000-000000000000	416	jqusvf2kc4jt	4105f420-8ea6-4fb7-9072-c5ac991c0376	t	2026-04-03 09:20:11.624274+00	2026-04-03 10:18:36.380029+00	\N	ff23b973-a78d-4b77-8839-2c97c01dbb71
 00000000-0000-0000-0000-000000000000	418	cnj5nikw3lcd	4105f420-8ea6-4fb7-9072-c5ac991c0376	f	2026-04-03 10:18:36.381592+00	2026-04-03 10:18:36.381592+00	jqusvf2kc4jt	ff23b973-a78d-4b77-8839-2c97c01dbb71
 00000000-0000-0000-0000-000000000000	419	bh76hrght6a3	4105f420-8ea6-4fb7-9072-c5ac991c0376	f	2026-04-03 10:24:53.54667+00	2026-04-03 10:24:53.54667+00	\N	b71f48f2-8f7f-406f-a944-e60efda51dd0
+00000000-0000-0000-0000-000000000000	420	fjwsdf2whj7h	4105f420-8ea6-4fb7-9072-c5ac991c0376	f	2026-04-03 12:07:30.253784+00	2026-04-03 12:07:30.253784+00	\N	30ff9c36-8a0f-4a59-911f-7e405e33b0a2
 \.
 
 
@@ -1101,7 +1104,7 @@ COPY "storage"."vector_indexes" ("id", "name", "bucket_id", "data_type", "dimens
 -- Name: refresh_tokens_id_seq; Type: SEQUENCE SET; Schema: auth; Owner: supabase_auth_admin
 --
 
-SELECT pg_catalog.setval('"auth"."refresh_tokens_id_seq"', 419, true);
+SELECT pg_catalog.setval('"auth"."refresh_tokens_id_seq"', 420, true);
 
 
 --
@@ -1248,6 +1251,6 @@ SELECT pg_catalog.setval('"public"."Profit_id_seq"', 1, true);
 -- PostgreSQL database dump complete
 --
 
--- \unrestrict 4Xbp1j0BkqRyMQDFuM3bP0e7cLGFw0Hz8ruqtZsomHQn6au41Uo7D1B56CeNYUU
+-- \unrestrict ODUmdLD493GT20XUTI4HvZBTOxsgJZVxleOEh8r0rAn8ZXDQcwzFc76ywz5rlgo
 
 RESET ALL;
