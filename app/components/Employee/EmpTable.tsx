@@ -182,7 +182,6 @@ const EmpTable = ({ onEdit, onRefresh, branchId, searchQuery }: EmpTableProps) =
                     {e.phone ?? "-"}
                   </div>
                 </td>
-                {canEdit && (
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-center gap-2">
                       <button
@@ -208,7 +207,7 @@ const EmpTable = ({ onEdit, onRefresh, branchId, searchQuery }: EmpTableProps) =
                       </Link>
                     </div>
                   </td>
-                )}
+    
 
               </tr>
             ))}
