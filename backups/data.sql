@@ -4,7 +4,7 @@ SET session_replication_role = replica;
 -- PostgreSQL database dump
 --
 
--- \restrict ODUmdLD493GT20XUTI4HvZBTOxsgJZVxleOEh8r0rAn8ZXDQcwzFc76ywz5rlgo
+-- \restrict L0PsDafHruGhZzMaaE0Ue0cafQoqK4rItdS70izBp8gJRdcv4lVpezTHnafa3j9
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -65,27 +65,8 @@ e2b1de2b-a0dd-43ef-b5c6-079ece9a48d2	2edd04f2-a7b0-4efc-865f-673ca6b434c8	3926c2
 --
 
 COPY "auth"."users" ("instance_id", "id", "aud", "role", "email", "encrypted_password", "email_confirmed_at", "invited_at", "confirmation_token", "confirmation_sent_at", "recovery_token", "recovery_sent_at", "email_change_token_new", "email_change", "email_change_sent_at", "last_sign_in_at", "raw_app_meta_data", "raw_user_meta_data", "is_super_admin", "created_at", "updated_at", "phone", "phone_confirmed_at", "phone_change", "phone_change_token", "phone_change_sent_at", "email_change_token_current", "email_change_confirm_status", "banned_until", "reauthentication_token", "reauthentication_sent_at", "is_sso_user", "deleted_at", "is_anonymous") FROM stdin;
-00000000-0000-0000-0000-000000000000	ae7bf44d-65a6-47dc-9a98-fd1d3b00b9c4	authenticated	authenticated	srushari@gmail.com	$2a$10$NSWd6/x/7m6lUSPZF5Bd4u2nr6dXr5Ic0.Pe7xBRAqPmpqmKCgjlO	2026-04-03 05:21:33.932997+00	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-04-03 05:21:33.921004+00	2026-04-03 05:21:33.933729+00	\N	\N			\N		0	\N		\N	f	\N	f
-00000000-0000-0000-0000-000000000000	45dca4ed-0b5d-4c5a-9d58-434a9eca5359	authenticated	authenticated	ishanisenevirathna87@gmail.com	$2a$10$kMe3tUUOF9k6Bmsgm6vQoOnqBxP9ZCFINlqacy5mNkuIUIWeBpZjq	2026-04-03 05:59:05.419976+00	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-04-03 05:59:05.394703+00	2026-04-03 05:59:05.421456+00	\N	\N			\N		0	\N		\N	f	\N	f
-00000000-0000-0000-0000-000000000000	15dfa3db-93b6-485d-9af4-a7b9d9475a38	authenticated	authenticated	induwarapradeep2006@gmail.com	$2a$10$vlFbUb.ERh36n1Tk7mSgoOnunekqz..r80ph.KJPq6Eh/4erwZQpW	2026-04-03 05:28:12.845724+00	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-04-03 05:28:12.814666+00	2026-04-03 05:28:12.847161+00	\N	\N			\N		0	\N		\N	f	\N	f
-00000000-0000-0000-0000-000000000000	4e5bbc63-35e0-4a55-8228-ab2c5d227581	authenticated	authenticated	contact.kawya@gmail.com	$2a$10$lLBivLJKOLE2C9za6b34BeH9GuF5SdVyug5eFwUPiJRJztOab4MYO	2026-04-03 05:28:29.385694+00	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-04-03 05:28:29.379285+00	2026-04-03 05:28:29.38639+00	\N	\N			\N		0	\N		\N	f	\N	f
-00000000-0000-0000-0000-000000000000	a6dfc416-6c93-4073-ba89-07a6f1a90691	authenticated	authenticated	info.ssupun@gmail.com	$2a$10$P/tqydIyTDBUCYPlanc5ouXyMsXgbU0FzR3gEtbZ41ArUpwajCLXK	2026-04-03 06:02:09.10539+00	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-04-03 06:02:09.101569+00	2026-04-03 06:02:09.106765+00	\N	\N			\N		0	\N		\N	f	\N	f
-00000000-0000-0000-0000-000000000000	60e17d82-5481-4bec-a2a2-31b77a1e9435	authenticated	authenticated	priyanthamaalabandanage@gmail.com	$2a$10$WhEf6M1U3WioW2aqkBgPGuGZGwUsocvFpCFmvQoe8cdvpinJDjxOe	2026-04-03 05:32:52.470632+00	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-04-03 05:32:52.433115+00	2026-04-03 05:32:52.472233+00	\N	\N			\N		0	\N		\N	f	\N	f
-00000000-0000-0000-0000-000000000000	871a45c4-79be-4dd8-b8ae-8383730ff84f	authenticated	authenticated	adithyamtr@yahoo.com	$2a$10$bR/PQN5jD86hvGls8GyWUuMMziuvbbiwKB2zH8cvKjjo7qkmsZaqO	2026-04-03 06:44:46.486574+00	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-04-03 06:44:46.477019+00	2026-04-03 06:44:46.489208+00	\N	\N			\N		0	\N		\N	f	\N	f
-00000000-0000-0000-0000-000000000000	c6f967c2-c974-4b70-91e1-abcad2880580	authenticated	authenticated	sandanikakakavindi22@gmail.com	$2a$10$433Y0.lQFM/DKPtIOBh4me/Qp0dB0fBGfxIL007mJOf8NwVwD3ns6	2026-04-03 07:55:03.207521+00	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-04-03 07:55:03.166655+00	2026-04-03 07:55:03.209088+00	\N	\N			\N		0	\N		\N	f	\N	f
-00000000-0000-0000-0000-000000000000	c5d90aad-5637-43cb-ae75-ff9577d0fe27	authenticated	authenticated	sampathkoralage6@gmail.com	$2a$10$6Ra9fsEcdc48SarUDTveZOPlKyWFjUJlkNE2lcJmn4O9PA/m1GCbu	2026-04-03 05:46:00.423399+00	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-04-03 05:46:00.412339+00	2026-04-03 05:46:00.424282+00	\N	\N			\N		0	\N		\N	f	\N	f
-00000000-0000-0000-0000-000000000000	8debbbb7-5243-4fa3-b365-27111ebca7a0	authenticated	authenticated	gaminiweerawickrama@yahoo.com	$2a$10$ZcTnqJxyCVrgULOKFsu1iOSMFZqC1Auv8NisUYd44fhgUKjWnvky2	2026-04-03 06:23:06.268727+00	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-04-03 06:23:06.222317+00	2026-04-03 06:23:06.269729+00	\N	\N			\N		0	\N		\N	f	\N	f
-00000000-0000-0000-0000-000000000000	5cdfe33a-bc3d-4add-a046-4150d1507119	authenticated	authenticated	sasanidisala16@gmail.com	$2a$10$7cydYAWjd1Dnnr5lztckn.dG..plx75GenzZBT6pwrxM.JHHCMS4i	2026-04-03 06:45:53.112121+00	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-04-03 06:45:53.107636+00	2026-04-03 06:45:53.113071+00	\N	\N			\N		0	\N		\N	f	\N	f
-00000000-0000-0000-0000-000000000000	cfc62ec5-2119-4249-a82f-255b82e80e0f	authenticated	authenticated	rameshlakmal177@gmail.com	$2a$10$XzSF51reJ46iyfzxLeTYx.iwK5Bjjt.KsjHjDAFK8PQraB0YbovOa	2026-04-03 06:27:11.169624+00	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-04-03 06:27:11.16322+00	2026-04-03 06:27:11.170506+00	\N	\N			\N		0	\N		\N	f	\N	f
-00000000-0000-0000-0000-000000000000	0082fef1-83a0-40e9-85c1-247a766270f5	authenticated	authenticated	hrm.senura@gmail.com	$2a$10$39UUoTvN5RjXxJl.M4uiDuUee2xml.0/F71QHlnzTE5utF4uPsCmi	2026-04-03 08:24:37.99046+00	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-04-03 08:24:37.982555+00	2026-04-03 08:24:37.991379+00	\N	\N			\N		0	\N		\N	f	\N	f
-00000000-0000-0000-0000-000000000000	6b7cc5ed-57f6-419c-a0cd-bad74c113f65	authenticated	authenticated	samantha222hk@gmail.com	$2a$10$/lfOqQe4ErkhaSKyIObBnO35.bBxbjYyYH7kdPeFlX0lAQbSYO4Pm	2026-04-03 07:46:25.628155+00	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-04-03 07:46:25.581373+00	2026-04-03 07:46:25.634649+00	\N	\N			\N		0	\N		\N	f	\N	f
-00000000-0000-0000-0000-000000000000	e779c46f-57e1-4b0e-8efd-96239eb6eecd	authenticated	authenticated	kumarasingha024@gmail.com	$2a$10$xdilXMYWbV7sUYg.1H7gxuFoXRaav8isWKRdxq7relcTOQ4uJ1ULW	2026-04-03 08:22:32.718599+00	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-04-03 08:22:32.698158+00	2026-04-03 08:22:32.720154+00	\N	\N			\N		0	\N		\N	f	\N	f
-00000000-0000-0000-0000-000000000000	2edd04f2-a7b0-4efc-865f-673ca6b434c8	authenticated	authenticated	supergreenitdep@gmail.com	$2a$10$evJJWkgzXM50b4hYvp61ZeBYuX9pj3ngSS.xd17llCY13NsOAeRle	2026-04-03 09:11:33.162666+00	\N		\N		2026-04-03 09:17:48.336017+00			\N	2026-04-03 09:12:54.181226+00	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-04-03 09:11:33.158844+00	2026-04-03 10:11:21.179925+00	\N	\N			\N		0	\N		\N	f	\N	f
-00000000-0000-0000-0000-000000000000	cf25ab02-53b9-4794-9d92-65a88cecfc53	authenticated	authenticated	nilnuwanlakiaya@gmail.com	$2a$10$2MjKYI0Z6lS4L7phnJrLb.q5piVp.xcrZqvwnPNhjpPsRdPoyFRf6	2026-04-03 08:33:00.558102+00	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-04-03 08:33:00.53593+00	2026-04-03 08:33:00.559075+00	\N	\N			\N		0	\N		\N	f	\N	f
-00000000-0000-0000-0000-000000000000	8a803552-99b9-4ae3-9898-1f1b9a9e0076	authenticated	authenticated	thilakarathna116@gmail.com	$2a$10$Qjbzz7njD8c/4tIhoX6WNOpR7wfoJfoPnMSHoMqMzzMJjsS4NAX.e	2026-04-03 08:37:15.151227+00	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-04-03 08:37:15.14664+00	2026-04-03 08:37:15.152199+00	\N	\N			\N		0	\N		\N	f	\N	f
-00000000-0000-0000-0000-000000000000	84da71fe-081c-4f4c-b222-fb2f67004de3	authenticated	authenticated	jayasundararathnayake61@gmail.com	$2a$10$/y6FjmPOed8xZLRqoQyaquDQut9VCCxTVMC7eGeI7OtQGH5wNwSnW	2026-04-03 08:29:53.075887+00	\N		\N	pkce_a03d057530c7a83acad1967d801f3a49851846a9af6dec5acdb79c24	2026-04-03 09:17:37.710683+00			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-04-03 08:29:53.066627+00	2026-04-03 09:17:38.677456+00	\N	\N			\N		0	\N		\N	f	\N	f
-00000000-0000-0000-0000-000000000000	4105f420-8ea6-4fb7-9072-c5ac991c0376	authenticated	authenticated	admin@company.com	$2a$10$miL9g7CGS6dgJ4HkQfaqNetNXmoif4ADmviuPMFbjxhaWwFVqLKQm	2026-04-03 05:11:25.496685+00	\N		\N		\N			\N	2026-04-03 12:07:30.209384+00	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-04-03 05:11:25.472892+00	2026-04-03 12:07:30.285359+00	\N	\N			\N		0	\N		\N	f	\N	f
-00000000-0000-0000-0000-000000000000	8a52678d-18b9-4694-b1e4-aa4250cbc506	authenticated	authenticated	kavindipalika@gmail.com	$2a$10$XMu8I1P3er2gPt/BoRFB/.BismzR5n06103/WHuI0BIwnxOg.nYm.	2026-04-03 05:20:59.003409+00	\N		\N		\N			\N	\N	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-04-03 05:20:58.978548+00	2026-04-03 05:20:59.005486+00	\N	\N			\N		0	\N		\N	f	\N	f
+00000000-0000-0000-0000-000000000000	494f6181-e2a4-4f1a-911a-c60fc804871d	authenticated	authenticated	supergreenitdep@gmail.com	$2a$10$JIRRpfxD8.HhqoS6MvEziuuyVKL7TmH0vFPFCRU.RgnfGJhMwdbzW	2026-04-04 04:58:19.448122+00	\N		\N		\N			\N	2026-04-04 08:17:53.036977+00	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-04-04 04:58:19.41076+00	2026-04-04 08:17:53.080306+00	\N	\N			\N		0	\N		\N	f	\N	f
+00000000-0000-0000-0000-000000000000	4105f420-8ea6-4fb7-9072-c5ac991c0376	authenticated	authenticated	admin@company.com	$2a$10$miL9g7CGS6dgJ4HkQfaqNetNXmoif4ADmviuPMFbjxhaWwFVqLKQm	2026-04-03 05:11:25.496685+00	\N		\N		\N			\N	2026-04-04 05:18:03.602669+00	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-04-03 05:11:25.472892+00	2026-04-04 09:07:46.849182+00	\N	\N			\N		0	\N		\N	f	\N	f
 \.
 
 
@@ -95,26 +76,7 @@ COPY "auth"."users" ("instance_id", "id", "aud", "role", "email", "encrypted_pas
 
 COPY "auth"."identities" ("provider_id", "user_id", "identity_data", "provider", "last_sign_in_at", "created_at", "updated_at", "id") FROM stdin;
 4105f420-8ea6-4fb7-9072-c5ac991c0376	4105f420-8ea6-4fb7-9072-c5ac991c0376	{"sub": "4105f420-8ea6-4fb7-9072-c5ac991c0376", "email": "admin@company.com", "email_verified": false, "phone_verified": false}	email	2026-04-03 05:11:25.4905+00	2026-04-03 05:11:25.490555+00	2026-04-03 05:11:25.490555+00	79238fa8-2184-405b-bb95-83fe2a9c5b41
-8a52678d-18b9-4694-b1e4-aa4250cbc506	8a52678d-18b9-4694-b1e4-aa4250cbc506	{"sub": "8a52678d-18b9-4694-b1e4-aa4250cbc506", "email": "kavindipalika@gmail.com", "email_verified": false, "phone_verified": false}	email	2026-04-03 05:20:58.996662+00	2026-04-03 05:20:58.996722+00	2026-04-03 05:20:58.996722+00	39bc4393-3f63-4925-b4d5-8a5ce3802c1c
-ae7bf44d-65a6-47dc-9a98-fd1d3b00b9c4	ae7bf44d-65a6-47dc-9a98-fd1d3b00b9c4	{"sub": "ae7bf44d-65a6-47dc-9a98-fd1d3b00b9c4", "email": "srushari@gmail.com", "email_verified": false, "phone_verified": false}	email	2026-04-03 05:21:33.930428+00	2026-04-03 05:21:33.930482+00	2026-04-03 05:21:33.930482+00	2cd19316-8b6e-4450-8295-87e489748794
-15dfa3db-93b6-485d-9af4-a7b9d9475a38	15dfa3db-93b6-485d-9af4-a7b9d9475a38	{"sub": "15dfa3db-93b6-485d-9af4-a7b9d9475a38", "email": "induwarapradeep2006@gmail.com", "email_verified": false, "phone_verified": false}	email	2026-04-03 05:28:12.835621+00	2026-04-03 05:28:12.835675+00	2026-04-03 05:28:12.835675+00	1da303fd-ffe7-4934-bc36-3b147b69b418
-4e5bbc63-35e0-4a55-8228-ab2c5d227581	4e5bbc63-35e0-4a55-8228-ab2c5d227581	{"sub": "4e5bbc63-35e0-4a55-8228-ab2c5d227581", "email": "contact.kawya@gmail.com", "email_verified": false, "phone_verified": false}	email	2026-04-03 05:28:29.383229+00	2026-04-03 05:28:29.383281+00	2026-04-03 05:28:29.383281+00	6205098e-f606-4044-86e9-54bb11f2db56
-60e17d82-5481-4bec-a2a2-31b77a1e9435	60e17d82-5481-4bec-a2a2-31b77a1e9435	{"sub": "60e17d82-5481-4bec-a2a2-31b77a1e9435", "email": "priyanthamaalabandanage@gmail.com", "email_verified": false, "phone_verified": false}	email	2026-04-03 05:32:52.460818+00	2026-04-03 05:32:52.460872+00	2026-04-03 05:32:52.460872+00	d7bcbefc-ab52-4a86-afb9-ccf8399d9297
-c5d90aad-5637-43cb-ae75-ff9577d0fe27	c5d90aad-5637-43cb-ae75-ff9577d0fe27	{"sub": "c5d90aad-5637-43cb-ae75-ff9577d0fe27", "email": "sampathkoralage6@gmail.com", "email_verified": false, "phone_verified": false}	email	2026-04-03 05:46:00.418628+00	2026-04-03 05:46:00.418678+00	2026-04-03 05:46:00.418678+00	0f3b169a-be47-4245-89dd-d8247303c1c3
-45dca4ed-0b5d-4c5a-9d58-434a9eca5359	45dca4ed-0b5d-4c5a-9d58-434a9eca5359	{"sub": "45dca4ed-0b5d-4c5a-9d58-434a9eca5359", "email": "ishanisenevirathna87@gmail.com", "email_verified": false, "phone_verified": false}	email	2026-04-03 05:59:05.415369+00	2026-04-03 05:59:05.415425+00	2026-04-03 05:59:05.415425+00	8ff12338-aeed-4cf1-8b47-ced61dc25a91
-a6dfc416-6c93-4073-ba89-07a6f1a90691	a6dfc416-6c93-4073-ba89-07a6f1a90691	{"sub": "a6dfc416-6c93-4073-ba89-07a6f1a90691", "email": "info.ssupun@gmail.com", "email_verified": false, "phone_verified": false}	email	2026-04-03 06:02:09.103492+00	2026-04-03 06:02:09.103542+00	2026-04-03 06:02:09.103542+00	bb35aeb5-e757-4822-a05a-c1f6e6ee2595
-8debbbb7-5243-4fa3-b365-27111ebca7a0	8debbbb7-5243-4fa3-b365-27111ebca7a0	{"sub": "8debbbb7-5243-4fa3-b365-27111ebca7a0", "email": "gaminiweerawickrama@yahoo.com", "email_verified": false, "phone_verified": false}	email	2026-04-03 06:23:06.250244+00	2026-04-03 06:23:06.2503+00	2026-04-03 06:23:06.2503+00	ca3d138a-a39f-4f75-9dbd-97f9408c0abc
-cfc62ec5-2119-4249-a82f-255b82e80e0f	cfc62ec5-2119-4249-a82f-255b82e80e0f	{"sub": "cfc62ec5-2119-4249-a82f-255b82e80e0f", "email": "rameshlakmal177@gmail.com", "email_verified": false, "phone_verified": false}	email	2026-04-03 06:27:11.166765+00	2026-04-03 06:27:11.166821+00	2026-04-03 06:27:11.166821+00	e41e6a55-0df5-4e28-afa0-3bb371a79923
-871a45c4-79be-4dd8-b8ae-8383730ff84f	871a45c4-79be-4dd8-b8ae-8383730ff84f	{"sub": "871a45c4-79be-4dd8-b8ae-8383730ff84f", "email": "adithyamtr@yahoo.com", "email_verified": false, "phone_verified": false}	email	2026-04-03 06:44:46.483448+00	2026-04-03 06:44:46.483496+00	2026-04-03 06:44:46.483496+00	e08a7d79-e53b-48e5-8f0d-0917912d4d0b
-5cdfe33a-bc3d-4add-a046-4150d1507119	5cdfe33a-bc3d-4add-a046-4150d1507119	{"sub": "5cdfe33a-bc3d-4add-a046-4150d1507119", "email": "sasanidisala16@gmail.com", "email_verified": false, "phone_verified": false}	email	2026-04-03 06:45:53.109961+00	2026-04-03 06:45:53.110009+00	2026-04-03 06:45:53.110009+00	4a0445fe-7b82-4414-91b3-4e5d7e3fc3a5
-6b7cc5ed-57f6-419c-a0cd-bad74c113f65	6b7cc5ed-57f6-419c-a0cd-bad74c113f65	{"sub": "6b7cc5ed-57f6-419c-a0cd-bad74c113f65", "email": "samantha222hk@gmail.com", "email_verified": false, "phone_verified": false}	email	2026-04-03 07:46:25.61442+00	2026-04-03 07:46:25.614478+00	2026-04-03 07:46:25.614478+00	00f51d09-d78b-4c5b-b962-bd0252bcf850
-c6f967c2-c974-4b70-91e1-abcad2880580	c6f967c2-c974-4b70-91e1-abcad2880580	{"sub": "c6f967c2-c974-4b70-91e1-abcad2880580", "email": "sandanikakakavindi22@gmail.com", "email_verified": false, "phone_verified": false}	email	2026-04-03 07:55:03.195577+00	2026-04-03 07:55:03.195634+00	2026-04-03 07:55:03.195634+00	f6d0dbed-6973-42d0-9707-e5feeddb91fb
-e779c46f-57e1-4b0e-8efd-96239eb6eecd	e779c46f-57e1-4b0e-8efd-96239eb6eecd	{"sub": "e779c46f-57e1-4b0e-8efd-96239eb6eecd", "email": "kumarasingha024@gmail.com", "email_verified": false, "phone_verified": false}	email	2026-04-03 08:22:32.712093+00	2026-04-03 08:22:32.712149+00	2026-04-03 08:22:32.712149+00	ceda4f15-78f6-4263-9d4f-c3d5f2e11fe0
-0082fef1-83a0-40e9-85c1-247a766270f5	0082fef1-83a0-40e9-85c1-247a766270f5	{"sub": "0082fef1-83a0-40e9-85c1-247a766270f5", "email": "hrm.senura@gmail.com", "email_verified": false, "phone_verified": false}	email	2026-04-03 08:24:37.98678+00	2026-04-03 08:24:37.986836+00	2026-04-03 08:24:37.986836+00	55b692d6-58b4-4f69-bd9f-d229639c16e9
-84da71fe-081c-4f4c-b222-fb2f67004de3	84da71fe-081c-4f4c-b222-fb2f67004de3	{"sub": "84da71fe-081c-4f4c-b222-fb2f67004de3", "email": "jayasundararathnayake61@gmail.com", "email_verified": false, "phone_verified": false}	email	2026-04-03 08:29:53.073643+00	2026-04-03 08:29:53.073712+00	2026-04-03 08:29:53.073712+00	ef7aeb08-7067-42d0-9306-ef5fa77f4936
-cf25ab02-53b9-4794-9d92-65a88cecfc53	cf25ab02-53b9-4794-9d92-65a88cecfc53	{"sub": "cf25ab02-53b9-4794-9d92-65a88cecfc53", "email": "nilnuwanlakiaya@gmail.com", "email_verified": false, "phone_verified": false}	email	2026-04-03 08:33:00.549239+00	2026-04-03 08:33:00.549295+00	2026-04-03 08:33:00.549295+00	e9da4379-e75d-4509-bfc9-b7e46c19ab1b
-8a803552-99b9-4ae3-9898-1f1b9a9e0076	8a803552-99b9-4ae3-9898-1f1b9a9e0076	{"sub": "8a803552-99b9-4ae3-9898-1f1b9a9e0076", "email": "thilakarathna116@gmail.com", "email_verified": false, "phone_verified": false}	email	2026-04-03 08:37:15.148937+00	2026-04-03 08:37:15.149002+00	2026-04-03 08:37:15.149002+00	f015663c-8013-4cc7-96a1-0af7f5b818f7
-2edd04f2-a7b0-4efc-865f-673ca6b434c8	2edd04f2-a7b0-4efc-865f-673ca6b434c8	{"sub": "2edd04f2-a7b0-4efc-865f-673ca6b434c8", "email": "supergreenitdep@gmail.com", "email_verified": false, "phone_verified": false}	email	2026-04-03 09:11:33.16101+00	2026-04-03 09:11:33.161063+00	2026-04-03 09:11:33.161063+00	97bd7094-601f-4023-a07f-93ef8a521746
+494f6181-e2a4-4f1a-911a-c60fc804871d	494f6181-e2a4-4f1a-911a-c60fc804871d	{"sub": "494f6181-e2a4-4f1a-911a-c60fc804871d", "email": "supergreenitdep@gmail.com", "email_verified": false, "phone_verified": false}	email	2026-04-04 04:58:19.434311+00	2026-04-04 04:58:19.434368+00	2026-04-04 04:58:19.434368+00	4e7a0eee-9997-4222-9ffd-b334977878df
 \.
 
 
@@ -139,11 +101,10 @@ COPY "auth"."oauth_clients" ("id", "client_secret_hash", "registration_type", "r
 --
 
 COPY "auth"."sessions" ("id", "user_id", "created_at", "updated_at", "factor_id", "aal", "not_after", "refreshed_at", "user_agent", "ip", "tag", "oauth_client_id", "refresh_token_hmac_key", "refresh_token_counter", "scopes") FROM stdin;
-e681ae47-8936-4b9f-85af-ea3e67f666cd	2edd04f2-a7b0-4efc-865f-673ca6b434c8	2026-04-03 09:12:27.679953+00	2026-04-03 09:12:27.679953+00	\N	aal1	\N	\N	node	112.134.153.49	\N	\N	\N	\N	\N
-0d41a693-89e7-443b-81ae-a13cd069b89b	2edd04f2-a7b0-4efc-865f-673ca6b434c8	2026-04-03 09:12:54.183832+00	2026-04-03 10:11:21.194156+00	\N	aal1	\N	2026-04-03 10:11:21.19405	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36	112.134.153.49	\N	\N	\N	\N	\N
-ff23b973-a78d-4b77-8839-2c97c01dbb71	4105f420-8ea6-4fb7-9072-c5ac991c0376	2026-04-03 09:20:11.618758+00	2026-04-03 10:18:36.388302+00	\N	aal1	\N	2026-04-03 10:18:36.388212	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36	112.134.153.49	\N	\N	\N	\N	\N
-b71f48f2-8f7f-406f-a944-e60efda51dd0	4105f420-8ea6-4fb7-9072-c5ac991c0376	2026-04-03 10:24:53.532026+00	2026-04-03 10:24:53.532026+00	\N	aal1	\N	\N	node	3.239.47.68	\N	\N	\N	\N	\N
-30ff9c36-8a0f-4a59-911f-7e405e33b0a2	4105f420-8ea6-4fb7-9072-c5ac991c0376	2026-04-03 12:07:30.209479+00	2026-04-03 12:07:30.209479+00	\N	aal1	\N	\N	node	44.192.57.26	\N	\N	\N	\N	\N
+920a4839-08b4-4788-a409-e9b0c7d6e579	4105f420-8ea6-4fb7-9072-c5ac991c0376	2026-04-04 05:18:03.60442+00	2026-04-04 05:18:03.60442+00	\N	aal1	\N	\N	node	112.134.157.120	\N	\N	\N	\N	\N
+0a0c7cb0-08cd-445b-80e7-8005569f2152	494f6181-e2a4-4f1a-911a-c60fc804871d	2026-04-04 05:00:43.427376+00	2026-04-04 07:01:05.371254+00	\N	aal1	\N	2026-04-04 07:01:05.371151	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36	112.134.157.120	\N	\N	\N	\N	\N
+d523f039-ea4a-46df-8980-a2c2580ab101	494f6181-e2a4-4f1a-911a-c60fc804871d	2026-04-04 08:17:53.03707+00	2026-04-04 08:17:53.03707+00	\N	aal1	\N	\N	node	34.224.67.105	\N	\N	\N	\N	\N
+ddedd354-a1cb-4cce-a9bf-fe5abf03a3de	4105f420-8ea6-4fb7-9072-c5ac991c0376	2026-04-04 04:54:49.67313+00	2026-04-04 09:07:46.862533+00	\N	aal1	\N	2026-04-04 09:07:46.862419	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36	112.134.157.120	\N	\N	\N	\N	\N
 \.
 
 
@@ -152,11 +113,10 @@ b71f48f2-8f7f-406f-a944-e60efda51dd0	4105f420-8ea6-4fb7-9072-c5ac991c0376	2026-0
 --
 
 COPY "auth"."mfa_amr_claims" ("session_id", "created_at", "updated_at", "authentication_method", "id") FROM stdin;
-e681ae47-8936-4b9f-85af-ea3e67f666cd	2026-04-03 09:12:27.737952+00	2026-04-03 09:12:27.737952+00	password	b2af64d8-cc1c-4e7b-9548-5bd4e3610922
-0d41a693-89e7-443b-81ae-a13cd069b89b	2026-04-03 09:12:54.209511+00	2026-04-03 09:12:54.209511+00	password	7448bb77-043c-436e-8326-36b003504ba6
-ff23b973-a78d-4b77-8839-2c97c01dbb71	2026-04-03 09:20:11.63152+00	2026-04-03 09:20:11.63152+00	password	5488469a-14ae-4604-9ded-4a54818e7f9e
-b71f48f2-8f7f-406f-a944-e60efda51dd0	2026-04-03 10:24:53.551686+00	2026-04-03 10:24:53.551686+00	password	8ccc385b-1a22-4d98-80e4-8a5b28a09321
-30ff9c36-8a0f-4a59-911f-7e405e33b0a2	2026-04-03 12:07:30.292622+00	2026-04-03 12:07:30.292622+00	password	7d6e1290-f86a-44e3-a43e-f749856a5b37
+ddedd354-a1cb-4cce-a9bf-fe5abf03a3de	2026-04-04 04:54:49.685541+00	2026-04-04 04:54:49.685541+00	password	8ff61aea-37c5-4720-9b32-eecac4c53f2f
+0a0c7cb0-08cd-445b-80e7-8005569f2152	2026-04-04 05:00:43.437286+00	2026-04-04 05:00:43.437286+00	password	d8d17f75-f172-4ead-b3e8-47bdaca0739b
+920a4839-08b4-4788-a409-e9b0c7d6e579	2026-04-04 05:18:03.660164+00	2026-04-04 05:18:03.660164+00	password	ac28839b-265c-4e00-9aed-65f06078ba8b
+d523f039-ea4a-46df-8980-a2c2580ab101	2026-04-04 08:17:53.083989+00	2026-04-04 08:17:53.083989+00	password	a78cfb15-3a0f-44a1-b8d6-5c28d168805b
 \.
 
 
@@ -205,7 +165,6 @@ COPY "auth"."oauth_consents" ("id", "user_id", "client_id", "scopes", "granted_a
 --
 
 COPY "auth"."one_time_tokens" ("id", "user_id", "token_type", "token_hash", "relates_to", "created_at", "updated_at") FROM stdin;
-e617c6c5-6a62-40af-9ba9-d12aada858df	84da71fe-081c-4f4c-b222-fb2f67004de3	recovery_token	pkce_a03d057530c7a83acad1967d801f3a49851846a9af6dec5acdb79c24	jayasundararathnayake61@gmail.com	2026-04-03 09:17:38.693354	2026-04-03 09:17:38.693354
 \.
 
 
@@ -214,13 +173,14 @@ e617c6c5-6a62-40af-9ba9-d12aada858df	84da71fe-081c-4f4c-b222-fb2f67004de3	recove
 --
 
 COPY "auth"."refresh_tokens" ("instance_id", "id", "token", "user_id", "revoked", "created_at", "updated_at", "parent", "session_id") FROM stdin;
-00000000-0000-0000-0000-000000000000	414	yaitfawlwn46	2edd04f2-a7b0-4efc-865f-673ca6b434c8	f	2026-04-03 09:12:27.717794+00	2026-04-03 09:12:27.717794+00	\N	e681ae47-8936-4b9f-85af-ea3e67f666cd
-00000000-0000-0000-0000-000000000000	415	zej4w5kp5qr2	2edd04f2-a7b0-4efc-865f-673ca6b434c8	t	2026-04-03 09:12:54.193838+00	2026-04-03 10:11:21.13783+00	\N	0d41a693-89e7-443b-81ae-a13cd069b89b
-00000000-0000-0000-0000-000000000000	417	x36gwp265rz4	2edd04f2-a7b0-4efc-865f-673ca6b434c8	f	2026-04-03 10:11:21.166624+00	2026-04-03 10:11:21.166624+00	zej4w5kp5qr2	0d41a693-89e7-443b-81ae-a13cd069b89b
-00000000-0000-0000-0000-000000000000	416	jqusvf2kc4jt	4105f420-8ea6-4fb7-9072-c5ac991c0376	t	2026-04-03 09:20:11.624274+00	2026-04-03 10:18:36.380029+00	\N	ff23b973-a78d-4b77-8839-2c97c01dbb71
-00000000-0000-0000-0000-000000000000	418	cnj5nikw3lcd	4105f420-8ea6-4fb7-9072-c5ac991c0376	f	2026-04-03 10:18:36.381592+00	2026-04-03 10:18:36.381592+00	jqusvf2kc4jt	ff23b973-a78d-4b77-8839-2c97c01dbb71
-00000000-0000-0000-0000-000000000000	419	bh76hrght6a3	4105f420-8ea6-4fb7-9072-c5ac991c0376	f	2026-04-03 10:24:53.54667+00	2026-04-03 10:24:53.54667+00	\N	b71f48f2-8f7f-406f-a944-e60efda51dd0
-00000000-0000-0000-0000-000000000000	420	fjwsdf2whj7h	4105f420-8ea6-4fb7-9072-c5ac991c0376	f	2026-04-03 12:07:30.253784+00	2026-04-03 12:07:30.253784+00	\N	30ff9c36-8a0f-4a59-911f-7e405e33b0a2
+00000000-0000-0000-0000-000000000000	424	tgpnhoxfyhda	4105f420-8ea6-4fb7-9072-c5ac991c0376	f	2026-04-04 05:18:03.634557+00	2026-04-04 05:18:03.634557+00	\N	920a4839-08b4-4788-a409-e9b0c7d6e579
+00000000-0000-0000-0000-000000000000	423	w3k5mvqyhl33	494f6181-e2a4-4f1a-911a-c60fc804871d	t	2026-04-04 05:00:43.434409+00	2026-04-04 07:01:05.319482+00	\N	0a0c7cb0-08cd-445b-80e7-8005569f2152
+00000000-0000-0000-0000-000000000000	422	bwcj4sd4wfwm	4105f420-8ea6-4fb7-9072-c5ac991c0376	t	2026-04-04 04:54:49.683121+00	2026-04-04 07:01:05.319461+00	\N	ddedd354-a1cb-4cce-a9bf-fe5abf03a3de
+00000000-0000-0000-0000-000000000000	426	f2u64cjlepwk	494f6181-e2a4-4f1a-911a-c60fc804871d	f	2026-04-04 07:01:05.342926+00	2026-04-04 07:01:05.342926+00	w3k5mvqyhl33	0a0c7cb0-08cd-445b-80e7-8005569f2152
+00000000-0000-0000-0000-000000000000	425	eytxhomwanam	4105f420-8ea6-4fb7-9072-c5ac991c0376	t	2026-04-04 07:01:05.343054+00	2026-04-04 08:09:42.101015+00	bwcj4sd4wfwm	ddedd354-a1cb-4cce-a9bf-fe5abf03a3de
+00000000-0000-0000-0000-000000000000	428	pmwir527yn6i	494f6181-e2a4-4f1a-911a-c60fc804871d	f	2026-04-04 08:17:53.066268+00	2026-04-04 08:17:53.066268+00	\N	d523f039-ea4a-46df-8980-a2c2580ab101
+00000000-0000-0000-0000-000000000000	427	ovamyxhzusta	4105f420-8ea6-4fb7-9072-c5ac991c0376	t	2026-04-04 08:09:42.119514+00	2026-04-04 09:07:46.808273+00	eytxhomwanam	ddedd354-a1cb-4cce-a9bf-fe5abf03a3de
+00000000-0000-0000-0000-000000000000	429	aypety2t5hgr	4105f420-8ea6-4fb7-9072-c5ac991c0376	f	2026-04-04 09:07:46.836713+00	2026-04-04 09:07:46.836713+00	ovamyxhzusta	ddedd354-a1cb-4cce-a9bf-fe5abf03a3de
 \.
 
 
@@ -332,7 +292,7 @@ COPY "public"."Position" ("createdAt", "updatedAt", "id", "title", "rank", "isMa
 
 COPY "public"."User" ("role", "branchId", "status", "email", "name", "id") FROM stdin;
 ADMIN	\N	t	admin@company.com	Admin User	4105f420-8ea6-4fb7-9072-c5ac991c0376
-BRANCH_MANAGER	6	t	supergreenitdep@gmail.com	Sample	2edd04f2-a7b0-4efc-865f-673ca6b434c8
+BRANCH_MANAGER	6	t	supergreenitdep@gmail.com	Sample	494f6181-e2a4-4f1a-911a-c60fc804871d
 \.
 
 
@@ -383,7 +343,6 @@ COPY "public"."Member" ("totalCommission", "createdAt", "updatedAt", "id", "posi
 0	2026-04-02 06:00:45	\N	185	1	PM000066	\N	0769884714	\N	133200220028972	MUNITHUNGA MW, UGGASNA, VILPITA, AKURESSA	\N	PEOPLES BANK	KAMBURUPITIYA	\N	\N	2026-03-01 00:00:00	2004-04-04 00:00:00	\N	W CHANUKA SANGEETH	200409511782	\N	\N	\N	PROBATION	\N	\N	\N	\N	\N	t
 0	2026-04-02 06:00:45	\N	186	1	PM000067	\N	0714705951	\N	8070053795	WAHARAJJA WATHTHA, MEDDAWATHTHA, MATARA	\N	COMMERCIAL	MATARA	\N	\N	2026-03-01 00:00:00	1948-07-19 00:00:00	\N	N SENARATHNA	487011762V	\N	\N	\N	PROBATION	\N	\N	\N	\N	\N	t
 0	2026-04-02 06:00:45	\N	198	1	PM000080	\N	0770428800	\N	95228316	ARANYA RD, 19 KANUWA, SOORIYA ARA, THANAMALWILA	\N	BOC	THANAMALWILA	\N	\N	\N	1998-06-28 00:00:00	\N	G OVINI PRABATHMA	986802380V	\N	\N		PROBATION		\N	\N	{}	\N	t
-0	2026-04-02 06:00:45	\N	166	110	PM000047	\N	741215524	\N	169200251880556	252/A/2, KALUM,HEENWILAWATTA, THALGASYAAYA	\N	GALLE	PEOPLES BANK	\N	\N	2026-01-01 00:00:00	1958-07-25 00:00:00	Female	LAKSHMI PUSHPARANI SAMARAWEERA	195870710084	\N	\N		PERMANENT		\N	\N	{}	\N	t
 0	2026-04-02 06:00:45	\N	179	104	PM000060	\N	0774356944	\N	101057653098	NO: 48/A, PILADUWA RD, MATARA	\N	SAMPATH	MATARA	\N	\N	2026-03-01 00:00:00	1980-05-10 00:00:00	Male	H D RANAWICKRAMA	801314074V	\N	\N		MANAGEMENT		\N	\N	{}	\N	t
 0	2026-04-02 06:00:45	\N	183	15	PM000064	\N	0702764330	\N	111657157526	NO: 166/15, WEERA MAWATHA, WEERAKETIYA RD, DANKATIYA, THANGALLE	\N	SAMPATH	THANGALLA	\N	\N	2026-03-01 00:00:00	1963-12-02 00:00:00	Male	A A RANJAN ANDARAWEERA	633372322V	\N	\N		PERMANENT		0774427863	\N	{}	\N	t
 0	2026-04-02 06:00:45	\N	184	1	PM000065	\N	0714532995	\N	82550680	NO: 174, USSAREGODA WATHTHA, NARAWELPITA, WEST	\N	BOC	HAKMANA	\N	\N	2026-03-01 00:00:00	2002-05-02 00:00:00	Male	W H BUDDIKA PIUMAL	200212301857	\N	\N		PROBATION		\N	\N	{}	\N	t
@@ -428,10 +387,10 @@ COPY "public"."Member" ("totalCommission", "createdAt", "updatedAt", "id", "posi
 0	2026-04-02 06:00:45	\N	240	1	PM000122	\N	0750719283	\N	077020395302	NO 393, 7TH LANE, HETTIYAWATTE, MEEGODA	\N	HNB	HOMAGAMA	\N	\N	2026-03-15 00:00:00	1999-04-14 00:00:00	\N	N A THARUSHA SANDARENU	996051021V	\N	\N	\N	PERMANENT	\N	\N	\N	\N	\N	t
 0	2026-04-02 06:00:45	\N	241	2	PM000123	\N	0750110280	\N	0750110280	NO 393, 7TH LANE, HETTIYAWATTE, MEEGODA	\N	COMMRCIAL	HOMAGAMA	\N	\N	2026-03-15 00:00:00	1995-05-17 00:00:00	\N	N A NIMESHA RASANGI	956382629V	\N	\N	\N	PERMANENT	\N	\N	\N	\N	\N	t
 0	2026-04-02 06:00:45	\N	242	1	PM000124	\N	0786217555	\N	049200160079481	NO 112 E, BATUWALA, PADUKKA	\N	PEOPLES BANK	HOMAGAMA	\N	\N	2026-03-15 00:00:00	1996-09-19 00:00:00	\N	K M S N PERERA	967634026V	\N	\N	\N	PROBATION	\N	\N	\N	\N	\N	t
+200000	2026-04-04 04:58:20.189	\N	249	3	PM000125	supergreenitdep@gmail.com	\N	494f6181-e2a4-4f1a-911a-c60fc804871d	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	Sample	\N	\N			PROBATION	\N	\N	\N	{}	\N	t
 0	2026-04-02 06:00:45	\N	124	107	PM000003	\N	774073127	\N	103552979335	\N	\N	SAMPATH BANK	GALLE	\N	\N	\N	\N	\N	H N A JAGATH CHANDANA	\N	\N	\N		MANAGEMENT		\N	\N	{}	\N	t
 0	2026-04-02 06:00:45	\N	136	2	PM000015	\N	715630113	\N	45200232955245	NO: 75, 6 KANUWA, EKAMUTHGAMA, SEWANAGALA, MONARAGALA	\N	PEOPLES BANK	SEWANAGALA	\N	\N	2025-07-01 00:00:00	1969-04-30 00:00:00	\N	K P P K PATHIRANA	691211800V	\N	2025-07-01		PROBATION		776025858	\N	{}	\N	t
-0	2026-04-03 09:11:33.873	\N	248	3	PM000125	supergreenitdep@gmail.com	\N	2edd04f2-a7b0-4efc-865f-673ca6b434c8	\N	\N	\N	\N	\N	\N	\N	\N	\N	\N	Sample	\N	\N			PROBATION	\N	\N	\N	{}	\N	t
-4500	2026-04-02 06:00:45	\N	232	4	PM000114	\N	0713494300	\N	\N	53,SOUTHERN COURT,MANAVILA,WALAHANDUWA	\N	\N	\N	\N	\N	\N	1959-02-25 00:00:00	\N	D.KARIYAWASAM	590560952V	RESIGN	\N	\N	PROBATION	\N	\N	2026-04-03 10:26:22.311	\N	\N	f
+4500	2026-04-02 06:00:45	\N	232	4	PM000114	\N	0713494300	\N	\N	53,SOUTHERN COURT,MANAVILA,WALAHANDUWA	\N	\N	\N	\N	\N	\N	1959-02-25 00:00:00	\N	D.KARIYAWASAM	590560952V	RESIGN	\N	\N	PROBATION	\N	\N	2026-04-04 05:22:50.384	\N	\N	f
 \.
 
 
@@ -530,6 +489,11 @@ COPY "public"."ActivityLog" ("id", "action", "entity", "entityId", "performedByI
 88	UPDATE	INVESTMENT	2	\N	1	{"after": {"advisorEmpNo": "PM000115"}, "before": {"advisorId": null}, "updatedField": "advisorId"}	2026-04-03 10:27:26.94
 89	CREATE	COMMISSION	2	\N	1	{"processedAt": "2026-04-03T10:27:35.944Z", "advisorEmpNo": "PM000115", "investmentId": 2}	2026-04-03 10:27:36.004
 90	CREATE	PROFIT	1	\N	\N	{"totalProfit": null, "investmentId": 2, "commissionPayout": null, "investmentAmount": 600000}	2026-04-03 10:27:38.067
+91	CREATE	MEMBER	249	\N	6	{"name": "Sample", "empNo": "PM000125"}	2026-04-04 04:58:21.634
+92	CREATE	CLIENT	9	\N	1	{"after": {"id": 9, "nic": "199999999932", "email": null, "idBack": null, "status": "Active", "address": "anywhere", "idFront": null, "branchId": 1, "fullName": "Client 03", "memberId": 232, "proposal": null, "agreement": null, "createdAt": "2026-04-04T05:22:50.239Z", "phoneLand": null, "signature": "https://itcfwcgidijtnfjepsyk.supabase.co/storage/v1/object/public/kyc-documents/signatures/1775280148417-84faf38c-c778-413e-8006-3a537ec7de5e.png", "updatedAt": "2026-04-04T05:22:50.239Z", "occupation": null, "passportNo": null, "createdById": null, "dateOfBirth": null, "investments": [{"id": 3, "amount": 6000000, "planId": 6, "branchId": 1, "clientId": 9, "advisorId": null, "createdAt": "2026-04-04T05:22:50.911Z", "isMatured": false, "nomineeId": 3, "refNumber": "INV-183865", "updatedAt": "2026-04-04T05:22:50.911Z", "maturityDate": "2031-04-04T00:00:00.000Z", "beneficiaryId": 3, "investmentDate": "2026-04-04T00:00:00.000Z", "maturityNotified": false, "commissionsProcessed": false}], "paymentSlip": null, "phoneMobile": null, "drivingLicense": null, "proposalFormNo": "1115", "investmentAmount": 6000000}}	2026-04-04 05:22:51.176
+93	UPDATE	INVESTMENT	1	\N	6	{"after": {"advisorEmpNo": "PM000125"}, "before": {"advisorId": null}, "updatedField": "advisorId"}	2026-04-04 08:29:27.838
+94	CREATE	COMMISSION	1	\N	6	{"processedAt": "2026-04-04T08:29:35.194Z", "advisorEmpNo": "PM000125", "investmentId": 1}	2026-04-04 08:29:35.198
+95	CREATE	PROFIT	2	\N	\N	{"totalProfit": 1800000, "investmentId": 1, "commissionPayout": 200000, "investmentAmount": 2000000}	2026-04-04 08:29:38.411
 \.
 
 
@@ -540,6 +504,7 @@ COPY "public"."ActivityLog" ("id", "action", "entity", "entityId", "performedByI
 COPY "public"."Client" ("id", "email", "address", "branchId", "createdAt", "updatedAt", "dateOfBirth", "drivingLicense", "fullName", "nic", "occupation", "passportNo", "phoneLand", "phoneMobile", "status", "investmentAmount", "agreement", "idBack", "idFront", "signature", "proposal", "paymentSlip", "memberId", "proposalFormNo", "createdById") FROM stdin;
 1	\N	anywhere	6	2026-04-03 09:35:24.581	2026-04-03 09:35:24.581	\N	\N	Client 01	199999999999	\N	\N	\N	\N	Active	2000000	https://itcfwcgidijtnfjepsyk.supabase.co/storage/v1/object/public/kyc-documents/agreement/1775208922194-aac55adf-cfe0-4474-97bc-6e67e53ae2e7.webp	https://itcfwcgidijtnfjepsyk.supabase.co/storage/v1/object/public/kyc-documents/idBack/1775208922194-eb276ad2-a912-4a61-909c-d22d0a37bba2.webp	https://itcfwcgidijtnfjepsyk.supabase.co/storage/v1/object/public/kyc-documents/idFront/1775208922194-c461e2f0-9d5b-4839-acd5-5416eb902a4f.webp	https://itcfwcgidijtnfjepsyk.supabase.co/storage/v1/object/public/kyc-documents/signatures/1775208738067-aa3479c3-3658-45d1-91b0-655d6e7b6e3f.png	https://itcfwcgidijtnfjepsyk.supabase.co/storage/v1/object/public/kyc-documents/proposal/1775208922194-054f0dc0-0e08-4472-8af3-323b77a2f809.webp	\N	148	1112	\N
 2	\N	anywhere	1	2026-04-03 10:26:22.115	2026-04-03 10:26:22.115	\N	\N	Client 02	199999999921	\N	\N	\N	\N	Active	600000	https://itcfwcgidijtnfjepsyk.supabase.co/storage/v1/object/public/kyc-documents/agreement/1775211980134-bb2583b2-69c6-4f75-8400-c3ec12dfee3e.webp	https://itcfwcgidijtnfjepsyk.supabase.co/storage/v1/object/public/kyc-documents/idBack/1775211980134-1f7d3fda-b6f0-488e-9cde-1a41bc0bf4ce.webp	https://itcfwcgidijtnfjepsyk.supabase.co/storage/v1/object/public/kyc-documents/idFront/1775211980133-4ab5fc11-8907-4270-b9e5-b81dafed227d.webp	https://itcfwcgidijtnfjepsyk.supabase.co/storage/v1/object/public/kyc-documents/signatures/1775211948973-ec7cd949-019d-4215-9f25-71d71708770d.png	https://itcfwcgidijtnfjepsyk.supabase.co/storage/v1/object/public/kyc-documents/proposal/1775211980134-3453e34b-cc24-4bfc-8fbd-7dc6306e6cb7.webp	\N	232	1113	\N
+9	\N	anywhere	1	2026-04-04 05:22:50.239	2026-04-04 05:22:50.239	\N	\N	Client 03	199999999932	\N	\N	\N	\N	Active	6000000	\N	\N	\N	https://itcfwcgidijtnfjepsyk.supabase.co/storage/v1/object/public/kyc-documents/signatures/1775280148417-84faf38c-c778-413e-8006-3a537ec7de5e.png	\N	\N	232	1115	\N
 \.
 
 
@@ -550,6 +515,7 @@ COPY "public"."Client" ("id", "email", "address", "branchId", "createdAt", "upda
 COPY "public"."Beneficiary" ("id", "fullName", "nic", "phone", "bankName", "bankBranch", "accountNo", "relationship", "createdAt", "updatedAt", "clientId") FROM stdin;
 1	Beni. 01	\N						2026-04-03 09:35:24.866	2026-04-03 09:35:24.866	1
 2	Beni	\N						2026-04-03 10:26:22.5	2026-04-03 10:26:22.5	2
+3	Beni	\N						2026-04-04 05:22:50.506	2026-04-04 05:22:50.506	9
 \.
 
 
@@ -558,13 +524,9 @@ COPY "public"."Beneficiary" ("id", "fullName", "nic", "phone", "bankName", "bank
 --
 
 COPY "public"."ClientDocumentRequest" ("id", "clientId", "token", "createdById", "expiresAt", "used", "createdAt") FROM stdin;
-1	1	41897780d4c4eb8f39e7a1dc2ecaa0baef9a353b1edc55a6bf08bfd50c83b391	2edd04f2-a7b0-4efc-865f-673ca6b434c8	2026-04-05 09:35:54.715	f	2026-04-03 09:35:54.717
-2	1	1b19d73fbf5fa832e135f8ee6cc1ea088e827aad2e4fb2d85eab6b0747f8b34b	2edd04f2-a7b0-4efc-865f-673ca6b434c8	2026-04-05 09:37:27.35	f	2026-04-03 09:37:27.351
-3	1	c49ef9c9650af10d8452f1ed407d576ca9665a1636451f8a291f743a4dd3e28e	2edd04f2-a7b0-4efc-865f-673ca6b434c8	2026-04-05 09:37:27.949	f	2026-04-03 09:37:27.949
-4	1	d89085754971f4ea88177e94bf2977a9fcf28eca988f90694db02232487c8268	2edd04f2-a7b0-4efc-865f-673ca6b434c8	2026-04-05 09:37:40.916	f	2026-04-03 09:37:40.917
-5	1	7aad17d71de669120f11e4b669391481b67b05ae29f7ebbdeebb245854646c72	2edd04f2-a7b0-4efc-865f-673ca6b434c8	2026-04-05 09:37:41.516	f	2026-04-03 09:37:41.516
-6	1	15b7468a9e1536ab4207daf6bdc75a574f56c8eb844e75834e6f4919c35076cd	2edd04f2-a7b0-4efc-865f-673ca6b434c8	2026-04-05 09:45:04.476	f	2026-04-03 09:45:04.477
-7	1	b4f838b6c05fa52a620888c29be93fc268a5c4c40ca3ce4daad54f4b6a3699ba	2edd04f2-a7b0-4efc-865f-673ca6b434c8	2026-04-05 09:45:04.927	f	2026-04-03 09:45:04.928
+8	1	1142c7da8e7f8539dff10b11c8b92d677ed891ae97e78d95c27d3514e9dccc89	494f6181-e2a4-4f1a-911a-c60fc804871d	2026-04-06 08:25:00.725	f	2026-04-04 08:25:00.731
+9	1	50afbabd7b2a9596054fb237e69810926ac11ab8c11cf4c1904b856cad54aee7	494f6181-e2a4-4f1a-911a-c60fc804871d	2026-04-06 08:25:29.842	f	2026-04-04 08:25:29.842
+10	1	e4c11db6920fe4f70fd9e3b714b21b58facec871f2b47ab0249f6ba302e0e22b	494f6181-e2a4-4f1a-911a-c60fc804871d	2026-04-06 08:34:15.349	f	2026-04-04 08:34:15.351
 \.
 
 
@@ -596,6 +558,7 @@ COPY "public"."FinancialPlan" ("id", "name", "duration", "rate", "description", 
 COPY "public"."Nominee" ("id", "fullName", "permanentAddress", "postalAddress", "createdAt", "updatedAt", "clientId") FROM stdin;
 1	Nomine		\N	2026-04-03 09:35:24.996	2026-04-03 09:35:24.996	1
 2	Nomi		\N	2026-04-03 10:26:22.685	2026-04-03 10:26:22.685	2
+3	nomi		\N	2026-04-04 05:22:50.639	2026-04-04 05:22:50.639	9
 \.
 
 
@@ -604,8 +567,9 @@ COPY "public"."Nominee" ("id", "fullName", "permanentAddress", "postalAddress", 
 --
 
 COPY "public"."Investment" ("id", "investmentDate", "amount", "clientId", "planId", "createdAt", "updatedAt", "advisorId", "commissionsProcessed", "refNumber", "branchId", "beneficiaryId", "nomineeId", "isMatured", "maturityDate", "maturityNotified") FROM stdin;
-1	2026-04-04 00:00:00	2000000	1	6	2026-04-03 09:35:25.245	2026-04-03 09:35:25.245	\N	f	INV-412917	6	1	1	f	2031-04-04 00:00:00	f
 2	2026-04-02 00:00:00	600000	2	5	2026-04-03 10:26:23.051	2026-04-03 10:27:32.389	233	t	INV-709129	1	2	2	f	2029-04-02 00:00:00	f
+3	2026-04-04 00:00:00	6000000	9	6	2026-04-04 05:22:50.911	2026-04-04 05:22:50.911	\N	f	INV-183865	1	3	3	f	2031-04-04 00:00:00	f
+1	2026-04-04 00:00:00	2000000	1	6	2026-04-03 09:35:25.245	2026-04-04 08:29:33.707	249	t	INV-412917	6	1	1	f	2031-04-04 00:00:00	f
 \.
 
 
@@ -618,6 +582,7 @@ COPY "public"."Commission" ("id", "investmentId", "memberEmpNo", "amount", "type
 2	2	PM000113	9000	UPLINE	2026-04-03 10:27:33.412	COM-1775212053406-KX1EK	1
 3	2	PM000026	4500	UPLINE	2026-04-03 10:27:34.487	COM-1775212054486-CY1SL	1
 4	2	PM000114	4500	UPLINE	2026-04-03 10:27:35.214	COM-1775212055214-NJYUZ	1
+5	1	PM000125	200000	PERSONAL	2026-04-04 08:29:34.273	COM-1775291374270-9XGQK	6
 \.
 
 
@@ -649,6 +614,7 @@ COPY "public"."CommissionRate" ("createdAt", "updatedAt", "id", "positionId", "r
 --
 
 COPY "public"."MemberBranch" ("id", "memberId", "branchId") FROM stdin;
+412	249	6
 236	127	8
 239	130	8
 248	139	4
@@ -719,7 +685,6 @@ COPY "public"."MemberBranch" ("id", "memberId", "branchId") FROM stdin;
 352	124	6
 356	154	6
 364	122	6
-371	166	6
 372	179	6
 375	220	6
 377	147	1
@@ -739,7 +704,6 @@ COPY "public"."MemberBranch" ("id", "memberId", "branchId") FROM stdin;
 404	152	4
 405	153	4
 406	158	4
-411	248	6
 \.
 
 
@@ -760,6 +724,7 @@ COPY "public"."MonthlyPayroll" ("id", "memberId", "year", "month", "volumeAchiev
 2	231	2026	4	600000	0	0	0	0	0	0	0	0	f	f	0	0	2026-04-03 10:27:34.245	0
 3	147	2026	4	600000	0	0	0	0	0	0	0	0	f	f	0	0	2026-04-03 10:27:34.97	0
 4	232	2026	4	600000	0	0	0	0	0	0	0	0	f	f	0	0	2026-04-03 10:27:35.7	0
+5	249	2026	4	2000000	0	0	0	0	0	0	0	0	f	f	0	0	2026-04-04 08:29:33.894	0
 \.
 
 
@@ -838,6 +803,7 @@ COPY "public"."PositionTarget" ("id", "positionId", "periodNumber", "monthNumber
 
 COPY "public"."Profit" ("id", "investmentId", "investmentAmount", "commissionPayout", "totalProfit") FROM stdin;
 1	2	600000	NaN	NaN
+2	1	2000000	200000	1800000
 \.
 
 
@@ -1073,6 +1039,9 @@ efc6ceeb-8286-43e0-b539-222918b639ae	kyc-documents	paySlip/1775208922194-5cf760d
 043186ad-302f-49f1-8e62-37d1d896dc2f	kyc-documents	paySlip/1775211980134-c47e5365-755f-4f46-8cff-a9496ef5e153.webp	4105f420-8ea6-4fb7-9072-c5ac991c0376	2026-04-03 10:26:19.106195+00	2026-04-03 10:26:19.106195+00	2026-04-03 10:26:19.106195+00	{"eTag": "\\"6589516bdebd3a7f616c31f84568ddf1\\"", "size": 51862, "mimetype": "image/webp", "cacheControl": "max-age=3600", "lastModified": "2026-04-03T10:26:20.000Z", "contentLength": 51862, "httpStatusCode": 200}	a0f656a8-edb6-4884-8116-4677dec0b9e4	4105f420-8ea6-4fb7-9072-c5ac991c0376	{}
 1c83874d-428e-4de2-82b9-cf716b02f221	kyc-documents	agreement/1775211980134-bb2583b2-69c6-4f75-8400-c3ec12dfee3e.webp	4105f420-8ea6-4fb7-9072-c5ac991c0376	2026-04-03 10:26:19.122337+00	2026-04-03 10:26:19.122337+00	2026-04-03 10:26:19.122337+00	{"eTag": "\\"6589516bdebd3a7f616c31f84568ddf1\\"", "size": 51862, "mimetype": "image/webp", "cacheControl": "max-age=3600", "lastModified": "2026-04-03T10:26:20.000Z", "contentLength": 51862, "httpStatusCode": 200}	96c8e781-fbd8-4bd5-ae36-25224117638f	4105f420-8ea6-4fb7-9072-c5ac991c0376	{}
 83d02a54-d329-4fa4-a67e-a29ff59ff522	kyc-documents	proposal/1775211980134-3453e34b-cc24-4bfc-8fbd-7dc6306e6cb7.webp	4105f420-8ea6-4fb7-9072-c5ac991c0376	2026-04-03 10:26:19.154443+00	2026-04-03 10:26:19.154443+00	2026-04-03 10:26:19.154443+00	{"eTag": "\\"6589516bdebd3a7f616c31f84568ddf1\\"", "size": 51862, "mimetype": "image/webp", "cacheControl": "max-age=3600", "lastModified": "2026-04-03T10:26:20.000Z", "contentLength": 51862, "httpStatusCode": 200}	fb4f5206-7dd2-4e79-913f-8ae5662b9c59	4105f420-8ea6-4fb7-9072-c5ac991c0376	{}
+a4deb2d6-1faf-4c36-9296-495552745436	kyc-documents	signatures/1775279734822-3e0658c8-33d6-4a77-bed4-fba40d3c0be4.png	494f6181-e2a4-4f1a-911a-c60fc804871d	2026-04-04 05:15:35.186535+00	2026-04-04 05:15:35.186535+00	2026-04-04 05:15:35.186535+00	{"eTag": "\\"5af80a0d2bc423c63e1c8139b7c4f607\\"", "size": 15814, "mimetype": "image/png", "cacheControl": "max-age=3600", "lastModified": "2026-04-04T05:15:36.000Z", "contentLength": 15814, "httpStatusCode": 200}	3e61326a-ea5d-4d3b-9607-1d9c7a11825b	494f6181-e2a4-4f1a-911a-c60fc804871d	{}
+bac8bb23-3338-4eac-8540-2bc66a560294	kyc-documents	signatures/1775279852341-7eb2ec9d-8146-4e1e-812e-6c319f1d78df.png	4105f420-8ea6-4fb7-9072-c5ac991c0376	2026-04-04 05:17:32.685292+00	2026-04-04 05:17:32.685292+00	2026-04-04 05:17:32.685292+00	{"eTag": "\\"d620f8d554178a9fad4e666d432b1612\\"", "size": 14645, "mimetype": "image/png", "cacheControl": "max-age=3600", "lastModified": "2026-04-04T05:17:33.000Z", "contentLength": 14645, "httpStatusCode": 200}	bd837dd7-90b2-46a2-8c2f-622df1d79907	4105f420-8ea6-4fb7-9072-c5ac991c0376	{}
+265400dd-9036-47cd-a98d-d85f2645eb47	kyc-documents	signatures/1775280148417-84faf38c-c778-413e-8006-3a537ec7de5e.png	4105f420-8ea6-4fb7-9072-c5ac991c0376	2026-04-04 05:22:27.791421+00	2026-04-04 05:22:27.791421+00	2026-04-04 05:22:27.791421+00	{"eTag": "\\"a203c2c9286247261134a6608c903d67\\"", "size": 12484, "mimetype": "image/png", "cacheControl": "max-age=3600", "lastModified": "2026-04-04T05:22:28.000Z", "contentLength": 12484, "httpStatusCode": 200}	5af3a474-29c2-4eae-b6a5-c1cb9272d5b3	4105f420-8ea6-4fb7-9072-c5ac991c0376	{}
 \.
 
 
@@ -1104,21 +1073,21 @@ COPY "storage"."vector_indexes" ("id", "name", "bucket_id", "data_type", "dimens
 -- Name: refresh_tokens_id_seq; Type: SEQUENCE SET; Schema: auth; Owner: supabase_auth_admin
 --
 
-SELECT pg_catalog.setval('"auth"."refresh_tokens_id_seq"', 420, true);
+SELECT pg_catalog.setval('"auth"."refresh_tokens_id_seq"', 429, true);
 
 
 --
 -- Name: ActivityLog_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"public"."ActivityLog_id_seq"', 90, true);
+SELECT pg_catalog.setval('"public"."ActivityLog_id_seq"', 95, true);
 
 
 --
 -- Name: Beneficiary_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"public"."Beneficiary_id_seq"', 2, true);
+SELECT pg_catalog.setval('"public"."Beneficiary_id_seq"', 3, true);
 
 
 --
@@ -1132,7 +1101,7 @@ SELECT pg_catalog.setval('"public"."Branch_id_seq"', 1, false);
 -- Name: ClientDocumentRequest_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"public"."ClientDocumentRequest_id_seq"', 7, true);
+SELECT pg_catalog.setval('"public"."ClientDocumentRequest_id_seq"', 10, true);
 
 
 --
@@ -1146,7 +1115,7 @@ SELECT pg_catalog.setval('"public"."ClientDocument_id_seq"', 1, false);
 -- Name: Client_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"public"."Client_id_seq"', 2, true);
+SELECT pg_catalog.setval('"public"."Client_id_seq"', 9, true);
 
 
 --
@@ -1160,7 +1129,7 @@ SELECT pg_catalog.setval('"public"."CommissionRate_id_seq"', 13, true);
 -- Name: Commission_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"public"."Commission_id_seq"', 4, true);
+SELECT pg_catalog.setval('"public"."Commission_id_seq"', 5, true);
 
 
 --
@@ -1174,21 +1143,21 @@ SELECT pg_catalog.setval('"public"."FinancialPlan_id_seq"', 6, true);
 -- Name: Investment_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"public"."Investment_id_seq"', 2, true);
+SELECT pg_catalog.setval('"public"."Investment_id_seq"', 3, true);
 
 
 --
 -- Name: MemberBranch_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"public"."MemberBranch_id_seq"', 411, true);
+SELECT pg_catalog.setval('"public"."MemberBranch_id_seq"', 412, true);
 
 
 --
 -- Name: Member_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"public"."Member_id_seq"', 248, true);
+SELECT pg_catalog.setval('"public"."Member_id_seq"', 249, true);
 
 
 --
@@ -1202,14 +1171,14 @@ SELECT pg_catalog.setval('"public"."MonthlyEvaluation_id_seq"', 1, false);
 -- Name: MonthlyPayroll_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"public"."MonthlyPayroll_id_seq"', 4, true);
+SELECT pg_catalog.setval('"public"."MonthlyPayroll_id_seq"', 5, true);
 
 
 --
 -- Name: Nominee_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"public"."Nominee_id_seq"', 2, true);
+SELECT pg_catalog.setval('"public"."Nominee_id_seq"', 3, true);
 
 
 --
@@ -1244,13 +1213,13 @@ SELECT pg_catalog.setval('"public"."Position_id_seq"', 1, false);
 -- Name: Profit_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('"public"."Profit_id_seq"', 1, true);
+SELECT pg_catalog.setval('"public"."Profit_id_seq"', 2, true);
 
 
 --
 -- PostgreSQL database dump complete
 --
 
--- \unrestrict ODUmdLD493GT20XUTI4HvZBTOxsgJZVxleOEh8r0rAn8ZXDQcwzFc76ywz5rlgo
+-- \unrestrict L0PsDafHruGhZzMaaE0Ue0cafQoqK4rItdS70izBp8gJRdcv4lVpezTHnafa3j9
 
 RESET ALL;
