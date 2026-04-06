@@ -23,7 +23,7 @@ jobs:
         run: mkdir -p backups/$DATE
 
       - name: Set date folder name
-        run: echo "DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+        run: echo "DATE=$(date +'%Y-%m-%d_%H-%M-%S')" >> $GITHUB_ENV
 
       - name: Backup roles
         run: supabase db dump --db-url "$supabase_db_url" -f backups/$DATE/roles.sql --role-only
