@@ -34,6 +34,8 @@ export default function Page() {
     branchId: null,
   });
 
+  const[ qutationModelOpen, setQutationModalOpen] = useState(false)
+
   const deleteMutation = useMutation({
     mutationFn: (id: number) => deleteFinancialPlan(id),
     onSuccess: () => {
@@ -95,12 +97,23 @@ export default function Page() {
           </p>
         </div>
         {canAdd && (
-          <button
+          <div className="flex gap-3">
+            <button
             onClick={() => setIsAddModalOpen(true)}
             className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-xl shadow-primary/10 active:scale-95 hover:opacity-90"
           >
-            <Plus size={17} /> Add Financial Plan
+            <Plus size={17} /> Add Plan
           </button>
+
+          <button
+            onClick={() => setQutationModalOpen(true)}
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-xl shadow-primary/10 active:scale-95 hover:opacity-90"
+          >
+            <Plus size={17} /> Qutation
+          </button>
+          </div>
+          
+          
         )}
 
       </div>
@@ -225,6 +238,7 @@ export default function Page() {
         />
       )}
 
+      
       <ConfirmDialog
         open={deleteDialog.open}
         onClose={() => setDeleteDialog({ open: false, branchId: null })}

@@ -208,7 +208,7 @@ model Member {
   gender                 String?
   civilStatus            String?
   address                String?
-  reportingPersons        String[]
+  reportingPersons       String[]
   dateOfJoin             DateTime?
   appointmentLetter      String?
   confirmation           String?
@@ -219,7 +219,7 @@ model Member {
   totalCommission        Float     @default(0)
   profilePic             String?
   lastClientRegisteredAt DateTime?
-  isActive                Boolean   @default(true)
+  isActive               Boolean   @default(true)
 
   userId String? @unique @db.Uuid
   user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
@@ -238,7 +238,7 @@ model Member {
   createdClients     Client[]       @relation("CreatedByMember")
 
   createdAt            DateTime              @default(now())
-  updatedAt            DateTime ?
+  updatedAt            DateTime?
   monthlyEvaluations   MonthlyEvaluation[]
   permanentEvaluations PermanentEvaluation[]
   monthlyPayrolls      MonthlyPayroll[]
@@ -517,6 +517,8 @@ model User {
   status                Boolean                 @default(true)
   member                Member?
   ClientDocumentRequest ClientDocumentRequest[]
+  quotations Quotation[]
+
 }
 
 model ClientDocumentRequest {
@@ -548,4 +550,48 @@ model ClientDocument {
   paymentSlip String?
 
   uploadedAt DateTime @default(now())
+}
+
+enum QuotationPlanType {
+  CHILD
+  MARGE
+  PENSION
+}
+
+enum QuotationFrequency {
+  MONTHLY
+  QUARTERLY
+  SEMI_ANNUAL
+  ANNUAL
+}
+
+model Quotation {
+  id String @id @default(cuid())
+
+  clientName String
+  clientNic  String?
+  clientAge  Int?
+
+  planType      QuotationPlanType
+  frequency     QuotationFrequency
+  duration      Int // plan duration in years
+  premium       Float
+  retirementAge Int? // PENSION only
+
+  totalInvested  Float
+  interestRate   Float
+  interestEarned Float
+  maturityAmount Float
+
+  notes String?
+
+  createdById String @db.Uuid
+  createdBy   User   @relation(fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([createdById])
+  @@index([planType])
+  @@index([createdAt])
 }
