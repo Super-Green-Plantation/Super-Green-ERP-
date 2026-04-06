@@ -401,6 +401,7 @@ async function getUplineChain(advisorRank: number, branchId: number) {
       position: { rank: { gt: advisorRank } },
     },
     include: {
+      
       position: { include: { salary: true, orc: true } },
       branches: { include: { branch: true } },
     },
