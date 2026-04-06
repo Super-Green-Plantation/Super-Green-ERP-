@@ -67,7 +67,7 @@ const FREQ_PERIODS: Record<PaymentFrequency, number> = {
 };
 
 const PLAN_LABELS: Record<PlanType, string> = {
-  CHILD:   "Child Plan \u2014 \u0DBB\u0DB1\u0DCA \u0D85\u0DC3\u0DCA\u0DC0\u0DAB\u0DD4",
+  CHILD:   "Child Plan",
   MARGE:   "Marge Plan",
   PENSION: "Pension Plan",
 };
@@ -82,7 +82,7 @@ function getPayingYears(planType: PlanType, duration: number) {
 
 const PLAN_CONDITIONS: Record<PlanType, { title: string; conditions: string[]; maturityRates: string[] }> = {
   CHILD: {
-    title: "Child Plan (Super Green \u0DBB\u0DB1\u0DCA \u0D85\u0DC3\u0DCA\u0DC0\u0DAB\u0DD4) \u2014 Terms & Conditions",
+    title: "Child Plan - Terms & Conditions",
     conditions: [
       "Available durations: 6 Year, 9 Year, and 12 Year plans.",
       "Paying term is 3 years from the start of the plan.",
@@ -102,7 +102,7 @@ const PLAN_CONDITIONS: Record<PlanType, { title: string; conditions: string[]; m
     ],
   },
   MARGE: {
-    title: "Marge Plan \u2014 Terms & Conditions",
+    title: "Marge Plan - Terms & Conditions",
     conditions: [
       "Available durations: 5 Year, 10 Year, and 15 Year plans.",
       "Paying term is 5 years from the start of the plan.",
@@ -122,7 +122,7 @@ const PLAN_CONDITIONS: Record<PlanType, { title: string; conditions: string[]; m
     ],
   },
   PENSION: {
-    title: "Pension Plan \u2014 Terms & Conditions",
+    title: "Pension Plan - Terms & Conditions",
     conditions: [
       "Age limit: 18 to 50 years. Retirement ages available: 35, 40, 45, 50, and 55.",
       "Investment period: 1 year to 10 years.",
