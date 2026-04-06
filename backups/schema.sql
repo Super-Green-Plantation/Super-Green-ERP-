@@ -109,6 +109,27 @@ CREATE TYPE "public"."PositionType" AS ENUM (
 ALTER TYPE "public"."PositionType" OWNER TO "postgres";
 
 
+CREATE TYPE "public"."QuotationFrequency" AS ENUM (
+    'MONTHLY',
+    'QUARTERLY',
+    'SEMI_ANNUAL',
+    'ANNUAL'
+);
+
+
+ALTER TYPE "public"."QuotationFrequency" OWNER TO "postgres";
+
+
+CREATE TYPE "public"."QuotationPlanType" AS ENUM (
+    'CHILD',
+    'MARGE',
+    'PENSION'
+);
+
+
+ALTER TYPE "public"."QuotationPlanType" OWNER TO "postgres";
+
+
 CREATE TYPE "public"."ReturnFrequency" AS ENUM (
     'Monthly',
     'HalfYearly',
@@ -873,6 +894,30 @@ ALTER SEQUENCE "public"."Profit_id_seq" OWNED BY "public"."Profit"."id";
 
 
 
+CREATE TABLE IF NOT EXISTS "public"."Quotation" (
+    "id" "text" NOT NULL,
+    "clientName" "text" NOT NULL,
+    "clientNic" "text",
+    "clientAge" integer,
+    "planType" "public"."QuotationPlanType" NOT NULL,
+    "frequency" "public"."QuotationFrequency" NOT NULL,
+    "duration" integer NOT NULL,
+    "premium" double precision NOT NULL,
+    "retirementAge" integer,
+    "totalInvested" double precision NOT NULL,
+    "interestRate" double precision NOT NULL,
+    "interestEarned" double precision NOT NULL,
+    "maturityAmount" double precision NOT NULL,
+    "notes" "text",
+    "createdAt" timestamp(3) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    "updatedAt" timestamp(3) without time zone NOT NULL,
+    "createdById" "uuid" NOT NULL
+);
+
+
+ALTER TABLE "public"."Quotation" OWNER TO "postgres";
+
+
 CREATE TABLE IF NOT EXISTS "public"."User" (
     "role" "public"."Role" DEFAULT 'EMPLOYEE'::"public"."Role" NOT NULL,
     "branchId" integer,
@@ -1081,6 +1126,11 @@ ALTER TABLE ONLY "public"."Profit"
 
 
 
+ALTER TABLE ONLY "public"."Quotation"
+    ADD CONSTRAINT "Quotation_pkey" PRIMARY KEY ("id");
+
+
+
 ALTER TABLE ONLY "public"."User"
     ADD CONSTRAINT "User_pkey" PRIMARY KEY ("id");
 
@@ -1184,6 +1234,18 @@ CREATE UNIQUE INDEX "Position_rank_key" ON "public"."Position" USING "btree" ("r
 
 
 CREATE UNIQUE INDEX "Profit_investmentId_key" ON "public"."Profit" USING "btree" ("investmentId");
+
+
+
+CREATE INDEX "Quotation_createdAt_idx" ON "public"."Quotation" USING "btree" ("createdAt");
+
+
+
+CREATE INDEX "Quotation_createdById_idx" ON "public"."Quotation" USING "btree" ("createdById");
+
+
+
+CREATE INDEX "Quotation_planType_idx" ON "public"."Quotation" USING "btree" ("planType");
 
 
 
@@ -1338,6 +1400,11 @@ ALTER TABLE ONLY "public"."PositionTarget"
 
 ALTER TABLE ONLY "public"."Profit"
     ADD CONSTRAINT "Profit_investmentId_fkey" FOREIGN KEY ("investmentId") REFERENCES "public"."Investment"("id") ON UPDATE CASCADE ON DELETE CASCADE;
+
+
+
+ALTER TABLE ONLY "public"."Quotation"
+    ADD CONSTRAINT "Quotation_createdById_fkey" FOREIGN KEY ("createdById") REFERENCES "public"."User"("id") ON UPDATE CASCADE ON DELETE RESTRICT;
 
 
 

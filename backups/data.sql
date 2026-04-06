@@ -4,7 +4,7 @@ SET session_replication_role = replica;
 -- PostgreSQL database dump
 --
 
--- \restrict RuP0f54khBrKdo52t11afG9ru0E2FX0gXgCGVLyy8G2b3OZ5RnEZ3AIkrDTv1Tm
+-- \restrict V5f8ejcbXwrT8zY3qaSqtYFjYV3RlYQF4dyCdTfnDCwdI5krxsMhRXkCRtTbuAr
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -65,8 +65,8 @@ e2b1de2b-a0dd-43ef-b5c6-079ece9a48d2	2edd04f2-a7b0-4efc-865f-673ca6b434c8	3926c2
 --
 
 COPY "auth"."users" ("instance_id", "id", "aud", "role", "email", "encrypted_password", "email_confirmed_at", "invited_at", "confirmation_token", "confirmation_sent_at", "recovery_token", "recovery_sent_at", "email_change_token_new", "email_change", "email_change_sent_at", "last_sign_in_at", "raw_app_meta_data", "raw_user_meta_data", "is_super_admin", "created_at", "updated_at", "phone", "phone_confirmed_at", "phone_change", "phone_change_token", "phone_change_sent_at", "email_change_token_current", "email_change_confirm_status", "banned_until", "reauthentication_token", "reauthentication_sent_at", "is_sso_user", "deleted_at", "is_anonymous") FROM stdin;
-00000000-0000-0000-0000-000000000000	494f6181-e2a4-4f1a-911a-c60fc804871d	authenticated	authenticated	supergreenitdep@gmail.com	$2a$10$JIRRpfxD8.HhqoS6MvEziuuyVKL7TmH0vFPFCRU.RgnfGJhMwdbzW	2026-04-04 04:58:19.448122+00	\N		\N		\N			\N	2026-04-04 08:17:53.036977+00	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-04-04 04:58:19.41076+00	2026-04-04 08:17:53.080306+00	\N	\N			\N		0	\N		\N	f	\N	f
-00000000-0000-0000-0000-000000000000	4105f420-8ea6-4fb7-9072-c5ac991c0376	authenticated	authenticated	admin@company.com	$2a$10$miL9g7CGS6dgJ4HkQfaqNetNXmoif4ADmviuPMFbjxhaWwFVqLKQm	2026-04-03 05:11:25.496685+00	\N		\N		\N			\N	2026-04-04 05:18:03.602669+00	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-04-03 05:11:25.472892+00	2026-04-04 09:07:46.849182+00	\N	\N			\N		0	\N		\N	f	\N	f
+00000000-0000-0000-0000-000000000000	4105f420-8ea6-4fb7-9072-c5ac991c0376	authenticated	authenticated	admin@company.com	$2a$10$miL9g7CGS6dgJ4HkQfaqNetNXmoif4ADmviuPMFbjxhaWwFVqLKQm	2026-04-03 05:11:25.496685+00	\N		\N		\N			\N	2026-04-06 05:14:42.624617+00	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-04-03 05:11:25.472892+00	2026-04-06 06:15:45.399729+00	\N	\N			\N		0	\N		\N	f	\N	f
+00000000-0000-0000-0000-000000000000	494f6181-e2a4-4f1a-911a-c60fc804871d	authenticated	authenticated	supergreenitdep@gmail.com	$2a$10$JIRRpfxD8.HhqoS6MvEziuuyVKL7TmH0vFPFCRU.RgnfGJhMwdbzW	2026-04-04 04:58:19.448122+00	\N		\N		\N			\N	2026-04-06 06:51:29.834413+00	{"provider": "email", "providers": ["email"]}	{"email_verified": true}	\N	2026-04-04 04:58:19.41076+00	2026-04-06 06:51:29.838914+00	\N	\N			\N		0	\N		\N	f	\N	f
 \.
 
 
@@ -101,10 +101,11 @@ COPY "auth"."oauth_clients" ("id", "client_secret_hash", "registration_type", "r
 --
 
 COPY "auth"."sessions" ("id", "user_id", "created_at", "updated_at", "factor_id", "aal", "not_after", "refreshed_at", "user_agent", "ip", "tag", "oauth_client_id", "refresh_token_hmac_key", "refresh_token_counter", "scopes") FROM stdin;
-920a4839-08b4-4788-a409-e9b0c7d6e579	4105f420-8ea6-4fb7-9072-c5ac991c0376	2026-04-04 05:18:03.60442+00	2026-04-04 05:18:03.60442+00	\N	aal1	\N	\N	node	112.134.157.120	\N	\N	\N	\N	\N
-0a0c7cb0-08cd-445b-80e7-8005569f2152	494f6181-e2a4-4f1a-911a-c60fc804871d	2026-04-04 05:00:43.427376+00	2026-04-04 07:01:05.371254+00	\N	aal1	\N	2026-04-04 07:01:05.371151	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36	112.134.157.120	\N	\N	\N	\N	\N
+0a0c7cb0-08cd-445b-80e7-8005569f2152	494f6181-e2a4-4f1a-911a-c60fc804871d	2026-04-04 05:00:43.427376+00	2026-04-06 05:31:43.692829+00	\N	aal1	\N	2026-04-06 05:31:43.692722	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36	112.134.155.155	\N	\N	\N	\N	\N
+9f5dcf00-99d3-4d11-b850-38025f8dc5cc	4105f420-8ea6-4fb7-9072-c5ac991c0376	2026-04-06 05:14:42.624723+00	2026-04-06 06:15:45.418984+00	\N	aal1	\N	2026-04-06 06:15:45.418303	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36	112.134.155.155	\N	\N	\N	\N	\N
+58f27331-981f-4e79-9609-bf1d6b863067	494f6181-e2a4-4f1a-911a-c60fc804871d	2026-04-06 06:51:24.940726+00	2026-04-06 06:51:24.940726+00	\N	aal1	\N	\N	node	112.134.155.155	\N	\N	\N	\N	\N
+b71bfb52-9f70-4441-8bb3-def1d26ca7ea	494f6181-e2a4-4f1a-911a-c60fc804871d	2026-04-06 06:51:29.8345+00	2026-04-06 06:51:29.8345+00	\N	aal1	\N	\N	node	3.94.173.0	\N	\N	\N	\N	\N
 d523f039-ea4a-46df-8980-a2c2580ab101	494f6181-e2a4-4f1a-911a-c60fc804871d	2026-04-04 08:17:53.03707+00	2026-04-04 08:17:53.03707+00	\N	aal1	\N	\N	node	34.224.67.105	\N	\N	\N	\N	\N
-ddedd354-a1cb-4cce-a9bf-fe5abf03a3de	4105f420-8ea6-4fb7-9072-c5ac991c0376	2026-04-04 04:54:49.67313+00	2026-04-04 09:07:46.862533+00	\N	aal1	\N	2026-04-04 09:07:46.862419	Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36	112.134.157.120	\N	\N	\N	\N	\N
 \.
 
 
@@ -113,10 +114,11 @@ ddedd354-a1cb-4cce-a9bf-fe5abf03a3de	4105f420-8ea6-4fb7-9072-c5ac991c0376	2026-0
 --
 
 COPY "auth"."mfa_amr_claims" ("session_id", "created_at", "updated_at", "authentication_method", "id") FROM stdin;
-ddedd354-a1cb-4cce-a9bf-fe5abf03a3de	2026-04-04 04:54:49.685541+00	2026-04-04 04:54:49.685541+00	password	8ff61aea-37c5-4720-9b32-eecac4c53f2f
 0a0c7cb0-08cd-445b-80e7-8005569f2152	2026-04-04 05:00:43.437286+00	2026-04-04 05:00:43.437286+00	password	d8d17f75-f172-4ead-b3e8-47bdaca0739b
-920a4839-08b4-4788-a409-e9b0c7d6e579	2026-04-04 05:18:03.660164+00	2026-04-04 05:18:03.660164+00	password	ac28839b-265c-4e00-9aed-65f06078ba8b
 d523f039-ea4a-46df-8980-a2c2580ab101	2026-04-04 08:17:53.083989+00	2026-04-04 08:17:53.083989+00	password	a78cfb15-3a0f-44a1-b8d6-5c28d168805b
+9f5dcf00-99d3-4d11-b850-38025f8dc5cc	2026-04-06 05:14:42.63815+00	2026-04-06 05:14:42.63815+00	password	a6e50670-9b82-4463-85f4-3d3bad615abf
+58f27331-981f-4e79-9609-bf1d6b863067	2026-04-06 06:51:24.995176+00	2026-04-06 06:51:24.995176+00	password	2e3e7377-11ec-44e1-94e5-262010eaac45
+b71bfb52-9f70-4441-8bb3-def1d26ca7ea	2026-04-06 06:51:29.83981+00	2026-04-06 06:51:29.83981+00	password	8422c040-1b69-47d5-854a-bb72d5d6a376
 \.
 
 
@@ -173,14 +175,14 @@ COPY "auth"."one_time_tokens" ("id", "user_id", "token_type", "token_hash", "rel
 --
 
 COPY "auth"."refresh_tokens" ("instance_id", "id", "token", "user_id", "revoked", "created_at", "updated_at", "parent", "session_id") FROM stdin;
-00000000-0000-0000-0000-000000000000	424	tgpnhoxfyhda	4105f420-8ea6-4fb7-9072-c5ac991c0376	f	2026-04-04 05:18:03.634557+00	2026-04-04 05:18:03.634557+00	\N	920a4839-08b4-4788-a409-e9b0c7d6e579
 00000000-0000-0000-0000-000000000000	423	w3k5mvqyhl33	494f6181-e2a4-4f1a-911a-c60fc804871d	t	2026-04-04 05:00:43.434409+00	2026-04-04 07:01:05.319482+00	\N	0a0c7cb0-08cd-445b-80e7-8005569f2152
-00000000-0000-0000-0000-000000000000	422	bwcj4sd4wfwm	4105f420-8ea6-4fb7-9072-c5ac991c0376	t	2026-04-04 04:54:49.683121+00	2026-04-04 07:01:05.319461+00	\N	ddedd354-a1cb-4cce-a9bf-fe5abf03a3de
-00000000-0000-0000-0000-000000000000	426	f2u64cjlepwk	494f6181-e2a4-4f1a-911a-c60fc804871d	f	2026-04-04 07:01:05.342926+00	2026-04-04 07:01:05.342926+00	w3k5mvqyhl33	0a0c7cb0-08cd-445b-80e7-8005569f2152
-00000000-0000-0000-0000-000000000000	425	eytxhomwanam	4105f420-8ea6-4fb7-9072-c5ac991c0376	t	2026-04-04 07:01:05.343054+00	2026-04-04 08:09:42.101015+00	bwcj4sd4wfwm	ddedd354-a1cb-4cce-a9bf-fe5abf03a3de
 00000000-0000-0000-0000-000000000000	428	pmwir527yn6i	494f6181-e2a4-4f1a-911a-c60fc804871d	f	2026-04-04 08:17:53.066268+00	2026-04-04 08:17:53.066268+00	\N	d523f039-ea4a-46df-8980-a2c2580ab101
-00000000-0000-0000-0000-000000000000	427	ovamyxhzusta	4105f420-8ea6-4fb7-9072-c5ac991c0376	t	2026-04-04 08:09:42.119514+00	2026-04-04 09:07:46.808273+00	eytxhomwanam	ddedd354-a1cb-4cce-a9bf-fe5abf03a3de
-00000000-0000-0000-0000-000000000000	429	aypety2t5hgr	4105f420-8ea6-4fb7-9072-c5ac991c0376	f	2026-04-04 09:07:46.836713+00	2026-04-04 09:07:46.836713+00	ovamyxhzusta	ddedd354-a1cb-4cce-a9bf-fe5abf03a3de
+00000000-0000-0000-0000-000000000000	426	f2u64cjlepwk	494f6181-e2a4-4f1a-911a-c60fc804871d	t	2026-04-04 07:01:05.342926+00	2026-04-06 05:31:43.670965+00	w3k5mvqyhl33	0a0c7cb0-08cd-445b-80e7-8005569f2152
+00000000-0000-0000-0000-000000000000	434	jjela4ncax5a	494f6181-e2a4-4f1a-911a-c60fc804871d	f	2026-04-06 05:31:43.684336+00	2026-04-06 05:31:43.684336+00	f2u64cjlepwk	0a0c7cb0-08cd-445b-80e7-8005569f2152
+00000000-0000-0000-0000-000000000000	433	frqnr2lzjqpn	4105f420-8ea6-4fb7-9072-c5ac991c0376	t	2026-04-06 05:14:42.635458+00	2026-04-06 06:15:45.373313+00	\N	9f5dcf00-99d3-4d11-b850-38025f8dc5cc
+00000000-0000-0000-0000-000000000000	435	xp3w4bn7apzh	4105f420-8ea6-4fb7-9072-c5ac991c0376	f	2026-04-06 06:15:45.39023+00	2026-04-06 06:15:45.39023+00	frqnr2lzjqpn	9f5dcf00-99d3-4d11-b850-38025f8dc5cc
+00000000-0000-0000-0000-000000000000	436	dkelhjrve22k	494f6181-e2a4-4f1a-911a-c60fc804871d	f	2026-04-06 06:51:24.963384+00	2026-04-06 06:51:24.963384+00	\N	58f27331-981f-4e79-9609-bf1d6b863067
+00000000-0000-0000-0000-000000000000	437	x5yqjdtqckqv	494f6181-e2a4-4f1a-911a-c60fc804871d	f	2026-04-06 06:51:29.837295+00	2026-04-06 06:51:29.837295+00	\N	b71bfb52-9f70-4441-8bb3-def1d26ca7ea
 \.
 
 
@@ -292,7 +294,7 @@ COPY "public"."Position" ("createdAt", "updatedAt", "id", "title", "rank", "isMa
 
 COPY "public"."User" ("role", "branchId", "status", "email", "name", "id") FROM stdin;
 ADMIN	\N	t	admin@company.com	Admin User	4105f420-8ea6-4fb7-9072-c5ac991c0376
-BRANCH_MANAGER	6	t	supergreenitdep@gmail.com	Sample	494f6181-e2a4-4f1a-911a-c60fc804871d
+EMPLOYEE	6	t	supergreenitdep@gmail.com	Sample	494f6181-e2a4-4f1a-911a-c60fc804871d
 \.
 
 
@@ -808,6 +810,15 @@ COPY "public"."Profit" ("id", "investmentId", "investmentAmount", "commissionPay
 
 
 --
+-- Data for Name: Quotation; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY "public"."Quotation" ("id", "clientName", "clientNic", "clientAge", "planType", "frequency", "duration", "premium", "retirementAge", "totalInvested", "interestRate", "interestEarned", "maturityAmount", "notes", "createdAt", "updatedAt", "createdById") FROM stdin;
+cmnmsrfco0000souvr213wb09	test 01	111111111	9	CHILD	MONTHLY	6	15000	\N	540000	15	81000	621000	test	2026-04-06 06:16:08.567	2026-04-06 06:16:08.567	4105f420-8ea6-4fb7-9072-c5ac991c0376
+\.
+
+
+--
 -- Data for Name: _prisma_migrations; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
@@ -907,9 +918,11 @@ b52134fe-d9b8-4272-87e9-ffaf3a37aec4	8b1f6cd52cf3f7297f16f1d16966c3546e6c57b6bbe
 fc5d169b-00fe-4b07-8b61-4cbee0adc1f8	226f14cce0739c1e096f4c54e206ae346402490ab560d21ae52b30879d934445	2026-04-03 05:01:17.038392+00	20260327044202_change	\N	\N	2026-04-03 05:01:16.42884+00	1
 3c65c6d2-3daf-4687-bd6c-1e3a087aca3c	8212ba6017d986575e66b8996bdc0a80dfa5a639424ea9db6cdf96e67bcaecdb	2026-04-03 05:01:18.000002+00	20260327072918_dev	\N	\N	2026-04-03 05:01:17.277146+00	1
 d3963d2f-dea2-4e82-aea2-da7c851186a6	a55da76f5b00770425146c18ab7849d0c2ed56d617625d09028101ea202a8a77	2026-04-03 05:01:19.476664+00	20260330033550_dev	\N	\N	2026-04-03 05:01:18.387013+00	1
+f98bdd0a-3b1d-4d88-949f-269ae859ee9c	5abe5811d1bf6fa53aa4616ab98474b2feb377b0880d79d865cac3d493c10826	2026-04-06 05:01:01.968262+00	20260406050059_dev	\N	\N	2026-04-06 05:01:00.389722+00	1
 4cba7f38-579b-4095-b90c-1f11c1d58cdc	8dad68a1c54b827e5642c72d1aa31fddc72100e40847f1b99f5b5858dcdbe8ed	2026-04-03 05:01:20.323629+00	20260330041201_dev	\N	\N	2026-04-03 05:01:19.717751+00	1
 dac20b01-7a95-4e24-98a9-44213c6eb2b3	5074270d6426ab93303e5dda0304fcac376ef9722e5d2ea4e7d8ae07cd7f946a	2026-04-03 05:01:21.172399+00	20260330043155_dev	\N	\N	2026-04-03 05:01:20.566778+00	1
 06948ed3-1c92-4952-80c6-5be0b9a8c723	575f127a98d17a0c4201ed3268404759ada0dc49bfa403f8031128127a75a9e0	2026-04-03 05:01:22.655529+00	20260331064338_dev	\N	\N	2026-04-03 05:01:21.917005+00	1
+8a474301-f7dd-4cef-80b8-1cf0096dad95	dd22a359a6ec483cbd8d5b50d59b02b19220b7ef549952186495b74f67ef5efa	2026-04-06 05:27:14.154803+00	20260406052712	\N	\N	2026-04-06 05:27:12.755048+00	1
 cbecafaa-7def-4d33-913a-48953305fe52	1dcba8a530b92307f9e80a49a50871c1189c336adb9b3217e0aa728e8381d149	2026-04-03 05:01:23.514131+00	20260402053659_dev	\N	\N	2026-04-03 05:01:22.896752+00	1
 f11ed80c-ca67-4f41-858e-d4646cf8c73b	d83d7287d0d927a208dc157e7127731dae4c966077b41c22fdab3da648f25c86	2026-04-03 05:01:24.369734+00	20260402054537_dev	\N	\N	2026-04-03 05:01:23.75318+00	1
 8f5c488a-df71-4b66-ab70-dc5db2c5c9cf	998b78e5700fbc8910f19782e5c2fb7155efd07a91d92850239e6a56eef611a7	2026-04-03 05:01:25.580033+00	20260402054737_dev	\N	\N	2026-04-03 05:01:24.946883+00	1
@@ -1073,7 +1086,7 @@ COPY "storage"."vector_indexes" ("id", "name", "bucket_id", "data_type", "dimens
 -- Name: refresh_tokens_id_seq; Type: SEQUENCE SET; Schema: auth; Owner: supabase_auth_admin
 --
 
-SELECT pg_catalog.setval('"auth"."refresh_tokens_id_seq"', 429, true);
+SELECT pg_catalog.setval('"auth"."refresh_tokens_id_seq"', 437, true);
 
 
 --
@@ -1220,6 +1233,6 @@ SELECT pg_catalog.setval('"public"."Profit_id_seq"', 2, true);
 -- PostgreSQL database dump complete
 --
 
--- \unrestrict RuP0f54khBrKdo52t11afG9ru0E2FX0gXgCGVLyy8G2b3OZ5RnEZ3AIkrDTv1Tm
+-- \unrestrict V5f8ejcbXwrT8zY3qaSqtYFjYV3RlYQF4dyCdTfnDCwdI5krxsMhRXkCRtTbuAr
 
 RESET ALL;
