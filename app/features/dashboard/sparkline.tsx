@@ -93,7 +93,7 @@ export function ClientRegistrationChart({ initialData }: Props) {
           >
             <ChevronLeft size={14} />
           </button>
-          <span className="text-xs font-semibold text-foreground/70 min-w-[90px] text-center">
+          <span className="text-xs font-semibold text-foreground/70 min-w-22.5 text-center">
             {MONTH_NAMES[data.month]} {data.year}
           </span>
           <button
@@ -175,10 +175,10 @@ export function ClientRegistrationChart({ initialData }: Props) {
         {data.branches.map((branch, i) => (
           <div key={branch.branchId} className="flex items-center gap-1.5">
             <span
-              className="w-2 h-2 rounded-sm flex-shrink-0"
+              className="w-2 h-2 rounded-sm shrink-0"
               style={{ background: BRANCH_COLORS[i % BRANCH_COLORS.length] }}
             />
-            <span className="text-[10px] text-muted-foreground/70 truncate max-w-[80px]">
+            <span className="text-[10px] text-muted-foreground/70 truncate max-w-20">
               {branch.branchName}
             </span>
             <span className="text-[10px] font-medium text-foreground/60">

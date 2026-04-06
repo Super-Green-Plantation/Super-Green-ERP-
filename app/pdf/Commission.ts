@@ -24,8 +24,6 @@ export const generateInvestmentPDF = (data: any) => {
   doc.setFont("helvetica", "bold");
   doc.text("INVESTOR DETAILS", leftColX, currentY);
 
-
-
   currentY += 10;
   doc.setTextColor(COLORS.text[0], COLORS.text[1], COLORS.text[2]);
   doc.setFontSize(10);
