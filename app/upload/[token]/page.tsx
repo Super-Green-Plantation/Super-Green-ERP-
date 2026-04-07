@@ -202,7 +202,7 @@ export default function PublicUploadPage() {
             <div className="p-2 bg-white/10 rounded-lg">
               <ShieldCheck className="w-5 h-5 text-white" />
             </div>
-            <h1 className="text-lg font-black uppercase tracking-widest">Document Upload</h1>
+            <h1 className="text-white text-lg font-black uppercase tracking-widest">Document Upload</h1>
           </div>
           <p className="text-slate-400 text-sm">
             Hi <span className="text-white font-semibold">{clientName}</span>, please
