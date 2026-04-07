@@ -61,6 +61,7 @@ export interface Member {
   createdAt: string | Date;
   updatedAt: string | Date;
   profilePic:string | undefined
+  isActive: boolean;
 }
 
 export interface Position {
@@ -163,6 +164,7 @@ export interface EmpData {
   bank?: string;
   bankBranch?: string;
   profilePic?: string;
+  isActive:boolean;
 }
 
 export type FormData = {
@@ -200,4 +202,5 @@ export type FormData = {
   probationStartDate: string;
 
   profilePic: string;
+  isActive: boolean;
 };

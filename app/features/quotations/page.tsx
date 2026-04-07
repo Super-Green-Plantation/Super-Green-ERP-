@@ -122,13 +122,13 @@ const QuotationsPage = () => {
     : quotations;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen p-6">
       <div className="max-w-7xl mx-auto space-y-6">
 
         {/* ── Header ── */}
         <div className="sm:flex space-y-3 items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <h1 className="text-2xl font-bold dark:text-gray-50 text-gray-900 flex items-center gap-2">
               <FileText className="w-6 h-6 text-green-600" />
               Quotations
             </h1>

@@ -585,13 +585,18 @@ model Quotation {
 
   notes String?
 
-  createdById String @db.Uuid
-  createdBy   User   @relation(fields: [createdById], references: [id])
+  documentCharge Float @default(500)
+  netInterestEarned Float          // interestEarned - documentCharge
+  netMaturityAmount Float          // maturityAmount - documentCharge
+
+
+  createdByUserId String @db.Uuid
+  createdBy   User   @relation(fields: [createdByUserId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([createdById])
+  @@index([createdByUserId])
   @@index([planType])
   @@index([createdAt])
 }

@@ -87,6 +87,7 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
     status: "PROBATION" as "PROBATION" | "PERMANENT" | "MANAGEMENT",
     probationStartDate: "",
     profilePic: "",
+    isActive: true,
   });
 
   useEffect(() => {
@@ -171,6 +172,7 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
         probationStartDate: initialData.probationStartDate
           ? new Date(initialData.probationStartDate).toISOString().slice(0, 10)
           : "",
+        isActive: initialData.isActive ?? true,
       });
     }
 
@@ -784,6 +786,42 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                     />
                   </div>
 
+                </div>
+
+                {/* Active Status Toggle */}
+                <div className="md:col-span-2">
+                  <label className={labelStyles}>Employment Status</label>
+
+                  <div className="flex items-center justify-between border border-gray-200 rounded-xl px-4 py-3 bg-gray-50/50">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-700">
+                        {formData.isActive ? "Active Employee" : "Inactive Employee"}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        {formData.isActive
+                          ? "Employee is currently active in the system"
+                          : "Employee is disabled and won't appear in active workflows"}
+                      </p>
+                    </div>
+
+                    {/* Toggle */}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          isActive: !prev.isActive,
+                        }))
+                      }
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all ${formData.isActive ? "bg-emerald-600" : "bg-gray-300"
+                        }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-all ${formData.isActive ? "translate-x-6" : "translate-x-1"
+                          }`}
+                      />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Appointment Letter ref */}

@@ -19,9 +19,9 @@ export async function createQuotation(formData: FormData) {
   const totalInvested = Number(formData.get("totalInvested"));
   const interestRate = Number(formData.get("interestRate"));
   const maturityAmount = Number(formData.get("maturityAmount"));
+  const interestEarned = Number(formData.get("interestEarned"));
+  const documentCharge = Number(formData.get("documentCharge")) || 500;
   const notes = (formData.get("notes") as string) || null;
-
-  const interestEarned = maturityAmount - totalInvested;
 
   const quotation = await prisma.quotation.create({
     data: {
@@ -35,10 +35,13 @@ export async function createQuotation(formData: FormData) {
       retirementAge,
       totalInvested,
       interestRate,
-      interestEarned,
+      interestEarned,                              // net (after doc charge)
+      netInterestEarned: interestEarned,           // same value, explicit field
+      netMaturityAmount: maturityAmount,           // net maturity (after doc charge)
       maturityAmount,
+      documentCharge,
       notes,
-      createdById: user.id,
+      createdByUserId: user.id,
     },
   });
 
@@ -54,12 +57,12 @@ export async function getQuotations(page = 1, pageSize = 15) {
 
   const [quotations, total] = await Promise.all([
     prisma.quotation.findMany({
-      where: { createdById: user.id },
+      where: { createdByUserId: user.id },
       orderBy: { createdAt: "desc" },
       skip,
       take: pageSize,
     }),
-    prisma.quotation.count({ where: { createdById: user.id } }),
+    prisma.quotation.count({ where: { createdByUserId: user.id } }),
   ]);
 
   // Advisor info derived from the logged-in user's member profile
@@ -78,7 +81,7 @@ export async function deleteQuotation(id: string) {
   if (!user?.id) throw new Error("Unauthorized");
 
   const quotation = await prisma.quotation.findFirst({
-    where: { id, createdById: user.id },
+    where: { id, createdByUserId: user.id },
   });
   if (!quotation) throw new Error("Not found");
 

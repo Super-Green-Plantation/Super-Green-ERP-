@@ -17,7 +17,7 @@ export async function getEvaluationPreview(branchId: number, year: number, month
     const endDate = new Date(year, month, 1);
 
     const memberBranches = await prisma.memberBranch.findMany({
-      where: { branchId },
+      where: { branchId , member: { isActive:true } },
       include: {
         member: {
           include: {

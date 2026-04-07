@@ -399,6 +399,7 @@ export async function updateEmployee(memberId: number, data: EmpData) {
         confirmation: data.confirmation || null,
         remark: data.remark || null,
         probationStartDate: data.probationStartDate || null,
+        isActive: data.isActive,
 
         // Banking
         accNo: data.accNo || null,

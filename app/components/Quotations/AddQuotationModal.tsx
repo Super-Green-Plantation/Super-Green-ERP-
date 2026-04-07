@@ -25,7 +25,7 @@ interface PlanConfig {
 
 const PLANS: Record<PlanType, PlanConfig> = {
   CHILD: {
-    label: "Child Plan (රන් අස්වණු)",
+    label: "Child Plan ( )",
     payingTerm: 3,
     durations: [6, 9, 12],
     minPremium: {
@@ -127,6 +127,8 @@ const FREQ_PERIODS: Record<PaymentFrequency, number> = {
   ANNUAL: 1,
 };
 
+const DOCUMENT_CHARGE = 500; // Rs. - fixed fee deducted from interest
+
 // ─── Calculation helpers ──────────────────────────────────────────────────────
 
 function getInterestRate(
@@ -154,25 +156,42 @@ function calcQuotation(
   const periodsPerYear = FREQ_PERIODS[frequency];
   const payingYears = planType === "PENSION" ? duration : plan.payingTerm;
   const totalPayments = payingYears * periodsPerYear;
+
+  // P = total capital invested (sum of all premiums)
   const totalInvested = premium * totalPayments;
-  const interestRate = getInterestRate(planType, frequency, duration) / 100;
-  const interestEarned = totalInvested * interestRate;
-  const maturityAmount = totalInvested + interestEarned;
+
+  // R = annual interest rate (%)
+  const R = getInterestRate(planType, frequency, duration);
+
+  // T = full plan duration in years (paying term + holding period)
+  // For PENSION the duration IS the paying term, no separate holding phase
+  const T = duration;
+
+  // Compound interest: A = P × (1 + R/100)^T
+  const maturityAmount = totalInvested * Math.pow(1 + R / 100, T);
+  const interestEarned = maturityAmount - totalInvested;
+
+  // Document charge deducted from interest
+  const netInterestEarned = interestEarned - DOCUMENT_CHARGE;
+  const netMaturityAmount = maturityAmount - DOCUMENT_CHARGE;
+
   const commission = (premium * plan.commissionRate[frequency]) / 100;
 
   return {
     totalPayments,
     totalInvested,
-    interestRate: interestRate * 100,
+    interestRate: R,
     interestEarned,
+    netInterestEarned,
     maturityAmount,
+    netMaturityAmount,
+    documentCharge: DOCUMENT_CHARGE,
     commissionPerPayment: commission,
     totalCommission: commission * totalPayments,
-    // Pension: 10% of maturity per month until exhausted
     pensionMonthlyPayout:
-      planType === "PENSION" ? maturityAmount * 0.1 : null,
+      planType === "PENSION" ? netMaturityAmount * 0.1 : null,
     pensionPayoutMonths:
-      planType === "PENSION" ? 10 : null, // 10% × 10 = 100%
+      planType === "PENSION" ? 10 : null,
   };
 }
 
@@ -242,8 +261,10 @@ const AddQuotationModal = ({ isOpen, onClose }: AddQuotationModalProps) => {
     payload.append("clientAge", String(clientAge));
     payload.append("retirementAge", planType === "PENSION" ? String(retirementAge) : "");
     payload.append("totalInvested", String(calc.totalInvested));
-    payload.append("maturityAmount", String(calc.maturityAmount));
+    payload.append("maturityAmount", String(calc.netMaturityAmount));
     payload.append("interestRate", String(calc.interestRate));
+    payload.append("interestEarned", String(calc.netInterestEarned));
+    payload.append("documentCharge", String(calc.documentCharge));
     payload.append("notes", notes);
     addQuotationMutation.mutate(payload);
   };
@@ -298,7 +319,7 @@ const AddQuotationModal = ({ isOpen, onClose }: AddQuotationModalProps) => {
             <p className="text-xs text-gray-400 mt-1.5">
               Paying term: <span className="font-medium text-gray-600">{plan.payingTerm} years</span>
               {planType !== "PENSION" && (
-                <> · Durations: {plan.durations.join(", ")} years</>
+                <> | Durations: {plan.durations.join(", ")} years</>
               )}
             </p>
           </div>
@@ -404,7 +425,7 @@ const AddQuotationModal = ({ isOpen, onClose }: AddQuotationModalProps) => {
                 >
                   <span className="block font-semibold">{FREQ_LABELS[f]}</span>
                   <span className={`text-xs ${frequency === f ? "text-blue-100" : "text-gray-400"}`}>
-                    Min {fmt(plan.minPremium[f])} · {plan.commissionRate[f]}% commission
+                    Min {fmt(plan.minPremium[f])} | {plan.commissionRate[f]}% commission
                   </span>
                 </button>
               ))}
@@ -443,7 +464,7 @@ const AddQuotationModal = ({ isOpen, onClose }: AddQuotationModalProps) => {
             <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
               <SummaryRow
                 label="Plan"
-                value={`${PLANS[planType].label} · ${duration}Y`}
+                value={`${PLANS[planType].label} | ${duration}Y`}
               />
               <SummaryRow label="Payment Frequency" value={FREQ_LABELS[frequency]} />
               <SummaryRow label="Premium" value={fmt(premium)} />
@@ -457,10 +478,12 @@ const AddQuotationModal = ({ isOpen, onClose }: AddQuotationModalProps) => {
                 value={`${calc.interestRate.toFixed(1)}%`}
                 highlight
               />
-              <SummaryRow label="Interest Earned" value={fmt(calc.interestEarned)} highlight />
+              <SummaryRow label="Gross Interest Earned" value={fmt(calc.interestEarned)} highlight />
+              <SummaryRow label="Document Charge" value={`- ${fmt(calc.documentCharge)}`} />
+              <SummaryRow label="Net Interest Earned" value={fmt(calc.netInterestEarned)} highlight />
               <SummaryRow
-                label="Maturity Amount"
-                value={fmt(calc.maturityAmount)}
+                label="Net Maturity Amount"
+                value={fmt(calc.netMaturityAmount)}
                 big
               />
               {planType === "PENSION" && calc.pensionMonthlyPayout != null && (
