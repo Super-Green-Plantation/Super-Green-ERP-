@@ -42,6 +42,8 @@ export async function createEmployee(data: EmpData) {
   let tempPassword: string | null = null;
 
   try {
+    await requirePermission("CREATE_EMPLOYEES");
+
     const currentUser = await getCurrentUserWithRole();
 
     // ── STEP 1: Create Supabase user (ONLY if email exists) ──────────────
@@ -74,7 +76,6 @@ export async function createEmployee(data: EmpData) {
 
       // Create user record ONLY if Supabase user exists
       if (supabaseUserId) {
-        await requirePermission("CREATE_EMPLOYEES");
 
         await tx.user.create({
           data: {
@@ -218,7 +219,7 @@ export async function getEmployeesByBranch(
   };
 }
 // Get employee by code
-export async function getEmployeeByCode(empCode: string ) {
+export async function getEmployeeByCode(empCode: string) {
   try {
     const employee = await prisma.member.findUnique({
       where: { empNo: empCode },
@@ -240,9 +241,9 @@ export async function getReportingPersons(empCodes: string[]) {
     const employees = await prisma.member.findMany({
       where: {
         empNo: { in: empCodes },
-        
+
       },
-      include:{branches: true, position: true}
+      include: { branches: true, position: true }
     });
 
     return { employees };
@@ -550,9 +551,9 @@ export async function deleteEmployee(id: number) {
 }
 
 export async function toggleEmployeeStatus(id: number, currentStatus: "PROBATION" | "PERMANENT" | "MANAGEMENT") {
-  
+
   await requirePermission("UPDATE_EMPLOYEES");
-  
+
   const newStatus = currentStatus === "PROBATION" ? "PERMANENT" : "PROBATION";
   const currentUser = await getCurrentUserWithRole();
 
