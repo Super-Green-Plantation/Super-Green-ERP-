@@ -1,10 +1,14 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { requirePermission } from "@/lib/auth/withPermission";
+
 export async function getEmployeePerformance(memberId: number) {
   const now = new Date();
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth() + 1;
+
+  await requirePermission("VIEW_EMPLOYEES");
 
   const member = await prisma.member.findUnique({
     where: { id: memberId },
@@ -46,7 +50,7 @@ export async function getEmployeePerformance(memberId: number) {
 
     // Find the matching PositionTarget row
     const target = member.position.positionTargets.find(
-      (t:any) =>
+      (t: any) =>
         Number(t.periodNumber) === periodNumber &&
         Number(t.monthNumber) === monthInPeriod
     ) ?? null;
@@ -70,7 +74,7 @@ export async function getEmployeePerformance(memberId: number) {
   // Current month payroll (first in the ordered list if it matches)
   const currentPayroll =
     member.monthlyPayrolls[0]?.year === currentYear &&
-    member.monthlyPayrolls[0]?.month === currentMonth
+      member.monthlyPayrolls[0]?.month === currentMonth
       ? member.monthlyPayrolls[0]
       : null;
 

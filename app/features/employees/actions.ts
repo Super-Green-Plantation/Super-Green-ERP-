@@ -10,6 +10,8 @@ import { ActivityAction, ActivityEntity, Prisma } from "@prisma/client";
 import { supabaseAdmin } from "@/prisma/seed";
 import { revalidatePath } from "next/cache";
 import { EmpData } from "@/app/types/member";
+import { requirePermission } from "@/lib/auth/withPermission";
+
 
 const generateEmpNo = async (tx: any) => {
   const lastEmp = await tx.member.findFirst({
@@ -72,6 +74,8 @@ export async function createEmployee(data: EmpData) {
 
       // Create user record ONLY if Supabase user exists
       if (supabaseUserId) {
+        await requirePermission("CREATE_EMPLOYEES");
+
         await tx.user.create({
           data: {
             id: supabaseUserId,
@@ -262,6 +266,7 @@ export async function getEmployeeById(empNo: string) {
 // Update employee commission
 export async function updateEmployeeCommission(empNo: string, commission: number) {
   try {
+    await requirePermission("UPDATE_EMPLOYEES");
     const member = await prisma.member.findUnique({
       where: { empNo },
       select: { totalCommission: true },
@@ -291,6 +296,7 @@ export async function updateEmployee(memberId: number, data: EmpData) {
   let supabaseUserId: string | null = null;
 
   try {
+    await requirePermission("UPDATE_EMPLOYEES");
     const [currentUser, existing] = await Promise.all([
       getCurrentUserWithRole(),
       prisma.member.findUnique({
@@ -505,6 +511,7 @@ export async function getMemberDetails(id: number) {
 
 export async function deleteEmployee(id: number) {
   try {
+    await requirePermission("DELETE_EMPLOYEES");
     const currentUser = await getCurrentUserWithRole();
 
     // Fetch first to get userId before deleting
@@ -543,6 +550,9 @@ export async function deleteEmployee(id: number) {
 }
 
 export async function toggleEmployeeStatus(id: number, currentStatus: "PROBATION" | "PERMANENT" | "MANAGEMENT") {
+  
+  await requirePermission("UPDATE_EMPLOYEES");
+  
   const newStatus = currentStatus === "PROBATION" ? "PERMANENT" : "PROBATION";
   const currentUser = await getCurrentUserWithRole();
 
@@ -567,6 +577,7 @@ export async function toggleEmployeeStatus(id: number, currentStatus: "PROBATION
 
 export async function uploadProfilePic(file: File, empNo: string) {
   try {
+    await requirePermission("UPDATE_EMPLOYEES");
     const ext = file.name.split(".").pop();
     const path = `profile-pictures/${empNo}-${Date.now()}.${ext}`;
 

@@ -1,13 +1,12 @@
 "use server"
 
-import { prisma } from "@/lib/prisma";
-import { revalidatePath } from "next/cache";
-
 import { serializeData } from "@/app/utils/serializers";
-import { logActivity } from "@/lib/logActivity";
-import { Prisma } from "@prisma/client";
-import { ActivityAction, ActivityEntity } from "@prisma/client";
 import { getCurrentUserWithRole } from "@/lib/getCurrentUserWithRole";
+import { logActivity } from "@/lib/logActivity";
+import { prisma } from "@/lib/prisma";
+import { ActivityAction, ActivityEntity } from "@prisma/client";
+import { revalidatePath } from "next/cache";
+import { requirePermission } from "@/lib/auth/withPermission";
 
 
 // Get all branches with full details
@@ -107,6 +106,7 @@ export async function getBranchesByMemberId(memberId: number) {
 // Create new branch
 export async function createBranch(data: { name: string; location: string }) {
   try {
+    await requirePermission("CREATE_BRANCHES");
     const currentUser = await getCurrentUserWithRole();
     const newBranch = await prisma.branch.create({
       data: {
@@ -136,6 +136,7 @@ export async function createBranch(data: { name: string; location: string }) {
 // Update branch
 export async function updateBranch(id: number, data: { name: string; location: string }) {
   try {
+    await requirePermission("UPDATE_BRANCHES");
     const [currentUser, oldBranch] = await Promise.all([
       getCurrentUserWithRole(),
       prisma.branch.findUnique({ where: { id } }),
@@ -170,6 +171,7 @@ export async function updateBranch(id: number, data: { name: string; location: s
 // Delete branch
 export async function deleteBranch(id: number) {
   try {
+    await requirePermission("DELETE_BRANCHES");
     const currentUser = await getCurrentUserWithRole();
 
     await prisma.branch.delete({
