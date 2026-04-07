@@ -340,11 +340,11 @@ function drawPage1(doc: jsPDF, data: QuotationPDFData, logo: string | null) {
   y = (doc as any).lastAutoTable.finalY;
 
   // Net Maturity highlight
-  doc.setFillColor(...C.green);
+  doc.setFillColor(...C.greenLight);
   doc.rect(14, y, pw - 28, 11, "F");
-  doc.setFontSize(9.5);
+  doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(...C.white);
+  doc.setTextColor(...C.dark);
   doc.text("Net Maturity Amount", 19, y + 7.5);
   doc.text(lkr(data.maturityAmount), pw - 15, y + 7.5, { align: "right" });
   y += 18;
