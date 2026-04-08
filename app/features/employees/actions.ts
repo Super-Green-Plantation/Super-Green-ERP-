@@ -115,7 +115,7 @@ export async function createEmployee(data: EmpData) {
           branches: {
             create: data.branchIds.map((branchId) => ({ branchId })),
           },
-          probationStartDate: data.probationStartDate,
+          probationStartDate: data.probationStartDate ? data.probationStartDate : data.dateOfJoin ,
 
           profilePic: data.profilePic,
         },
