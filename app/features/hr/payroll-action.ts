@@ -23,20 +23,6 @@ type PayrollBreakdown = {
 };
 
 
-// ─── getPayrollPreview ────────────────────────────────────────────────────────
-/**
- * Read-only preview — no DB writes.
- *
- * Loads all ACTIVE members in a branch with their position salary config
- * and any existing MonthlyPayroll record for the given month.
- *
- * Returns a list of preview rows the UI renders in a table. Each row shows:
- *  - Employee name, position, status
- *  - Whether they already have a payroll record this month (alreadyProcessed)
- *  - A projected breakdown if volumes are passed in (used for live preview)
- *
- * volumes: optional map of { memberId → volumeAchieved } for live calculation
- */
 export async function getPayrollPreview(
     branchId: number,
     year: number,
@@ -47,15 +33,16 @@ export async function getPayrollPreview(
     const endDate = new Date(year, month, 1);
 
     const branchMembers = await prisma.memberBranch.findMany({
-        where: { branchId },
+        where: { branchId, },
         include: {
             member: {
+
                 include: {
                     position: { include: { salary: true, orc: true } },
                     monthlyPayrolls: { where: { year, month } },
                     commissions: {
                         where: {
-                            type: "PERSONAL",
+                            // type: "PERSONAL",
                             investment: {
                                 investmentDate: { gte: startDate, lt: endDate },
                             },
@@ -67,6 +54,7 @@ export async function getPayrollPreview(
         },
     });
 
+    console.log("branch member", branchMembers);
 
 
     const rows = branchMembers.map(({ member }: any) => {
@@ -110,6 +98,7 @@ export async function getPayrollPreview(
             orcRate,  // ← pass in
         ) : null;
         return {
+            actualCommissionEarned,
             memberId: member.id,
             name: member.nameWithInitials ?? member.name,
             empNo: member.empNo,
@@ -126,21 +115,6 @@ export async function getPayrollPreview(
 }
 
 
-// ─── runMonthlyPayroll ────────────────────────────────────────────────────────
-/**
- * Commits payroll for an entire branch for a given month.
- *
- * volumes: map of { memberId → volumeAchieved } — HR enters these manually
- * force:   if true, overwrites existing payroll records for this month
- *          if false, skips members who already have a record
- *
- * For each member:
- *  1. Loads their salary config
- *  2. Calls calculatePayroll() to get the full breakdown
- *  3. Upserts a MonthlyPayroll record
- *
- * Returns a summary: { processed, skipped, errors }
- */
 export async function runMonthlyPayroll(
     branchId: number,
     year: number,
@@ -179,10 +153,10 @@ export async function runMonthlyPayroll(
     for (const { member } of branchMembers) {
         const salary = member.position?.salary;
 
-        if (!salary) {
-            errors.push(`${member.nameWithInitials}: no salary config for position`);
-            continue;
-        }
+        // if (!salary) {
+        //     errors.push(`${member.nameWithInitials}: no salary config for position`);
+        //     continue;
+        // }
 
         const alreadyProcessed = member.monthlyPayrolls?.length > 0;
         if (alreadyProcessed && !force) {
@@ -193,11 +167,7 @@ export async function runMonthlyPayroll(
         const volumeAchieved = volumes[member.id] ?? 0;
 
         console.log("commissions for", member.empNo, JSON.stringify(member.commissions));
-
-
-
-
-
+        
         const actualCommissionEarned = member.commissions.reduce(
             (sum: number, c: any) => sum + Number(c.amount),
             0
@@ -210,23 +180,23 @@ export async function runMonthlyPayroll(
             volumeAchieved,
         });
 
-        
+
         const normalizedSalary = {
             ...salary,
-            basicSalaryPermanent: Number(salary.basicSalaryPermanent),
-            basicSalaryProbation: Number(salary.basicSalaryProbation),
-            monthlyTarget: Number(salary.monthlyTarget),
-            incentiveAmount: Number(salary.incentiveAmount),
-            allowanceAmount: Number(salary.allowanceAmount),
-            // orcRate: Number(salary.orcRate),
-            commRateLow: Number(salary.commRateLow),
-            commRateHigh: Number(salary.commRateHigh),
-            commThreshold: Number(salary.commThreshold),
-            epfEmployee: Number(salary.epfEmployee),
-            epfEmployer: Number(salary.epfEmployer),
-            etfEmployer: Number(salary.etfEmployer),
-            allowanceThresholdPermanent: Number(salary.allowanceThresholdPermanent),
-            allowanceThresholdProbation: Number(salary.allowanceThresholdProbation),
+            basicSalaryPermanent: Number(salary?.basicSalaryPermanent),
+            basicSalaryProbation: Number(salary?.basicSalaryProbation),
+            monthlyTarget: Number(salary?.monthlyTarget),
+            incentiveAmount: Number(salary?.incentiveAmount),
+            allowanceAmount: Number(salary?.allowanceAmount),
+            // orcRate: Number(salary?.orcRate),
+            commRateLow: Number(salary?.commRateLow),
+            commRateHigh: Number(salary?.commRateHigh),
+            commThreshold: Number(salary?.commThreshold),
+            epfEmployee: Number(salary?.epfEmployee),
+            epfEmployer: Number(salary?.epfEmployer),
+            etfEmployer: Number(salary?.etfEmployer),
+            allowanceThresholdPermanent: Number(salary?.allowanceThresholdPermanent),
+            allowanceThresholdProbation: Number(salary?.allowanceThresholdProbation),
         };
 
 

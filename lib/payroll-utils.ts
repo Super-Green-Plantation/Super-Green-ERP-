@@ -1,47 +1,32 @@
 export type PayrollBreakdown = {
-  basicSalaryPermanent: number;  // ← was basicSalary
+  basicSalary: number;
+  basicType: "PERMANENT" | "PROBATION";
   monthlyTarget: number;
   volumeAchieved: number;
+
   incentiveEarned: number;
   allowanceEarned: number;
   orcEarned: number;
   commissionEarned: number;
+
   epfDeduction: number;
   epfEmployer: number;
   etfEmployer: number;
+
   incentiveHit: boolean;
   allowanceHit: boolean;
+
   grossPay: number;
   netPay: number;
 };
 
-// ─── calculatePayroll ─────────────────────────────────────────────────────────
-/**
- * Pure calculation — no DB reads or writes.
- *
- * Given a member's salary config, their status (PROBATION / PERMANENT),
- * and the volume they achieved this month, returns a full PayrollBreakdown.
- *
- * Commission rate logic:
- *   PROBATION  → <500k = 7%,  ≥500k = 10%
- *   PERMANENT  → <500k = 5%,  ≥500k = 8%
- *
- * Incentive  → paid in full when volumeAchieved >= monthlyTarget (100%)
- * Allowance  → paid in full when volumeAchieved >= monthlyTarget * 0.75 (75%)
- * EPF        → 8% of basicSalary (employee deduction)
- * EPF emp    → 12% of basicSalary (employer cost, not deducted)
- * ETF        → 3% of basicSalary (employer cost, not deducted)
- */
 export function calculatePayroll(
   salary: {
-    basicSalaryPermanent: number;  
+    basicSalaryPermanent: number;
     basicSalaryProbation: number;
     monthlyTarget: number;
     incentiveAmount: number;
     allowanceAmount: number;
-    commRateLow: number;
-    commRateHigh: number;
-    commThreshold: number;
     epfEmployee: number;
     epfEmployer: number;
     etfEmployer: number;
@@ -51,63 +36,67 @@ export function calculatePayroll(
   commissionEarned: number = 0,
   memberStatus: "PROBATION" | "PERMANENT" | "MANAGEMENT",
   volumeAchieved: number,
+  orcVolume: number = 0,
   orcRate: number = 0,
-  orcVolume: number = 0, // total ORC-eligible volume from commissions
 ): PayrollBreakdown {
-  const {
-    monthlyTarget,
-    incentiveAmount,
-    allowanceAmount,
-    epfEmployee,
-    epfEmployer,
-    etfEmployer,
-  } = salary;
 
+  const safe = (n: any) => Number(n ?? 0);
 
-  // // Thresholds
-  // const allowanceHit = volumeAchieved >= monthlyTarget * 0.75;
-  // const incentiveHit = volumeAchieved >= monthlyTarget;
-  const allowanceThresholdPct = memberStatus === "PERMANENT"
-    ? salary.allowanceThresholdPermanent  // 1.0 for all except FA (0.75)
-    : salary.allowanceThresholdProbation; // 0.75 TL, 0.60 BM, 0.70 RM/ZM, 0.65 AGM
+  const isPermanent = memberStatus === "PERMANENT";
 
-  const basicSalary = memberStatus === "PERMANENT"
-    ? Number(salary.basicSalaryPermanent)
-    : Number(salary.basicSalaryProbation); // 0
+  const basicSalary = isPermanent
+    ? safe(salary.basicSalaryPermanent)
+    : safe(salary.basicSalaryProbation);
 
+  const basicType = isPermanent ? "PERMANENT" : "PROBATION";
+
+  const monthlyTarget = safe(salary.monthlyTarget);
+  const incentiveAmount = safe(salary.incentiveAmount);
+  const allowanceAmount = safe(salary.allowanceAmount);
+
+  const allowanceThresholdPct = isPermanent
+    ? safe(salary.allowanceThresholdPermanent)
+    : safe(salary.allowanceThresholdProbation);
 
   const allowanceHit = volumeAchieved >= monthlyTarget * allowanceThresholdPct;
-  const incentiveHit = volumeAchieved >= monthlyTarget; // always 100%
+  const incentiveHit = volumeAchieved >= monthlyTarget;
 
   const incentiveEarned = incentiveHit ? incentiveAmount : 0;
   const allowanceEarned = allowanceHit ? allowanceAmount : 0;
 
-  // ORC = flat rate on total ORC-eligible volume (from commission system)
-  const orcEarned = orcVolume * orcRate;
+  const orcEarned = safe(orcVolume) * safe(orcRate);
 
-  // EPF/ETF on basic salary only
-  const epfDeduction = basicSalary * epfEmployee;
-  const epfEmployerAmount = basicSalary * epfEmployer;
-  const etfEmployerAmount = basicSalary * etfEmployer;
+  const epfDeduction = basicSalary * safe(salary.epfEmployee);
+  const epfEmployerAmount = basicSalary * safe(salary.epfEmployer);
+  const etfEmployerAmount = basicSalary * safe(salary.etfEmployer);
 
   const grossPay =
-    basicSalary + incentiveEarned + allowanceEarned + orcEarned + commissionEarned;
+    basicSalary +
+    incentiveEarned +
+    allowanceEarned +
+    orcEarned +
+    safe(commissionEarned);
+
   const netPay = grossPay - epfDeduction;
 
-
   return {
-    basicSalaryPermanent: basicSalary,
+    basicSalary,
+    basicType,
     monthlyTarget,
     volumeAchieved,
+
     incentiveEarned,
     allowanceEarned,
     orcEarned,
-    commissionEarned,
+    commissionEarned: safe(commissionEarned),
+
     epfDeduction,
     epfEmployer: epfEmployerAmount,
     etfEmployer: etfEmployerAmount,
+
     incentiveHit,
     allowanceHit,
+
     grossPay,
     netPay,
   };

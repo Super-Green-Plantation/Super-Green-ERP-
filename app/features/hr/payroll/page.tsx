@@ -116,7 +116,7 @@ export default function PayrollPage() {
   const alreadyProcessedCount = preview.filter((r) => r.alreadyProcessed).length;
   const unconfiguredCount = preview.filter((r) => !r.salaryConfigured).length;
 
-  console.log(preview);
+  console.log("preeeeeeeeee",preview);
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
@@ -279,14 +279,14 @@ export default function PayrollPage() {
                       />
                     </td>
 
-                    {!row.salaryConfigured ? (
+                    {/* {!row.salaryConfigured ? (
                       <td colSpan={6} className="px-4 py-3 text-center text-xs text-red-400 font-medium">
                         No salary config — will be skipped
-                      </td>
-                    ) : (
+                      </td> */}
+                    {/* // ) : ( */}
                       <>
                         <td className="px-5 py-4 text-right text-xs font-bold text-muted-foreground">
-                          {fmt(row.breakdown?.basicSalaryPermanent ?? 0)}
+                          {fmt(row.breakdown?.basicSalary ?? 0)}
                         </td>
                         <td className="px-5 py-4 text-right text-xs font-bold">
                           <span className={row.breakdown?.incentiveHit ? "text-green-600" : "text-muted-foreground/40"}>
@@ -301,7 +301,7 @@ export default function PayrollPage() {
                           </span>
                         </td>
                         <td className="px-5 py-4 text-right text-xs font-bold text-primary">
-                          {fmt(row.breakdown?.commissionEarned ?? 0)}
+                          {fmt(row.actualCommissionEarned ?? 0)}
                         </td>
                         <td className="px-5 py-4 text-right text-xs font-bold text-destructive">
                           -{fmt(row.breakdown?.epfDeduction ?? 0)}
@@ -310,7 +310,7 @@ export default function PayrollPage() {
                           {fmt(row.breakdown?.netPay ?? 0)}
                         </td>
                       </>
-                    )}
+                    {/* // )} */}
 
                     <td className="px-5 py-4 text-center">
                       {row.alreadyProcessed ? (
