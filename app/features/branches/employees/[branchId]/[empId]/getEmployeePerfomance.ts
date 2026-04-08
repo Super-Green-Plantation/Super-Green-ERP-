@@ -8,7 +8,6 @@ export async function getEmployeePerformance(memberId: number) {
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth() + 1;
 
-  await requirePermission("VIEW_EMPLOYEES");
 
   const member = await prisma.member.findUnique({
     where: { id: memberId },
@@ -33,10 +32,13 @@ export async function getEmployeePerformance(memberId: number) {
     },
   });
 
+  console.log("member --- ", member);
+  
+
   if (!member) return null;
 
   // ── PROBATION ──────────────────────────────────────────────────────────────
-  if (member.status === "PROBATION" && member.probationStartDate) {
+  if (member.position.isProbation === true && member.probationStartDate) {
     const start = new Date(member.probationStartDate);
 
     // monthsElapsed: how many full months since probation started
@@ -56,6 +58,9 @@ export async function getEmployeePerformance(memberId: number) {
     ) ?? null;
 
     const evaluation = member.monthlyEvaluations[0] ?? null;
+
+    console.log("target==============================: ", target);
+    
 
     return {
       status: "PROBATION" as const,

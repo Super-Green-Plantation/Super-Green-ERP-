@@ -332,20 +332,16 @@ function PermanentStatus({ data, status }: {
 // ─── Main Export ──────────────────────────────────────────────────────────────
 
 export default function EmployeeStatusSection({
-    readOnly,
     memberId,
     status,
-    onStatusChange,
 }: {
-    readOnly: boolean;
     memberId: number;
     status: "PROBATION" | "PERMANENT" | "MANAGEMENT";
-    onStatusChange?: (newStatus: "PROBATION" | "PERMANENT" | "MANAGEMENT") => void;
 }) {
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-    const [toggling, setToggling] = useState(false);
 
+console.log(memberId);
 
     useEffect(() => {
         getEmployeePerformance(memberId).then((res) => {
@@ -354,19 +350,7 @@ export default function EmployeeStatusSection({
         });
     }, [memberId]);
 
-    const handleToggle = async () => {
-        setToggling(true);
-        const res = await toggleEmployeeStatus(memberId, status);
-        if (res.success) {
-            // triggers parent re-fetch via onStatusChange
-            onStatusChange?.(res.newStatus);
-        }
-        setToggling(false);
-    };
-
-
     if (loading) return <Loading />
-
     if (!data) return null;
 
     return (

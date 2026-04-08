@@ -58,9 +58,7 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
   });
 
     const queryClient = useQueryClient();
-
     const router = useRouter();
-
 
   useEffect(() => {
     if (employee?.status === "PERMANENT") {
@@ -147,6 +145,10 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
   let targetValue = 0;
   let achievedValue = 0;
   let targetLabel = "Monthly Target";
+
+  console.log("emppp- - " , employee);
+  console.log("performance- - " , performance);
+  
 
   if (performance?.status === "PROBATION") {
     targetValue = performance.target?.targetAmount || 0;
@@ -364,12 +366,8 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
           {/* Employment Cycle Section */}
           {!isManagement && (
             <EmployeeStatusSection
-              readOnly={true}
               memberId={employee.id}
               status={employee.status}
-              onStatusChange={(newStatus) =>
-                setEmployee((prev) => prev ? { ...prev, status: newStatus } : prev)
-              }
             />
           )}
 
