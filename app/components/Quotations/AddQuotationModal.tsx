@@ -457,7 +457,7 @@ const AddQuotationModal = ({ isOpen, onClose }: AddQuotationModalProps) => {
           </div>
 
           {/* ── Quotation Summary Card ── */}
-          <div className="bg-gradient-to-br from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-5 space-y-3">
+          <div className="bg-linear-to-br from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-5 space-y-3">
             <h3 className="text-sm font-bold text-green-800 uppercase tracking-wide">
               Quotation Summary
             </h3>

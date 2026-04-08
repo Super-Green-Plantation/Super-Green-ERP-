@@ -3,6 +3,7 @@
 import { logout } from "@/app/auth/logout/action";
 import {
   BanknoteArrowUp, Calculator, ChartCandlestick, ChevronLeft,
+  CircleUserRound,
   GitBranch, IdCardLanyard, Landmark, LayoutDashboard,
   LogOut, Menu, Nfc, Percent, ReceiptText, Target, User, Users,
 } from "lucide-react";
@@ -34,7 +35,7 @@ const links = [
   { name: "Calculations", href: "/features/calculations", icon: Calculator, role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "AGM"] },
   { name: "Clients", href: "/features/clients", icon: Users, role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "AGM"] },
   { name: "Users", href: "/features/users", icon: User, role: ["ADMIN", "HR", "DEV"] },
-  { name: "Profile", href: "/features/profile", icon: User, role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "AGM"] },
+  { name: "Profile", href: "/features/profile", icon: CircleUserRound, role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "AGM"] },
 ];
 
 const Sidebar = ({ role, loading, isCollapsed, setIsCollapsed, onNavigate }: SidebarProps) => {

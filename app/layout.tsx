@@ -2,6 +2,7 @@ import { Analytics } from "@vercel/analytics/next";
 import NextTopLoader from "nextjs-toploader";
 import "./globals.css";
 import Toast from "./Toast";
+import SupportButton from "./components/Buttons/SupportButton";
 
 
 export default function RootLayout({
@@ -18,6 +19,7 @@ export default function RootLayout({
         <NextTopLoader color="#16a34a" showSpinner={false} />
         <Analytics />
         <Toast>{children}</Toast>
+        <SupportButton />
       </body>
     </html>
   );
