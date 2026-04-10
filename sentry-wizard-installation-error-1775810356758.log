@@ -1,0 +1,10 @@
+npm ERR! Windows_NT 10.0.19045
+npm ERR! argv "C:\\Program Files\\nodejs\\node.exe" "E:\\super-green erp\\node_modules\\npm\\bin\\npm-cli.js" "install" "@sentry/nextjs@10"
+npm ERR! node v22.21.1
+npm ERR! npm  v2.15.12
+npm ERR! code EPEERINVALID
+
+npm ERR! peerinvalid The package ajv@6.12.6 does not satisfy its siblings' peerDependencies requirements!
+
+npm ERR! Please include the following file with any support request:
+npm ERR!     E:\super-green erp\npm-debug.log

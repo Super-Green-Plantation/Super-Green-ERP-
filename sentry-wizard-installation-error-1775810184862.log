@@ -1,0 +1,41 @@
+npm WARN peerDependencies The peer dependency webpack@>=5.0.0 included from @sentry/webpack-plugin will no
+npm WARN peerDependencies longer be automatically installed to fulfill the peerDependency 
+npm WARN peerDependencies in npm 3+. Your application will need to depend on it explicitly.
+npm WARN peerDependencies The peer dependency @opentelemetry/context-async-hooks@^1.30.1 || ^2.1.0 included from @sentry/opentelemetry will no
+npm WARN peerDependencies longer be automatically installed to fulfill the peerDependency 
+npm WARN peerDependencies in npm 3+. Your application will need to depend on it explicitly.
+npm WARN peerDependencies The peer dependency @opentelemetry/core@^1.30.1 || ^2.1.0 included from @sentry/opentelemetry will no
+npm WARN peerDependencies longer be automatically installed to fulfill the peerDependency 
+npm WARN peerDependencies in npm 3+. Your application will need to depend on it explicitly.
+npm WARN peerDependencies The peer dependency @opentelemetry/sdk-trace-base@^1.30.1 || ^2.1.0 included from @sentry/opentelemetry will no
+npm WARN peerDependencies longer be automatically installed to fulfill the peerDependency 
+npm WARN peerDependencies in npm 3+. Your application will need to depend on it explicitly.
+npm WARN optional dep failed, continuing @sentry/cli-win32-i686@2.58.5
+npm WARN optional dep failed, continuing @sentry/cli-linux-arm64@2.58.5
+npm WARN optional dep failed, continuing @sentry/cli-linux-arm@2.58.5
+npm WARN optional dep failed, continuing @sentry/cli-linux-i686@2.58.5
+npm WARN optional dep failed, continuing @sentry/cli-darwin@2.58.5
+npm WARN optional dep failed, continuing @sentry/cli-linux-x64@2.58.5
+npm WARN optional dep failed, continuing @sentry/cli-win32-arm64@2.58.5
+npm WARN peerDependencies The peer dependency encoding@^0.1.0 included from node-fetch will no
+npm WARN peerDependencies longer be automatically installed to fulfill the peerDependency 
+npm WARN peerDependencies in npm 3+. Your application will need to depend on it explicitly.
+npm WARN peerDependencies The peer dependency @opentelemetry/exporter-trace-otlp-http@>=0.57.0 <1 included from @sentry/node-core will no
+npm WARN peerDependencies longer be automatically installed to fulfill the peerDependency 
+npm WARN peerDependencies in npm 3+. Your application will need to depend on it explicitly.
+npm ERR! Windows_NT 10.0.19045
+npm ERR! argv "C:\\Program Files\\nodejs\\node.exe" "E:\\super-green erp\\node_modules\\npm\\bin\\npm-cli.js" "install" "@sentry/nextjs@10"
+npm ERR! node v22.21.1
+npm ERR! npm  v2.15.12
+npm ERR! path E:\super-green erp\node_modules\@sentry\nextjs\node_modules\webpack\node_modules\@types\eslint-scope\package.json
+npm ERR! code ENOTDIR
+npm ERR! errno -4058
+npm ERR! syscall open
+
+npm ERR! ENOENT: no such file or directory, open 'E:\super-green erp\node_modules\@sentry\nextjs\node_modules\webpack\node_modules\@types\eslint-scope\package.json'
+npm ERR! 
+npm ERR! If you need help, you may report this error at:
+npm ERR!     <https://github.com/npm/npm/issues>
+
+npm ERR! Please include the following file with any support request:
+npm ERR!     E:\super-green erp\npm-debug.log
