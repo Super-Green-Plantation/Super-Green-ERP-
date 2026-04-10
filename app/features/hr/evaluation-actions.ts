@@ -23,22 +23,17 @@ export async function getEvaluationPreview(branchId: number, year: number, month
             monthlyEvaluations: {
               where: { year, month },
             },
-            advisorInvestments: {          // ← on member, not client
-              where: {
-                investmentDate: { gte: startDate, lt: endDate },
-              },
-              select: { amount: true },
-            },
+            monthlyPayrolls: { where: { year, month }, },
+            
           },
         },
       },
     });
 
     const previews = memberBranches.map(({ member }) => {
-      const volumeAchieved = member.advisorInvestments.reduce(
-        (sum, inv) => sum + inv.amount, 0
+      const volumeAchieved = Number(
+        member.monthlyPayrolls?.[0]?.volumeAchieved ?? 0
       );
-
       let periodNumber: number | null = null;
       let monthInPeriod: number | null = null;
       let targetAmount = 0;
@@ -164,19 +159,11 @@ export async function runBatchEvaluation(
         continue;
       }
 
-      // Replace the clients-based volume calculation:
-      const advisorInvestments = await prisma.investment.findMany({
-        where: {
-          advisorId: member.id,
-          investmentDate: {
-            gte: new Date(year, month - 1, 1),
-            lt: new Date(year, month, 1),
-          },
-        },
-        select: { amount: true },
+      const payroll = await prisma.monthlyPayroll.findUnique({
+        where: { memberId_year_month: { memberId: member.id, year, month } },
       });
 
-      const volumeAchieved = advisorInvestments.reduce((sum, inv) => sum + inv.amount, 0);
+      const volumeAchieved = Number(payroll?.volumeAchieved ?? 0);
 
       let periodNumber: number | null = null;
       let monthInPeriod: number | null = null;
@@ -188,7 +175,7 @@ export async function runBatchEvaluation(
       if (member.status === "PROBATION" && member.probationStartDate) {
         const start = new Date(member.probationStartDate);
         const evalDate = new Date(year, month - 1, 1);
-   
+
         const monthsElapsed =
           (evalDate.getFullYear() - start.getFullYear()) * 12 +
           (evalDate.getMonth() - start.getMonth());
@@ -252,8 +239,6 @@ export async function runBatchEvaluation(
   }
 }
 
-// ── getEvaluationHistory ──────────────────────────────────────────────────────
-// Returns all past evaluations for a single member.
 
 export async function getEvaluationHistory(memberId: number) {
   try {
@@ -268,9 +253,7 @@ export async function getEvaluationHistory(memberId: number) {
   }
 }
 
-// ── getBranches (for selector) ────────────────────────────────────────────────
-// Re-export or use your existing getBranches action.
-// If you already have one, skip this and import from branches/actions.
+
 export async function getBranchesForEval() {
   const branches = await prisma.branch.findMany({
     orderBy: { name: "asc" },

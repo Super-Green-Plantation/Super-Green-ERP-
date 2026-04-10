@@ -122,22 +122,6 @@ enum EmployeeStatus {
   MANAGEMENT
 }
 
-model PermanentEvaluation {
-  id              Int      @id @default(autoincrement())
-  memberId        Int
-  member          Member   @relation(fields: [memberId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  year            Int
-  month           Int
-  volumeAchieved  Float
-  monthlyTarget   Float
-  incentiveEarned Float    @default(0)
-  allowanceEarned Float    @default(0)
-  incentiveHit    Boolean  @default(false)
-  allowanceHit    Boolean  @default(false)
-  createdAt       DateTime @default(now())
-
-  @@unique([memberId, year, month])
-}
 
 model MonthlyPayroll {
   id       Int    @id @default(autoincrement())
@@ -240,7 +224,6 @@ model Member {
   createdAt            DateTime              @default(now())
   updatedAt            DateTime?
   monthlyEvaluations   MonthlyEvaluation[]
-  permanentEvaluations PermanentEvaluation[]
   monthlyPayrolls      MonthlyPayroll[]
 }
 

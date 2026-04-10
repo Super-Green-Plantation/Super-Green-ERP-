@@ -1,0 +1,5 @@
+git stash              # saves current changes temporarily
+git checkout other-branch
+# do your work...
+git checkout original-branch
+git stash pop          # brings your changes back

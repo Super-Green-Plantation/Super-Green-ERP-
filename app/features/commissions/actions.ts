@@ -108,7 +108,7 @@ export async function getEmployeeCommissions(empNo: number) {
 export async function getEligibleCommissions(empNo: string, branchId: number) {
   try {
     const advisor = await prisma.member.findFirst({
-      where: { empNo , isActive: true },
+      where: { empNo, isActive: true },
       include: {
         position: { include: { salary: true } },
         branches: { include: { branch: true, member: true } },
@@ -257,6 +257,25 @@ export async function processCommissions(data: {
 
       // Upline commissions — ORC rate from position.salary.orcRate
       for (const upline of uplines) {
+        // Always cascade volume — regardless of ORC config
+        await tx.monthlyPayroll.upsert({
+          where: {
+            memberId_year_month: { memberId: upline.id, year, month },
+          },
+          update: {
+            volumeAchieved: { increment: investment.amount },
+          },
+          create: {
+            memberId: upline.id,
+            year,
+            month,
+            basicSalaryPermanent: 0,
+            monthlyTarget: 0,
+            volumeAchieved: investment.amount,
+          },
+        });
+
+        // ORC commission only if configured and rate > 0
         if (!upline.position?.orc) continue;
 
         const orcRate = upline.status === "PERMANENT"
@@ -264,9 +283,10 @@ export async function processCommissions(data: {
           : upline.position.orc.rateNonPermanent;
 
         const uplineRate = Number(orcRate);
-        if (uplineRate > 2) throw new ApiError("ORC_RATE_TOO_HIGH", "ORC rate too high, Posibly misconfigured percentage");
+        if (uplineRate === 0) continue;
+        if (uplineRate > 1) throw new ApiError("ORC_RATE_TOO_HIGH", "ORC rate too high");
 
-        const uplineAmount = investment.amount * Number(orcRate);
+        const uplineAmount = investment.amount * uplineRate;
 
         await tx.member.update({
           where: { empNo: upline.empNo },
@@ -283,28 +303,6 @@ export async function processCommissions(data: {
             branchId,
           } as any,
           include: { member: { include: { position: true } } },
-        });
-
-        // Cascade volume to upline's monthly payroll
-        await tx.monthlyPayroll.upsert({
-          where: {
-            memberId_year_month: {
-              memberId: upline.id,
-              year,
-              month,
-            },
-          },
-          update: {
-            volumeAchieved: { increment: investment.amount },
-          },
-          create: {
-            memberId: upline.id,
-            year,
-            month,
-            basicSalaryPermanent: 0,
-            monthlyTarget: 0,
-            volumeAchieved: investment.amount,
-          },
         });
 
         createdCommissions.push(uplineCommissionRecord);
@@ -403,8 +401,8 @@ async function getUplineChain(advisorRank: number, branchId: number) {
     orderBy: { position: { rank: "asc" } },
   });
 
-  console.log("branch Uplines : ",branchUplines);
-  
+  console.log("branch Uplines : ", branchUplines);
+
 
   const highestBranchRank = branchUplines.length > 0
     ? Math.max(...branchUplines.map(m => m.position?.rank ?? 0))
