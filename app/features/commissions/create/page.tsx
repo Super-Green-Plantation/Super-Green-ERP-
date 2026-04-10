@@ -1,386 +1,227 @@
 "use client";
 
+import { Briefcase, Calculator, ChevronRight, Loader2, ShieldCheck, Users } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+
+// Components
+import Back from "@/app/components/Buttons/Back";
+import CommissionReceipt from "@/app/components/Commission/CommissionReceipt";
+import Heading from "@/app/components/Heading";
+import BranchStaffPanel from "./components/BranchStaffPanel";
+import ClientSelector from "./components/ClientSelector";
+import MemberList from "./components/MemberList";
+
+// Actions & Types
 import { getBranchById, getBranches } from "@/app/features/branches/actions";
-import {
-  getClientById,
-  getClientsByBranch,
-} from "@/app/features/clients/actions";
+import { getClientById, getClientsByBranch } from "@/app/features/clients/actions";
 import { getEligibleCommissions, processCommissions } from "@/app/features/commissions/actions";
-import { getPlansByClient, updateAdvisorId } from "@/app/features/investments/actions";
 import { createProfit } from "@/app/features/profit/actions";
 import { Branch } from "@/app/types/branch";
 import { Client } from "@/app/types/client";
-import { FinancialPlan } from "@/app/types/FinancialPlan";
-import { Member } from "@/app/types/member";
-
-import { useEffect, useState } from "react";
-
-import Back from "@/app/components/Buttons/Back";
-import CommissionReceipt from "@/app/components/Commission/CommissionReceipt";
-import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
-import BranchStaffPanel from "./components/BranchStaffPanel";
-import ClientDetailsCard from "./components/ClientDetailsCard";
-import ClientSelector from "./components/ClientSelector";
-import MemberList from "./components/MemberList";
-import PlanCard from "./components/PlanCard";
-import Heading from "@/app/components/Heading";
-
-type CommissionReceipt = {
-  alreadyProcessed: boolean;
-  investment: any;
-  advisor?: any;
-  commissions: any[];
-};
+import { ClientDetailsCard } from "./components/ClientDetailsCard";
 
 const Page = () => {
-  /* ---------------- State ---------------- */
-  const [branches, setBranches] = useState<Branch[]>([]);
-  const [branch, setBranch] = useState<Branch | null>(null);
-
-  const [clients, setClients] = useState<Client[]>([]);
-  const [client, setClient] = useState<Client | null>(null);
-
-  const [plans, setPlans] = useState<FinancialPlan[]>([]);
-
+  /* --- States --- */
+  const [branches, setBranches] = useState([]);
   const [selectedBranchId, setSelectedBranchId] = useState<number | null>(null);
+  const [branchData, setBranchData] = useState<Branch | null>(null);
+  
+  const [clients, setClients] = useState<Client[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<number | null>(null);
-  const [selectedEmpNo, setSelectedEmpNo] = useState<string>("");
+  const [clientData, setClientData] = useState<Client | null>(null);
+  
+  const [selectedEmpNo, setSelectedEmpNo] = useState("");
+  const [eligibleMembers, setEligibleMembers] = useState([]);
+  
+  const [selectedInvestmentId, setSelectedInvestmentId] = useState<number | null>(null);
+  const [processing, setProcessing] = useState(false);
+  const [commissionDetails, setCommissionDetails] = useState(null);
 
-  const [eligibleMembers, setEligibleMembers] = useState<Member[]>([]);
-  const [loadingEligible, setLoadingEligible] = useState(false);
-
-  const [selectedInvestmentId, setSelectedInvestmentId] = useState<
-    number | null
-  >(null);
-  const [commissionDetails, setCommissionDetails] =
-    useState<CommissionReceipt | null>(null);
-
-
-  console.log(commissionDetails);
-
-
-
+  /* --- Data Loading Orchestration --- */
   useEffect(() => {
-    const updateAdvisor = async () => {
-      await updateAdvisorId(Number(selectedInvestmentId), selectedEmpNo);
-    };
-    updateAdvisor();
-  }, [selectedInvestmentId]);
-
-  /* ---------------- Load branches ---------------- */
-  useEffect(() => {
-    const loadBranches = async () => {
-      const data = await getBranches();
-      // Adjust if the action returns { branches } or just branches
-      setBranches(data as any);
-    };
-    loadBranches();
+    getBranches().then(data => setBranches(data as any));
   }, []);
 
-  /* ---------------- Load branch details ---------------- */
   useEffect(() => {
-    if (!selectedBranchId) {
-      setBranch(null);
-      setSelectedEmpNo("");
-      return;
-    }
-
-    const loadBranch = async () => {
-      const data = await getBranchById(selectedBranchId);
-      setBranch(data as any);
-    };
-
-    loadBranch();
+    if (!selectedBranchId) return;
+    getBranchById(selectedBranchId).then(setBranchData);
+    getClientsByBranch(selectedBranchId).then(res => setClients(res.clients ));
   }, [selectedBranchId]);
 
-  /* ---------------- Load clients by branch ---------------- */
-  useEffect(() => {
-    if (!selectedBranchId) {
-      setClients([]);
-      return;
-    }
-
-    const loadClients = async () => {
-      const data = await getClientsByBranch(selectedBranchId);
-      setClients(data.clients as any);
-    };
-
-    loadClients();
-  }, [selectedBranchId]);
-
-  /* ---------------- Load client details ---------------- */
   useEffect(() => {
     if (!selectedClientId) {
-      setClient(null);
-      setPlans([]);
+      setClientData(null);
       return;
     }
-
-    const loadClient = async () => {
-      const data = await getClientById(selectedClientId);
-      setClient(data as any);
-    };
-
-    loadClient();
+    getClientById(selectedClientId).then(setClientData);
   }, [selectedClientId]);
 
-  /* ---------------- Load plans by client ---------------- */
   useEffect(() => {
-    if (!selectedClientId) return;
-
-    const loadPlans = async () => {
-      const data = await getPlansByClient(selectedClientId);
-      setPlans(data as any);
-    };
-
-    loadPlans();
-  }, [selectedClientId]);
-
-  /* ---------------- Load eligible members ---------------- */
-  useEffect(() => {
-    const loadEligibleMembers = async () => {
-      if (!selectedEmpNo || !selectedBranchId) {
-        setEligibleMembers([]);
-        return;
-      }
-
-      try {
-        setLoadingEligible(true);
-        const data = await getEligibleCommissions(selectedEmpNo, selectedBranchId);
-        setEligibleMembers(data.upperMember as any);
-      } catch (error) {
-        console.error(error);
-        setEligibleMembers([]);
-      } finally {
-        setLoadingEligible(false);
-      }
-    };
-
-    loadEligibleMembers();
+    if (!selectedEmpNo || !selectedBranchId) {
+      setEligibleMembers([]);
+      return;
+    }
+    getEligibleCommissions(selectedEmpNo, selectedBranchId)
+      .then(data => setEligibleMembers(data.upperMember))
+      .catch(() => setEligibleMembers([]));
   }, [selectedEmpNo, selectedBranchId]);
 
-  /* ---------------- Decide members to display ---------------- */
-  const displayedMembers: Member[] | undefined = selectedEmpNo
-    ? eligibleMembers
-    : branch?.members as any;
-
-  const uniquePlans = plans.filter(
-    (plan, index, self) => plan && index === self.findIndex((p) => p?.id === plan.id),
-  );
-
-  const [processing, setProcessing] = useState(false);
-
   const handleProcess = async () => {
-    if (!selectedEmpNo || !selectedInvestmentId || !selectedBranchId) {
-      toast.error("Please select all required fields (Branch, Staff, Investment)");
-      return;
-    }
-
+    if (!selectedEmpNo || !selectedInvestmentId) return;
     setProcessing(true);
     try {
       const result = await processCommissions({
         investmentId: selectedInvestmentId,
         empNo: selectedEmpNo,
-        branchId: selectedBranchId,
+        branchId: selectedBranchId!,
       });
 
       if (result.success) {
-        setCommissionDetails(result.receipt as any);
-        await createProfit(result.receipt as any);
-        if (result.receipt.alreadyProcessed) {
-          toast.warning("Commission already processed.");
-        } else {
-          toast.success("Commission processed successfully!");
-        }
-      } else {
-        toast.error(result.error?.message || "Failed to process commission");
+        setCommissionDetails(result.receipt);
+        await createProfit(result.receipt);
+        result.receipt.alreadyProcessed 
+          ? toast.warning("Record already exists in ledger.") 
+          : toast.success("Ledger updated successfully.");
       }
-    } catch (err) {
-      console.error(err);
-      toast.error("An unexpected error occurred");
     } finally {
       setProcessing(false);
     }
   };
 
-  useEffect(() => {
-    const fetchUpperMembers = async () => {
-      if (!selectedEmpNo || !selectedBranchId) return;
-
-      const members = await getEligibleCommissions(
-        selectedEmpNo,
-        Number(selectedBranchId),
-      );
-
-      console.log(
-        "upper member ORC rate:",
-        members?.upperMember?.[0]?.position?.salary?.orcRate,
-      );
-    };
-
-    fetchUpperMembers();
-  }, [selectedEmpNo, selectedBranchId]);
-
   return (
-    <>
-      <div className="min-h-screen">
-        <div className="max-w-7xl mx-auto md:px-8 px-4 ">
-          {/* Header Section */}
-          <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="min-h-screen bg-[#F8FAFC] pb-20">
+      {/* Enterprise Top Bar */}
+      <div className="bg-white border-b border-slate-200 sticky top-0 z-30 mb-8">
+        <div className="max-w-400 mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Back />
+            <div className="h-6 w-px bg-slate-200 mx-2" />
             <div>
-              <div className="flex gap-4 items-center">
-                <Back />
-                <Heading>Create Commissions</Heading>
-              </div>
-              <p className="text-sm font-medium text-gray-500">
-                Manage branch staff allocations and investment performance.
-              </p>
+              <Heading className="text-lg font-bold text-slate-900">Process Commission</Heading>
+              <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">v1.0 • {new Date().toLocaleDateString()}</p>
             </div>
-
-            {/* Quick Stats Placeholder (Optional) */}
-            <div className="flex gap-4">
-              <div className=" px-4 py-2 rounded-xl border ">
-
-                <p className="text-xs font-bold text-emerald-600 flex items-center gap-1">
-                  <span className="h-2 w-2 bg-emerald-500 rounded-full animate-ping mr-2" />
-                  Live Data
-                </p>
-              </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="hidden md:flex flex-col items-end mr-4">
+              <span className="text-[10px] font-bold text-emerald-600 uppercase">System Status</span>
+              <span className="text-xs text-slate-500 font-medium">Operational</span>
             </div>
-          </header>
-
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Left Column: Selection & Staff (4/12) */}
-            <aside className="lg:col-span-4 space-y-8">
-              <section className="sticky top-8 space-y-8">
-                <BranchStaffPanel
-                  branches={branches}
-                  branch={branch}
-                  selectedBranchId={selectedBranchId}
-                  selectedEmpNo={selectedEmpNo}
-                  onBranchChange={setSelectedBranchId}
-                  onEmployeeChange={setSelectedEmpNo}
-                />
-
-                <div className=" overflow-hidden">
-                  <div className="p-4 border-b border-gray-50 bg-gray-50/50">
-                    <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500">
-                      Eligible Members
-                    </h3>
-                  </div>
-                  <div className="max-h-125 overflow-y-auto">
-                    <MemberList
-                      members={displayedMembers}
-                      loading={loadingEligible}
-                      selectedEmpNo={selectedEmpNo}
-                    />
-                  </div>
-                </div>
-              </section>
-            </aside>
-
-            {/* Right Column: Client & Plans (8/12) */}
-            <main className="lg:col-span-8 space-y-8">
-              {/* Top Row: Client Select & Active Plan Summary */}
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                <ClientSelector
-                  clients={clients}
-                  selectedClientId={selectedClientId}
-                  onChange={setSelectedClientId}
-                />
-                <PlanCard plans={uniquePlans} />
-              </div>
-
-              {/* Bottom Row: Detailed Client View & Processing */}
-              {client ? (
-                <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                  <ClientDetailsCard
-                    client={client}
-                    selectedInvestmentId={selectedInvestmentId}
-                    onInvestmentChange={setSelectedInvestmentId}
-                  />
-
-                  <div className="p-1">
-                    <button
-                      className="group relative w-full overflow-hidden rounded-2xl bg-blue-600 px-8 py-4 text-white transition-all hover:bg-blue-700 hover:shadow-xl active:scale-[0.98] disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
-                      onClick={handleProcess}
-                      disabled={!selectedEmpNo || !selectedInvestmentId || processing}
-                    >
-                      <div className="relative z-10 flex items-center justify-center gap-3 font-bold uppercase tracking-widest">
-                        {processing ? (
-                          <>
-                            <Loader2 className="h-5 w-5 animate-spin" />
-                            Processing...
-                          </>
-                        ) : (
-                          <>
-                            <svg
-                              className="h-5 w-5"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={3}
-                                d="M9 5l7 7-7 7"
-                              />
-                            </svg>
-                            Process Commission
-                          </>
-                        )}
-                      </div>
-                      {/* Glossy Overlay */}
-                      <div className="absolute inset-0 z-0 bg-linear-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                    </button>
-
-                    {!selectedInvestmentId && (
-                      <p className="mt-3 text-center text-xs font-bold text-orange-500 uppercase tracking-tighter">
-                        * Please select an investment plan to proceed
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div className="h-64 flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-3xl bg-gray-50/50">
-                  <div className="p-4 bg-white rounded-2xl shadow-sm mb-4">
-                    <svg
-                      className="h-8 w-8 text-gray-300"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                      />
-                    </svg>
-                  </div>
-                  <p className="text-gray-400 font-medium">
-                    Select a client to view investment details
-                  </p>
-                </div>
-              )}
-            </main>
+            <div className="h-8 w-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center">
+              <ShieldCheck className="w-4 h-4 text-slate-400" />
+            </div>
           </div>
         </div>
-
-
       </div>
-      <div>
-        <CommissionReceipt data={commissionDetails} />
+
+      <div className="max-w-400 mx-auto px-4">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          
+          {/* Left: Origin Context (Branch & Staff) */}
+          <aside className="lg:col-span-3 space-y-6">
+            <BranchStaffPanel
+              branches={branches}
+              branch={branchData}
+              selectedBranchId={selectedBranchId}
+              selectedEmpNo={selectedEmpNo}
+              onBranchChange={setSelectedBranchId}
+              onEmployeeChange={setSelectedEmpNo}
+            />
+            
+            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+              <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                  <Users className="w-3 h-3" /> Hierarchy Trace
+                </span>
+                {eligibleMembers.length > 0 && <span className="text-[10px] font-bold text-blue-600">{eligibleMembers.length} Found</span>}
+              </div>
+              <div className="max-h-100 overflow-y-auto p-4">
+                <MemberList 
+                  members={selectedEmpNo ? eligibleMembers : branchData?.members} 
+                  loading={false} 
+                  selectedEmpNo={selectedEmpNo} 
+                />
+              </div>
+            </div>
+          </aside>
+
+          {/* Middle: Selection Workspace (Client & Plan) */}
+          <main className="lg:col-span-6 space-y-6">
+            <ClientSelector
+              clients={clients}
+              selectedClientId={selectedClientId}
+              onChange={setSelectedClientId}
+            />
+
+            {clientData ? (
+              <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <ClientDetailsCard
+                  client={clientData}
+                  selectedInvestmentId={selectedInvestmentId}
+                  onInvestmentChange={setSelectedInvestmentId}
+                />
+              </div>
+            ) : (
+              <div className="h-75 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
+                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm mb-3">
+                  <Briefcase className="w-6 h-6 text-slate-300" />
+                </div>
+                <p className="text-slate-400 font-medium text-sm">Select a client to load active portfolios</p>
+              </div>
+            )}
+          </main>
+
+          {/* Right: Final Action & Summary */}
+          <aside className="lg:col-span-3 sticky top-24">
+            <div className="bg-slate-900 rounded-2xl p-6 text-white shadow-xl shadow-slate-200">
+              <div className="flex items-center gap-2 text-blue-400 mb-6">
+                <Calculator className="w-5 h-5" />
+                <h3 className="text-xs text-white font-bold uppercase tracking-[0.2em]">Ready for Processing</h3>
+              </div>
+              
+              <div className="space-y-4 mb-8">
+                <div className="flex justify-between items-end border-b border-slate-800 pb-2">
+                  <span className="text-xs text-slate-400 font-medium">Branch</span>
+                  <span className="text-sm font-bold">{branchData?.name || "—"}</span>
+                </div>
+                <div className="flex justify-between items-end border-b border-slate-800 pb-2">
+                  <span className="text-xs text-slate-400 font-medium">Advisor</span>
+                  <span className="text-sm font-bold truncate max-w-37.5">{selectedEmpNo || "—"}</span>
+                </div>
+                <div className="flex justify-between items-end border-b border-slate-800 pb-2">
+                  <span className="text-xs text-slate-400 font-medium">Investment ID</span>
+                  <span className="text-sm font-bold text-blue-400">{selectedInvestmentId || "—"}</span>
+                </div>
+              </div>
+
+              <button
+                onClick={handleProcess}
+                disabled={!selectedEmpNo || !selectedInvestmentId || processing}
+                className="w-full h-14 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-600 rounded-xl font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+              >
+                {processing ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>Execute Payout <ChevronRight className="w-5 h-5" /></>
+                )}
+              </button>
+            </div>
+          </aside>
+        </div>
+
+        {/* Receipt Overlay */}
+        {commissionDetails && (
+          <div className="mt-12 border-t border-slate-200 pt-12">
+            <div className="flex flex-col items-center">
+              <div className="mb-4 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-bold uppercase tracking-widest">
+                Transaction Completed
+              </div>
+              <CommissionReceipt data={commissionDetails} />
+            </div>
+          </div>
+        )}
       </div>
-    </>
+    </div>
   );
 };
 

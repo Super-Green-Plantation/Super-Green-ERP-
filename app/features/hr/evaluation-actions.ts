@@ -7,40 +7,27 @@ import { logActivity } from "@/lib/logActivity";
 import { getCurrentUserWithRole } from "@/lib/getCurrentUserWithRole";
 import { ActivityAction, ActivityEntity } from "@prisma/client";
 
-// ── getEvaluationPreview ──────────────────────────────────────────────────────
-// Returns a preview of what the evaluation would produce for all members
-// in a branch for a given month/year — without writing anything to DB.
-
 export async function getEvaluationPreview(branchId: number, year: number, month: number) {
   try {
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 1);
 
     const memberBranches = await prisma.memberBranch.findMany({
-      where: { branchId , member: { isActive:true } },
+      where: { branchId, member: { isActive: true } },
       include: {
         member: {
           include: {
             position: {
-              include: {
-                positionTargets: true,
-              },
+              include: { positionTargets: true },
             },
             monthlyEvaluations: {
               where: { year, month },
             },
-            clients: {
-              include: {
-                investments: {
-                  where: {
-                    investmentDate: {
-                      gte: startDate,
-                      lt: endDate,
-                    },
-                  },
-                  select: { amount: true },
-                },
+            advisorInvestments: {          // ← on member, not client
+              where: {
+                investmentDate: { gte: startDate, lt: endDate },
               },
+              select: { amount: true },
             },
           },
         },
@@ -48,8 +35,8 @@ export async function getEvaluationPreview(branchId: number, year: number, month
     });
 
     const previews = memberBranches.map(({ member }) => {
-      const volumeAchieved = member.clients.reduce((sum, client) =>
-        sum + client.investments.reduce((s, inv) => s + inv.amount, 0), 0
+      const volumeAchieved = member.advisorInvestments.reduce(
+        (sum, inv) => sum + inv.amount, 0
       );
 
       let periodNumber: number | null = null;
@@ -70,7 +57,8 @@ export async function getEvaluationPreview(branchId: number, year: number, month
           (evalDate.getFullYear() - start.getFullYear()) * 12 +
           (evalDate.getMonth() - start.getMonth());
 
-        if (monthsElapsed >= 0 && monthsElapsed < 6) {
+        if (monthsElapsed >= 0 && monthsElapsed <= 5) {
+          // Normal probation — months 1–6
           periodNumber = monthsElapsed < 3 ? 1 : 2;
           monthInPeriod = (monthsElapsed % 3) + 1;
 
@@ -91,12 +79,21 @@ export async function getEvaluationPreview(branchId: number, year: number, month
               if (periodNumber === 2 && excessRate > 0) {
                 excessBonus = (volumeAchieved - targetAmount) * excessRate;
               }
-            } else if (
-              target.partialThreshold > 0 &&
-              volumeAchieved >= target.partialThreshold
-            ) {
+            } else if (target.partialThreshold > 0 && volumeAchieved >= target.partialThreshold) {
               bonusEarned = target.partialBonus;
             }
+          }
+
+        } else if (monthsElapsed >= 6) {
+          // Extended probation — use after6MonthTarget from any target row for this position
+          // All rows for a position share the same after6MonthTarget so just take the first
+          const anyTarget = member.position?.positionTargets?.[0];
+
+          if (anyTarget) {
+            targetAmount = anyTarget.after6MonthTarget;
+            targetHit = volumeAchieved >= targetAmount;
+            bonusEarned = targetHit ? anyTarget.bonusAmount : 0;
+            // No excess bonus in extended probation — adjust if your rules differ
           }
         }
       }
@@ -127,10 +124,6 @@ export async function getEvaluationPreview(branchId: number, year: number, month
     return { success: false, error: "Failed to load preview" };
   }
 }
-
-// ── runBatchEvaluation ────────────────────────────────────────────────────────
-// Runs evaluation for all members in a branch for a given month/year.
-// Skips members already evaluated unless force=true.
 
 export async function runBatchEvaluation(
   branchId: number,
@@ -195,10 +188,7 @@ export async function runBatchEvaluation(
       if (member.status === "PROBATION" && member.probationStartDate) {
         const start = new Date(member.probationStartDate);
         const evalDate = new Date(year, month - 1, 1);
-        const existingEval = member.monthlyEvaluations?.[0];
-        const volumeAchieved = existingEval?.volumeAchieved ??
-          member.advisorInvestments?.reduce((sum, inv) => sum + inv.amount, 0) ?? 0;
-
+   
         const monthsElapsed =
           (evalDate.getFullYear() - start.getFullYear()) * 12 +
           (evalDate.getMonth() - start.getMonth());
@@ -239,20 +229,6 @@ export async function runBatchEvaluation(
         create: { memberId: member.id, year, month, periodNumber, monthInPeriod, volumeAchieved, targetAmount, bonusEarned, excessBonus, targetHit },
       });
 
-      // Auto-promote to PERMANENT after 6 months
-      if (member.status === "PROBATION" && member.probationStartDate) {
-        const start = new Date(member.probationStartDate);
-        const evalDate = new Date(year, month - 1, 1);
-        const monthsElapsed =
-          (evalDate.getFullYear() - start.getFullYear()) * 12 +
-          (evalDate.getMonth() - start.getMonth());
-        if (monthsElapsed >= 5) {
-          await prisma.member.update({
-            where: { id: member.id },
-            data: { status: "PERMANENT" },
-          });
-        }
-      }
 
       results.push({ memberId: member.id, skipped: false, evaluation });
     }
@@ -271,7 +247,7 @@ export async function runBatchEvaluation(
 
     return { success: true, results: serializeData(results) };
   } catch (err) {
-    console.error("runBatchEvaluation error:", err);
+    console.error("Run Batch Evaluation error:", err);
     return { success: false, error: "Failed to run batch evaluation" };
   }
 }

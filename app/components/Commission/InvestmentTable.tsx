@@ -52,10 +52,10 @@ useEffect(() => {
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-50/50 border-b border-slate-200">
-              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-500">Trace ID</th>
+              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-500">ID</th>
               <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-500">Branch Name</th>
               <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-500">Member / Client</th>
-              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-500">Plan Type</th>
+              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-500">Plan</th>
               <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-500">Amount</th>
               <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-slate-500 text-right">View</th>
             </tr>

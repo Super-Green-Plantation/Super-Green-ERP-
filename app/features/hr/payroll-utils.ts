@@ -1,6 +1,5 @@
 export type PayrollBreakdown = {
-  basicSalary: number;
-  basicType: "PERMANENT" | "PROBATION";
+  basicSalaryPermanent: number;  // was: basicSalary
   monthlyTarget: number;
   volumeAchieved: number;
 
@@ -80,8 +79,8 @@ export function calculatePayroll(
   const netPay = grossPay - epfDeduction;
 
   return {
-    basicSalary,
-    basicType,
+   basicSalaryPermanent: basicSalary,
+    
     monthlyTarget,
     volumeAchieved,
 

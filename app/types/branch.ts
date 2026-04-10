@@ -3,9 +3,9 @@ import { Member } from "./member";
 export interface Branch {
   id: number;
   name: string;
-  location: string;
+  location: string | null;
   status: string;
-  members: Member[];
+  members?: Member[];
 }
 
 export type BranchSparklineData = {

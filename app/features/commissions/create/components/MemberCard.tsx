@@ -10,7 +10,7 @@ export default function MemberCard({ member }: Props) {
   return (
     <div className="group overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm transition-all hover:shadow-md">
       {/* Header Section */}
-      <div className="border-l-4 border-blue-500 bg-linear-to-r from-blue-50/50 to-transparent p-4">
+      <div className=" bg-linear-to-r from-blue-50/50 to-transparent p-4">
         <div className="flex items-center justify-between">
           <div>
             <p className="font-extrabold text-gray-900 tracking-tight leading-none mb-1">

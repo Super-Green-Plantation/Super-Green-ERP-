@@ -7,16 +7,24 @@ export interface Investment {
 
   investmentDate: string | Date;
   amount: number;
-  rate: number;
+  rate?: number | null;
+  
+  // 1. Add these fields if they aren't there, allowing null
+  refNumber?: string | null;
+  branchId: number;
 
-  returnFrequency: ReturnFrequency;
+  returnFrequency?: ReturnFrequency | null;
 
   clientId: number;
   client?: Client;
 
-  planId?: number;
-  plan?: FinancialPlan;
+  // 2. Change this from 'planId?: number' to:
+  planId?: number | null; 
+  plan?: FinancialPlan | null;
 
   createdAt: string | Date;
   updatedAt: string | Date;
+  
+  // 3. Add this from your error log
+  maturityNotified: boolean; 
 }

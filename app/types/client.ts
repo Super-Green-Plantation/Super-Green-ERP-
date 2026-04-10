@@ -4,29 +4,32 @@ import { Investment } from "./investment";
 
 export interface Client {
   id: number;
-
   fullName: string;
-  nic?: string;
-  drivingLicense?: string;
-  passportNo?: string;
+  
+  // Update these to accept null
+  nic: string | null; 
+  drivingLicense?: string | null;
+  passportNo?: string | null;
 
-  email?: string;
-  phoneMobile?: string;
-  phoneLand?: string;
+  email?: string | null;
+  phoneMobile?: string | null;
+  phoneLand?: string | null;
 
-  dateOfBirth?: string | Date;
-  occupation?: string;
+  dateOfBirth?: string | Date | null;
+  occupation?: string | null;
 
   address: string;
 
   branchId: number;
-  branch?: Branch; // optional if included in query
+  branch?: Partial<Branch>;
 
   status: Status;
 
+  // Prisma often returns arrays for relations, 
+  // ensure these match your API response (plural vs singular)
   investments?: Investment[];
-  beneficiary?: Beneficiary;
-  nominee?: Nominee;
+  beneficiaries?: Beneficiary[]; // Changed to array if that's what API returns
+  nominees?: Nominee[];       // Changed to array if that's what API returns
 
   createdAt: string | Date;
   updatedAt: string | Date;
@@ -37,7 +40,7 @@ export interface Beneficiary {
   id: number;
 
   fullName: string;
-  nic?: string;
+  nic?: string |  null;
   phone: string;
 
   bankName: string;
@@ -57,8 +60,8 @@ export interface Nominee {
   id: number;
 
   fullName: string;
-  permanentAddress: string;
-  postalAddress?: string;
+  permanentAddress?: string |  null;
+  postalAddress?: string |  null;
 
   clientId: number;
   client?: Client;

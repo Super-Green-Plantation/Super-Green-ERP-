@@ -1,8 +1,8 @@
 "use server";
 
-import { calculatePayroll } from "@/lib/payroll-utils";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { calculatePayroll } from "./payroll-utils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -33,7 +33,8 @@ export async function getPayrollPreview(
     const endDate = new Date(year, month, 1);
 
     const branchMembers = await prisma.memberBranch.findMany({
-        where: { branchId, },
+        where: { branchId },
+        
         include: {
             member: {
 

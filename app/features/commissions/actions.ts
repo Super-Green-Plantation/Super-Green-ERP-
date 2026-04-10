@@ -17,7 +17,7 @@ export async function getCommissionStats() {
   try {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    
+
     const last7Days = new Array(7).fill(0).map((_, i) => {
       const d = new Date();
       d.setDate(now.getDate() - (6 - i));
@@ -63,7 +63,7 @@ export async function getCommissionStats() {
     ]);
 
     const heatmap = last7Days.map(date => {
-      const match = heatmapRaw.find(d => 
+      const match = heatmapRaw.find(d =>
         new Date(d.createdAt).toDateString() === date.toDateString()
       );
       return match ? match._count.id : 0;
@@ -107,8 +107,8 @@ export async function getEmployeeCommissions(empNo: number) {
 // Get eligible commissions for employee
 export async function getEligibleCommissions(empNo: string, branchId: number) {
   try {
-    const advisor = await prisma.member.findUnique({
-      where: { empNo },
+    const advisor = await prisma.member.findFirst({
+      where: { empNo , isActive: true },
       include: {
         position: { include: { salary: true } },
         branches: { include: { branch: true, member: true } },
@@ -126,7 +126,7 @@ export async function getEligibleCommissions(empNo: string, branchId: number) {
   }
 }
 
-// ── processCommissions ────────────────────────────────────────────────────────
+// ── process commissions ────────────────────────────────────────────────────────
 export async function processCommissions(data: {
   investmentId: number;
   empNo: string;
@@ -134,18 +134,18 @@ export async function processCommissions(data: {
 }) {
   const { investmentId, empNo, branchId } = data;
 
-  console.log(data);
-
   try {
+    //for activity log
     const currentUser = await getCurrentUserWithRole();
 
+    //business owner
     const advisor = await prisma.member.findUnique({
       where: { empNo },
       include: {
         position: {
           include: {
             orc: true,
-            salary: true, // contains commThreshold, commRateLow, commRateHigh, etc.
+            salary: true,
           },
         },
       },
@@ -153,6 +153,7 @@ export async function processCommissions(data: {
 
     if (!advisor) throw new ApiError("ADVISOR_NOT_FOUND", "Advisor not found", 404);
 
+    //get upline chain from advisor
     const uplines = await getUplineChain(advisor.position.rank, branchId);
 
 
@@ -177,7 +178,7 @@ export async function processCommissions(data: {
         return serializeData({ alreadyProcessed: true, investment, commissions: existingCommissions });
       }
 
-      console.log(advisor);
+      console.log("business owner  : ", advisor);
 
       if (!advisor.position) throw new ApiError("POSITION_MISSING", "Advisor has no position");
 
@@ -190,22 +191,19 @@ export async function processCommissions(data: {
       const year = now.getFullYear();
       const month = now.getMonth() + 1;
 
-      const currentPayroll = await tx.monthlyPayroll.findUnique({
-        where: { memberId_year_month: { memberId: advisor.id, year, month } },
-      });
-
-      const volumeBefore = Number(currentPayroll?.volumeAchieved ?? 0);
-      const volumeAfter = volumeBefore + investment.amount;
       const commThreshold = Number(advisor.position.salary?.commThreshold ?? 500000);
+      const isPermanent = advisor.status === "PERMANENT";
+      const isHighRate = investment.amount >= commThreshold;
 
-      const commRate =
-        advisor.status === "PROBATION"
-          ? volumeAfter < commThreshold ? 0.07 : 0.10
-          : volumeAfter < commThreshold
-            ? Number(advisor.position.salary?.commRateLow ?? 0.05)
-            : Number(advisor.position.salary?.commRateHigh ?? 0.08);
+      const commRate = isPermanent
+        ? isHighRate
+          ? Number(advisor.position.salary?.commRateHigh ?? 0.08)
+          : Number(advisor.position.salary?.commRateLow ?? 0.05)
+        : isHighRate
+          ? 0.10
+          : 0.07;
 
-      const personalAmount = investment.amount * commRate;
+      const personalCommissionAmount = investment.amount * commRate;
 
       await tx.investment.update({
         where: { id: investmentId },
@@ -239,27 +237,25 @@ export async function processCommissions(data: {
 
       const updatedAdvisor = await tx.member.update({
         where: { empNo },
-        data: { totalCommission: { increment: personalAmount } },
+        data: { totalCommission: { increment: personalCommissionAmount } },
       });
 
 
-
-      const uplineRecord = await tx.commission.create({
+      const personalCommissionRecord = await tx.commission.create({
         data: {
           investmentId,
           memberEmpNo: empNo,
           branchId,
-          amount: personalAmount,
+          amount: personalCommissionAmount,
           type: "PERSONAL",
           refNumber: generateCommissionRef(),
         } as any,
         include: { member: { include: { position: true } } },
       });
 
-      createdCommissions.push(uplineRecord);
+      createdCommissions.push(personalCommissionRecord);
 
       // Upline commissions — ORC rate from position.salary.orcRate
-
       for (const upline of uplines) {
         if (!upline.position?.orc) continue;
 
@@ -268,7 +264,7 @@ export async function processCommissions(data: {
           : upline.position.orc.rateNonPermanent;
 
         const uplineRate = Number(orcRate);
-        if (uplineRate > 2) throw new ApiError("ORC_RATE_TOO_HIGH", "ORC rate too high");
+        if (uplineRate > 2) throw new ApiError("ORC_RATE_TOO_HIGH", "ORC rate too high, Posibly misconfigured percentage");
 
         const uplineAmount = investment.amount * Number(orcRate);
 
@@ -277,7 +273,7 @@ export async function processCommissions(data: {
           data: { totalCommission: { increment: uplineAmount } },
         });
 
-        await tx.commission.create({
+        const uplineCommissionRecord = await tx.commission.create({
           data: {
             investmentId,
             memberEmpNo: upline.empNo,
@@ -311,7 +307,7 @@ export async function processCommissions(data: {
           },
         });
 
-        createdCommissions.push(uplineRecord);
+        createdCommissions.push(uplineCommissionRecord);
       }
 
       return serializeData({
@@ -392,8 +388,8 @@ export async function getCommissionDetails() {
   }
 }
 
-
 async function getUplineChain(advisorRank: number, branchId: number) {
+
   const branchUplines = await prisma.member.findMany({
     where: {
       isActive: true,
@@ -401,15 +397,15 @@ async function getUplineChain(advisorRank: number, branchId: number) {
       position: { rank: { gt: advisorRank } },
     },
     include: {
-      
       position: { include: { salary: true, orc: true } },
       branches: { include: { branch: true } },
     },
     orderBy: { position: { rank: "asc" } },
   });
 
-  // Step 2: find cross-branch seniors (RM, ZM, AGM) who manage this branch
-  // They're in MemberBranch for this branchId but have higher rank than any BM
+  console.log("branch Uplines : ",branchUplines);
+  
+
   const highestBranchRank = branchUplines.length > 0
     ? Math.max(...branchUplines.map(m => m.position?.rank ?? 0))
     : advisorRank;

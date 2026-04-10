@@ -101,12 +101,13 @@ export default function EvaluationsPage() {
   const totalPayout = previews.reduce((s, p) => s + p.totalPayout, 0);
   const alreadyEvaluatedCount = previews.filter(p => p.alreadyEvaluated).length;
 
+  
   return (
     <div className="max-w-6xl mx-auto sm:px-10 space-y-6">
 
       {/* Header */}
       <div className="flex items-center gap-4 pb-8 border-b border-border">
-        
+
         <div className="w-full">
           <Heading>Monthly Evaluations</Heading>
           <p className="text-sm text-muted-foreground font-medium mt-2 max-w-2xl">Run probation target evaluations by branch and month to process bonuses.</p>
@@ -243,12 +244,10 @@ export default function EvaluationsPage() {
                             </p>
                             <VolumeBar achieved={p.volumeAchieved} target={p.targetAmount} />
                           </div>
-                        ) : p.status === "PERMANENT" ? (
+                        ) : (
                           <span className="text-xs font-semibold text-slate-500">
                             {p.volumeAchieved > 0 ? `Rs. ${fmt(p.volumeAchieved)}` : "—"}
                           </span>
-                        ) : (
-                          <span className="text-slate-300 text-xs">—</span>
                         )}
                       </td>
 
