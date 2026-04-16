@@ -294,10 +294,11 @@ export async function updateEmployeeCommission(empNo: string, commission: number
 
 // Update employee details
 export async function updateEmployee(memberId: number, data: EmpData) {
-  let supabaseUserId: string | null = null;
+  let createdSupabaseUserId: string | null = null;
 
   try {
     await requirePermission("UPDATE_EMPLOYEES");
+
     const [currentUser, existing] = await Promise.all([
       getCurrentUserWithRole(),
       prisma.member.findUnique({
@@ -306,41 +307,62 @@ export async function updateEmployee(memberId: number, data: EmpData) {
       }),
     ]);
 
-    if (!existing) return { success: false, error: "Member not found" };
-
-    const emailChanged = data.email && data.email !== existing.email;
-    const hadNoEmail = !existing.userId;
+    if (!existing) {
+      return { success: false, error: "Member not found" };
+    }
 
     let userId = existing.userId;
 
+    // =========================
+    // 🔐 HANDLE USER / EMAIL
+    // =========================
     if (data.email) {
-      if (hadNoEmail) {
+      const existingUserByEmail = await prisma.user.findUnique({
+        where: { email: data.email },
+      });
+
+      if (existingUserByEmail) {
+        // ✅ Reuse existing user
+        userId = existingUserByEmail.id;
+
+        // Optional: update name/branch
+        await prisma.user.update({
+          where: { id: existingUserByEmail.id },
+          data: {
+            name: data.nameWithInitials,
+            branchId: data.branchIds[0],
+          },
+        });
+      } else {
+        // ✅ Create new Supabase user
         const tempPassword = generateTempPassword();
 
-        const { data: authData, error: authError } =
+        const { data: authData, error } =
           await supabaseAdmin.auth.admin.createUser({
             email: data.email,
             password: tempPassword,
             email_confirm: true,
           });
 
-        if (authError || !authData.user)
-          throw new Error(authError?.message ?? "Auth user creation failed");
+        if (error || !authData.user) {
+          throw new Error(error?.message ?? "Auth user creation failed");
+        }
 
-        supabaseUserId = authData.user.id;
+        createdSupabaseUserId = authData.user.id;
+        userId = authData.user.id;
 
+        // ✅ Create Prisma user
         await prisma.user.create({
           data: {
-            id: authData.user.id,
-            name: data.nameWithInitials,
+            id: userId,
             email: data.email,
+            name: data.nameWithInitials,
             role: "EMPLOYEE",
             branchId: data.branchIds[0],
           },
         });
 
-        userId = authData.user.id;
-
+        // ✅ Send welcome email (non-blocking)
         try {
           await sendWelcomeEmail({
             to: data.email,
@@ -351,71 +373,68 @@ export async function updateEmployee(memberId: number, data: EmpData) {
         } catch (e) {
           console.warn("Welcome email failed:", e);
         }
-      } else if (emailChanged && existing.user?.id) {
-        const { error } = await supabaseAdmin.auth.admin.updateUserById(
-          existing.user.id,
-          { email: data.email }
-        );
-
-        if (error)
-          throw new Error(`Supabase email update failed: ${error.message}`);
-
-        await prisma.user.update({
-          where: { id: existing.user.id },
-          data: { email: data.email, name: data.nameWithInitials },
-        });
       }
     }
 
-    // Rebuild branches
-    await prisma.memberBranch.deleteMany({ where: { memberId } });
+    // =========================
+    // 🔁 TRANSACTION (SAFE UPDATE)
+    // =========================
+    const updated = await prisma.$transaction(async (tx) => {
+      // remove old branches
+      await tx.memberBranch.deleteMany({ where: { memberId } });
 
-    const updated = await prisma.member.update({
-      where: { id: memberId },
-      data: {
-        // Link user if newly created
-        ...(userId && !existing.userId && { userId }),
+      return await tx.member.update({
+        where: { id: memberId },
+        data: {
+          // ✅ always set userId if available
+          ...(userId && { userId }),
 
-        // Core
-        nameWithInitials: data.nameWithInitials,
-        status: data.status,
-        empNo: data.empNo,
-        epfNo: data.epfNo,
-        email: data.email || null,
-        phone: data.phone || null,
-        phone2: data.phone2 || null,
-        totalCommission: Number(data.totalCommission),
-        positionId: Number(data.positionId),
+          // Core
+          nameWithInitials: data.nameWithInitials,
+          status: data.status,
+          empNo: data.empNo,
+          epfNo: data.epfNo,
+          email: data.email || null,
+          phone: data.phone || null,
+          phone2: data.phone2 || null,
+          totalCommission: Number(data.totalCommission),
+          positionId: Number(data.positionId),
 
-        // Branches
-        branches: {
-          create: data.branchIds.map((branchId) => ({ branchId })),
+          // Branches
+          branches: {
+            create: data.branchIds.map((branchId) => ({ branchId })),
+          },
+
+          // Personal
+          nic: data.nic || null,
+          dob: data.dob ? new Date(data.dob) : null,
+          gender: data.gender || null,
+          civilStatus: data.civilStatus || null,
+          address: data.address || null,
+          profilePic: data.profilePic,
+
+          // Employment
+          reportingPersons: data.reportingPersons ?? [],
+          dateOfJoin: data.dateOfJoin
+            ? new Date(data.dateOfJoin)
+            : null,
+          appointmentLetter: data.appointmentLetter || null,
+          confirmation: data.confirmation || null,
+          remark: data.remark || null,
+          probationStartDate: data.probationStartDate || null,
+          isActive: data.isActive,
+
+          // Banking
+          accNo: data.accNo || null,
+          bank: data.bank || null,
+          bankBranch: data.bankBranch || null,
         },
-        // Personal
-        nic: data.nic || null,
-        dob: data.dob ? new Date(data.dob) : null,
-        gender: data.gender || null,
-        civilStatus: data.civilStatus || null,
-        address: data.address || null,
-        profilePic: data.profilePic,
-
-        // Employment
-        reportingPersons: data.reportingPersons?.map((name) => name) ?? [],
-        dateOfJoin: data.dateOfJoin ? new Date(data.dateOfJoin) : null,
-        appointmentLetter: data.appointmentLetter || null,
-        confirmation: data.confirmation || null,
-        remark: data.remark || null,
-        probationStartDate: data.probationStartDate || null,
-        isActive: data.isActive,
-
-        // Banking
-        accNo: data.accNo || null,
-        bank: data.bank || null,
-        bankBranch: data.bankBranch || null,
-      },
+      });
     });
 
-
+    // =========================
+    // 📝 LOG ACTIVITY
+    // =========================
     void logActivity({
       action: ActivityAction.UPDATE,
       entity: ActivityEntity.MEMBER,
@@ -439,50 +458,31 @@ export async function updateEmployee(memberId: number, data: EmpData) {
     });
 
     return { success: true, member: updated };
-  } catch (err) {
+
+  } catch (err: any) {
     console.error("Error updating employee:", err);
 
     let message = "Failed to update employee";
 
-    // ✅ 1. Handle Supabase Auth errors
-    if (err instanceof Error) {
-      const msg = err.message.toLowerCase();
-
-      if (msg.includes("already been registered")) {
-        message = "Email already exists";
-      } else if (msg.includes("invalid email")) {
-        message = "Invalid email address";
-      }
+    if (err?.message?.toLowerCase().includes("already been registered")) {
+      message = "Email already exists";
     }
 
-    // ✅ 2. Handle Prisma errors
     if (err instanceof Prisma.PrismaClientKnownRequestError) {
       if (err.code === "P2002") {
-        const rawMessage =
-          (err.meta as any)?.driverAdapterError?.cause?.originalMessage || "";
-
-        const msg = rawMessage.toLowerCase();
-
-        if (msg.includes("empno")) {
-          message = "Employee ID already exists";
-        } else if (msg.includes("email")) {
-          message = "Email already exists";
-        } else {
-          message = "Duplicate value detected";
-        }
+        message = "Duplicate value detected";
       }
     }
 
-    // ✅ rollback if needed
-    if (supabaseUserId) {
+    // 🔁 Rollback Supabase user if created
+    if (createdSupabaseUserId) {
       await supabaseAdmin.auth.admin
-        .deleteUser(supabaseUserId)
-        .catch((e) => console.error("Rollback failed:", e));
+        .deleteUser(createdSupabaseUserId)
+        .catch(() => {});
     }
 
     return { success: false, error: message };
   }
-
 }
 // Get member details for profile page
 export async function getMemberDetails(id: number) {
