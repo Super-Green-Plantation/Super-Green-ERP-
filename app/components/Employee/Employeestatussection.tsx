@@ -202,7 +202,7 @@ function PermanentStatus({ data, status }: {
     if (!salary) {
         return (
             <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 text-xs text-slate-400 font-medium">
-                No salary configuration found for this position. Set it up in HR → Salary Config.
+                No salary configuration found for this position. Set it up in Target page.
             </div>
         );
     }
@@ -213,7 +213,6 @@ function PermanentStatus({ data, status }: {
     const allowanceEarned = currentPayroll?.allowanceEarned ?? 0;
     const netPay = currentPayroll?.netPay ?? 0;
 
-    const allowanceThreshold = monthlyTarget; // permanent = 100%
     const progressPct = monthlyTarget > 0
         ? Math.min((volumeAchieved / monthlyTarget) * 100, 100)
         : 0;

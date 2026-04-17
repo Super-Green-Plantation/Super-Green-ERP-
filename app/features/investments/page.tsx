@@ -239,7 +239,7 @@ export default function InvestmentsPage() {
                         href={`/features/clients/${inv.clientId}`}
                         className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-primary hover:bg-card hover:border-border border border-transparent shadow-sm transition-all rounded-xl px-3 py-1.5 text-[11px] font-bold uppercase tracking-tight"
                       >
-                        View <ExternalLink className="w-3 h-3" />
+                        View Client<ExternalLink className="w-3 h-3" />
                       </Link>
                     </td>
                   </tr>

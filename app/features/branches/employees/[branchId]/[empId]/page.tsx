@@ -46,11 +46,12 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
   const [loading, setLoading] = useState(true);
   const [allCommission, setAllCommission] = useState();
   const [payrolls, setPayrolls] = useState<any[]>([]);
-  const [activeTab, setActiveTab] = useState<"commissions" | "paysheets">("paysheets");
   const [openModel, setModelOpen] = useState(false);
   const [orc, setOrc] = useState(0);
   const [reportingPeople, setReportingPeople] = useState<any[]>([]);
   const [isManagement, setIsManagement] = useState(false)
+  const [isPermeant, setIsPermeant] = useState(false)
+  const [activeTab, setActiveTab] = useState<"commissions" | "paysheets">(isPermeant ? "paysheets" : "commissions");
 
     const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; branchId: number | null }>({
     open: false,
@@ -63,6 +64,7 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
   useEffect(() => {
     if (employee?.status === "PERMANENT") {
       setOrc(employee.position?.orc?.ratePermanent * 100 || 0);
+      setIsPermeant(true);
     } else if (employee?.status === "PROBATION") {
       setOrc(employee.position?.orc?.rateNonPermanent * 100 || 0);
     } else if (employee?.status === "MANAGEMENT") {
@@ -325,44 +327,6 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
         {/* ── Sidebar Column ── */}
         <aside className="lg:col-span-4 space-y-8">
 
-          {/* High-Fidelity Payroll Summary */}
-          {/* {!isManagement && (
-            <section className="bg-primary/80 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-primary/20 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-8 bg-secondary/10 rounded-full blur-[60px] pointer-events-none group-hover:scale-110 transition-transform duration-700" />
-              <div className="relative z-10">
-                <div className="flex justify-between items-start mb-10">
-                  <div>
-                    <p className="text-emerald-100/40 text-[10px] font-bold uppercase tracking-[0.3em] mb-2">Total Earned YTD</p>
-                    <p className="text-4xl font-bold font-heading leading-none">
-                      <span className="text-sm font-medium opacity-60 mr-1.5">Rs.</span>
-                      {employee.totalCommission?.toLocaleString()}
-                    </p>
-                  </div>
-                  <div className="md:block hidden p-4 bg-white/10 rounded-[1.5rem] border border-white/10 backdrop-blur-md">
-                    <Wallet className="w-6 h-6 text-secondary" />
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                   
-                    <div className="text-right">
-                      <p className="text-emerald-100/40 text-[9px] font-bold uppercase tracking-widest mb-1">ORC Yield</p>
-                      <p className="text-lg font-bold text-secondary">{orc}%</p>
-                    </div>
-                  {!readOnly && (
-                    <ExportButton
-                      data={{ ...employee, allCommission }}
-                      exportFn={generateEmployeeCommissionPDF}
-                      className="w-full bg-white/10 hover:bg-white/20 text-white rounded-[1.5rem] py-4 font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-3 border border-white/5 transition-all shadow-lg active:scale-95"
-                    />
-                  )}
-
-                </div>
-              </div>
-            </section>
-          )} */}
-
-
           {/* Employment Cycle Section */}
           {!isManagement && (
             <EmployeeStatusSection
@@ -442,7 +406,9 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
 
           <div className="flex items-center gap-4 flex-wrap">
             <div className="flex bg-card/50 p-1 rounded-xl border border-border/40 backdrop-blur-md">
-              <button
+              
+              {(isPermeant || isManagement) &&(
+                <button
                 onClick={() => setActiveTab("paysheets")}
                 className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === "paysheets"
                   ? "bg-primary/50 text-white shadow-md"
@@ -451,6 +417,8 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
               >
                 Salary Slips
               </button>
+              )}
+              
               {!isManagement && (
                 <button
                   onClick={() => setActiveTab("commissions")}
@@ -469,7 +437,8 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
         </div>
 
         {activeTab === "paysheets" ? (
-          <PaySheet payrolls={payrolls} member={employee} />
+         <PaySheet payrolls={payrolls} member={employee} />
+          
         ) : (
           allCommission && (
             <div className="bg-card/30 rounded-[3rem] p-2 sm:p-6 border border-border/40 backdrop-blur-sm animate-in fade-in slide-in-from-bottom-10 duration-1000">
@@ -497,7 +466,7 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
             <div className="text-center sm:text-left">
               <h4 className="text-sm font-bold text-foreground uppercase tracking-widest">Delete Employee Record</h4>
               <p className="text-xs text-muted-foreground font-medium mt-1 uppercase tracking-wider">
-                Permanent delete extraction from core enterprise records.
+                Permanent delete from core enterprise records.
               </p>
             </div>
             <button 

@@ -24,77 +24,96 @@ export async function sendWelcomeEmail({
   empNo,
   tempPassword,
 }: SendWelcomeEmailOptions) {
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const appUrl = process.env.APP_URL;
 
   await transporter.sendMail({
     from: `"Super Green" <${process.env.EMAIL_USER}>`,
     to,
-    subject: "Welcome to Super Green — Your Account Details",
+    subject: "Welcome to Super Green — Your Account is Ready",
+    // Attach the image so we can reference it via 'cid'
+    attachments: [{
+      filename: 'logo.png',
+      path: './public/logo.png', // Path to your file
+      cid: 'supergreen-logo' // Same identifier used in the <img> tag
+    }],
     html: `
       <!DOCTYPE html>
-      <html>
-        <body style="font-family: Arial, sans-serif; background: #f4f7f6; padding: 32px;">
-          <div style="max-width: 520px; margin: 0 auto; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.08);">
-            <!-- Header -->
-            <div style="background: #1a1a2e; padding: 28px 32px;">
-              <h1 style="color: #4ade80; margin: 0; font-size: 22px;">🌿 Super Green ERP</h1>
-              <p style="color: #94a3b8; margin: 6px 0 0; font-size: 13px;">Employee Management System</p>
-            </div>
-            <!-- Body -->
-            <div style="padding: 32px;">
-              <h2 style="color: #1e293b; margin: 0 0 8px;">Welcome, ${name}!</h2>
-              <p style="color: #475569; font-size: 14px; line-height: 1.6;">
-                Your employee account has been created. Use the credentials below to log in for the first time.
-                <strong>Please change your password immediately after logging in.</strong>
-              </p>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Welcome to Super Green</title>
+      </head>
+      <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+          <tr>
+            <td align="center" style="padding: 40px 10px;">
+              <div style="max-width: 600px; width: 100%; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); border: 1px solid #e2e8f0;">
+                
+                <div style="background-color: #064e3b; padding: 32px; text-align: center;">
+                  <img src="cid:supergreen-logo" alt="Super Green Logo" style="height: 60px; width: auto; margin-bottom: 12px;">
+                  <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700;">Super Green ERP</h1>
+                  <p style="color: #6ee7b7; margin: 4px 0 0; font-size: 14px; text-transform: uppercase;">Employee Management Portal</p>
+                </div>
 
-              <!-- Credentials Box -->
-              <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin: 24px 0;">
-                <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
-                  <tr>
-                    <td style="color: #64748b; padding: 6px 0; width: 130px;">Employee ID</td>
-                    <td style="color: #1e293b; font-weight: 600;">${empNo}</td>
-                  </tr>
-                  <tr>
-                    <td style="color: #64748b; padding: 6px 0;">Email</td>
-                    <td style="color: #1e293b; font-weight: 600;">${to}</td>
-                  </tr>
-                  <tr>
-                    <td style="color: #64748b; padding: 6px 0;">Temp Password</td>
-                    <td>
-                      <code style="background: #fef9c3; color: #854d0e; padding: 4px 10px; border-radius: 6px; font-size: 15px; font-weight: bold; letter-spacing: 1px;">
-                        ${tempPassword}
-                      </code>
-                    </td>
-                  </tr>
-                </table>
+                <div style="padding: 40px 32px;">
+                  <h2 style="color: #0f172a; margin: 0 0 16px; font-size: 20px; font-weight: 700;">Hello ${name},</h2>
+                  <p style="color: #475569; font-size: 16px; line-height: 1.6; margin: 0 0 24px;">
+                    Welcome to the team! Your employee account has been successfully provisioned. You can now access the ERP portal using the secure credentials provided below.
+                  </p>
+
+                  <div style="background-color: #f1f5f9; border-radius: 12px; padding: 24px; margin-bottom: 32px;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                      <tr>
+                        <td style="padding-bottom: 12px; color: #64748b; font-size: 13px; font-weight: 600; text-transform: uppercase;">Employee ID</td>
+                        <td style="padding-bottom: 12px; color: #0f172a; font-size: 15px; font-weight: 700; text-align: right;">${empNo}</td>
+                      </tr>
+                      <tr>
+                        <td style="padding-bottom: 12px; color: #64748b; font-size: 13px; font-weight: 600; text-transform: uppercase;">Login Email</td>
+                        <td style="padding-bottom: 12px; color: #0f172a; font-size: 15px; font-weight: 600; text-align: right;">${to}</td>
+                      </tr>
+                      <tr>
+                        <td style="color: #64748b; font-size: 13px; font-weight: 600; text-transform: uppercase;">Temporary Password</td>
+                        <td style="text-align: right;">
+                          <span style="background-color: #fef08a; color: #854d0e; padding: 6px 12px; border-radius: 6px; font-family: monospace; font-size: 16px; font-weight: 700; border: 1px solid #facc15;">
+                            ${tempPassword}
+                          </span>
+                        </td>
+                      </tr>
+                    </table>
+                  </div>
+
+                  <div style="text-align: center;">
+                    <a href="${appUrl}" style="display: inline-block; background-color: #10b981; color: #ffffff; font-weight: 700; font-size: 16px; text-decoration: none; padding: 14px 32px; border-radius: 8px; box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.39);">
+                      Access Your Account
+                    </a>
+                    <p style="color: #ef4444; font-size: 13px; margin-top: 20px; font-weight: 600;">
+                      * You will be required to change this password upon your first login.
+                    </p>
+                  </div>
+                </div>
+
+                <div style="padding: 24px 32px; background-color: #f8fafc; border-top: 1px solid #e2e8f0; text-align: center;">
+                  <p style="color: #94a3b8; font-size: 12px; margin: 0; line-height: 1.5;">
+                    This is an automated system message from <strong>Super Green ERP</strong>.<br>
+                    Please do not reply to this email. For support, contact your HR administrator.
+                  </p>
+                </div>
               </div>
-
-              <!-- CTA -->
-              <a href="${appUrl}" style="display: inline-block; background: #16a34a; color: #fff; text-decoration: none; padding: 12px 28px; border-radius: 8px; font-weight: bold; font-size: 14px;">
-                Log In Now →
-              </a>
-
-              <p style="color: #94a3b8; font-size: 12px; margin-top: 28px; border-top: 1px solid #f1f5f9; padding-top: 16px;">
-                This is an automated message from Super Green ERP. Do not reply to this email.
-              </p>
-            </div>
-          </div>
-        </body>
+            </td>
+          </tr>
+        </table>
+      </body>
       </html>
     `,
   });
 }
 
-/**
- * Generates a random temporary password.
- * Format: 3 uppercase + 3 lowercase + 3 digits + 2 symbol chars = 11 chars
- */
+
 export function generateTempPassword(): string {
   const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
   const lower = "abcdefghjkmnpqrstuvwxyz";
   const digits = "23456789";
-  const symbols = "!@#$%";
 
   const rand = (str: string) => str[Math.floor(Math.random() * str.length)];
 
@@ -102,7 +121,6 @@ export function generateTempPassword(): string {
     rand(upper), rand(upper), rand(upper),
     rand(lower), rand(lower), rand(lower),
     rand(digits), rand(digits), rand(digits),
-    rand(symbols), rand(symbols),
   ];
 
   // Shuffle to avoid predictable pattern
