@@ -726,14 +726,15 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                           >
                             {isSelected && <Check className="w-3 h-3" />}
                             <User className="w-3 h-3" />
-                            {m.nameWithInitials}
+                              {m.nameWithInitials}
+                              <p className="text-[10px] text-green-800 p-1 bg-green-100 rounded-full">{m.position.title}</p>
                           </button>
                         );
                       })}
 
                       {uplineSuggestions.length === 0 && (
                         <span className="text-xs text-gray-400">
-                          No higher-rank members found in selected branches.
+                          No higher-rank members found.
                         </span>
                       )}
                     </div>
@@ -823,34 +824,6 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                     </button>
                   </div>
                 </div>
-
-                {/* Appointment Letter ref */}
-                {/* <div>
-                  <label className={labelStyles}>Appointment Letter Ref</label>
-                  <div className="relative">
-                    <FileText className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                    <input
-                      placeholder="File ref or URL"
-                      value={formData.appointmentLetter}
-                      onChange={(e) => setFormData({ ...formData, appointmentLetter: e.target.value })}
-                      className={inputStyles}
-                    />
-                  </div>
-                </div> */}
-
-                {/* Confirmation */}
-                {/* <div>
-                  <label className={labelStyles}>Confirmation Ref</label>
-                  <div className="relative">
-                    <FileText className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                    <input
-                      placeholder="File ref or URL"
-                      value={formData.confirmation}
-                      onChange={(e) => setFormData({ ...formData, confirmation: e.target.value })}
-                      className={inputStyles}
-                    />
-                  </div>
-                </div> */}
 
                 {/* Remark */}
                 <div className="md:col-span-2">
