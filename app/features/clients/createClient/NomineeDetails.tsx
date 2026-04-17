@@ -21,6 +21,11 @@ const NomineeDetails = () => {
           <label className={labelClass}>Full Name</label>
           <input type="text" {...register("nominee.fullName")} className={inputClass} />
         </div>
+
+         <div>
+          <label className={labelClass}>NIC</label>
+          <input type="text" {...register("nominee.nic")} className={inputClass} />
+        </div>
         <div>
           <label className={labelClass}>Permanent Address</label>
           <textarea rows={2} {...register("nominee.permanentAddress")} className={inputClass} />

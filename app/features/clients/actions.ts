@@ -6,13 +6,13 @@ import { generateInvestmentNumber } from "@/lib/investment";
 import { logActivity } from "@/lib/logActivity";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
-import { ActivityAction, ActivityEntity } from "@prisma/client";
+import { ActivityAction, ActivityEntity, Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import crypto from "crypto"
 import nodemailer from "nodemailer";
 
 
-export async function getAccessibleClients(page = 1, pageSize = 10 ,searchText = "") {
+export async function getAccessibleClients(page = 1, pageSize = 10, searchText = "") {
   const dbUser = await getCurrentUserWithRole();
   if (!dbUser) throw new Error("User not found");
 
@@ -188,6 +188,15 @@ export async function getClientsByMember(memberId: number) {
     throw new Error("Failed to fetch clients by member");
   }
 }
+
+const UNIQUE_FIELD_LABELS: Record<string, string> = {
+  nic: "NIC",
+  drivingLicense: "Driving License",
+  passportNo: "Passport Number",
+  email: "Email",
+  proposalFormNo: "Proposal Form Number",
+};
+
 // Create client with investment, beneficiary, and nominee
 export async function saveClient(data: {
   applicant: any;
@@ -273,6 +282,7 @@ export async function saveClient(data: {
           data: {
             clientId: createdClient.id,
             fullName: nominee.fullName,
+            nic: nominee.nic || "",
             permanentAddress: nominee.permanentAddress || "",
             postalAddress: nominee.postalAddress || null,
           },
@@ -324,6 +334,25 @@ export async function saveClient(data: {
 
     return serializeData({ success: true, client });
   } catch (err) {
+    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+      const fields = (err.meta?.target as string[]) ?? [];
+      console.log(fields);
+
+      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+        const driverError = err.meta?.driverAdapterError as any;
+        const fields: string[] = driverError?.cause?.constraint?.fields ?? [];
+
+        const label = fields.map((f) => UNIQUE_FIELD_LABELS[f] ?? f).join(", ");
+
+        return {
+          success: false,
+          error: label
+            ? `A client with this ${label} already exists.`
+            : "A duplicate value was found. Please check your entries.",
+        };
+      }
+    }
+
     console.error("Error creating client:", err);
     return { success: false, error: "Server error" };
   }

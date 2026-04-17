@@ -43,6 +43,7 @@ export interface FormData {
     fullName?: string;
     permanentAddress?: string;
     postalAddress?: string;
+    nic?: string;
   };
 }
 
