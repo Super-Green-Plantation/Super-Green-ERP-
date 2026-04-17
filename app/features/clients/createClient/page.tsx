@@ -8,9 +8,11 @@ import { SubmitButton } from "./SubmitButton";
 import Back from "@/app/components/Buttons/Back";
 import DocumentUploadSection from "./ClientDocuments";
 import Heading from "@/app/components/Heading";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 
 const Page = () => {
+  const [resetKey, setResetKey] = useState(0);
+
   const pendingFilesRef = useRef<Record<string, File | null>>({
     idFront: null, idBack: null, paymentSlip: null, proposal: null, agreement: null,
   });
@@ -35,7 +37,7 @@ const Page = () => {
           <div className="lg:col-span-2 space-y-6">
             <ApplicantDetails />
             <div className="bg-card/60 backdrop-blur-xl border border-border/50 rounded-[2rem] p-6 shadow-sm">
-               <DocumentUploadSection pendingFilesRef={pendingFilesRef} />
+              <DocumentUploadSection key={resetKey} pendingFilesRef={pendingFilesRef} />
             </div>
           </div>
 
@@ -47,8 +49,10 @@ const Page = () => {
         </div>
 
         <div className="flex justify-end pt-4">
-          <SubmitButton pendingFilesRef={pendingFilesRef} />
-        </div>
+          <SubmitButton
+            pendingFilesRef={pendingFilesRef}
+            onResetComplete={() => setResetKey(prev => prev + 1)}
+          /></div>
       </div>
     </FormProvider>
   );

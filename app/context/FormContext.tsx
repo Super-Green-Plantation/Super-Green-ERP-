@@ -62,15 +62,53 @@ export const useFormContext = () => {
 
 export const FormProvider = ({ children }: { children: ReactNode }) => {
   const form = useForm<FormData>({
-    defaultValues: {
-      applicant: {},
-      beneficiary: {},
-      nominee: {},
-      investment: {},
-    },
+    defaultValues,
   });
 
   return (
     <FormContext.Provider value={{ form }}>{children}</FormContext.Provider>
   );
+};
+
+export const defaultValues: FormData = {
+  applicant: {
+    fullName: "",
+    nic: "",
+    drivingLicense: "",
+    passportNo: "",
+    email: "",
+    phoneMobile: "",
+    phoneLand: "",
+    dateOfBirth: "",
+    occupation: "",
+    address: "",
+    branchId: "",
+    investmentAmount: 0,
+    investmentDate: "",
+    idFront: "",
+    idBack: "",
+    paymentSlip: "",
+    proposal: "",
+    agreement: "",
+    signature: "",
+    proposalFormNo: "",
+  },
+  beneficiary: {
+    fullName: "",
+    nic: "",
+    phone: "",
+    bankName: "",
+    bankBranch: "",
+    accountNo: "",
+    relationship: "",
+  },
+  nominee: {
+   fullName: "",
+    permanentAddress: "",
+    postalAddress: "",
+    nic: "",
+  },
+  investment: {
+    planId:"",
+  },
 };

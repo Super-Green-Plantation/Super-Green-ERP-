@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useFormContext } from "@/app/context/FormContext";
+import { defaultValues, useFormContext } from "@/app/context/FormContext";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
@@ -41,13 +41,15 @@ const uploadToSupabase = async (key: string, file: File): Promise<string> => {
 
 export const SubmitButton = ({
   pendingFilesRef,
+  onResetComplete
 }: {
   pendingFilesRef: PendingFilesRef;
+  onResetComplete: () => void;
 }) => {
   const { form } = useFormContext();
   const [loading, setLoading] = useState(false);
   const [dbUser, setDbUser] = useState<DbUser | null>(null);
-const { reset, resetField } = form;
+const { reset } = form;
 
   useEffect(() => {
     fetch("/api/me")
@@ -94,14 +96,8 @@ const { reset, resetField } = form;
 
       toast.success("Client saved successfully!");
 
-      reset();
-      resetField("applicant.idFront");
-      resetField("applicant.idBack");
-      resetField("applicant.paymentSlip");
-      resetField("applicant.proposal");
-      resetField("applicant.agreement");
-      resetField("applicant.signature");
-      resetField("applicant.investmentAmount");
+      reset(defaultValues);
+      onResetComplete();
       pendingFilesRef.current = {};
     } catch (err) {
       console.error(err);
