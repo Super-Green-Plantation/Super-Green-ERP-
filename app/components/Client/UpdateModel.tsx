@@ -5,22 +5,27 @@ import { getFinancialPlans } from "@/app/features/financial_plans/actions";
 import { FinancialPlan } from "@/app/types/FinancialPlan";
 import { X, Save, User, Briefcase, Landmark, Users } from "lucide-react";
 import { updateClient } from "@/app/features/clients/actions";
+import { inputClass, labelClass } from "@/app/const/inputStyles";
+import { useQueryClient } from "@tanstack/react-query";
+import { useParams } from "next/navigation";
 
 interface UpdateClientModalProps {
   isOpen: boolean;
-  id:number
+  id: number
   onClose: () => void;
   initialData: any;
   onUpdate: (updatedData: any) => void;
 }
 
 const UpdateClientModal = ({
-  isOpen,
-  id,
-  onClose,
+   onClose,
   initialData,
   onUpdate,
 }: UpdateClientModalProps) => {
+
+  const queryClient = useQueryClient();
+  const { id } = useParams();
+
   // Initialize formData with safe defaults
   const [formData, setFormData] = useState<any>({
     applicant: {
@@ -43,25 +48,10 @@ const UpdateClientModal = ({
       planId: initialData?.investment?.planId || "",
       ...initialData.investment,
     },
-    beneficiary: {
-      fullName: "",
-      relationship: "",
-      bankName: "",
-      accountNo: "",
-      bankBranch: "",
-      ...initialData.beneficiary,
-    },
-    nominee: {
-      fullName: "",
-      permanentAddress: "",
-      postalAddress: "",
-      ...initialData.nominee,
-    },
+
   });
 
   const [plans, setPlans] = useState<FinancialPlan[]>([]);
-
-  if (!isOpen) return null;
 
   // Fetch all plans
   useEffect(() => {
@@ -94,6 +84,7 @@ const UpdateClientModal = ({
         investmentAmount: Number(
           formData.applicant.investmentAmount?.toString().trim() || 0,
         ),
+        
         // Ensure we only store the numeric part of the phone numbers
         phoneMobile: formData.applicant.phoneMobile?.toString().replace(/\D/g, "").slice(-9),
         phoneLand: formData.applicant.phoneLand?.toString().replace(/\D/g, "").slice(-9),
@@ -101,16 +92,9 @@ const UpdateClientModal = ({
     };
 
     onUpdate(payload);
+    queryClient.invalidateQueries({ queryKey: ["client", Number(id)] });
     onClose();
   };
-
-  console.log("datttttttttttt",formData);
-  
-
-  const inputClass =
-    "w-full bg-muted/30 border border-border rounded-xl px-4 py-3 text-sm font-bold text-foreground focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all placeholder:text-muted-foreground/30";
-  const labelClass =
-    "block text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em] mb-2 ml-1";
 
   return (
     <div className="fixed inset-0 z-100 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">
@@ -201,32 +185,28 @@ const UpdateClientModal = ({
               <div>
                 <label className={labelClass}>Mobile Phone</label>
                 <div className="flex items-center h-full">
-                  <span className="h-full flex items-center px-4 bg-muted border border-r-0 border-border rounded-l-xl text-muted-foreground text-sm font-bold">
-                    +94
-                  </span>
+
                   <input
                     value={formData.applicant.phoneMobile}
                     onChange={(e) =>
                       handleChange("applicant", "phoneMobile", e.target.value)
                     }
-                    className={`${inputClass} rounded-l-none`}
-                    placeholder="7XXXXXXXX"
+                    className={`${inputClass} rounded`}
+                    placeholder="07XXXXXXXX"
                   />
                 </div>
               </div>
               <div>
                 <label className={labelClass}>Land Phone</label>
                 <div className="flex items-center h-full">
-                  <span className="h-full flex items-center px-4 bg-muted border border-r-0 border-border rounded-l-xl text-muted-foreground text-sm font-bold">
-                    +94
-                  </span>
+
                   <input
                     value={formData.applicant.phoneLand}
                     onChange={(e) =>
                       handleChange("applicant", "phoneLand", e.target.value)
                     }
-                    className={`${inputClass} rounded-l-none`}
-                    placeholder="1XXXXXXXX"
+                    className={`${inputClass} rounded`}
+                    placeholder="01XXXXXXXX"
                   />
                 </div>
               </div>
@@ -307,116 +287,6 @@ const UpdateClientModal = ({
                   }
                   className={`${inputClass} font-bold text-blue-700`}
                 />
-              </div>
-            </div>
-          </div>
-
-          {/* Beneficiary */}
-          <div className="space-y-8">
-            <div className="flex items-center gap-3 pb-3 border-b border-border">
-              <Landmark className="w-5 h-5 text-emerald-600" />
-              <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-foreground">
-                Beneficiary Banking
-              </h3>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="md:col-span-2">
-                <label className={labelClass}>Beneficiary Name</label>
-                <input
-                  value={formData.beneficiary.fullName}
-                  onChange={(e) =>
-                    handleChange("beneficiary", "fullName", e.target.value)
-                  }
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className={labelClass}>Relationship</label>
-                <input
-                  value={formData.beneficiary.relationship}
-                  onChange={(e) =>
-                    handleChange("beneficiary", "relationship", e.target.value)
-                  }
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className={labelClass}>Bank Name</label>
-                <input
-                  value={formData.beneficiary.bankName}
-                  onChange={(e) =>
-                    handleChange("beneficiary", "bankName", e.target.value)
-                  }
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className={labelClass}>Account Number</label>
-                <input
-                  value={formData.beneficiary.accountNo}
-                  onChange={(e) =>
-                    handleChange("beneficiary", "accountNo", e.target.value)
-                  }
-                  className={inputClass}
-                />
-              </div>
-              <div>
-                <label className={labelClass}>Bank Branch</label>
-                <input
-                  value={formData.beneficiary.bankBranch}
-                  onChange={(e) =>
-                    handleChange("beneficiary", "bankBranch", e.target.value)
-                  }
-                  className={inputClass}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Nominee */}
-          <div className="space-y-8">
-            <div className="flex items-center gap-3 pb-3 border-b border-border">
-              <Users className="w-5 h-5 text-purple-600" />
-              <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-foreground">
-                Nominee Registry
-              </h3>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className={labelClass}>Nominee Full Name</label>
-                <input
-                  value={formData.nominee.fullName}
-                  onChange={(e) =>
-                    handleChange("nominee", "fullName", e.target.value)
-                  }
-                  className={inputClass}
-                />
-              </div>
-              <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className={labelClass}>Permanent Address</label>
-                  <input
-                    value={formData.nominee.permanentAddress}
-                    onChange={(e) =>
-                      handleChange(
-                        "nominee",
-                        "permanentAddress",
-                        e.target.value,
-                      )
-                    }
-                    className={inputClass}
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>Postal Address</label>
-                  <input
-                    value={formData.nominee.postalAddress}
-                    onChange={(e) =>
-                      handleChange("nominee", "postalAddress", e.target.value)
-                    }
-                    className={inputClass}
-                  />
-                </div>
               </div>
             </div>
           </div>

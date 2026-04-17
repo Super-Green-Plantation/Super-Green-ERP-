@@ -29,26 +29,27 @@ const mapClientToFormData = (client: any) => ({
   },
   investment: {
     planId: client.investments?.[0]?.planId?.toString() || "",
-    refNumber:client.investments?.[0]?.refNumber
+    refNumber: client.investments?.[0]?.refNumber
   },
-  beneficiary: client.beneficiary
-    ? {
-        fullName: client.beneficiary.fullName || "",
-        nic: client.beneficiary.nic || "",
-        phone: client.beneficiary.phone || "",
-        bankName: client.beneficiary.bankName || "",
-        bankBranch: client.beneficiary.bankBranch || "",
-        accountNo: client.beneficiary.accountNo || "",
-        relationship: client.beneficiary.relationship || "",
-      }
-    : {},
-  nominee: client.nominee
-    ? {
-        fullName: client.nominee.fullName || "",
-        permanentAddress: client.nominee.permanentAddress || "",
-        postalAddress: client.nominee.postalAddress || "",
-      }
-    : {},
+  beneficiaries: client.beneficiaries?.length
+    ? client.beneficiaries.map((b: any) => ({
+      fullName: b.fullName || "",
+      nic: b.nic || "",
+      phone: b.phone || "",
+      bankName: b.bankName || "",
+      bankBranch: b.bankBranch || "",
+      accountNo: b.accountNo || "",
+      relationship: b.relationship || "",
+    }))
+    : [emptyBeneficiary],
+  nominees: client.nominees?.length
+    ? client.nominees.map((n: any) => ({
+      fullName: n.fullName || "",
+      nic: n.nic || "",
+      permanentAddress: n.permanentAddress || "",
+      postalAddress: n.postalAddress || "",
+    }))
+    : [emptyNominee],
   investments: client.investments || [],
 });
 
@@ -64,4 +65,21 @@ export const useClient = (clientId: number) => {
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,
   });
+};
+
+export const emptyBeneficiary = {
+  fullName: "",
+  nic: "",
+  phone: "",
+  bankName: "",
+  bankBranch: "",
+  accountNo: "",
+  relationship: "",
+};
+
+export const emptyNominee = {
+  nic:"",
+  fullName: "",
+  permanentAddress: "",
+  postalAddress: "",
 };

@@ -12,10 +12,10 @@ const ClientInvestmentTable = ({ investments }: { investments: any }) => {
               Investment Details
             </th>
             <th className="px-6 py-5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-              Status
+              Commission Status
             </th>
             <th className="px-6 py-5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest text-right">
-              Ref Number
+              Inve. Plan
             </th>
             <th className="px-6 py-5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest text-right">
               Amount
@@ -32,7 +32,7 @@ const ClientInvestmentTable = ({ investments }: { investments: any }) => {
                   </div>
                   <div>
                     <p className="text-sm font-bold text-foreground">
-                      ID: {item.refNumber || item.id}
+                      {item.refNumber || item.id}
                     </p>
                     <p className="text-[10px] text-muted-foreground font-medium flex items-center gap-1">
                       <Calendar className="w-3 h-3" />
@@ -46,16 +46,18 @@ const ClientInvestmentTable = ({ investments }: { investments: any }) => {
                 </div>
               </td>
               <td className="px-6 py-5">
-                <span className={`px-2.5 py-1 text-[9px] font-bold rounded-md tracking-tighter uppercase ${
-                  item.commissionsProcessed 
-                    ? "bg-green-500/10 text-green-600" 
+                <span className={`px-2.5 py-1 text-[9px] font-bold rounded-md tracking-tighter uppercase ${item.commissionsProcessed
+                    ? "bg-green-500/10 text-green-600"
                     : "bg-amber-500/10 text-amber-600"
-                }`}>
+                  }`}>
                   {item.commissionsProcessed ? "Processed" : "Pending"}
                 </span>
               </td>
               <td className="px-6 py-5 text-right font-medium text-muted-foreground text-xs text-nowrap">
-                {item.refNumber || "N/A"}
+                <p>
+                  {item.plan.name || "N/A"}
+                </p>
+                {item.plan.rate + " %" || "N/A"}
               </td>
               <td className="px-6 py-5 text-right">
                 <p className="text-base font-bold text-foreground">

@@ -36,7 +36,7 @@ export default function SendDocumentLinkButton({ clientId }: { clientId: number 
   };
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 animate-pulse">
       <button
         onClick={handleGenerate}
         disabled={loading}

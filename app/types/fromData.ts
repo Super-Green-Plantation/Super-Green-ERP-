@@ -11,21 +11,25 @@ export interface FormData {
     occupation?: string;
     address?: string;
     branchId?: string;
-    investmentAmount?:string;
+    investmentAmount?: string;
   };
   investment: { planId?: string };
-  beneficiary: {
-    fullName?: string;
-    nic?: string;
-    phone?: string;
-    bankName?: string;
-    bankBranch?: string;
-    accountNo?: string;
-    relationship?: string;
-  };
-  nominee: {
-    fullName?: string;
-    permanentAddress?: string;
-    postalAddress?: string;
-  };
+  beneficiaries: BeneficiaryData[];
+  nominees: NomineeData[];
 }
+
+type BeneficiaryData = {
+  fullName?: string;
+  nic?: string;
+  phone?: string;
+  bankName?: string;
+  bankBranch?: string;
+  accountNo?: string;
+  relationship?: string;
+};
+
+type NomineeData = {
+  fullName?: string;
+  permanentAddress?: string;
+  postalAddress?: string;
+};

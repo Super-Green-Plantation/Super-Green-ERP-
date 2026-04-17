@@ -3,14 +3,20 @@
 import Back from "@/app/components/Buttons/Back";
 import UpdateDocsModal from "@/app/components/Client/UpdateDocsModal";
 import UpdateClientModal from "@/app/components/Client/UpdateModel";
-import ClientInvestmentTable from "@/app/components/Tables/ClientInvestmentTable";
 import { DetailItem } from "@/app/components/DetailItem";
 import ErrorMessage from "@/app/components/Status/Error";
 import Loading from "@/app/components/Status/Loading";
-import { useClient } from "@/app/hooks/useClient";
+import ClientInvestmentTable from "@/app/components/Tables/ClientInvestmentTable";
 import { deleteClient, generateUploadUrl, updateClient, updateClientDocuments } from "@/app/features/clients/actions";
+import { useClient } from "@/app/hooks/useClient";
 
+import { MaturityBadge } from "@/app/components/Buttons/MaturityBadge";
+import SendDocumentLinkButton from "@/app/components/Buttons/SendDocumentLinkButton";
+import { DocPreview } from "@/app/components/Doc/DocPreview";
+import { ProposalTemplate } from "@/app/components/Doc/ProposalTemplate";
+import ConfirmDialog from "@/app/components/ui/ConfirmDialog";
 import { getFinancialPlanById } from "@/app/features/financial_plans/actions";
+import { generateClientApplicationPDF } from "@/app/pdf/ClientApplication";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Briefcase,
@@ -20,6 +26,7 @@ import {
   Mail,
   MapPin,
   Pen,
+  Pencil,
   Phone,
   ShieldCheck,
   Trash2,
@@ -29,14 +36,8 @@ import {
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import Heading from "@/app/components/Heading";
-import { ProposalTemplate } from "@/app/components/Doc/ProposalTemplate";
-import CopyButton from "@/app/components/Buttons/CopyButton";
-import SendDocumentLinkButton from "@/app/components/Buttons/SendDocumentLinkButton";
-import { DocPreview } from "@/app/components/Doc/DocPreview";
-import { MaturityBadge } from "@/app/components/Buttons/MaturityBadge";
-import ConfirmDialog from "@/app/components/ui/ConfirmDialog";
-import { generateClientApplicationPDF } from "@/app/pdf/ClientApplication";
+import UpdateBeneficiary from "@/app/components/Client/UpdateBeneficiary";
+import UpdateNominee from "@/app/components/Client/UpdateNominee";
 
 export default function ApplicationViewPage() {
   const queryClient = useQueryClient();
@@ -51,8 +52,12 @@ export default function ApplicationViewPage() {
   const { data: formData, isLoading, isError } = useClient(Number(id));
 
   const [deleteDialog, setDeleteDialog] = useState(false);
+  const [updateBeneficiary, setUpdateBeneficiary] = useState(false);
+  const [selectBeneficiary, setSelectBeneficiary] = useState<any>(null);
+  const [updateNominee, setUpdateNominee] = useState(false);
+  const [selectNominee, setSelectNominee] = useState<any>(null);
 
-console.log(id);
+  console.log("nominee : ", formData?.nominees);
 
 
   useEffect(() => {
@@ -139,8 +144,6 @@ console.log(id);
 
   if (isLoading) return <Loading />;
   if (isError) return <ErrorMessage />;
-  console.log(formData?.investment);
-
 
   return (
     <div className="max-w-7xl mx-auto  space-y-8 min-h-screen">
@@ -157,7 +160,7 @@ console.log(id);
           <div>
 
             <h2 className="text-xl font-black text-foreground uppercase tracking-tight">
-              Application Profile
+              {formData?.applicant?.fullName || "Application Profile"}
             </h2>
             <p className="text-sm text-muted-foreground font-medium mt-1">
               Ref ID: <span className="font-mono text-primary">{formData?.investment.refNumber}</span>
@@ -172,10 +175,10 @@ console.log(id);
               {/* Update Button */}
               <button
                 onClick={() => setShowUpdateModel(true)}
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-[0.2em] rounded-xl transition-all shadow-xl shadow-primary/20 active:scale-95 hover:opacity-90"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground text-[10px] font-black uppercase tracking-[0.2em] rounded-xl transition-all shadow-lg shadow-primary/20 active:scale-95 hover:opacity-90"
               >
                 <Pen className="w-4 h-4 fill-current" />
-                <span>Update Profile</span>
+                <span>Update</span>
               </button>
 
               {/* Download PDF Button */}
@@ -184,14 +187,14 @@ console.log(id);
                   proposalRef.current,
                   `Proposal_${formData?.applicant?.fullName?.replace(/\s+/g, '_')}`
                 )}
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-xl transition-all shadow-xl shadow-green-500/20 active:scale-95 hover:opacity-90"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-green-600 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-xl transition-all shadow-lg shadow-green-500/20 active:scale-95 hover:opacity-90"
               >
                 <Download className="w-4 h-4" />
-                <span>Download PDF</span>
+                <span>Download</span>
               </button>
 
               <div>
-                <MaturityBadge investments={formData?.investments} />
+                {/* <MaturityBadge investments={formData?.investments} /> */}
               </div>
 
 
@@ -262,33 +265,46 @@ console.log(id);
 
           {/* Section: Beneficiary */}
           <section className="bg-card rounded-3xl shadow-sm border border-border overflow-hidden">
+            {/* Header */}
             <div className="px-6 py-5 bg-green-500/10 border-b border-border flex items-center gap-3">
               <HeartHandshake className="w-5 h-5 text-green-600" />
               <h2 className="text-[11px] font-black uppercase tracking-widest text-foreground">
                 Beneficiary Information
               </h2>
             </div>
-            <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
-              <DetailItem label="Name" value={formData?.beneficiary.fullName} />
-              <DetailItem
-                label="Relationship"
-                value={formData?.beneficiary.relationship}
-              />
-              <DetailItem
-                label="Bank Name"
-                value={formData?.beneficiary.bankName}
-              />
-              <DetailItem
-                label="Account Number"
-                value={formData?.beneficiary.accountNo}
-                isCode
-              />
-              <DetailItem
-                label="Bank Branch"
-                value={formData?.beneficiary.bankBranch}
-              />
-              <DetailItem label="Phone" value={formData?.beneficiary.phone} />
-            </div>
+
+            {formData?.beneficiaries.map((b: any, index: number) => {
+              return (
+                <div key={index} className="border-b border-border/50 last:border-none">
+                  {/* Data Grid */}
+                  <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
+                    <DetailItem label="Name" value={b.fullName} />
+                    <DetailItem label="NIC" value={b.nic} />
+                    <DetailItem label="Relationship" value={b.relationship} />
+                    <DetailItem label="Bank Name" value={b.bankName} />
+                    <DetailItem label="Account Number" value={b.accountNo} />
+                    <DetailItem label="Bank Branch" value={b.bankBranch} />
+                    <DetailItem label="Phone" value={b.phone} />
+                  </div>
+
+                  {/* Responsive Edit Button Area */}
+                  <div className="px-6 pb-6 flex justify-end">
+                    <button
+                      onClick={() => {
+                        setUpdateBeneficiary(true);
+                        setSelectBeneficiary(b);
+                      }}
+                      className="w-full md:w-auto group flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-green-500/5 hover:bg-green-500 text-green-600 hover:text-white border border-green-500/20 hover:border-green-500 transition-all duration-200 shadow-sm"
+                    >
+                      <Pencil className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform" />
+                      <span className="text-[10px] font-bold uppercase tracking-widest">
+                        Edit Beneficiary
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </section>
 
           {/* Section: Nominee */}
@@ -297,17 +313,33 @@ console.log(id);
               <User className="w-5 h-5 text-purple-600" />
               <h2 className="text-[11px] font-black uppercase tracking-widest text-foreground">Nominee Info</h2>
             </div>
-            <div className="p-6 space-y-4">
-              <DetailItem label="Name" value={formData?.nominee.fullName} />
-              <DetailItem
-                label="Permanent Address"
-                value={formData?.nominee.permanentAddress}
-              />
-              <DetailItem
-                label="Postal Address"
-                value={formData?.nominee.postalAddress}
-              />
-            </div>
+
+            {formData?.nominees.map((n: any, index: number) => (
+              <div key={index} className="p-6">
+                <div className="space-y-4 mb-6">
+                  <DetailItem label="Name" value={n.fullName} />
+                  <DetailItem label="NIC" value={n.nic} />
+                  <DetailItem label="Permanent Address" value={n.permanentAddress} />
+                  <DetailItem label="Postal Address" value={n.postalAddress} />
+                </div>
+
+                {/* Responsive Button Container */}
+                <div className="pt-4 border-t border-border/50 flex justify-end">
+                  <button
+                    onClick={() => {
+                      setUpdateNominee(true);
+                      setSelectNominee(n);
+                    }}
+                    className="w-full md:w-auto group flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-purple-500/5 hover:bg-purple-500 text-purple-600 hover:text-white border border-purple-500/20 hover:border-purple-500 transition-all duration-200 shadow-sm"
+                  >
+                    <Pencil className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">
+                      Edit Nominee
+                    </span>
+                  </button>
+                </div>
+              </div>
+            ))}
           </section>
 
           {/* Investment Table */}
@@ -317,9 +349,9 @@ console.log(id);
         {/* Right Column: Documents & Investment Plan */}
         <div className="space-y-8">
           {/* Compliance & KYC Documents */}
-          <section className="bg-card rounded-3xl shadow-sm border border-border overflow-hidden">
+          <SendDocumentLinkButton clientId={Number(id)} />
+          <section className="  bg-card rounded-3xl shadow-sm border border-border overflow-hidden">
 
-            <SendDocumentLinkButton clientId={Number(id)} />
 
             <div className="px-6 py-5 bg-muted/30 border-b border-border flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -374,11 +406,20 @@ console.log(id);
                     Verified Digital Signature
                   </p>
                   <div className="bg-muted/30 rounded-2xl p-8 border border-dashed border-border flex items-center justify-center group hover:bg-card hover:border-primary/50 transition-all cursor-crosshair shadow-inner">
-                    <img
-                      src={formData?.applicant.signature || null}
-                      alt="Signature"
-                      className="max-h-20 object-contain mix-blend-multiply opacity-80 group-hover:opacity-100 transition-opacity dark:invert"
-                    />
+                    {formData?.applicant.signature ? (
+                      <img
+                        src={formData?.applicant.signature || null}
+                        alt="Signature"
+                        className="max-h-20 object-contain mix-blend-multiply opacity-80 group-hover:opacity-100 transition-opacity dark:invert"
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center gap-2">
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
+                          No Signature Uploaded
+                        </span>
+                      </div>
+                    )}
+
                   </div>
                 </div>
               </div>
@@ -398,92 +439,11 @@ console.log(id);
             </div>
           </section>
 
-          {/* Investment Plan Card */}
-          <section className="bg-linear-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl shadow-xl p-6 text-white relative overflow-hidden border border-white/10">
-            {/* Background Decoration */}
-            <TrendingUp className="absolute -right-4 -top-4 w-32 h-32 text-white/5 rotate-12" />
-
-            {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-blue-500/20 rounded-lg">
-                  <ShieldCheck className="w-5 h-5 text-blue-400" />
-                </div>
-                <h2 className="text-sm font-semibold uppercase tracking-widest text-gray-400">
-                  Investment Plan
-                </h2>
-              </div>
-              <span className="px-2 py-1 rounded-md bg-green-500/10 border border-green-500/20 text-green-400 text-[10px] font-bold uppercase tracking-tight">
-                Active Plan
-              </span>
-            </div>
-
-            {/* Main Content */}
-            <div className="space-y-1">
-              <h3 className="text-3xl font-black tracking-tight bg-linear-to-r from-white to-gray-400 bg-clip-text text-transparent">
-                {plan?.name || "N/A"}
-              </h3>
-              <p className="text-sm text-gray-400 font-medium">
-                Selected Financial Product
-              </p>
-            </div>
-
-            {/* Stats Divider */}
-            <div className="my-6 border-t border-white/5" />
-
-            {/* Metrics Grid */}
-            <div className="grid sm:grid-cols-3 gap-2">
-              <div className="flex flex-col items-center p-3 rounded-xl bg-white/5 border border-white/5">
-                <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">
-                  Rate
-                </p>
-                <p className="text-green-400 font-bold text-base">
-                  {plan?.rate}%
-                </p>
-              </div>
-
-              <div className="flex flex-col items-center p-3 rounded-xl bg-white/5 border border-white/5">
-                <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">
-                  Amount
-                </p>
-                <p className="text-white font-bold text-base">
-                  <span className="text-lg font-bold text-gray-400 mr-0.5">Rs.</span>
-                  {formData?.applicant.investmentAmount || "N/A"}
-                </p>
-              </div>
-
-              <div className="flex flex-col items-center p-3 rounded-xl bg-white/5 border border-white/5">
-                <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">
-                  Period
-                </p>
-                <p className="text-blue-400 font-bold text-lg">
-                  {plan?.duration || "N/A"}{" "}
-                  <span className="text-lg font-bold">Months</span>
-                </p>
-              </div>
-            </div>
-          </section>
         </div>
       </div>
-      {showUpdateModel ? (
-        <UpdateClientModal
-          id={Number(id)}
-          isOpen={showUpdateModel}
-          onClose={() => setShowUpdateModel(false)}
-          initialData={formData}
-          onUpdate={(updatedData) => handleDetailsUpdate(updatedData)}
-        />
-      ) : null}
 
-      {showDocUpdateModel ? (
-        <UpdateDocsModal
-          isOpen={showDocUpdateModel}
-          onClose={() => setDocShowUpdateModel(false)}
-          onSave={handleDocsUpdate}
-        />
-      ) : null}
 
-      <div className="w-full p-6 border border-destructive/20 bg-destructive/5 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-6 shadow-sm">
+      <div className="mb-20 w-full p-6 border border-destructive/20 bg-destructive/5 rounded-3xl flex flex-col sm:flex-row items-center justify-between gap-6 shadow-sm">
         <div>
           <h4 className="text-destructive font-black text-[13px] uppercase tracking-wider">Terminate Application</h4>
           <p className="text-muted-foreground/60 text-[10px] font-bold uppercase tracking-tight mt-1">Once deleted, this data is gone forever from the ecosystem.</p>
@@ -507,8 +467,42 @@ console.log(id);
           cancelLabel="Keep it"
           variant="danger"
         />
-      </div>
 
+
+      </div>
+      {showUpdateModel && (
+        <UpdateClientModal
+          id={Number(id)}
+          isOpen={showUpdateModel}
+          onClose={() => setShowUpdateModel(false)}
+          initialData={formData}
+          onUpdate={(updatedData) => handleDetailsUpdate(updatedData)}
+        />
+      )}
+
+      {showDocUpdateModel && (
+        <UpdateDocsModal
+          isOpen={showDocUpdateModel}
+          onClose={() => setDocShowUpdateModel(false)}
+          onSave={handleDocsUpdate}
+        />
+      )}
+
+      {
+        updateBeneficiary && (
+          <UpdateBeneficiary
+            onClose={() => setUpdateBeneficiary(false)}
+            initialData={selectBeneficiary}
+          />
+        )
+      }
+
+      {updateNominee && (
+        <UpdateNominee
+          initialData={selectNominee}
+          onClose={() => setUpdateNominee(false)}
+        />
+      )}
     </div>
   );
 }

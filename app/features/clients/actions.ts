@@ -136,15 +136,17 @@ export async function getClientById(id: number) {
       branch: true,
       nominees: true,
       beneficiaries: true,
-
     },
   });
+
+  console.log(client?.nominees);
+  
 
   if (!client) {
     throw new Error("Client not accessible");
   }
 
-  return serializeData(client);
+  return client;
 }
 // Get clients by branch
 export async function getClientsByBranch(branchId: number) {
@@ -387,6 +389,7 @@ export async function updateClient(id: number, formData: any) {
         proposal: formData.applicant.proposal || null,
         agreement: formData.applicant.agreement || null,
         investmentAmount: Number(formData.applicant.investmentAmount) || undefined,
+        
         dateOfBirth: formData.applicant.dateOfBirth
           ? new Date(formData.applicant.dateOfBirth)
           : undefined,
@@ -704,7 +707,6 @@ async function sendDocumentRequestEmail({
 }
 
 
-
 export async function validateUploadToken(token: string) {
   const request = await prisma.clientDocumentRequest.findUnique({
     where: { token },
@@ -827,4 +829,47 @@ export async function searchClients(searchText: string) {
   });
 
   return client;
+}
+
+export async function updateBeneficiary(data:any){
+  try{
+    console.log(data);
+    
+    const updatedBeneficiary = await prisma.beneficiary.update({
+      where: { nic: data.nic },
+      data: {
+        fullName: data.fullName,
+        relationship: data.relationship || "",
+        bankName: data.bankName || "",
+        bankBranch: data.bankBranch || "",
+        accountNo: data.accountNo || "",
+        nic: data.nic || null,
+        phone: data.phone || "",
+      },
+    })
+
+    return updatedBeneficiary;
+
+  }catch(err){
+    console.error("Error updating beneficiary:", err);
+    return { success: false, error: "Failed to update beneficiary" };
+  }
+}
+
+export async function updateNominee(data:any){
+  try{
+    const updatedNominee = await prisma.nominee.update({
+      where: { nic: data.nic },
+      data: {
+        fullName: data.fullName,
+        permanentAddress: data.permanentAddress || "",
+        postalAddress: data.postalAddress || null,},
+    });
+
+    return updatedNominee;
+
+  }catch(err){
+    console.error("Error updating nominee:", err);
+    return { success: false, error: "Failed to update nominee" };
+  }
 }
