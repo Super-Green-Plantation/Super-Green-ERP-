@@ -19,6 +19,7 @@ import { getFinancialPlanById } from "@/app/features/financial_plans/actions";
 import { generateClientApplicationPDF } from "@/app/pdf/ClientApplication";
 import { useQueryClient } from "@tanstack/react-query";
 import {
+  Banknote,
   Briefcase,
   Calendar,
   Download,
@@ -258,6 +259,25 @@ export default function ApplicationViewPage() {
                   label="Residential Address"
                   value={formData?.applicant.address}
                   icon={<MapPin className="w-3 h-3" />}
+                />
+              </div>
+              <div className="flex justify-between p-3 bg-yellow-100 rounded-lg border border-blue-300/50 col-span-full">
+                <DetailItem
+                  label="Total Harvest"
+                  value={"LKR "+formData?.applicant.totalHarvest || "0" }
+                  icon={<Banknote  className="w-3 h-3" />}
+                />
+
+                <DetailItem
+                  label="Monthly Harvest"
+                  value={"LKR "+ parseFloat(formData?.applicant.monthlyHarvest || "0").toFixed(2)}
+                  icon={<Banknote className="w-3 h-3" />}
+                />
+
+                <DetailItem
+                  label="Total Return"
+                  value={"LKR "+(parseFloat(formData?.applicant.totalHarvest || "0") + parseFloat(formData?.applicant.investmentAmount || "0")).toFixed(2)}
+                  icon={<Banknote className="w-3 h-3" />}
                 />
               </div>
             </div>

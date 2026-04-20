@@ -21,7 +21,7 @@ export interface FormData {
     investmentDate?: string;
     idFront?: string;
     idBack?: string;
-    paymentSlip?: string;   
+    paymentSlip?: string;
     proposal?: string;
     agreement?: string;
     signature?: string;
@@ -29,6 +29,8 @@ export interface FormData {
   };
   investment: {
     planId?: string;
+    investmentRate?: number;
+
   };
   beneficiary: {
     fullName?: string;
@@ -103,12 +105,12 @@ export const defaultValues: FormData = {
     relationship: "",
   },
   nominee: {
-   fullName: "",
+    fullName: "",
     permanentAddress: "",
     postalAddress: "",
     nic: "",
   },
   investment: {
-    planId:"",
+    planId: "",
   },
 };

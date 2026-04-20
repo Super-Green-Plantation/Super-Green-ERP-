@@ -299,7 +299,8 @@ export async function createInvestmentForExistingClient(data: {
   branchId: number;
   planId?: number;
   amount: number;
-  investmentDate?: string;
+  investmentDate?: Date;
+  investmentRate?: number;
   beneficiaryId?: number | null;
   nomineeId?: number | null;
   newBeneficiary?: {
@@ -313,6 +314,7 @@ export async function createInvestmentForExistingClient(data: {
   } | null;
   newNominee?: {
     fullName: string;
+    nic?: string;
     permanentAddress: string;
     postalAddress?: string;
   } | null;
@@ -324,7 +326,6 @@ export async function createInvestmentForExistingClient(data: {
       let beneficiaryId = data.beneficiaryId ?? null;
       let nomineeId = data.nomineeId ?? null;
 
-      // Create new beneficiary if provided
       if (data.newBeneficiary?.fullName) {
         const b = await tx.beneficiary.create({
           data: {
@@ -336,43 +337,59 @@ export async function createInvestmentForExistingClient(data: {
         beneficiaryId = b.id;
       }
 
-      // Create new nominee if provided
       if (data.newNominee?.fullName) {
         const n = await tx.nominee.create({
           data: {
             clientId: data.clientId,
-            ...data.newNominee,
+            fullName: data.newNominee.fullName,
+            nic: data.newNominee.nic || "",
+            permanentAddress: data.newNominee.permanentAddress,
             postalAddress: data.newNominee.postalAddress || null,
           },
         });
         nomineeId = n.id;
       }
 
-      const investmentDate = data.investmentDate
-        ? new Date(data.investmentDate)
-        : new Date();
+      const investmentDate = data.investmentDate ?? new Date();
 
       const plan = data.planId
-        ? await prisma.financialPlan.findUnique({ where: { id: data.planId } })
+        ? await tx.financialPlan.findUnique({ where: { id: data.planId } })
         : null;
 
-      const maturityDate = plan ? new Date(
-        new Date(investmentDate).setMonth(
-          new Date(investmentDate).getMonth() + plan.duration
-        )
-      ) : null;
+      const maturityDate = plan
+        ? new Date(
+            new Date(investmentDate).setMonth(
+              new Date(investmentDate).getMonth() + plan.duration
+            )
+          )
+        : null;
+
+      // Rate: use submitted value (special employee override) or fall back to plan rate
+      const investmentRate =
+        data.investmentRate != null ? data.investmentRate : (plan?.rate ?? null);
+
+      const months = plan?.duration ?? 0;
+      const totalHarvest =
+        investmentRate && months
+          ? data.amount * (investmentRate / 100) * (months / 12)
+          : null;
+      const monthlyHarvest =
+        totalHarvest && months ? totalHarvest / months : null;
 
       return tx.investment.create({
         data: {
           clientId: data.clientId,
           branchId: data.branchId,
-          planId: data.planId ? Number(data.planId) : null,
-          investmentDate: new Date(),
+          planId: data.planId ?? null,
+          investmentDate,
+          maturityDate,
           amount: data.amount,
           refNumber: generateInvestmentNumber(),
+          investmentRate,
+          totalHarvest,
+          monthlyHarvest,
           beneficiaryId,
           nomineeId,
-          maturityDate,
         },
       });
     });

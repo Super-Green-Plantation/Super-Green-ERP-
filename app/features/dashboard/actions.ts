@@ -77,7 +77,7 @@ export async function getDashboardStats() {
 
     // Map heatmap data to last 7 days
     const heatmap = last7Days.map(date => {
-      const match = heatmapDataRaw.find(d => 
+      const match = heatmapDataRaw.find(d =>
         new Date(d.investmentDate).toDateString() === date.toDateString()
       );
       return match ? match._count.id : 0;
@@ -126,9 +126,9 @@ export async function getClientRegistrationByBranch(year?: number, month?: numbe
     orderBy: { name: "asc" },
   });
 
-  const registrations = await prisma.client.groupBy({
-    by: ["branchId", "createdAt"],
-    where: { createdAt: { gte: from, lte: to } },
+  const registrations = await prisma.investment.groupBy({
+    by: ["branchId", "investmentDate"],
+    where: { investmentDate: { gte: from, lte: to } },
     _count: { id: true },
   });
 
@@ -143,7 +143,7 @@ export async function getClientRegistrationByBranch(year?: number, month?: numbe
     const dailyMap: Record<string, number> = {};
     for (const reg of registrations) {
       if (reg.branchId === branch.id) {
-        const day = new Date(reg.createdAt).toISOString().slice(0, 10);
+        const day = new Date(reg.investmentDate).toISOString().slice(0, 10);
         dailyMap[day] = (dailyMap[day] || 0) + reg._count.id;
       }
     }

@@ -140,7 +140,7 @@ export async function getClientById(id: number) {
   });
 
   console.log(client?.nominees);
-  
+
 
   if (!client) {
     throw new Error("Client not accessible");
@@ -297,14 +297,28 @@ export async function saveClient(data: {
         : new Date(); // fallback to today
 
       const plan = await tx.financialPlan.findUnique({
-        where: { id: Number(investment.planId) }
+        where: { id: Number(investment.planId) },
       });
 
-      const maturityDate = plan ? new Date(
-        new Date(investmentDate).setMonth(
-          new Date(investmentDate).getMonth() + plan.duration
+      const maturityDate = plan
+        ? new Date(
+          new Date(investmentDate).setMonth(
+            new Date(investmentDate).getMonth() + plan.duration
+          )
         )
-      ) : null;
+        : null;
+
+      // Use submitted rate (handles special employee override), fall back to plan rate
+      const investmentRate =
+        investment.investmentRate != null
+          ? Number(investment.investmentRate)
+          : plan?.rate ?? 0;
+
+      const amount = Number(applicant.investmentAmount);
+      const months = plan?.duration ?? 0;
+
+      const totalHarvest = Math.round(amount * (investmentRate / 100) * (months / 12));
+      const monthlyHarvest = months > 0 ? Math.round(totalHarvest / months) : 0;
 
       const createdInvestment = await tx.investment.create({
         data: {
@@ -314,9 +328,12 @@ export async function saveClient(data: {
           planId: Number(investment.planId),
           investmentDate,
           maturityDate,
-          amount: Number(applicant.investmentAmount),
+          amount,
           beneficiaryId,
           nomineeId,
+          investmentRate,
+          totalHarvest,
+          monthlyHarvest,
         },
       });
 
@@ -337,22 +354,21 @@ export async function saveClient(data: {
     return serializeData({ success: true, client });
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
-      const fields = (err.meta?.target as string[]) ?? [];
-      console.log(fields);
+      console.error("P2002 meta:", JSON.stringify(err.meta, null, 2));
 
-      if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
-        const driverError = err.meta?.driverAdapterError as any;
-        const fields: string[] = driverError?.cause?.constraint?.fields ?? [];
+      const driverError = err.meta?.driverAdapterError as any;
+      const fields: string[] = driverError?.cause?.constraint?.fields
+        ?? (err.meta?.target as string[])  // fallback to standard Prisma meta
+        ?? [];
 
-        const label = fields.map((f) => UNIQUE_FIELD_LABELS[f] ?? f).join(", ");
+      const label = fields.map((f) => UNIQUE_FIELD_LABELS[f] ?? f).join(", ");
 
-        return {
-          success: false,
-          error: label
-            ? `A client with this ${label} already exists.`
-            : "A duplicate value was found. Please check your entries.",
-        };
-      }
+      return {
+        success: false,
+        error: label
+          ? `A client with this ${label} already exists.`
+          : "A duplicate value was found. Please check your entries.",
+      };
     }
 
     console.error("Error creating client:", err);
@@ -389,7 +405,7 @@ export async function updateClient(id: number, formData: any) {
         proposal: formData.applicant.proposal || null,
         agreement: formData.applicant.agreement || null,
         investmentAmount: Number(formData.applicant.investmentAmount) || undefined,
-        
+
         dateOfBirth: formData.applicant.dateOfBirth
           ? new Date(formData.applicant.dateOfBirth)
           : undefined,
@@ -831,10 +847,10 @@ export async function searchClients(searchText: string) {
   return client;
 }
 
-export async function updateBeneficiary(data:any){
-  try{
+export async function updateBeneficiary(data: any) {
+  try {
     console.log(data);
-    
+
     const updatedBeneficiary = await prisma.beneficiary.update({
       where: { nic: data.nic },
       data: {
@@ -850,25 +866,26 @@ export async function updateBeneficiary(data:any){
 
     return updatedBeneficiary;
 
-  }catch(err){
+  } catch (err) {
     console.error("Error updating beneficiary:", err);
     return { success: false, error: "Failed to update beneficiary" };
   }
 }
 
-export async function updateNominee(data:any){
-  try{
+export async function updateNominee(data: any) {
+  try {
     const updatedNominee = await prisma.nominee.update({
       where: { nic: data.nic },
       data: {
         fullName: data.fullName,
         permanentAddress: data.permanentAddress || "",
-        postalAddress: data.postalAddress || null,},
+        postalAddress: data.postalAddress || null,
+      },
     });
 
     return updatedNominee;
 
-  }catch(err){
+  } catch (err) {
     console.error("Error updating nominee:", err);
     return { success: false, error: "Failed to update nominee" };
   }

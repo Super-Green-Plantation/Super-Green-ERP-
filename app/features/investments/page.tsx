@@ -184,7 +184,7 @@ export default function InvestmentsPage() {
                       <p className="text-xs font-bold text-foreground/90">{inv.plan?.name ?? "—"}</p>
                       {inv.plan && (
                         <p className="text-[10px] text-accent font-bold">
-                          {inv.plan.rate}% <span className="text-muted-foreground/60">·</span> {inv.plan.duration}mo
+                          {inv.investmentRate ? inv.investmentRate : inv.plan.rate}% <span className="text-muted-foreground/60">·</span> {inv.plan.duration}mo
                         </p>
                       )}
                     </td>

@@ -4,6 +4,8 @@ import { getClientById } from "../features/clients/actions";
 const mapClientToFormData = (client: any) => ({
   applicant: {
     fullName: client.fullName || "",
+    monthlyHarvest: client.monthlyHarvest || "",
+    totalHarvest: client.totalHarvest || "",
     nic: client.nic || "",
     drivingLicense: client.drivingLicense || "",
     passportNo: client.passportNo || "",

@@ -10,10 +10,20 @@ import { useEffect, useState } from "react";
 
 const ApplicantDetails = () => {
   const { form } = useFormContext();
-  const { register } = form;
+  const { register, watch, setValue } = form;
 
   const [branch, setBranch] = useState<Branch[] | null>(null);
   const [plans, setPlans] = useState<FinancialPlan[] | null>([]);
+  const selectedPlanId = watch("investment.planId");
+
+  // Auto-fill rate when plan selection changes
+  useEffect(() => {
+    if (!selectedPlanId) return;
+    const plan = plans?.find((p) => p.id === Number(selectedPlanId));
+    if (plan) {
+      setValue("investment.investmentRate", plan.rate);
+    }
+  }, [selectedPlanId, plans, setValue]);
 
   const fetchBranch = async () => {
     const branches = await getBranches();
@@ -109,13 +119,7 @@ const ApplicantDetails = () => {
                 <label className={labelClass}>Investment Amount</label>
                 <input type="text" {...register("applicant.investmentAmount")} placeholder="0.00" className={`${inputClass} font-black text-primary text-lg`} />
               </div>
-              <div>
-                <label className={labelClass}>Target Plan</label>
-                <select className={inputClass} {...register("investment.planId", { setValueAs: (v) => (v === "" ? undefined : Number(v)) })}>
-                  <option value="">Choose a Plan...</option>
-                  {plans?.map((b) => <option value={b.id} key={b.id}>{b.name}</option>)}
-                </select>
-              </div>
+
               <div>
                 <label className={labelClass}>Assigned Branch</label>
                 <select
@@ -131,6 +135,33 @@ const ApplicantDetails = () => {
                     </option>
                   ))}
                 </select>
+              </div>
+
+              <div>
+                <label className={labelClass}>Target Plan</label>
+                <select
+                  className={inputClass}
+                  {...register("investment.planId", {
+                    setValueAs: (v) => (v === "" ? undefined : Number(v)),
+                  })}
+                >
+                  <option value="">Choose a Plan...</option>
+                  {plans?.map((b) => (
+                    <option value={b.id} key={b.id}>{b.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className={labelClass}>Rate</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  className={inputClass}
+                  {...register("investment.investmentRate", {
+                    setValueAs: (v) => (v === "" ? undefined : Number(v)),
+                  })}
+                />
               </div>
 
               <div>
