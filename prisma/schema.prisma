@@ -21,7 +21,6 @@ model Branch {
   id          Int            @id @default(autoincrement())
   name        String
   location    String?
-  // members     Member[]
   members     MemberBranch[]
   status      Status         @default(Active)
   client      Client[]

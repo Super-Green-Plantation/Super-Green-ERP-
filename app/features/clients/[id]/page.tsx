@@ -56,7 +56,7 @@ export default function ApplicationViewPage() {
   const [updateNominee, setUpdateNominee] = useState(false);
   const [selectNominee, setSelectNominee] = useState<any>(null);
 
-  console.log("beneficiaries : ", formData?.beneficiaries);
+  console.log("investments : ", formData?.investments);
 
 
   useEffect(() => {
@@ -205,7 +205,7 @@ export default function ApplicationViewPage() {
             return (
               <div
                 key={inv.id || index}
-                className="flex-1 min-w-[340px] max-w-[420px] bg-[#0f172a] rounded-[2rem] p-8 text-white shadow-2xl border border-slate-800 relative overflow-hidden group"
+                className="flex-1 min-w-85 max-w-105 bg-[#0f172a] rounded-[2rem] p-8 text-white shadow-2xl border border-slate-800 relative overflow-hidden group"
               >
                 <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-blue-500/10 transition-colors" />
 
@@ -215,7 +215,7 @@ export default function ApplicationViewPage() {
                   </div>
                   <div className="text-right">
                     <span className="block text-[10px] text-slate-500 font-bold tracking-widest uppercase mb-1">Ref: {inv.refNumber}</span>
-                    <span className="bg-blue-500 text-white text-[9px] font-black py-1 px-3 rounded-full uppercase tracking-tighter">Fixed Plan</span>
+                    <span className="bg-blue-500 text-white text-[13px] py-1 px-3 rounded-full uppercase tracking-tighter">Rs. {(inv.amount).toLocaleString()}</span>
                   </div>
                 </div>
 
