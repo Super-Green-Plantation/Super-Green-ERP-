@@ -16,6 +16,7 @@ const UpdateBeneficiary = ({
 }: UpdateBeneficiaryModalProps) => {
     const [formData, setFormData] = useState<any>({
         beneficiary: {
+            id: null,
             fullName: "",
             relationship: "",
             bankName: "",

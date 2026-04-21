@@ -109,7 +109,7 @@ export async function deleteFinancialPlan(id: number) {
 export async function getFinancialPlanById(id: number) {
   try {
     const plan = await prisma.financialPlan.findUnique({
-      where: { id },
+      where: { id: Number(id) },
     });
     return plan;
   } catch (error) {

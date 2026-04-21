@@ -139,7 +139,6 @@ export async function getClientById(id: number) {
     },
   });
 
-  console.log(client?.nominees);
 
 
   if (!client) {
@@ -848,11 +847,11 @@ export async function searchClients(searchText: string) {
 }
 
 export async function updateBeneficiary(data: any) {
+  console.log("beni data",data);
   try {
-    console.log(data);
 
     const updatedBeneficiary = await prisma.beneficiary.update({
-      where: { nic: data.nic },
+      where: { id: data.id },
       data: {
         fullName: data.fullName,
         relationship: data.relationship || "",
@@ -873,9 +872,11 @@ export async function updateBeneficiary(data: any) {
 }
 
 export async function updateNominee(data: any) {
+  console.log(data);
+  
   try {
     const updatedNominee = await prisma.nominee.update({
-      where: { nic: data.nic },
+      where: { id: data.id },
       data: {
         fullName: data.fullName,
         permanentAddress: data.permanentAddress || "",

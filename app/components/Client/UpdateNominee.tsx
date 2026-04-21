@@ -22,6 +22,7 @@ export const UpdateNominee = ({
 
   const [formData, setFormData] = useState<any>({
         nominee: {
+            id: initialData?.id || null,
             fullName: initialData?.fullName || "",
             nic: initialData?.nic || "",
             permanentAddress: initialData?.permanentAddress || "",

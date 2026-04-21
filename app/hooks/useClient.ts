@@ -3,9 +3,9 @@ import { getClientById } from "../features/clients/actions";
 
 const mapClientToFormData = (client: any) => ({
   applicant: {
+    id: client.id,
     fullName: client.fullName || "",
-    monthlyHarvest: client.monthlyHarvest || "",
-    totalHarvest: client.totalHarvest || "",
+
     nic: client.nic || "",
     drivingLicense: client.drivingLicense || "",
     passportNo: client.passportNo || "",
@@ -30,11 +30,12 @@ const mapClientToFormData = (client: any) => ({
     signature: client.signature || "",
   },
   investment: {
-    planId: client.investments?.[0]?.planId?.toString() || "",
-    refNumber: client.investments?.[0]?.refNumber
+    planId: client.investments?.map((p:any)=>p.planId?.toString()) || "",
+    refNumber: client.investments?.map((ref:any) => ref.refNumber) || [],
   },
   beneficiaries: client.beneficiaries?.length
     ? client.beneficiaries.map((b: any) => ({
+      id: b.id,
       fullName: b.fullName || "",
       nic: b.nic || "",
       phone: b.phone || "",
@@ -46,6 +47,7 @@ const mapClientToFormData = (client: any) => ({
     : [emptyBeneficiary],
   nominees: client.nominees?.length
     ? client.nominees.map((n: any) => ({
+      id:n.id,
       fullName: n.fullName || "",
       nic: n.nic || "",
       permanentAddress: n.permanentAddress || "",
@@ -53,6 +55,7 @@ const mapClientToFormData = (client: any) => ({
     }))
     : [emptyNominee],
   investments: client.investments || [],
+  
 });
 
 export const useClient = (clientId: number) => {
@@ -80,7 +83,7 @@ export const emptyBeneficiary = {
 };
 
 export const emptyNominee = {
-  nic:"",
+  nic: "",
   fullName: "",
   permanentAddress: "",
   postalAddress: "",

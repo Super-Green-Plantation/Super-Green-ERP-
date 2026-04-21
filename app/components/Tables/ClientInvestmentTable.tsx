@@ -1,7 +1,7 @@
 import React from 'react';
 import { Briefcase, Calendar } from 'lucide-react';
 
-const ClientInvestmentTable = ({ investments }: { investments: any }) => {
+const ClientInvestmentTable = ({ formData }: { formData: any }) => {
 
   return (
     <div className="overflow-x-auto rounded-xl">
@@ -23,8 +23,8 @@ const ClientInvestmentTable = ({ investments }: { investments: any }) => {
           </tr>
         </thead>
         <tbody className="divide-y divide-border bg-card">
-          {(investments || []).map((item: any) => (
-            <tr key={item.id} className="hover:bg-muted/20 transition-all border-b border-border last:border-0">
+          {(formData.investments || []).map((item: any, index:number) => (
+            <tr key={index} className="hover:bg-muted/20 transition-all border-b border-border last:border-0">
               <td className="px-6 py-5">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-primary/10 rounded-lg text-primary">
@@ -57,7 +57,7 @@ const ClientInvestmentTable = ({ investments }: { investments: any }) => {
                 <p>
                   {item.plan.name || "N/A"}
                 </p>
-                {item.plan.rate + " %" || "N/A"}
+                {item.investmentRate + " %" || "N/A"}
               </td>
               <td className="px-6 py-5 text-right">
                 <p className="text-base font-bold text-foreground">
@@ -81,7 +81,7 @@ const ClientInvestmentTable = ({ investments }: { investments: any }) => {
                 <span className="text-xs mr-1 font-medium opacity-70">
                   Rs.
                 </span>
-                {(investments || []).reduce((sum: number, inv: any) => sum + (Number(inv.amount) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                {(formData.investments || []).reduce((sum: number, inv: any) => sum + (Number(inv.amount) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </p>
             </td>
           </tr>
