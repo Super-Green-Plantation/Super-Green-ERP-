@@ -66,7 +66,7 @@ export default function MemberCard({
               <button
                 onClick={() => onToggle(member.empNo)}
                 title={isEnabled ? "Disable member" : "Enable member"}
-                className={`flex-shrink-0 p-1.5 rounded-lg transition-colors ${
+                className={`shrink-0 p-1.5 rounded-lg transition-colors ${
                   isEnabled
                     ? "text-blue-500 hover:bg-blue-50"
                     : "text-gray-400 hover:bg-gray-100"

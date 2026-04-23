@@ -282,7 +282,7 @@ const Page = () => {
                           </div>
                           <button
                             onClick={() => handleAddManualMember(result)}
-                            className="ml-2 flex-shrink-0 px-2 py-1 text-[10px] font-bold uppercase tracking-wide rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+                            className="ml-2 shrink-0 px-2 py-1 text-[10px] font-bold uppercase tracking-wide rounded-md bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
                           >
                             Add
                           </button>
