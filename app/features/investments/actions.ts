@@ -115,25 +115,22 @@ export async function createInvestment(data: {
 }
 
 export async function getInvestmentById(id: number) {
+  console.log("inv no. ",Number(id));
+  
   try {
 
-    const commission = await prisma.commission.findUnique({
-      where: { id },
+    const investment = await prisma.investment.findUnique({
+      where: { id: id },
       include: {
-        investment: {
+        client: {
           include: {
-            client: true,
-            plan: true,
-            advisor: true,
+            branch: true,
+            beneficiaries: true,   // all client's beneficiaries for the picker
+            nominees: true,        // all client's nominees for the picker
           },
         },
-      },
-    });
-
-    const investment = await prisma.investment.findUnique({
-      where: { id: commission?.investmentId },
-      include: {
-        client: true,
+        beneficiary: true,
+        nominee: true,
         plan: true,
         advisor: {
           include: {
@@ -358,10 +355,10 @@ export async function createInvestmentForExistingClient(data: {
 
       const maturityDate = plan
         ? new Date(
-            new Date(investmentDate).setMonth(
-              new Date(investmentDate).getMonth() + plan.duration
-            )
+          new Date(investmentDate).setMonth(
+            new Date(investmentDate).getMonth() + plan.duration
           )
+        )
         : null;
 
       // Rate: use submitted value (special employee override) or fall back to plan rate
@@ -409,5 +406,56 @@ export async function createInvestmentForExistingClient(data: {
   } catch (err) {
     console.error("createInvestmentForExistingClient error:", err);
     return { success: false, error: "Failed to create investment" };
+  }
+}
+
+
+export async function updateInvestment({
+  investmentId, planId, amount, investmentDate, investmentRate,
+  beneficiaryId, nomineeId, newBeneficiary, newNominee,
+}: {
+  investmentId: number;
+  planId?: number;
+  amount: number;
+  investmentDate: Date;
+  investmentRate?: number;
+  beneficiaryId: number | null;
+  nomineeId: number | null;
+  newBeneficiary: any | null;
+  newNominee: any | null;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    return await prisma.$transaction(async (tx) => {
+
+      const clientId = await tx.investment.findUnique({
+        where: { id: investmentId },
+        select: { clientId: true }
+      }).then(inv => inv?.clientId);
+
+      // Create new beneficiary/nominee records if payload provided
+      let resolvedBeneficiaryId = beneficiaryId;
+      if (newBeneficiary?.fullName) {
+        const b = await tx.beneficiary.create({ data: { ...newBeneficiary, clientId: clientId } });
+        resolvedBeneficiaryId = b.id;
+      }
+      let resolvedNomineeId = nomineeId;
+      if (newNominee?.fullName) {
+        const n = await tx.nominee.create({ data: { ...newNominee, clientId: clientId } });
+        resolvedNomineeId = n.id;
+      }
+
+      await tx.investment.update({
+        where: { id: investmentId },
+        data: {
+          planId, amount, investmentDate, investmentRate,
+          beneficiaryId: resolvedBeneficiaryId,
+          nomineeId: resolvedNomineeId,
+        },
+      });
+
+      return { success: true };
+    });
+  } catch (e: any) {
+    return { success: false, error: e.message };
   }
 }

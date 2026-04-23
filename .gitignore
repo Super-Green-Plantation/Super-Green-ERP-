@@ -47,5 +47,3 @@ next-env.d.ts
 /backup/
 # Sentry Config File
 .env.sentry-build-plugin
-
-.env.sentry-build-plugin
