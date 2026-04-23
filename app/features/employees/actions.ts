@@ -637,11 +637,11 @@ export async function getUplineMembers(positionId: number, branchIds: number[]) 
       position: {
         rank: { gt: selectedPosition.rank }, // higher rank = higher up
       },
-      // branches: {
-      //   some: {
-      //     branchId: { in: branchIds }, // shares at least one branch
-      //   },
-      // },
+      branches: {
+        some: {
+          branchId: { in: branchIds }, // shares at least one branch
+        },
+      },
     },
     select: {
       id: true,

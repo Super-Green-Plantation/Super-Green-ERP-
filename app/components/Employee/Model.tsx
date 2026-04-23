@@ -176,8 +176,6 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
       });
     }
 
-    console.log("initialData dates:", initialData?.dob);
-
   }, [mode, initialData, branchId]);
 
   const handlePositionChange = (value: string) => {
