@@ -92,9 +92,9 @@ const UserListPage = () => {
                   {/* Identity Column */}
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm shadow-lg shadow-primary/10 uppercase">
+                      {/* <div className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm shadow-lg shadow-primary/10 uppercase">
                         {user?.name?.charAt(0) || <UserIcon size={16} />}
-                      </div>
+                      </div> */}
                       <div className="flex flex-col">
                         <span className="text-sm font-bold text-foreground leading-tight">
                           {user?.name || "Unassigned"}

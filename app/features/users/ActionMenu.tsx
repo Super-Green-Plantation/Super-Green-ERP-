@@ -2,170 +2,122 @@
 
 import { Role } from '@/app/types/role';
 import { createClient } from '@/lib/supabase/client';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 import { useQueryClient } from '@tanstack/react-query';
-import { Check, ChevronRight, Loader2, MoreVertical } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { Check, Loader2, MoreVertical } from 'lucide-react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { deleteUser, updateUserRole } from './action';
 
-// const ROLES = ['ADMIN', 'HR', 'DEV', 'IT_US', 'BRANCH_MANAGER', 'EMPLOYEE'] as const;
-// type Role = typeof ROLES[number];
-
 export const ActionMenu = ({ userId, currentRole, email }: { userId: string; currentRole: Role; email: string }) => {
-    const [open, setOpen] = useState(false);
-    const [showRoles, setShowRoles] = useState(false);
-    const [loadingAction, setLoadingAction] = useState<string | null>(null);
-    const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
-    const buttonRef = useRef<HTMLButtonElement>(null);
-    const menuRef = useRef<HTMLDivElement>(null);
+  const [loadingAction, setLoadingAction] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-    const queryClient = useQueryClient();
-    useEffect(() => {
-        if (open && buttonRef.current) {
-            const rect = buttonRef.current.getBoundingClientRect();
-            setMenuPos({
-                top: rect.bottom + window.scrollY + 4,
-                left: rect.right + window.scrollX - 160,
-            });
-        }
-    }, [open]);
-
-    useEffect(() => {
-        if (!open) {
-            setShowRoles(false);
-            return;
-        }
-        const handler = (e: MouseEvent) => {
-            if (
-                !buttonRef.current?.contains(e.target as Node) &&
-                !menuRef.current?.contains(e.target as Node)  // ← add this
-            ) {
-                setOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handler);
-        return () => document.removeEventListener('mousedown', handler);
-    }, [open]);
-
-    const handleRoleChange = async (role: Role) => {
-        if (role === currentRole) {
-            setOpen(false);
-            return;
-        }
-        setLoadingAction('role');
-        try {
-            await updateUserRole(userId, role); // your API call
-            queryClient.invalidateQueries({ queryKey: ['users'] }); // invalidate users list to refresh data
-            toast.success(`Role updated to ${role}`);
-        } catch {
-            toast.error('Failed to update role');
-        } finally {
-            setLoadingAction(null);
-            setOpen(false);
-        }
-    };
-
-    const handleResetPassword = async () => {
-        setLoadingAction('reset');
-        try {
-            const supabase = await createClient()
-            const { data, error } = await supabase.auth.resetPasswordForEmail(email);
-
-            if (data && !error) {
-                toast.success('Password reset email sent');
-            } else {
-                toast.error('Failed to send reset email');
-            }
-        } catch (error) {
-            toast.error('Failed to send reset email');
-        } finally {
-            setLoadingAction(null);
-            setOpen(false);
-        }
-    };
-
-    const handleDeleteUser = async (userId: string) => {
-        setLoadingAction('delete');
-        console.log(userId);
-        await deleteUser(userId);
-        queryClient.invalidateQueries({ queryKey: ['users'] });
-        toast.success('User deleted');
-        setLoadingAction(null);
-        setOpen(false);
-        
+  const handleRoleChange = async (role: Role) => {
+    if (role === currentRole) return;
+    setLoadingAction('role');
+    try {
+      await updateUserRole(userId, role);
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast.success(`Role updated to ${role}`);
+    } catch {
+      toast.error('Failed to update role');
+    } finally {
+      setLoadingAction(null);
     }
+  };
 
-    const menu = open ? (
-        <div
-            ref={menuRef}   // ← add this
-            style={{ top: menuPos.top, left: menuPos.left }}
-            className="fixed w-48 bg-card shadow-xl rounded-xl border border-border z-9999 overflow-hidden"
+  const handleResetPassword = async () => {
+    setLoadingAction('reset');
+    try {
+      const supabase = await createClient();
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email);
+      if (data && !error) {
+        toast.success('Password reset email sent');
+      } else {
+        toast.error('Failed to send reset email');
+      }
+    } catch {
+      toast.error('Failed to send reset email');
+    } finally {
+      setLoadingAction(null);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    setLoadingAction('delete');
+    try {
+      await deleteUser(userId);
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      toast.success('User deleted');
+    } catch {
+      toast.error('Failed to delete user');
+    } finally {
+      setLoadingAction(null);
+    }
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-card hover:shadow-sm border border-transparent hover:border-border rounded-xl transition-all">
+          {loadingAction ? <Loader2 size={18} className="animate-spin" /> : <MoreVertical size={18} />}
+        </button>
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent align="end" className="w-48">
+        {/* Update Role submenu */}
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger className="font-semibold text-sm">
+            Update Role
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent className="w-48">
+            {Object.values(Role).map((role) => (
+              <DropdownMenuItem
+                key={role}
+                onClick={() => handleRoleChange(role)}
+                className="flex items-center justify-between text-xs font-bold uppercase tracking-tight"
+              >
+                {role.replace('_', ' ')}
+                {role === currentRole && <Check size={12} className="text-green-500" />}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
+
+        <DropdownMenuSeparator />
+
+        {/* Reset Password */}
+        <DropdownMenuItem
+          onClick={handleResetPassword}
+          disabled={loadingAction === 'reset'}
+          className="font-semibold text-sm"
         >
-            {/* Update Role — expands inline */}
-            <button
-                className="w-full text-left px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted transition-colors flex items-center justify-between"
-                onClick={() => setShowRoles((v) => !v)}
-                disabled={loadingAction === 'role'}
-            >
-                <span className="flex items-center gap-2">
-                    {loadingAction === 'role' && <Loader2 size={12} className="animate-spin" />}
-                    Update Role
-                </span>
-                <ChevronRight
-                    size={14}
-                    className={`text-muted-foreground transition-transform duration-200 ${showRoles ? 'rotate-90' : ''}`}
-                />
-            </button>
+          {loadingAction === 'reset' && <Loader2 size={12} className="animate-spin mr-2" />}
+          Reset Password
+        </DropdownMenuItem>
 
-            {/* Inline role list */}
-            {showRoles && (
-                <div className="border-t border-border bg-muted/50">
-                    {Object.values(Role).map((role) => (
-                        <button
-                            key={role}
-                            onClick={() => handleRoleChange(role)}
-                            className="w-full text-left px-5 py-2 text-xs font-bold text-muted-foreground hover:bg-muted transition-colors flex items-center justify-between uppercase tracking-tight"
-                        >
-                            {role.replace('_', ' ')}
-                            {role === currentRole && <Check size={12} className="text-green-500" />}
-                        </button>
-                    ))}
-                </div>
-            )}
+        <DropdownMenuSeparator />
 
-            <div className="border-t border-border" />
-
-            {/* Reset Password */}
-            <button
-                className="w-full text-left px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted transition-colors flex items-center gap-2 disabled:opacity-50"
-                onClick={handleResetPassword}
-                disabled={loadingAction === 'reset'}
-            >
-                {loadingAction === 'reset' && <Loader2 size={12} className="animate-spin" />}
-                {loadingAction === 'reset' ? 'Sending...' : 'Reset Password'}
-            </button>
-
-            {/* delete user */}
-            <button
-                className="w-full text-left px-4 py-2.5 text-sm font-semibold text-destructive hover:bg-destructive/10 transition-colors flex items-center gap-2 disabled:opacity-50"
-                onClick={()=>handleDeleteUser(userId)}
-            >
-                Delete User
-            </button>
-        </div>
-    ) : null;
-
-    return (
-        <>
-            <button
-                ref={buttonRef}
-                onClick={() => setOpen((v) => !v)}
-                className="p-2 text-muted-foreground hover:text-foreground hover:bg-card hover:shadow-sm border border-transparent hover:border-border rounded-xl transition-all"
-            >
-                <MoreVertical size={18} />
-            </button>
-            {typeof window !== 'undefined' && createPortal(menu, document.body)}
-        </>
-    );
+        {/* Delete User */}
+        <DropdownMenuItem
+          onClick={handleDeleteUser}
+          disabled={loadingAction === 'delete'}
+          className="font-semibold text-sm text-destructive focus:text-destructive"
+        >
+          {loadingAction === 'delete' && <Loader2 size={12} className="animate-spin mr-2" />}
+          Delete User
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 };
