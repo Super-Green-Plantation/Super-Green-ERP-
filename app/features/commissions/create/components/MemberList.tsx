@@ -40,9 +40,9 @@ export default function MemberList({
   return (
     <div className="space-y-3">
       {/* Eligible / hierarchy members */}
-      {members?.map((m) => (
+      {members?.map((m, index) => (
         <MemberCard
-          key={m.empNo}
+          key={index}
           member={m}
           investmentAmount={investmentAmount}
           isEnabled={!disabledEmpNos.has(m.empNo)}
