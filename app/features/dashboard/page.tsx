@@ -92,6 +92,9 @@ const PrivilegedView = ({ data, userName, userRole, achieved, target, percentage
     fetchChartData();
   }, []);
 
+  console.log(data);
+  
+
   return (
     <div className="max-w-7xl mx-auto min-h-screen bg-transparent  sm:p-8">
       {/* Premium Minimal Header */}

@@ -68,6 +68,8 @@ export default function InvestmentsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const { data, isLoading, isError } = useInvestments(currentPage);
 
+  console.log(data);
+
   useEffect(() => {
     if (!userLoading && userData) {
       const isPrivileged = ["ADMIN", "HR", "DEV", "BRANCH_MANAGER"].includes(userData.role);
@@ -90,9 +92,7 @@ export default function InvestmentsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-slate-900 rounded-2xl shadow-lg shadow-slate-900/20">
-            <BanknoteArrowUp className="w-6 h-6 text-white" />
-          </div>
+
           <div>
             <Heading>
               Investments
@@ -120,7 +120,7 @@ export default function InvestmentsPage() {
           </Link>
         </div>
       </div>
-           
+
 
       {/* Empty state */}
       {investments.length === 0 ? (
