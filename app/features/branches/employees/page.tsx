@@ -8,6 +8,7 @@ import { getBranchById, getBranchesByMemberId, searchEmployees } from "../action
 import { useBranches } from "@/app/hooks/useBranches";
 import Loading from "@/app/components/Status/Loading";
 import Error from "@/app/components/Status/Error";
+import { ProposalReportExport } from "@/app/components/Buttons/ProposalReportExport";
 
 interface Branch {
   id: number;
@@ -83,6 +84,8 @@ const Page = () => {
           Select a branch to view and manage team members and their profiles.
         </p>
       </div>
+
+       <ProposalReportExport/>
 
       <div className="relative w-full">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />

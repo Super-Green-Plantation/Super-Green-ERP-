@@ -484,3 +484,55 @@ export async function getInvestmentCountsPerAdvisor(advisorIds: number[]): Promi
 
   return countMap;
 }
+
+
+export type BranchReportRow = {
+  branchId: number;
+  branchName: string;
+  employees: {
+    memberId: number;
+    name: string;
+    position: string;
+    proposalCount: number;
+  }[];
+};
+
+export async function getProposalReportByBranch(
+  from: Date,
+  to: Date
+): Promise<BranchReportRow[]> {
+  // Get all branches with their members and investment counts
+  const branches = await prisma.branch.findMany({
+    orderBy: { id: "asc" },
+    include: {
+      members: {
+        include: {
+          member: {
+            include: {
+              position: true,
+              advisorInvestments: {
+                where: {
+                  createdAt: {
+                    gte: from,
+                    lte: to,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return branches.map((branch) => ({
+    branchId: branch.id,
+    branchName: branch.name,
+    employees: branch.members.map(({ member }) => ({
+      memberId: member.id,
+      name: member.nameWithInitials || "",
+      position: member.position?.title ?? "—",
+      proposalCount: member.advisorInvestments.length,
+    })),
+  }));
+}

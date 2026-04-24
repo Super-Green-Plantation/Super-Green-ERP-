@@ -59,7 +59,6 @@ const PrivilegedView = ({ data, userName, userRole, achieved, target, percentage
 
   const [chartData, setChartData] = useState<ClientRegChartData | null>(null);
 
-
   const modules = [
     {
       title: "Client Management Dashboard",

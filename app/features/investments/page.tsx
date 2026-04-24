@@ -16,6 +16,7 @@ import {
 import { useIsMounted } from "@/app/hooks/useIsMounted";
 import { generateInvestmentsReportPDF } from "@/app/pdf/InvestmentsReport";
 import Heading from "@/app/components/Heading";
+import { ProposalReportExport } from "@/app/components/Buttons/ProposalReportExport";
 
 const fmt = (n: number) =>
   n >= 1_000_000
@@ -115,9 +116,11 @@ export default function InvestmentsPage() {
             className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-blue-600 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-slate-900/20 active:scale-95"
           >
             <BanknoteArrowUp className="w-4 h-4" /> New Investment
+
           </Link>
         </div>
       </div>
+           
 
       {/* Empty state */}
       {investments.length === 0 ? (
