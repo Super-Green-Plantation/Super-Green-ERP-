@@ -459,3 +459,28 @@ export async function updateInvestment({
     return { success: false, error: e.message };
   }
 }
+
+// actions/investment.ts
+export async function getInvestmentCountsPerAdvisor(advisorIds: number[]): Promise<Record<number, number>> {
+  const results = await prisma.investment.groupBy({
+    by: ['advisorId'],
+    where: {
+      advisorId: { in: advisorIds },
+    },
+    _count: {
+      id: true,
+    },
+  });
+
+  // Build a map: { memberId: count }
+  const countMap: Record<number, number> = {};
+
+  // Initialize all to 0 first
+  advisorIds.forEach(id => (countMap[id] = 0));
+
+ results.forEach(r => {
+  if (r.advisorId) countMap[r.advisorId] = r._count.id;
+});
+
+  return countMap;
+}

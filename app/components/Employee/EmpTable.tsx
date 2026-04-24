@@ -21,6 +21,7 @@ import Error from "../Status/Error";
 import Loading from "../Status/Loading";
 import ConfirmDialog from "../ui/ConfirmDialog";
 import { usePermission } from "@/app/hooks/usePermission";
+import { getInvestmentCountsPerAdvisor } from "@/app/features/investments/actions";
 
 interface EmpTableProps {
   onEdit: (emp: Member) => void;
@@ -34,6 +35,10 @@ const EmpTable = ({ onEdit, onRefresh, branchId, searchQuery }: EmpTableProps) =
   const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [investmentCounts, setInvestmentCounts] = useState<Record<number, number>>({});
+
+
+
   const canEdit = usePermission(userRole, PERMISSIONS.UPDATE_EMPLOYEES);
 
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; branchId: number | null }>({
@@ -49,6 +54,9 @@ const EmpTable = ({ onEdit, onRefresh, branchId, searchQuery }: EmpTableProps) =
     isLoading,
     isError,
   } = useEmployees(branchId);
+
+  console.log(data);
+
 
   const allEmployees = data?.pages.flatMap((page) => page.emp) ?? [];
 
@@ -120,8 +128,22 @@ const EmpTable = ({ onEdit, onRefresh, branchId, searchQuery }: EmpTableProps) =
 
   }, []);
 
-  if (isLoading) return <Loading/>
-  if (isError) return <Error/>
+  useEffect(() => {
+    if (!data) return;
+
+    // Flatten all employees across pages
+    const allEmployees = data.pages.flatMap(page => page.emp);
+    const allIds = allEmployees.map(emp => emp.id);
+
+    if (allIds.length === 0) return;
+
+    getInvestmentCountsPerAdvisor(allIds).then(counts => {
+      setInvestmentCounts(counts);
+    });
+  }, [data?.pages.length]);
+
+  if (isLoading) return <Loading />
+  if (isError) return <Error />
 
   return (
     <div className="w-full overflow-hidden">
@@ -141,11 +163,15 @@ const EmpTable = ({ onEdit, onRefresh, branchId, searchQuery }: EmpTableProps) =
               <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                 Contact
               </th>
-              
-                <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground text-center">
-                  Actions
-                </th>
-            
+
+              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                Proposal Count
+              </th>
+
+              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground text-center">
+                Actions
+              </th>
+
 
             </tr>
           </thead>
@@ -182,32 +208,38 @@ const EmpTable = ({ onEdit, onRefresh, branchId, searchQuery }: EmpTableProps) =
                     {e.phone ?? "-"}
                   </div>
                 </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center justify-center gap-2">
-                      <button
-                        onClick={() => onEdit(e)}
-                        className="p-2 text-muted-foreground hover:text-primary hover:bg-card hover:shadow-sm border border-transparent hover:border-border rounded-xl transition-all"
-                        title="Edit"
-                      >
-                        <Pen size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteClick(e.id)}
-                        className="p-2 text-muted-foreground hover:text-destructive hover:bg-card hover:shadow-sm border border-transparent hover:border-border rounded-xl transition-all"
-                        title="Delete"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                      <Link
-                        href={`/features/branches/employees/${branchId}/${e.id}`}
-                        className="ml-2 px-4 py-2 text-[10px] font-bold uppercase tracking-tighter text-foreground bg-muted border border-border rounded-xl hover:bg-card hover:shadow-md hover:text-primary transition-all flex items-center gap-1.5 active:scale-95"
-                      >
-                        Profile
-                        <ExternalLink size={12} />
-                      </Link>
-                    </div>
-                  </td>
-    
+                <td>
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-bold bg-blue-500/10 text-blue-600 border border-blue-500/20 uppercase tracking-tight">
+                    {investmentCounts[e.id] ?? 0} Proposals
+                  </div>
+                </td>
+
+                <td className="px-6 py-4">
+                  <div className="flex items-center justify-center gap-2">
+                    <button
+                      onClick={() => onEdit(e)}
+                      className="p-2 text-muted-foreground hover:text-primary hover:bg-card hover:shadow-sm border border-transparent hover:border-border rounded-xl transition-all"
+                      title="Edit"
+                    >
+                      <Pen size={16} />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteClick(e.id)}
+                      className="p-2 text-muted-foreground hover:text-destructive hover:bg-card hover:shadow-sm border border-transparent hover:border-border rounded-xl transition-all"
+                      title="Delete"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                    <Link
+                      href={`/features/branches/employees/${branchId}/${e.id}`}
+                      className="ml-2 px-4 py-2 text-[10px] font-bold uppercase tracking-tighter text-foreground bg-muted border border-border rounded-xl hover:bg-card hover:shadow-md hover:text-primary transition-all flex items-center gap-1.5 active:scale-95"
+                    >
+                      Profile
+                      <ExternalLink size={12} />
+                    </Link>
+                  </div>
+                </td>
+
 
               </tr>
             ))}
