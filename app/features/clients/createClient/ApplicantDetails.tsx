@@ -158,7 +158,7 @@ const ApplicantDetails = () => {
                     {investmentRates.length} year{investmentRates.length > 1 ? "s" : ""}
                   </span>
                 </label>
-                <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                   {investmentRates.map((rate, i) => (
                     <div key={i} className="flex flex-col gap-1">
                       <span className="text-[10px] text-muted-foreground/60 font-bold text-center">

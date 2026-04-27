@@ -3,6 +3,27 @@ import { Briefcase, Calendar } from 'lucide-react';
 
 const ClientInvestmentTable = ({ formData }: { formData: any }) => {
 
+  const getCurrentRate = (inv: any): string => {
+    const rates: number[] = Array.isArray(inv.investmentRates) ? inv.investmentRates : [];
+    if (rates.length === 0) return "N/A";
+    if (rates.length === 1) return `${rates[0]}%`;
+
+    const months = inv.plan?.duration ?? 0;
+    if (!months) return `${rates[0]}%`;
+
+    const monthsPerYear = months / rates.length;
+    const monthsElapsed =
+      (new Date().getFullYear() - new Date(inv.investmentDate).getFullYear()) * 12 +
+      (new Date().getMonth() - new Date(inv.investmentDate).getMonth());
+
+    const yearIndex = Math.min(
+      Math.floor(monthsElapsed / monthsPerYear),
+      rates.length - 1
+    );
+
+    return `${rates[yearIndex]}% (Yr ${yearIndex + 1})`;
+  };
+
   return (
     <div className="overflow-x-auto rounded-xl">
       <table className="w-full text-left bg-card text-card-foreground">
@@ -23,7 +44,7 @@ const ClientInvestmentTable = ({ formData }: { formData: any }) => {
           </tr>
         </thead>
         <tbody className="divide-y divide-border bg-card">
-          {(formData.investments || []).map((item: any, index:number) => (
+          {(formData.investments || []).map((item: any, index: number) => (
             <tr key={index} className="hover:bg-muted/20 transition-all border-b border-border last:border-0">
               <td className="px-6 py-5">
                 <div className="flex items-center gap-3">
@@ -47,17 +68,15 @@ const ClientInvestmentTable = ({ formData }: { formData: any }) => {
               </td>
               <td className="px-6 py-5">
                 <span className={`px-2.5 py-1 text-[9px] font-bold rounded-md tracking-tighter uppercase ${item.commissionsProcessed
-                    ? "bg-green-500/10 text-green-600"
-                    : "bg-amber-500/10 text-amber-600"
+                  ? "bg-green-500/10 text-green-600"
+                  : "bg-amber-500/10 text-amber-600"
                   }`}>
                   {item.commissionsProcessed ? "Processed" : "Pending"}
                 </span>
               </td>
               <td className="px-6 py-5 text-right font-medium text-muted-foreground text-xs text-nowrap">
-                <p>
-                  {item.plan.name || "N/A"}
-                </p>
-                {item.investmentRate + " %" || "N/A"}
+                <p>{item.plan?.name || "N/A"}</p>
+                <p className="text-foreground font-bold mt-0.5">{getCurrentRate(item)}</p>
               </td>
               <td className="px-6 py-5 text-right">
                 <p className="text-base font-bold text-foreground">

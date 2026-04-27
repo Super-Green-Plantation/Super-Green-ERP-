@@ -86,6 +86,27 @@ export default function InvestmentsPage() {
   const totalPages = data?.totalPages ?? 1;
   const total = data?.total ?? 0;
 
+  const getCurrentRate = (inv: any): string => {
+  const rates: number[] = Array.isArray(inv.investmentRates) ? inv.investmentRates : [];
+  if (rates.length === 0) return "N/A";
+  if (rates.length === 1) return `${rates[0]}%`;
+
+  const months = inv.plan?.duration ?? 0;
+  if (!months) return `${rates[0]}%`;
+
+  const monthsPerYear = months / rates.length;
+  const monthsElapsed =
+    (new Date().getFullYear() - new Date(inv.investmentDate).getFullYear()) * 12 +
+    (new Date().getMonth() - new Date(inv.investmentDate).getMonth());
+
+  const yearIndex = Math.min(
+    Math.floor(monthsElapsed / monthsPerYear),
+    rates.length - 1
+  );
+
+  return `${rates[yearIndex]}% (Yr ${yearIndex + 1})`;
+};
+
   return (
     <div className="max-w-7xl mx-auto space-y-6 p-4 md:p-8 min-h-screen">
 
@@ -184,13 +205,9 @@ export default function InvestmentsPage() {
                     </td>
 
                     {/* Plan Info */}
-                    <td className="px-5 py-4">
-                      <p className="text-xs font-bold text-foreground/90">{inv.plan?.name ?? "—"}</p>
-                      {inv.plan && (
-                        <p className="text-[10px] text-accent font-bold">
-                          {inv.investmentRate ? inv.investmentRate : inv.plan.rate}% <span className="text-muted-foreground/60">·</span> {inv.plan.duration}mo
-                        </p>
-                      )}
+                    <td className="px-6 py-5 text-right font-medium text-muted-foreground text-xs text-nowrap">
+                      <p>{inv.plan?.name || "N/A"}</p>
+                      <p className="text-foreground font-bold mt-0.5">{getCurrentRate(inv)}</p>
                     </td>
 
                     {/* Amount - Boldest text for financial focus */}

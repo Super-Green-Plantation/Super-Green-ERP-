@@ -154,7 +154,7 @@ export default function ApplicationViewPage() {
   if (isError) return <ErrorMessage />;
 
   console.log(formData);
-  
+
 
   return (
     <div className="max-w-7xl mx-auto space-y-10 min-h-screen p-4 md:p-8 pb-24">
@@ -435,13 +435,13 @@ export default function ApplicationViewPage() {
       />
 
       <UpdateInvestmentDocsModal
-  isOpen={docsModal.open}
-  onClose={() => setDocsModal(prev => ({ ...prev, open: false }))}
-  investmentId={docsModal.investmentId}
-  investmentRef={docsModal.investmentRef}
-  currentDocs={docsModal.currentDocs}
-  onSave={handleSaveInvestmentDocs}
-/>
+        isOpen={docsModal.open}
+        onClose={() => setDocsModal(prev => ({ ...prev, open: false }))}
+        investmentId={docsModal.investmentId}
+        investmentRef={docsModal.investmentRef}
+        currentDocs={docsModal.currentDocs}
+        onSave={handleSaveInvestmentDocs}
+      />
       {showUpdateModel && <UpdateClientModal id={Number(id)} isOpen={showUpdateModel} onClose={() => setShowUpdateModel(false)} initialData={formData} onUpdate={handleDetailsUpdate} />}
       {showDocUpdateModel && <UpdateDocsModal isOpen={showDocUpdateModel} onClose={() => setDocShowUpdateModel(false)} onSave={handleDocsUpdate} />}
       {updateBeneficiary && <UpdateBeneficiary onClose={() => setUpdateBeneficiary(false)} initialData={selectBeneficiary} />}
