@@ -263,6 +263,7 @@ export default function CreateInvestmentForm({
   // Investment fields — pre-fill from initialData in edit mode
   const [planId, setPlanId] = useState(String(initialData?.planId ?? ""));
   const [amount, setAmount] = useState(String(initialData?.amount ?? ""));
+  const [proposal, setProposal] = useState("");
   const [investmentDate, setInvestmentDate] = useState(
     initialData?.investmentDate ?? new Date().toISOString().slice(0, 10)
   );
@@ -443,6 +444,7 @@ export default function CreateInvestmentForm({
     const client = selectedClient ?? lockedClient;
     if (!client) { toast.error("Please select a client"); return; }
     if (!amount) { toast.error("Please enter an amount"); return; }
+    if (!proposal) { toast.error("Please enter an proposal form number"); return; }
 
     const { beneficiaryId, newBeneficiary } = resolveBeneficiary();
     const { nomineeId, newNominee } = resolveNominee();
@@ -460,6 +462,7 @@ export default function CreateInvestmentForm({
           nomineeId,
           newBeneficiary,
           newNominee,
+          proposal
         });
         if (!res.success) { toast.error(res.error ?? "Update failed"); return; }
         toast.success("Investment updated successfully");
@@ -475,6 +478,7 @@ export default function CreateInvestmentForm({
           nomineeId,
           newBeneficiary,
           newNominee,
+          proposal
         });
         if (!res.success) { toast.error(res.error ?? "Failed"); return; }
         toast.success("Investment created successfully");
@@ -714,6 +718,7 @@ export default function CreateInvestmentForm({
 
               <Field label="Investment Date *" value={investmentDate} onChange={setInvestmentDate} type="date" />
               <Field label="Investment Amount (LKR) *" value={amount} onChange={setAmount} placeholder="0.00" type="number" />
+              <Field label="Proposal No. *" value={proposal} onChange={setProposal} type="text" />
               {/* REMOVE the single Rate field, REPLACE with this */}
               <div className="sm:col-span-2 space-y-3">
                 <label className="block text-[10px] font-black uppercase tracking-wider text-muted-foreground">

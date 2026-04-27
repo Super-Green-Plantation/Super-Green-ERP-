@@ -297,6 +297,7 @@ export async function createInvestmentForExistingClient(data: {
   branchId: number;
   planId?: number;
   amount: number;
+  proposal:string;
   investmentDate?: Date;
   investmentRates?: number[];
   beneficiaryId?: number | null;
@@ -396,6 +397,7 @@ export async function createInvestmentForExistingClient(data: {
           monthlyHarvest,
           beneficiaryId,
           nomineeId,
+          proposalFormNo: data.proposal,
         },
       });
     });
@@ -432,6 +434,7 @@ export async function updateInvestment({
   nomineeId: number | null;
   newBeneficiary: any | null;
   newNominee: any | null;
+  proposal: string;
 }): Promise<{ success: boolean; error?: string }> {
   try {
     return await prisma.$transaction(async (tx) => {

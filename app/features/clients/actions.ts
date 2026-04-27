@@ -806,7 +806,6 @@ export async function searchClients(searchText: string) {
     OR: [
       { fullName: { contains: searchText, mode: "insensitive" } },
       { nic: { contains: searchText, mode: "insensitive" } },
-      { proposalFormNo: { contains: searchText, mode: "insensitive" } },
     ],
   };
 
