@@ -23,9 +23,6 @@ const Table = (data: any) => {
                             <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                                 NIC
                             </th>
-                            <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                                Inv. Amount
-                            </th>
                             <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground text-center">
                                 Actions
                             </th>
@@ -89,19 +86,7 @@ const Table = (data: any) => {
                                         </div>
                                     </td>
 
-                                    {/* Status Column */}
-                                    <td className="px-6 py-4">
-                                        <div
-                                            className={`
-                  inline-flex items-center gap-1.5 px-6 py-1 rounded-full text-[11px] font-bold uppercase tracking-tight
-                    ${client.investmentAmount > 0 ? "bg-emerald-500/10 text-emerald-600" : "bg-rose-500/10 text-rose-600"}
-                 `}>
-                                            <div
-                                                className={`w-1.5 h-1.5 rounded-full ${client.investmentAmount > 0 ? "bg-emerald-500" : "bg-rose-500"}`}
-                                            />
-                                            Rs. {client.investmentAmount}
-                                        </div>
-                                    </td>
+                                 
 
                                     {/* Action Column */}
                                     <td className="px-6 py-4 text-center">

@@ -18,6 +18,14 @@ export async function GET(req: NextRequest) {
       nameWithInitials: true,
       dob: true,
       phone: true,
+      position:{select:{title:true}},
+      branches:{
+        select:{
+          branch:{
+            select:{name:true}
+          }
+        }
+      }
     },
   });
 
@@ -69,7 +77,7 @@ const upcomingBirthdays = employees.filter((emp) => {
 
   //  Build message
   const lines = upcomingBirthdays.map(
-    (emp) => `• ${emp.nameWithInitials} — ${emp.phone ?? "No phone"} - ${new Date(emp.dob as Date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+    (emp) => `• ${emp.nameWithInitials} — ${emp.position?.title ?? "No position"} — ${emp.branches?.map((b)=>b.branch?.name ) ?? "No branch"} — ${emp.phone ?? "No phone"} - ${new Date(emp.dob as Date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
   );
 
   const message =

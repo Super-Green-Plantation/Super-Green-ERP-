@@ -1,8 +1,5 @@
 "use client";
 
-import AddPlanModal from "@/app/components/FinancialPlans/AddPlanModal";
-import EditPlanModal from "@/app/components/FinancialPlans/EditPlanModal";
-import Heading from "@/app/components/Heading";
 import Error from "@/app/components/Status/Error";
 import Loading from "@/app/components/Status/Loading";
 import { usePlans } from "@/app/hooks/usePlans";
@@ -21,6 +18,8 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { deleteFinancialPlan } from "./actions";
 import ConfirmDialog from "@/app/components/ui/ConfirmDialog";
+import PlanModal from "@/app/components/FinancialPlans/PlanModal";
+import Heading from "@/app/components/Heading";
 
 export default function Page() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -34,7 +33,6 @@ export default function Page() {
     branchId: null,
   });
 
-  const[ qutationModelOpen, setQutationModalOpen] = useState(false)
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => deleteFinancialPlan(id),
@@ -105,12 +103,7 @@ export default function Page() {
             <Plus size={17} /> Add Plan
           </button>
 
-          <button
-            onClick={() => setQutationModalOpen(true)}
-            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-xl shadow-primary/10 active:scale-95 hover:opacity-90"
-          >
-            <Plus size={17} /> Qutation
-          </button>
+         
           </div>
           
           
@@ -161,7 +154,7 @@ export default function Page() {
                       </span>
                     </div>
                     <span className="text-sm font-bold text-foreground">
-                      {plan.rate}%
+                      {plan.rate?.map((r:any)=>r)}%
                     </span>
                   </div>
 
@@ -218,7 +211,7 @@ export default function Page() {
 
       {/* Modals */}
       {isAddModalOpen && (
-        <AddPlanModal
+        <PlanModal
           isOpen={isAddModalOpen}
           onClose={() => {
             setIsAddModalOpen(false);
@@ -228,7 +221,7 @@ export default function Page() {
 
 
       {selectedPlan && (
-        <EditPlanModal
+        <PlanModal
           isOpen={isEditModalOpen}
           plan={selectedPlan}
           onClose={() => {

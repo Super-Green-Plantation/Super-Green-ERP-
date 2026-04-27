@@ -74,6 +74,7 @@ export async function createInvestment(data: {
   planId?: number;
   advisorId?: number;
   amount: number;
+  proposalFormNo: string;
 }) {
   try {
     const currentUser = await getCurrentUserWithRole();
@@ -82,12 +83,12 @@ export async function createInvestment(data: {
     const investment = await prisma.investment.create({
       data: {
         refNumber,
-        branchId: Number(data.branchId), // Will be set by a trigger based on the advisor's branch
+        branchId: Number(data.branchId),
         clientId: data.clientId,
         planId: data.planId || null,
-        advisorId: data.advisorId || null,
         amount: data.amount,
         investmentDate: new Date(),
+        proposalFormNo: data.proposalFormNo,
       },
       include: {
         client: true,
@@ -115,8 +116,8 @@ export async function createInvestment(data: {
 }
 
 export async function getInvestmentById(id: number) {
-  console.log("inv no. ",Number(id));
-  
+  console.log("inv no. ", Number(id));
+
   try {
 
     const investment = await prisma.investment.findUnique({
@@ -297,7 +298,7 @@ export async function createInvestmentForExistingClient(data: {
   planId?: number;
   amount: number;
   investmentDate?: Date;
-  investmentRate?: number;
+  investmentRates?: number[];
   beneficiaryId?: number | null;
   nomineeId?: number | null;
   newBeneficiary?: {
@@ -361,17 +362,25 @@ export async function createInvestmentForExistingClient(data: {
         )
         : null;
 
-      // Rate: use submitted value (special employee override) or fall back to plan rate
-      const investmentRate =
-        data.investmentRate != null ? data.investmentRate : (plan?.rate ?? null);
+
+
+      const investmentRates: number[] =
+        data.investmentRates?.length
+          ? data.investmentRates
+          : plan?.rate ?? [];
 
       const months = plan?.duration ?? 0;
+      const years = investmentRates.length;
+      const monthsPerYear = years > 0 ? months / years : 0;
+
       const totalHarvest =
-        investmentRate && months
-          ? data.amount * (investmentRate / 100) * (months / 12)
+        investmentRates.length && months
+          ? investmentRates.reduce(
+            (sum, rate) => sum + data.amount * (rate / 100) * (monthsPerYear / 12),
+            0
+          )
           : null;
-      const monthlyHarvest =
-        totalHarvest && months ? totalHarvest / months : null;
+      const monthlyHarvest = totalHarvest && months ? totalHarvest / months : null;
 
       return tx.investment.create({
         data: {
@@ -382,7 +391,7 @@ export async function createInvestmentForExistingClient(data: {
           maturityDate,
           amount: data.amount,
           refNumber: generateInvestmentNumber(),
-          investmentRate,
+          investmentRates: data.investmentRates,
           totalHarvest,
           monthlyHarvest,
           beneficiaryId,
@@ -411,14 +420,14 @@ export async function createInvestmentForExistingClient(data: {
 
 
 export async function updateInvestment({
-  investmentId, planId, amount, investmentDate, investmentRate,
+  investmentId, planId, amount, investmentDate, investmentRates,
   beneficiaryId, nomineeId, newBeneficiary, newNominee,
 }: {
   investmentId: number;
   planId?: number;
   amount: number;
   investmentDate: Date;
-  investmentRate?: number;
+  investmentRates?: number[];
   beneficiaryId: number | null;
   nomineeId: number | null;
   newBeneficiary: any | null;
@@ -444,10 +453,30 @@ export async function updateInvestment({
         resolvedNomineeId = n.id;
       }
 
+      const plan = planId
+        ? await tx.financialPlan.findUnique({ where: { id: planId } })
+        : null;
+
+      const rates = investmentRates?.length ? investmentRates : (plan?.rate ?? []);
+      const months = plan?.duration ?? 0;
+      const years = rates.length;
+      const monthsPerYear = years > 0 ? months / years : 0;
+
+      const totalHarvest =
+        rates.length && months
+          ? rates.reduce(
+            (sum, rate) => sum + amount * (rate / 100) * (monthsPerYear / 12),
+            0
+          )
+          : null;
+
       await tx.investment.update({
         where: { id: investmentId },
         data: {
-          planId, amount, investmentDate, investmentRate,
+          planId, amount, investmentDate,
+          investmentRates: rates,
+          totalHarvest,
+          monthlyHarvest: totalHarvest && months ? totalHarvest / months : null,
           beneficiaryId: resolvedBeneficiaryId,
           nomineeId: resolvedNomineeId,
         },
@@ -478,9 +507,9 @@ export async function getInvestmentCountsPerAdvisor(advisorIds: number[]): Promi
   // Initialize all to 0 first
   advisorIds.forEach(id => (countMap[id] = 0));
 
- results.forEach(r => {
-  if (r.advisorId) countMap[r.advisorId] = r._count.id;
-});
+  results.forEach(r => {
+    if (r.advisorId) countMap[r.advisorId] = r._count.id;
+  });
 
   return countMap;
 }
@@ -535,4 +564,49 @@ export async function getProposalReportByBranch(
       proposalCount: member.advisorInvestments.length,
     })),
   }));
+}
+
+export async function updateInvestmentDocuments(
+  investmentId: number,
+  data: { paymentSlip?: string; proposal?: string; agreement?: string }
+) {
+  if (!investmentId) return { success: false, error: "Investment ID is required" };
+
+  try {
+    const [currentUser, investment] = await Promise.all([
+      getCurrentUserWithRole(),
+      prisma.investment.findUnique({
+        where: { id: investmentId },
+        select: { clientId: true, client: { select: { branchId: true } } },
+      }),
+    ]);
+
+    if (!investment) return { success: false, error: "Investment not found" };
+
+    await prisma.investment.update({
+      where: { id: investmentId },
+      data: {
+        paymentSlip: data.paymentSlip === "" ? null : (data.paymentSlip ?? undefined),
+        proposal: data.proposal === "" ? null : (data.proposal ?? undefined),
+        agreement: data.agreement === "" ? null : (data.agreement ?? undefined),
+      },
+    });
+
+    revalidatePath("/features/clients");
+    revalidatePath(`/features/clients/${investment.clientId}`);
+
+    void logActivity({
+      action: ActivityAction.UPDATE,
+      entity: ActivityEntity.CLIENT,        // or add INVESTMENT to your enum
+      entityId: investment.clientId,
+      performedById: currentUser?.member?.id ?? 0,
+      branchId: investment.client?.branchId,
+      metadata: { investmentId, updatedFields: Object.keys(data) },
+    });
+
+    return { success: true };
+  } catch (err) {
+    console.error("Error updating investment documents:", err);
+    return { success: false, error: "Failed to update investment documents" };
+  }
 }

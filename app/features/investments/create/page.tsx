@@ -235,7 +235,7 @@ type InitialData = {
   planId?: number;
   amount: number;
   investmentDate: string;
-  investmentRate?: number;
+  investmentRates?: number[];
   beneficiary?: any;   // full record
   nominee?: any;       // full record
 };
@@ -258,14 +258,17 @@ export default function CreateInvestmentForm({
   const [selectedClient, setSelectedClient] = useState<any | null>(lockedClient ?? null);
   const [loading, setLoading] = useState(false);
 
+
+
   // Investment fields — pre-fill from initialData in edit mode
   const [planId, setPlanId] = useState(String(initialData?.planId ?? ""));
   const [amount, setAmount] = useState(String(initialData?.amount ?? ""));
   const [investmentDate, setInvestmentDate] = useState(
     initialData?.investmentDate ?? new Date().toISOString().slice(0, 10)
   );
-  const [investmentRate, setInvestmentRate] = useState(String(initialData?.investmentRate ?? ""));
-
+  const [investmentRates, setInvestmentRates] = useState<number[]>(
+    initialData?.investmentRates ?? []
+  );
   const [totalHarvest, setTotalHarvest] = useState("");
   const [monthlyHarvest, setMonthlyHarvest] = useState("");
 
@@ -314,22 +317,47 @@ export default function CreateInvestmentForm({
 
   // Auto-fill rate from plan (only when user picks a plan, don't override edit-mode initial rate)
   const rateOverriddenByUser = useRef(false);
+
+  // ── plan selection: pre-fill year rates ─────────────────────────────────────
+
   useEffect(() => {
     if (!planId || rateOverriddenByUser.current) return;
     const plan = plans.find(p => p.id === Number(planId));
-    if (plan && !isEditMode) setInvestmentRate(String(plan.rate));
+    if (!plan || isEditMode) return;
+
+    const years = Math.ceil(plan.duration / 12);
+
+    // plan.rate is Float[] — if it has the right count use it, else repeat first value
+    const defaults: number[] =
+      plan.rate.length === years
+        ? plan.rate
+        : Array(years).fill(plan.rate[0] ?? 0);
+
+    setInvestmentRates(defaults);
   }, [planId, plans, isEditMode]);
 
+  // ── harvest calculation: sum across years ────────────────────────────────────
   useEffect(() => {
     const plan = plans.find(p => p.id === Number(planId));
     const amt = Number(amount);
-    const rate = Number(investmentRate);
     const months = plan?.duration ?? 0;
-    if (!amt || !rate || !months) { setTotalHarvest(""); setMonthlyHarvest(""); return; }
-    const total = amt * (rate / 100) * (months / 12);
+
+    if (!amt || !months || investmentRates.length === 0) {
+      setTotalHarvest(""); setMonthlyHarvest(""); return;
+    }
+
+    // each rate covers (duration / years) months
+    const years = investmentRates.length;
+    const monthsPerYear = months / years;
+
+    const total = investmentRates.reduce((sum, rate) => {
+      return sum + amt * (rate / 100) * (monthsPerYear / 12);
+    }, 0);
+
     setTotalHarvest(total.toFixed(2));
     setMonthlyHarvest((total / months).toFixed(2));
-  }, [amount, investmentRate, planId, plans]);
+  }, [amount, investmentRates, planId, plans]);
+
 
   // When switching away from "existing" mode, clear the snapshot/label
   const handleBeneficiaryModeChange = (mode: BeneficiaryMode) => {
@@ -385,6 +413,7 @@ export default function CreateInvestmentForm({
     handleNomineeModeChange("none");
   };
 
+
   // ---- submit logic ----
   const resolveBeneficiary = () => {
     if (beneficiaryMode === "none") return { beneficiaryId: null, newBeneficiary: null };
@@ -426,7 +455,7 @@ export default function CreateInvestmentForm({
           planId: planId ? Number(planId) : undefined,
           amount: Number(amount),
           investmentDate: new Date(investmentDate),
-          investmentRate: investmentRate ? Number(investmentRate) : undefined,
+          investmentRates,
           beneficiaryId,
           nomineeId,
           newBeneficiary,
@@ -441,7 +470,7 @@ export default function CreateInvestmentForm({
           planId: planId ? Number(planId) : undefined,
           amount: Number(amount),
           investmentDate: new Date(investmentDate),
-          investmentRate: investmentRate ? Number(investmentRate) : undefined,
+          investmentRates,
           beneficiaryId,
           nomineeId,
           newBeneficiary,
@@ -675,7 +704,9 @@ export default function CreateInvestmentForm({
                   >
                     <option value="">Select Plan</option>
                     {plans.map(p => (
-                      <option key={p.id} value={p.id}>{p.name} ({p.rate}%)</option>
+                      <option key={p.id} value={p.id}>
+                        {p.name} ({p.rate.length === 1 ? `${p.rate[0]}%` : `${p.rate[0]}–${p.rate[p.rate.length - 1]}%`})
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -683,13 +714,41 @@ export default function CreateInvestmentForm({
 
               <Field label="Investment Date *" value={investmentDate} onChange={setInvestmentDate} type="date" />
               <Field label="Investment Amount (LKR) *" value={amount} onChange={setAmount} placeholder="0.00" type="number" />
-              <Field
-                label="Rate (%)"
-                value={investmentRate}
-                onChange={v => { rateOverriddenByUser.current = true; setInvestmentRate(v); }}
-                placeholder="e.g. 32"
-                type="number"
-              />
+              {/* REMOVE the single Rate field, REPLACE with this */}
+              <div className="sm:col-span-2 space-y-3">
+                <label className="block text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                  Rate per Year (%)
+                </label>
+                {investmentRates.length === 0 ? (
+                  <p className="text-xs text-muted-foreground italic font-medium">
+                    Select a plan to set rates.
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                    {investmentRates.map((rate, i) => (
+                      <div key={i}>
+                        <label className="block text-[10px] font-bold text-muted-foreground mb-1">
+                          Year {i + 1}
+                        </label>
+                        <div className="flex items-center border border-border rounded-lg bg-card focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10 transition-all">
+                          <input
+                            type="number"
+                            value={rate}
+                            onChange={e => {
+                              const updated = [...investmentRates];
+                              updated[i] = Number(e.target.value);
+                              setInvestmentRates(updated);
+                              rateOverriddenByUser.current = true;
+                            }}
+                            className="flex-1 px-3 py-2 text-sm font-semibold text-foreground outline-none bg-transparent"
+                          />
+                          <span className="pr-3 text-xs text-muted-foreground font-bold">%</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
               <Field label="Monthly Harvest (LKR)" value={monthlyHarvest} placeholder="—" readOnly />
               <Field label="Total Harvest (LKR)" value={totalHarvest} placeholder="—" readOnly />
             </div>

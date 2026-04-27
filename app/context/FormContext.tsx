@@ -29,7 +29,7 @@ export interface FormData {
   };
   investment: {
     planId?: string;
-    investmentRate?: number;
+    investmentRates?: number[];
 
   };
   beneficiary: {

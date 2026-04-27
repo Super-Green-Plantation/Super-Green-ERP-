@@ -6,7 +6,7 @@ export interface FinancialPlan {
   id: number;
   name: string;
   duration: number; // months
-  rate: number;
+  rate: number[];
   description: string;
   status: Status;
 

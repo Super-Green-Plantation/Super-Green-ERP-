@@ -12,29 +12,32 @@ export async function getFinancialPlans() {
   });
 }
 
-export async function createFinancialPlan(formData: FormData) {
-  const name = formData.get("name") as string;
-  const duration = parseInt(formData.get("duration") as string);
-  const rate = parseFloat(formData.get("rate") as string);
-  const description = formData.get("description") as string;
-  const investmentValue = formData.get("investment") as string;
-  const investment = investmentValue ? parseFloat(investmentValue) : null;
-
+export async function createFinancialPlan(data: {
+  name: string;
+  duration: number;
+  rate: number[];
+  description: string;
+  investment: number | null;
+}) {
   try {
     const currentUser = await getCurrentUserWithRole();
 
     const plan = await prisma.financialPlan.create({
-      data: { name, duration, rate, description, investment },
+      data: {
+        name: data.name,
+        duration: data.duration,
+        rate: data.rate,       // Float[]
+        description: data.description,
+        investment: data.investment,
+      },
     });
 
     revalidatePath("/features/financial_plans");
 
     const memberId = currentUser?.member?.id;
-
     if (!memberId) throw new Error("Current user has no associated member record");
 
-
-void logActivity({
+    void logActivity({
       action: ActivityAction.CREATE,
       entity: ActivityEntity.FINANCIAL_PLAN,
       entityId: plan.id,
@@ -44,43 +47,52 @@ void logActivity({
 
     return { success: true };
   } catch (error) {
-    return { success: false };
+    return { success: false,  error: (error as any).message };
   }
 }
 
-export async function updateFinancialPlan(id: number, data: any) {
+export async function updateFinancialPlan(
+  id: number,
+  data: {
+    name: string;
+    duration: number;
+    rate: number[];
+    description: string;
+    investment: number | null;
+  }
+) {
   try {
-    const [currentUser, oldPlan] = await Promise.all([
-      getCurrentUserWithRole(),
-      prisma.financialPlan.findUnique({ where: { id } }),
-    ]);
+    const currentUser = await getCurrentUserWithRole();
 
-    const updated = await prisma.financialPlan.update({
+    const plan = await prisma.financialPlan.update({
       where: { id },
       data: {
-        name: data.name,
-        duration: data.duration,
-        rate: data.rate,
+        name:        data.name,
+        duration:    data.duration,
+        rate:        data.rate,
         description: data.description,
-        investment: data.investment
+        investment:  data.investment,
       },
     });
 
     revalidatePath("/features/financial_plans");
 
     void logActivity({
-      action: ActivityAction.UPDATE,
-      entity: ActivityEntity.FINANCIAL_PLAN,
-      entityId: id,
+      action:        ActivityAction.UPDATE,
+      entity:        ActivityEntity.FINANCIAL_PLAN,
+      entityId:      plan.id,
       performedById: currentUser?.member?.id ?? 0,
-      metadata: { before: oldPlan, after: updated },
+      metadata:      { updated: plan },
     });
 
     return { success: true };
   } catch (error) {
-    return { success: false };
+    console.error("updateFinancialPlan error:", error); // ← see the real error
+    return { success: false, error: (error as any).message };
   }
 }
+
+
 
 export async function deleteFinancialPlan(id: number) {
   try {

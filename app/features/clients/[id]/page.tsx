@@ -23,6 +23,7 @@ import {
   Banknote,
   Briefcase,
   Calendar,
+  CheckCircle2,
   Download,
   HeartHandshake,
   Mail,
@@ -37,6 +38,8 @@ import {
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import UpdateInvestmentDocsModal from "@/app/components/Client/UpdateInvestmentDocsModal";
+import { updateInvestmentDocuments } from "../../investments/actions";
 
 export default function ApplicationViewPage() {
   const queryClient = useQueryClient();
@@ -75,18 +78,6 @@ export default function ApplicationViewPage() {
   const handleDocsUpdate = async (updatedFiles: Record<string, string | null>) => {
     if (!updatedFiles) return;
 
-    // Merge the uploaded URLs into your existing applicant data
-    const finalFormData = {
-      ...formData, // whatever your main form data is
-      applicant: {
-        ...formData?.applicant,
-        idFront: updatedFiles.idFront ?? formData?.applicant.idFront,
-        idBack: updatedFiles.idBack ?? formData?.applicant.idBack,
-        paymentSlip: updatedFiles.paymentSlip ?? formData?.applicant.paymentSlip,
-        proposal: updatedFiles.proposal ?? formData?.applicant.proposal,
-        agreement: updatedFiles.agreement ?? formData?.applicant.agreement,
-      },
-    };
 
     try {
       const res = await updateClientDocuments(Number(id), updatedFiles);
@@ -141,15 +132,36 @@ export default function ApplicationViewPage() {
     router.push("/features/clients");
   };
 
+  const [docsModal, setDocsModal] = useState<{
+    open: boolean;
+    investmentId: number;
+    investmentRef: string;
+    currentDocs: { proposal?: string | null; agreement?: string | null; paymentSlip?: string | null };
+  }>({ open: false, investmentId: 0, investmentRef: "", currentDocs: {} });
+
+  const handleSaveInvestmentDocs = async (files: Record<string, string | null>) => {
+    // only send keys that actually have a new upload
+    const updates = Object.fromEntries(
+      Object.entries(files).filter(([, v]) => v !== null)
+    );
+    if (!Object.keys(updates).length) return;
+
+    await updateInvestmentDocuments(docsModal.investmentId, updates); // your server action
+    queryClient.invalidateQueries({ queryKey: ["client", Number(id)] }); // refresh client data
+  };
+
   if (isLoading) return <Loading />;
   if (isError) return <ErrorMessage />;
+
+  console.log(formData);
+  
 
   return (
     <div className="max-w-7xl mx-auto space-y-10 min-h-screen p-4 md:p-8 pb-24">
       {/* Hidden Proposal Template for PDF Generation */}
       <div className="hidden">
         <div ref={proposalRef}>
-          <ProposalTemplate data={formData}  />
+          <ProposalTemplate data={formData} />
         </div>
       </div>
 
@@ -245,9 +257,41 @@ export default function ApplicationViewPage() {
                     </span>
                   </div>
                 </div>
+                <div className="pt-5 mt-5 border-t border-slate-800 flex items-center justify-between gap-3 relative">
+                  <div className="flex gap-2 flex-wrap">
+                    {(["proposal", "agreement", "paymentSlip"] as const).map(key => {
+                      const labels = { proposal: "Proposal", agreement: "Agreement", paymentSlip: "Slip" };
+                      const present = !!inv[key];
+                      return (
+                        <span
+                          key={key}
+                          className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border ${present
+                            ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                            : "bg-slate-800 text-slate-500 border-slate-700"
+                            }`}
+                        >
+                          {present ? (
+                            <CheckCircle2 size={9} />
+                          ) : (
+                            <span className="w-2 h-2 rounded-full border border-slate-600 inline-block" />
+                          )}
+                          {labels[key]}
+                        </span>
+                      );
+                    })}
+                  </div>
+                  <button
+                    onClick={() => setDocsModal({ open: true, investmentId: inv.id, investmentRef: inv.refNumber, currentDocs: { proposal: inv.proposal, agreement: inv.agreement, paymentSlip: inv.paymentSlip } })}
+                    className="shrink-0 px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 text-blue-400 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-blue-500/20 transition-colors"
+                  >
+                    Docs
+                  </button>
+                </div>
               </div>
+
             );
           })}
+
         </div>
       </section>
 
@@ -338,7 +382,7 @@ export default function ApplicationViewPage() {
               <div className="p-6 space-y-5">
                 <DocPreview label="ID Front" url={formData?.applicant.idFront} id={formData?.applicant.nic} docKey="idFront" />
                 <DocPreview label="ID Back" url={formData?.applicant.idBack} id={formData?.applicant.nic} docKey="idBack" />
-                <DocPreview label="Agreement" url={formData?.applicant.agreement} id={formData?.applicant.nic} docKey="agreement" />
+                {/* <DocPreview label="Agreement" url={formData?.applicant.agreement} id={formData?.applicant.nic} docKey="agreement" /> */}
 
                 <div className="pt-6 border-t border-slate-100">
                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4">Digital Signature</p>
@@ -389,6 +433,15 @@ export default function ApplicationViewPage() {
         description={`This will permanently delete ${formData?.applicant?.fullName}. This action is irreversible.`}
         variant="danger"
       />
+
+      <UpdateInvestmentDocsModal
+  isOpen={docsModal.open}
+  onClose={() => setDocsModal(prev => ({ ...prev, open: false }))}
+  investmentId={docsModal.investmentId}
+  investmentRef={docsModal.investmentRef}
+  currentDocs={docsModal.currentDocs}
+  onSave={handleSaveInvestmentDocs}
+/>
       {showUpdateModel && <UpdateClientModal id={Number(id)} isOpen={showUpdateModel} onClose={() => setShowUpdateModel(false)} initialData={formData} onUpdate={handleDetailsUpdate} />}
       {showDocUpdateModel && <UpdateDocsModal isOpen={showDocUpdateModel} onClose={() => setDocShowUpdateModel(false)} onSave={handleDocsUpdate} />}
       {updateBeneficiary && <UpdateBeneficiary onClose={() => setUpdateBeneficiary(false)} initialData={selectBeneficiary} />}

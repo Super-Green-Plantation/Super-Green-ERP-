@@ -53,7 +53,7 @@ const uploadBase64ToSupabase = async (key: string, dataUrl: string): Promise<str
 const docFields = [
   { key: "idFront",     label: "ID / NIC — Front", description: "Clear photo or scan of front side" },
   { key: "idBack",      label: "ID / NIC — Back",  description: "Clear photo or scan of back side" },
-  { key: "paymentSlip", label: "Payment Slip",      description: "Your payment receipt or slip" },
+  // { key: "paymentSlip", label: "Payment Slip",      description: "Your payment receipt or slip" },
 ];
 
 export default function PublicUploadPage() {

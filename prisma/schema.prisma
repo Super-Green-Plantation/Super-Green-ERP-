@@ -282,7 +282,7 @@ model FinancialPlan {
   id          Int          @id @default(autoincrement())
   name        String
   duration    Int // months
-  rate        Float
+  rate        Float[]
   description String
   status      Status       @default(Active)
   investment  Float?
@@ -307,7 +307,7 @@ model Investment {
   planId Int?
   plan   FinancialPlan? @relation(fields: [planId], references: [id])
 
-  investmentRate Float?
+  investmentRates Float[] @default([]) // store the rate at time of investment for easy calculations
 
   advisorId Int?
   advisor   Member? @relation("AdvisorInvestments", fields: [advisorId], references: [id], onDelete: SetNull, onUpdate: Cascade)
@@ -329,6 +329,11 @@ model Investment {
   monthlyHarvest Float?
   totalHarvest   Float?
 
+  proposalFormNo String? @unique
+  proposal       String? // file URL
+  agreement      String? // file URL
+  paymentSlip    String? // file URL
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -347,13 +352,13 @@ model Client {
   dateOfBirth           DateTime?
   occupation            String?
   address               String
-  investmentAmount      Int
+  // investmentAmount      Int
   signature             String?
   idFront               String?
   idBack                String?
-  paymentSlip           String?
-  proposal              String?
-  agreement             String?
+  // paymentSlip           String?
+  // proposal              String?
+  // agreement             String?
   branchId              Int
   branch                Branch                  @relation(fields: [branchId], references: [id])
   status                Status                  @default(Active)
@@ -363,7 +368,7 @@ model Client {
   createdAt             DateTime                @default(now())
   updatedAt             DateTime                @updatedAt
   ClientDocumentRequest ClientDocumentRequest[]
-  proposalFormNo        String?                 @unique
+  // proposalFormNo        String?                 @unique
 
   createdById Int?
   createdBy   Member? @relation("CreatedByMember", fields: [createdById], references: [id])
@@ -372,7 +377,7 @@ model Client {
 model Beneficiary {
   id           Int     @id @default(autoincrement())
   fullName     String
-  nic          String? 
+  nic          String?
   phone        String
   bankName     String
   bankBranch   String
@@ -533,7 +538,6 @@ model ClientDocument {
 
   idFront     String?
   idBack      String?
-  paymentSlip String?
 
   uploadedAt DateTime @default(now())
 }

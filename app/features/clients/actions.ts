@@ -139,6 +139,9 @@ export async function getClientById(id: number) {
     },
   });
 
+  console.log("server's client : ", client);
+
+
 
 
   if (!client) {
@@ -198,7 +201,6 @@ const UNIQUE_FIELD_LABELS: Record<string, string> = {
   proposalFormNo: "Proposal Form Number",
 };
 
-// Create client with investment, beneficiary, and nominee
 export async function saveClient(data: {
   applicant: any;
   investment: any;
@@ -210,8 +212,8 @@ export async function saveClient(data: {
   if (!applicant.fullName || !applicant.address || !applicant.branchId) {
     return { success: false, error: "Missing required fields: fullName, address, branchId" };
   }
+  console.log("data : " + JSON.stringify(data));
 
-  const investmentNumber = generateInvestmentNumber();
 
   try {
     const currentUser = await getCurrentUserWithRole();
@@ -224,8 +226,7 @@ export async function saveClient(data: {
         },
       });
 
-      // Create beneficiary and nominee first so we have their IDs
-      const createdClient = await tx.client.create({
+      const createClient = await tx.client.create({
         data: {
           fullName: applicant.fullName,
           nic: applicant.nic || null,
@@ -237,19 +238,20 @@ export async function saveClient(data: {
           dateOfBirth: applicant.dateOfBirth ? new Date(applicant.dateOfBirth) : null,
           occupation: applicant.occupation || null,
           address: applicant.address,
-          investmentAmount: Number(applicant.investmentAmount),
+          // investmentAmount: Number(applicant.investmentAmount),
           branchId: applicant.branchId,
-          proposalFormNo: applicant.proposalFormNo || null,
+          // proposalFormNo: applicant.proposalFormNo || null,
           signature: applicant.signature,
           idFront: applicant.idFront,
           idBack: applicant.idBack,
-          paymentSlip: applicant.paymentSlip,
-          proposal: applicant.proposal,
-          agreement: applicant.agreement,
-          memberId: member ? member.id : null,
+          // paymentSlip: applicant.paymentSlip,
+          // proposal: applicant.proposal,
+          // agreement: applicant.agreement,
+          // memberId: member ? member.id : null,
           createdById: currentUser?.member?.id ?? null,
         },
       });
+
 
       if (member) {
         await tx.member.update({
@@ -263,7 +265,7 @@ export async function saveClient(data: {
       if (beneficiary?.fullName) {
         const createdBeneficiary = await tx.beneficiary.create({
           data: {
-            clientId: createdClient.id,
+            clientId: createClient.id,
             fullName: beneficiary.fullName,
             nic: beneficiary.nic || null,
             phone: beneficiary.phone || "",
@@ -281,7 +283,7 @@ export async function saveClient(data: {
       if (nominee?.fullName) {
         const createdNominee = await tx.nominee.create({
           data: {
-            clientId: createdClient.id,
+            clientId: createClient.id,
             fullName: nominee.fullName,
             nic: nominee.nic || "",
             permanentAddress: nominee.permanentAddress || "",
@@ -300,29 +302,40 @@ export async function saveClient(data: {
       });
 
       const maturityDate = plan
-        ? new Date(
-          new Date(investmentDate).setMonth(
-            new Date(investmentDate).getMonth() + plan.duration
-          )
+        ? new Date(new Date(investmentDate).setMonth(
+          new Date(investmentDate).getMonth() + plan.duration
+        )
         )
         : null;
 
-      // Use submitted rate (handles special employee override), fall back to plan rate
-      const investmentRate =
-        investment.investmentRate != null
-          ? Number(investment.investmentRate)
-          : plan?.rate ?? 0;
+      const investmentRates: number[] =
+        Array.isArray(investment.investmentRates) && investment.investmentRates.length > 0
+          ? investment.investmentRates.map((r: any) => parseFloat(r))
+          : Array.isArray(plan?.rate) && plan.rate.length > 0
+            ? plan.rate
+            : [];
 
       const amount = Number(applicant.investmentAmount);
       const months = plan?.duration ?? 0;
+      const years = investmentRates.length;
+      const monthsPerYear = years > 0 ? months / years : 0;
 
-      const totalHarvest = Math.round(amount * (investmentRate / 100) * (months / 12));
+      const totalHarvest =
+        investmentRates.length && months
+          ? Math.round(
+            investmentRates.reduce(
+              (sum, rate) => sum + amount * (rate / 100) * (monthsPerYear / 12),
+              0
+            )
+          )
+          : 0;
+
       const monthlyHarvest = months > 0 ? Math.round(totalHarvest / months) : 0;
 
-      const createdInvestment = await tx.investment.create({
+      const createInvestment = await tx.investment.create({
         data: {
-          clientId: createdClient.id,
-          refNumber: investmentNumber,
+          clientId: createClient.id,
+          refNumber: generateInvestmentNumber(),
           branchId: applicant.branchId,
           planId: Number(investment.planId),
           investmentDate,
@@ -330,13 +343,17 @@ export async function saveClient(data: {
           amount,
           beneficiaryId,
           nomineeId,
-          investmentRate,
+          investmentRates,    // ← array
           totalHarvest,
           monthlyHarvest,
+          proposalFormNo: applicant.proposalFormNo || null,
+          proposal: applicant.proposal,
+          paymentSlip: applicant.paymentSlip,
+          agreement: applicant.agreement,
         },
       });
 
-      return { ...createdClient, investments: [createdInvestment] };
+      return { ...createClient, investments: [createInvestment] };
     });
 
     revalidatePath("/features/clients");
@@ -396,14 +413,11 @@ export async function updateClient(id: number, formData: any) {
         address: formData.applicant.address || null,
         drivingLicense: formData.applicant.drivingLicense || null,
         passportNo: formData.applicant.passportNo || null,
-        proposalFormNo: formData.applicant.proposalFormNo || null,
+
         phoneLand: formData.applicant.phoneLand || null,
         idFront: formData.applicant.idFront || null,
         idBack: formData.applicant.idBack || null,
-        paymentSlip: formData.applicant.paymentSlip || null,
-        proposal: formData.applicant.proposal || null,
-        agreement: formData.applicant.agreement || null,
-        investmentAmount: Number(formData.applicant.investmentAmount) || undefined,
+
 
         dateOfBirth: formData.applicant.dateOfBirth
           ? new Date(formData.applicant.dateOfBirth)
@@ -427,6 +441,11 @@ export async function updateClient(id: number, formData: any) {
             ? Number(formData.investment.planId)
             : existingInvestment.planId,
           amount: Number(formData.applicant.investmentAmount) ?? Number(existingInvestment.amount),
+          investmentDate: formData.investment?.investmentDate,
+          proposalFormNo: formData.applicant.proposalFormNo || null,
+          paymentSlip: formData.applicant.paymentSlip || null,
+          proposal: formData.applicant.proposal || null,
+          agreement: formData.applicant.agreement || null,
         },
       });
     }
@@ -541,9 +560,7 @@ export async function updateClientDocuments(
   data: {
     idFront?: string;
     idBack?: string;
-    paymentSlip?: string;
-    proposal?: string;
-    agreement?: string;
+
   }
 ) {
   if (!clientId) return { success: false, error: "Client ID is required" };
@@ -559,9 +576,7 @@ export async function updateClientDocuments(
       data: {
         idFront: data.idFront ?? undefined,
         idBack: data.idBack ?? undefined,
-        paymentSlip: data.paymentSlip ?? undefined,
-        proposal: data.proposal ?? undefined,
-        agreement: data.agreement ?? undefined,
+
       },
     });
 
@@ -743,7 +758,7 @@ export async function saveUploadedDocuments(
   urls: {
     idFront?: string;
     idBack?: string;
-    paymentSlip?: string;
+    // paymentSlip?: string;
     signature?: string; // ← optional, not required
   }
 ) {
@@ -761,7 +776,7 @@ export async function saveUploadedDocuments(
       data: {
         idFront: urls.idFront ?? undefined,
         idBack: urls.idBack ?? undefined,
-        paymentSlip: urls.paymentSlip ?? undefined,
+        // paymentSlip: urls.paymentSlip ?? undefined,
         signature: urls.signature ?? undefined,
       },
     }),
@@ -847,7 +862,7 @@ export async function searchClients(searchText: string) {
 }
 
 export async function updateBeneficiary(data: any) {
-  console.log("beni data",data);
+  console.log("beni data", data);
   try {
 
     const updatedBeneficiary = await prisma.beneficiary.update({
@@ -873,7 +888,7 @@ export async function updateBeneficiary(data: any) {
 
 export async function updateNominee(data: any) {
   console.log(data);
-  
+
   try {
     const updatedNominee = await prisma.nominee.update({
       where: { id: data.id },
