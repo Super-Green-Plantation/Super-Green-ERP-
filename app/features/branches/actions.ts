@@ -237,7 +237,50 @@ export async function searchEmployees(searchText: string) {
         { nameWithInitials: { contains: searchText, mode: "insensitive" } },
       ],
     },
-    include:{branches:{include:{branch:true}}},
+    include: { branches: { include: { branch: true } } },
     take: 10, // ✅ limit for dropdown
   });
+}
+
+export async function getBranchThisMonthProposalCount() {
+  try {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    const [branches, proposalGroups] = await Promise.all([
+      prisma.branch.findMany({
+        select: { id: true, name: true },
+      }),
+      prisma.investment.groupBy({
+        by: ["branchId"],
+        where: {
+          proposalFormNo: { not: null },
+          investmentDate: {
+            gte: monthStart,
+            lte: monthEnd,
+          },
+        },
+        _count: { proposalFormNo: true },
+      }),
+    ]);
+
+    const countMap = new Map(
+      proposalGroups.map(g => [g.branchId, g._count.proposalFormNo])
+    );
+
+    console.log(branches.map(branch => ({
+     
+      proposalCount: countMap.get(branch.id) ?? 0,
+    })))
+
+    return branches.map(branch => ({
+      branchId: branch.id,
+      branchName: branch.name,
+      proposalCount: countMap.get(branch.id) ?? 0,
+    }));
+  } catch (error) {
+    console.error("Error fetching branch proposal counts:", error);
+    throw new Error("Failed to fetch branch proposal counts");
+  }
 }

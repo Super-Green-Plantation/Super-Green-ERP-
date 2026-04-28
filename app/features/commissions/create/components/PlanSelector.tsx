@@ -9,7 +9,7 @@ const PlanSelector = ({
   selectedInvestmentId,
   onChange,
 }: PlanSelectorProps) => {
-  
+
   return (
     <div>
       <label className="block text-xs font-medium text-gray-400 mb-1">
@@ -27,8 +27,20 @@ const PlanSelector = ({
 
         {investments?.map((inv) => (
           <option key={inv.id} value={inv.id}>
-            {inv.plan?.name ?? "Plan"} — Rs.{" "}
-            {inv.amount.toLocaleString()}
+            <div className="flex justify-evenly">
+              <span>
+                {inv.plan?.name ?? "Plan"} — Rs.{" "}
+              </span>
+              <span>
+                {inv.amount.toLocaleString()} {"    "}
+              </span>
+              <span>
+                Proposal — {inv.proposalFormNo}
+              </span>
+
+
+            </div>
+
           </option>
         ))}
       </select>

@@ -4,7 +4,7 @@ import Heading from "@/app/components/Heading";
 import { Search, Users } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getBranchById, getBranchesByMemberId, searchEmployees } from "../actions";
+import { getBranchById, getBranchesByMemberId, getBranchThisMonthProposalCount, searchEmployees } from "../actions";
 import { useBranches } from "@/app/hooks/useBranches";
 import Loading from "@/app/components/Status/Loading";
 import Error from "@/app/components/Status/Error";
@@ -16,6 +16,11 @@ interface Branch {
   members: Array<any>;
 }
 
+interface BranchProposalCount {
+  branchName: string;   // was "brnachName"
+  branchId: number;
+  proposalCount: number;
+}
 const Page = () => {
   const { data: branches, isLoading: branchesLoading, error } = useBranches();
   const [dbUser, setDbUser] = useState<any>(null);
@@ -23,6 +28,15 @@ const Page = () => {
   const [searchText, setSearchText] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [proposalCounts, setProposalCounts] = useState<BranchProposalCount[]>([]);
+
+  // build lookup map once both datasets are ready
+  const proposalMap = new Map<number, number>(proposalCounts.map(p => [p.branchId, p.proposalCount]));
+
+
+  useEffect(() => {
+    getBranchThisMonthProposalCount().then(setProposalCounts);
+  }, []);
 
   const getUser = async () => {
     const { dbUser } = await fetch("/api/me").then((res) => res.json());
@@ -47,7 +61,6 @@ const Page = () => {
         setBranch([singleBranch]);
       }
     };
-
     loadBranch();
   }, [dbUser, branches]);
 
@@ -62,13 +75,10 @@ const Page = () => {
       const res = await searchEmployees(searchText);
       setResults(res ?? []);
       setLoading(false);
-    }, 400); 
+    }, 400);
 
-    console.log(results);
-    
     return () => clearTimeout(delay);
   }, [searchText]);
-
 
   if (branchesLoading) return <Loading />;
   if (error) return <Error />
@@ -85,7 +95,7 @@ const Page = () => {
         </p>
       </div>
 
-       <ProposalReportExport/>
+      <ProposalReportExport />
 
       <div className="relative w-full">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -128,45 +138,40 @@ const Page = () => {
 
       {/* Branch Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {branch?.map((branch: Branch) => (
-          <Link
-            key={branch.id}
-            href={`/features/branches/employees/${branch.id}`}
-            className="group"
-          >
-            <div
-              className="
-                rounded-3xl border border-border
-                bg-card p-6
-                transition-all duration-300
-                hover:bg-muted/50
-                hover:border-primary/50
-                hover:shadow-xl hover:shadow-primary/5
-                group-active:scale-[0.98]
-              "
-            >
-              <div className="flex items-center gap-4">
-                <div className="h-12 w-12 flex items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 shrink-0">
-                  <Users size={20} />
-                </div>
+        {branch?.map((b: Branch) => {
+          const proposals = proposalMap.get(b.id) ?? 0;
 
-                <div className="min-w-0">
-                  <h3 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors truncate">
-                    {branch.name}
-                  </h3>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest bg-muted px-2 py-0.5 rounded-lg border border-border/50">
-                      {branch.members.length} Staff
-                    </span>
+          return (
+            <Link key={b.id} href={`/features/branches/employees/${b.id}`} className="group">
+              <div className="rounded-3xl border border-border bg-card p-6 transition-all duration-300 hover:bg-muted/50 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5 group-active:scale-[0.98]">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 flex items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 shrink-0">
+                    <Users size={20} />
                   </div>
-                  <p className="text-[10px] font-bold text-primary uppercase tracking-[0.15em] mt-3 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
-                    Manage Team →
-                  </p>
+
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors truncate">
+                      {b.name}
+                    </h3>
+
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest bg-muted px-2 py-0.5 rounded-lg border border-border/50">
+                        {b.members.length} Staff
+                      </span>
+                      <span className="text-[10px] font-bold text-primary/70 uppercase tracking-widest bg-primary/5 px-2 py-0.5 rounded-lg border border-primary/10">
+                       This month {proposals} Proposals
+                      </span>
+                    </div>
+
+                    <p className="text-[10px] font-bold text-primary uppercase tracking-[0.15em] mt-3 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
+                      Manage Team →
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
-          </Link>
-        ))}
+            </Link>
+          );
+        })}
       </div>
     </div>
   );

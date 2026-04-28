@@ -386,7 +386,7 @@ export default function ApplicationViewPage() {
 
                 <div className="pt-6 border-t border-slate-100">
                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-4">Digital Signature</p>
-                  <div className="bg-slate-50 rounded-2xl p-6 border border-dashed border-slate-200 flex items-center justify-center min-h-[100px]">
+                  <div className="bg-slate-50 rounded-2xl p-6 border border-dashed border-slate-200 flex items-center justify-center min-h-25">
                     {formData?.applicant.signature ? (
                       <img src={formData?.applicant.signature} alt="Signature" className="max-h-16 object-contain mix-blend-multiply opacity-80" />
                     ) : (
