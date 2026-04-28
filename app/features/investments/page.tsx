@@ -12,11 +12,18 @@ import {
   BanknoteArrowUp, Calendar, Download,
   ExternalLink, TrendingUp, User, AlertCircle, Wallet,
   Pencil,
+  Loader2,
+  Search,
+  X,
+  ChevronDown,
 } from "lucide-react";
 import { useIsMounted } from "@/app/hooks/useIsMounted";
 import { generateInvestmentsReportPDF } from "@/app/pdf/InvestmentsReport";
 import Heading from "@/app/components/Heading";
 import { ProposalReportExport } from "@/app/components/Buttons/ProposalReportExport";
+import { useQuery } from "@tanstack/react-query";
+import { getBranches } from "../branches/actions";
+import { getInvestmentSummary, searchInvestments } from "./actions";
 
 const fmt = (n: number) =>
   n >= 1_000_000
@@ -66,46 +73,88 @@ export default function InvestmentsPage() {
   const router = useRouter();
   const { data: userData, isLoading: userLoading } = useSessionUser();
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchText, setSearchText] = useState("");
+  const [branchId, setBranchId] = useState<string>("all");
+
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+
+  const { data: summary } = useQuery({
+    queryKey: ["investment-summary", branchId, dateFrom, dateTo],
+    queryFn: () => getInvestmentSummary({
+      branchId: branchId !== "all" ? Number(branchId) : undefined,
+      from: dateFrom ? new Date(dateFrom) : undefined,
+      to: dateTo ? new Date(dateTo) : undefined,
+    }),
+  });
+
+  const { data: branchData } = useQuery({
+    queryKey: ["branches"],
+    queryFn: async () => {
+      const res = await getBranches();
+      return res?.branches || res || [];
+    },
+  });
+
+  useEffect(() => { setCurrentPage(1); }, [searchText, branchId]);
+
   const { data, isLoading, isError } = useInvestments(currentPage);
 
-  console.log(data);
+  const isFiltered = searchText.trim() !== "" || branchId !== "all";
+
+  const { data: filteredData, isFetching: isFilterFetching } = useQuery({
+    queryKey: ["investments-filtered", searchText, branchId, currentPage],
+    queryFn: async () => {
+      return await searchInvestments(
+        searchText,
+        branchId !== "all" ? Number(branchId) : undefined
+      );
+    },
+    enabled: isFiltered,
+  });
 
   useEffect(() => {
     if (!userLoading && userData) {
       const isPrivileged = ["ADMIN", "HR", "DEV", "BRANCH_MANAGER"].includes(userData.role);
-      if (!isPrivileged) {
-        router.push("/features/clients");
-      }
+      if (!isPrivileged) router.push("/features/clients");
     }
   }, [userData, userLoading, router]);
 
   if (isLoading || userLoading) return <Loading />;
   if (isError) return <Error />;
 
-  const investments = data?.investments ?? [];
-  const totalPages = data?.totalPages ?? 1;
-  const total = data?.total ?? 0;
+  const investments = isFiltered
+    ? (filteredData?.investments ?? [])
+    : (data?.investments ?? []);
+
+  const totalPages = isFiltered ? 1 : (data?.totalPages ?? 1);
+  const total = isFiltered ? (filteredData?.total ?? 0) : (data?.total ?? 0);
+  const isTableFetching = isFiltered && isFilterFetching;
+
+  const handleClear = () => {
+    setSearchText("");
+    setBranchId("all");
+    setDateFrom("");
+    setDateTo("");
+    setCurrentPage(1);
+  };
 
   const getCurrentRate = (inv: any): string => {
-  const rates: number[] = Array.isArray(inv.investmentRates) ? inv.investmentRates : [];
-  if (rates.length === 0) return "N/A";
-  if (rates.length === 1) return `${rates[0]}%`;
-
-  const months = inv.plan?.duration ?? 0;
-  if (!months) return `${rates[0]}%`;
-
-  const monthsPerYear = months / rates.length;
-  const monthsElapsed =
-    (new Date().getFullYear() - new Date(inv.investmentDate).getFullYear()) * 12 +
-    (new Date().getMonth() - new Date(inv.investmentDate).getMonth());
-
-  const yearIndex = Math.min(
-    Math.floor(monthsElapsed / monthsPerYear),
-    rates.length - 1
-  );
-
-  return `${rates[yearIndex]}% (Yr ${yearIndex + 1})`;
-};
+    const rates: number[] = Array.isArray(inv.investmentRates) ? inv.investmentRates : [];
+    if (rates.length === 0) return "N/A";
+    if (rates.length === 1) return `${rates[0]}%`;
+    const months = inv.plan?.duration ?? 0;
+    if (!months) return `${rates[0]}%`;
+    const monthsPerYear = months / rates.length;
+    const monthsElapsed =
+      (new Date().getFullYear() - new Date(inv.investmentDate).getFullYear()) * 12 +
+      (new Date().getMonth() - new Date(inv.investmentDate).getMonth());
+    const yearIndex = Math.min(
+      Math.floor(monthsElapsed / monthsPerYear),
+      rates.length - 1
+    );
+    return `${rates[yearIndex]}% (Yr ${yearIndex + 1})`;
+  };
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 p-4 md:p-8 min-h-screen">
@@ -113,14 +162,9 @@ export default function InvestmentsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
         <div className="flex items-center gap-4">
-
           <div>
-            <Heading>
-              Investments
-            </Heading>
-            <p className="text-sm font-bold text-foreground">
-              {total} total investments
-            </p>
+            <Heading>Investments</Heading>
+            <p className="text-sm font-bold text-foreground">{total} total investments</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -134,127 +178,223 @@ export default function InvestmentsPage() {
           )}
           <Link
             href="/features/investments/create"
-            className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-blue-600 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-lg shadow-slate-900/20 active:scale-95"
+            className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-blue-600 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-lg active:scale-95"
           >
             <BanknoteArrowUp className="w-4 h-4" /> New Investment
-
           </Link>
         </div>
       </div>
 
+      {/* Date range + Summary cards */}
+      <div className="space-y-4">
 
-      {/* Empty state */}
-      {investments.length === 0 ? (
+        {/* Date pickers */}
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2 px-4 py-2.5 bg-card border border-border rounded-xl">
+            <Calendar className="w-4 h-4 text-muted-foreground shrink-0" />
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={e => { setDateFrom(e.target.value); setCurrentPage(1); }}
+              className="bg-transparent text-sm font-semibold text-foreground outline-none w-36"
+            />
+          </div>
+          <span className="text-xs font-bold text-muted-foreground">to</span>
+          <div className="flex items-center gap-2 px-4 py-2.5 bg-card border border-border rounded-xl">
+            <Calendar className="w-4 h-4 text-muted-foreground shrink-0" />
+            <input
+              type="date"
+              value={dateTo}
+              onChange={e => { setDateTo(e.target.value); setCurrentPage(1); }}
+              className="bg-transparent text-sm font-semibold text-foreground outline-none w-36"
+            />
+          </div>
+          {(dateFrom || dateTo) && (
+            <button
+              onClick={() => { setDateFrom(""); setDateTo(""); }}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-muted-foreground hover:text-destructive transition-colors"
+            >
+              <X className="w-3.5 h-3.5" /> Clear dates
+            </button>
+          )}
+        </div>
+
+        {/* Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="bg-card border border-border rounded-2xl p-5 space-y-1">
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+              Total Invested
+            </p>
+            <p className="text-2xl font-black text-foreground tabular-nums tracking-tight">
+              <span className="text-sm font-bold text-muted-foreground mr-1">Rs.</span>
+              {(summary?.totalAmount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+            </p>
+            {(dateFrom || dateTo) && (
+              <p className="text-[10px] text-muted-foreground font-medium">
+                {dateFrom && dateTo
+                  ? `${new Date(dateFrom).toLocaleDateString("en-GB", { day: "numeric", month: "short" })} – ${new Date(dateTo).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`
+                  : dateFrom ? `From ${new Date(dateFrom).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`
+                    : `Until ${new Date(dateTo).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`}
+              </p>
+            )}
+          </div>
+
+          <div className="bg-card border border-border rounded-2xl p-5 space-y-1">
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+              Total Investments
+            </p>
+            <p className="text-2xl font-black text-foreground tabular-nums">
+              {summary?.investmentCount ?? 0}
+            </p>
+            <p className="text-[10px] text-muted-foreground font-medium">records</p>
+          </div>
+
+          <div className="bg-card border border-border rounded-2xl p-5 space-y-1">
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+              Proposals Filed
+            </p>
+            <p className="text-2xl font-black text-foreground tabular-nums">
+              {summary?.proposalCount ?? 0}
+            </p>
+            <p className="text-[10px] text-muted-foreground font-medium">
+              of {summary?.investmentCount ?? 0} have proposal no.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Search & Filter */}
+      <div className="flex flex-col md:flex-row gap-3 items-center">
+        <div className="lg:col-span-2 border-2 border-teal-800 rounded-full flex-1">
+          <div className="relative flex-1 w-full">
+            {isTableFetching ? (
+              <Loader2 className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-teal-700 animate-spin" />
+            ) : (
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+            )}
+            <input
+              value={searchText}
+              onChange={e => setSearchText(e.target.value)}
+              type="text"
+              placeholder="Search by NIC, Proposal No. or Ref No."
+              className="w-full bg-transparent border-none pl-11 pr-10 py-3 text-sm font-semibold text-foreground outline-none"
+            />
+            {searchText && (
+              <button
+                onClick={() => setSearchText("")}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-destructive"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="relative w-full md:w-52">
+          <select
+            value={branchId}
+            onChange={e => setBranchId(e.target.value)}
+            className="w-full appearance-none pl-4 pr-10 py-3 bg-background border-2 border-teal-800 rounded-full text-sm font-semibold text-foreground outline-none cursor-pointer focus:ring-2 focus:ring-teal-600"
+          >
+            <option value="all">All Branches</option>
+            {branchData?.map((branch: any) => (
+              <option key={branch.id} value={branch.id}>{branch.name}</option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+        </div>
+
+        {isFiltered && (
+          <button
+            onClick={handleClear}
+            className="px-5 py-3 text-sm font-bold text-muted-foreground hover:text-foreground bg-muted hover:bg-muted/80 rounded-xl transition-colors whitespace-nowrap"
+          >
+            Clear
+          </button>
+        )}
+      </div>
+
+      {/* Table */}
+      {investments.length === 0 && !isTableFetching ? (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-16 text-center">
           <div className="p-4 bg-slate-50 rounded-2xl w-fit mx-auto mb-4">
             <Wallet className="w-10 h-10 text-slate-200" />
           </div>
           <h3 className="text-sm font-bold text-slate-600 uppercase tracking-widest mb-2">
-            No investments yet
+            {isFiltered ? "No results found" : "No investments yet"}
           </h3>
           <p className="text-xs text-slate-400 font-medium mb-6">
-            Get started by creating your first investment
+            {isFiltered ? "Try a different search or clear filters" : "Get started by creating your first investment"}
           </p>
-          <Link
-            href="/features/investments/create"
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-blue-600 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all active:scale-95"
-          >
-            <BanknoteArrowUp className="w-4 h-4" /> Create Investment
-          </Link>
+          {!isFiltered && (
+            <Link
+              href="/features/investments/create"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-blue-600 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all active:scale-95"
+            >
+              <BanknoteArrowUp className="w-4 h-4" /> Create Investment
+            </Link>
+          )}
         </div>
       ) : (
-        /* Table */
-        <div className=" overflow-hidden">
+        <div className="relative overflow-hidden">
+          {isTableFetching && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50 rounded-xl backdrop-blur-sm">
+              <Loader2 className="h-7 w-7 animate-spin text-teal-700" />
+            </div>
+          )}
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                {/* Header with better contrast using muted-foreground */}
                 <tr className="bg-muted/50 border-b border-border">
                   {["Proposal No.", "Client", "Plan", "Amount", "Inv. Date", "Maturity", "Advisor", "Actions"].map(h => (
-                    <th
-                      key={h}
-                      className={`px-5 py-4 text-[11px] font-extrabold uppercase tracking-widest text-muted-foreground ${h === "Actions" ? "text-center" : ""}`}
-                    >
+                    <th key={h} className={`px-5 py-4 text-[11px] font-extrabold uppercase tracking-widest text-muted-foreground ${h === "Actions" ? "text-center" : ""}`}>
                       {h}
                     </th>
                   ))}
                 </tr>
               </thead>
-
               <tbody className="divide-y divide-border/60">
                 {investments.map((inv: any) => (
                   <tr key={inv.id} className="hover:bg-muted/30 transition-colors group">
-
-                    {/* Proposal No - Mono font for data clarity */}
                     <td className="px-5 py-4">
                       <span className="text-[11px] font-bold text-muted-foreground/80 font-mono tracking-tighter">
-                        {inv.client?.proposalFormNo ?? `#${inv.id}`}
+                        {inv.proposalFormNo ?? `#${inv.id}`}
                       </span>
                     </td>
-
-                    {/* Client Info - High contrast name */}
                     <td className="px-3 py-4">
-                      <div>
-                        <p className="text-sm font-bold text-foreground leading-tight">
-                          {inv.client?.fullName ?? "—"}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground font-semibold">
-                          {inv.client?.nic ?? "No NIC"}
-                        </p>
-                      </div>
+                      <p className="text-sm font-bold text-foreground leading-tight">{inv.client?.fullName ?? "—"}</p>
+                      <p className="text-[10px] text-muted-foreground font-semibold">{inv.client?.nic ?? "No NIC"}</p>
                     </td>
-
-                    {/* Plan Info */}
                     <td className="px-6 py-5 text-right font-medium text-muted-foreground text-xs text-nowrap">
                       <p>{inv.plan?.name || "N/A"}</p>
                       <p className="text-foreground font-bold mt-0.5">{getCurrentRate(inv)}</p>
                     </td>
-
-                    {/* Amount - Boldest text for financial focus */}
                     <td className="px-5 py-4">
-                      <p className="text-sm font-black text-foreground tabular-nums">
-                        Rs. {fmt(inv.amount)}
-                      </p>
+                      <p className="text-sm font-black text-foreground tabular-nums">Rs. {fmt(inv.amount)}</p>
                     </td>
-
-                    {/* Investment Date */}
                     <td className="px-5 py-4">
                       <div className="text-xs font-bold text-muted-foreground/90">
                         {inv.investmentDate && isMounted
-                          ? new Date(inv.investmentDate).toLocaleDateString("en-GB", {
-                            day: "numeric", month: "short", year: "numeric",
-                          })
+                          ? new Date(inv.investmentDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
                           : "—"}
                       </div>
                     </td>
-
-                    {/* Maturity Status */}
                     <td className="px-5 py-4">
                       <div className="space-y-1">
                         <MaturityBadge maturityDate={inv.maturityDate} isMatured={inv.isMatured} isMounted={isMounted} />
                         {inv.maturityDate && isMounted && (
                           <p className="text-[10px] text-muted-foreground font-semibold">
-                            {new Date(inv.maturityDate).toLocaleDateString("en-GB", {
-                              day: "numeric", month: "short", year: "numeric",
-                            })}
+                            {new Date(inv.maturityDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
                           </p>
                         )}
                       </div>
                     </td>
-
-                    {/* Advisor - Forest Green accents */}
                     <td className="px-5 py-4">
                       <p className="text-xs font-bold text-foreground/80">
-                        {inv.advisor?.nameWithInitials ?? (
-                          <span className="text-muted-foreground/40 italic">Unassigned</span>
-                        )}
+                        {inv.advisor?.nameWithInitials ?? <span className="text-muted-foreground/40 italic">Unassigned</span>}
                       </p>
-                      {inv.advisor && (
-                        <p className="text-[10px] text-primary font-bold">{inv.advisor.empNo}</p>
-                      )}
+                      {inv.advisor && <p className="text-[10px] text-primary font-bold">{inv.advisor.empNo}</p>}
                     </td>
-
-                    {/* Actions - Themed Button */}
                     <td className="px-5 py-4">
                       <div className="flex items-center justify-center gap-2">
                         <Link
@@ -276,8 +416,6 @@ export default function InvestmentsPage() {
               </tbody>
             </table>
           </div>
-
-          {/* Pagination container with themed top border */}
           <div className="border-t border-border bg-muted/20">
             <Pagination
               currentPage={currentPage}

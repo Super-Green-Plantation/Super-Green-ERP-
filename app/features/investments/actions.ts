@@ -613,3 +613,116 @@ export async function updateInvestmentDocuments(
     return { success: false, error: "Failed to update investment documents" };
   }
 }
+
+
+export async function searchInvestments(searchText: string, branchId?: number) {
+  const dbUser = await getCurrentUserWithRole();
+  if (!dbUser) throw new Error("User not found");
+
+  // base search — by client NIC or proposal form number on the investment
+  let whereCondition: any = {
+    OR: [
+      { client: { nic: { contains: searchText, mode: "insensitive" } } },
+      { proposalFormNo: { contains: searchText, mode: "insensitive" } },
+      { refNumber: { contains: searchText, mode: "insensitive" } },
+    ],
+  };
+
+  // branch filter
+  if (branchId) {
+    whereCondition.branchId = branchId;
+  }
+
+  // role-based access
+  switch (dbUser.role) {
+    case "ADMIN":
+    case "HR":
+    case "DEV":
+      break;
+
+    case "EMPLOYEE": {
+      if (!dbUser.member?.id) throw new Error("Member not found");
+      whereCondition = {
+        ...whereCondition,
+        client: { ...whereCondition.client, createdById: dbUser.member.id },
+      };
+      break;
+    }
+
+    case "BRANCH_MANAGER":
+    case "REGIONAL_MANAGER":
+    case "AGM": {
+      const branchIds = dbUser.member?.branches?.map((mb) => mb.branchId) ?? [];
+      if (branchIds.length === 0) throw new Error("No branches assigned");
+      whereCondition = {
+        ...whereCondition,
+        branchId: { in: branchIds },
+      };
+      break;
+    }
+
+    default:
+      throw new Error("Unauthorized role");
+  }
+
+  const investments = await prisma.investment.findMany({
+    where: whereCondition,
+    include: {
+      client: true,
+      plan: true,
+      advisor: true,
+    },
+    orderBy: { investmentDate: "desc" },
+    take: 20,
+  });
+
+  return { investments, total: investments.length };
+}
+
+export async function getInvestmentSummary(filters: {
+  branchId?: number;
+  from?: Date;
+  to?: Date;
+}) {
+  const dbUser = await getCurrentUserWithRole();
+  if (!dbUser) throw new Error("User not found");
+
+  let whereCondition: any = {};
+
+  if (filters.branchId) whereCondition.branchId = filters.branchId;
+
+  if (filters.from || filters.to) {
+    whereCondition.investmentDate = {
+      ...(filters.from && { gte: filters.from }),
+      ...(filters.to && { lte: filters.to }),
+    };
+  }
+
+  // role-based access
+  switch (dbUser.role) {
+    case "ADMIN": case "HR": case "DEV": break;
+    case "BRANCH_MANAGER": case "REGIONAL_MANAGER": case "AGM": {
+      const branchIds = dbUser.member?.branches?.map(mb => mb.branchId) ?? [];
+      whereCondition.branchId = { in: branchIds };
+      break;
+    }
+    default: throw new Error("Unauthorized");
+  }
+
+  const [totalAmount, proposalCount, investmentCount] = await Promise.all([
+    prisma.investment.aggregate({
+      where: whereCondition,
+      _sum: { amount: true },
+    }),
+    prisma.investment.count({
+      where: { ...whereCondition, proposalFormNo: { not: null } },
+    }),
+    prisma.investment.count({ where: whereCondition }),
+  ]);
+
+  return {
+    totalAmount:     totalAmount._sum.amount ?? 0,
+    proposalCount,
+    investmentCount,
+  };
+}

@@ -175,6 +175,12 @@ model PositionSalary {
   basicSalaryProbation Float @default(0)
 }
 
+enum Channel {
+  Chanel_01
+  Chanel_02
+  Micro
+}
+
 //many side ekata foreign key eka / Parent has an array
 model Member {
   id                     Int       @id @default(autoincrement())
@@ -211,6 +217,8 @@ model Member {
 
   positionId Int
   position   Position @relation(fields: [positionId], references: [id])
+
+  channel Channel @default(Chanel_01)
 
   branches           MemberBranch[]
   commissions        Commission[]
@@ -292,6 +300,12 @@ model FinancialPlan {
   updatedAt DateTime @updatedAt
 }
 
+enum InvStatus {
+  Active
+  Inactive
+  Renew
+}
+
 model Investment {
   id             Int      @id @default(autoincrement())
   refNumber      String?
@@ -326,6 +340,7 @@ model Investment {
   isMatured        Boolean   @default(false)
   maturityNotified Boolean   @default(false) // track if notification was sent
 
+  status         InvStatus @default(Active)
   monthlyHarvest Float?
   totalHarvest   Float?
 
@@ -536,8 +551,8 @@ model ClientDocument {
   requestId Int
   request   ClientDocumentRequest @relation(fields: [requestId], references: [id])
 
-  idFront     String?
-  idBack      String?
+  idFront String?
+  idBack  String?
 
   uploadedAt DateTime @default(now())
 }
