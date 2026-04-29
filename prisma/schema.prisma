@@ -35,8 +35,7 @@ enum Title {
   // Management/Support
   ADMIN
   CHAIRMEN
-  COO
-  GM
+
   HR
   ACC
   IT
@@ -52,7 +51,7 @@ enum Title {
   BM // probation BM
   RM // probation RM
   ZM // probation ZM
-  P_AGM // probation AGM
+  PRO_AGM // probation AGM
 
   // Permanent positions
   TRAINEE_FA
@@ -64,8 +63,11 @@ enum Title {
   SRM
   JZM
   SZM
-  AGM
-
+  PER_AGM
+  COO
+  DGM
+  GM
+  
   SE
 }
 

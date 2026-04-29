@@ -13,7 +13,7 @@ export async function getEmployeePerformance(memberId: number) {
     where: { id: memberId },
     select: {
       status: true,
-      probationStartDate: true,
+      dateOfJoin: true,
       positionId: true,
       position: {
         include: {
@@ -38,8 +38,8 @@ export async function getEmployeePerformance(memberId: number) {
   if (!member) return null;
 
   // ── PROBATION ──────────────────────────────────────────────────────────────
-  if (member.position.isProbation === true && member.probationStartDate) {
-    const start = new Date(member.probationStartDate);
+  if (member.position.isProbation === true && member.dateOfJoin) {
+    const start = new Date(member.dateOfJoin);
 
     // monthsElapsed: how many full months since probation started
     const monthsElapsed =
@@ -64,7 +64,7 @@ export async function getEmployeePerformance(memberId: number) {
 
     return {
       status: "PROBATION" as const,
-      probationStartDate: member.probationStartDate,
+      probationStartDate: member.dateOfJoin,
       monthsElapsed,
       periodNumber,
       monthInPeriod,

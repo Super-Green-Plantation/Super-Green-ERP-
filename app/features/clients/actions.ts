@@ -633,8 +633,6 @@ export async function deleteClientDocument(nic: string, field: string) {
   }
 }
 
-
-
 export async function generateUploadUrl(clientId: number) {
   const token = crypto.randomBytes(32).toString("hex");
 
@@ -679,7 +677,6 @@ export async function generateUploadUrl(clientId: number) {
     emailSent: !!client.email,
   };
 }
-
 
 async function sendDocumentRequestEmail({
   to,
@@ -736,7 +733,6 @@ async function sendDocumentRequestEmail({
   });
 }
 
-
 export async function validateUploadToken(token: string) {
   const request = await prisma.clientDocumentRequest.findUnique({
     where: { token },
@@ -751,7 +747,6 @@ export async function validateUploadToken(token: string) {
 
   return { valid: true, request };
 }
-
 
 export async function saveUploadedDocuments(
   token: string,
@@ -796,7 +791,6 @@ export async function saveUploadedDocuments(
 
   return { success: true };
 }
-
 
 export async function searchClients(searchText: string) {
   const dbUser = await getCurrentUserWithRole();

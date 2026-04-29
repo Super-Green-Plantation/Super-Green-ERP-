@@ -126,8 +126,6 @@ export async function getEligibleCommissions(empNo: string, branchId: number) {
   }
 }
 
-
-
 // ── process commissions ────────────────────────────────────────────────────────
 export async function processCommissions(data: {
   investmentId: number;
@@ -331,6 +329,7 @@ export async function processCommissions(data: {
         // Already filtered to enabled-only before passing in, but guard anyway
         if (disabledSet.has(manual.empNo)) continue;
 
+
         await tx.monthlyPayroll.upsert({
           where: {
             memberId_year_month: { memberId: manual.id, year, month },
@@ -510,7 +509,6 @@ async function getUplineChain(advisorRank: number, branchId: number) {
 
   return all.sort((a, b) => (a.position?.rank ?? 0) - (b.position?.rank ?? 0));
 }
-
 
 export async function runMonthlyEvaluation(data: {
   memberId: number;

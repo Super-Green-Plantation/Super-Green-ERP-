@@ -297,7 +297,7 @@ export async function createInvestmentForExistingClient(data: {
   branchId: number;
   planId?: number;
   amount: number;
-  proposal:string;
+  proposal: string;
   investmentDate?: Date;
   investmentRates?: number[];
   beneficiaryId?: number | null;
@@ -526,6 +526,7 @@ export type BranchReportRow = {
     name: string;
     position: string;
     proposalCount: number;
+    totalAmount: number;
   }[];
 };
 
@@ -549,6 +550,9 @@ export async function getProposalReportByBranch(
                     lte: to,
                   },
                 },
+                select: {
+                  amount: true,
+                }
               },
             },
           },
@@ -565,6 +569,10 @@ export async function getProposalReportByBranch(
       name: member.nameWithInitials || "",
       position: member.position?.title ?? "—",
       proposalCount: member.advisorInvestments.length,
+      totalAmount: member.advisorInvestments.reduce(   // ← add this
+        (sum, inv) => sum + (inv.amount ?? 0),
+        0
+      ),
     })),
   }));
 }
@@ -721,7 +729,7 @@ export async function getInvestmentSummary(filters: {
   ]);
 
   return {
-    totalAmount:     totalAmount._sum.amount ?? 0,
+    totalAmount: totalAmount._sum.amount ?? 0,
     proposalCount,
     investmentCount,
   };

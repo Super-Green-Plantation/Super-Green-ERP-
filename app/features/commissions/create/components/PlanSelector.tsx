@@ -26,21 +26,8 @@ const PlanSelector = ({
         <option value="">Choose a plan</option>
 
         {investments?.map((inv) => (
-          <option key={inv.id} value={inv.id}>
-            <div className="flex justify-evenly">
-              <span>
-                {inv.plan?.name ?? "Plan"} — Rs.{" "}
-              </span>
-              <span>
-                {inv.amount.toLocaleString()} {"    "}
-              </span>
-              <span>
-                Proposal — {inv.proposalFormNo}
-              </span>
-
-
-            </div>
-
+          <option key={inv.id} value={inv.id} className="py-2">
+            {`${inv.plan?.name ?? "Plan"}  |  Rs. ${inv.amount.toLocaleString()}  |  Prop: ${inv.proposalFormNo ?? 'N/A'}`}
           </option>
         ))}
       </select>

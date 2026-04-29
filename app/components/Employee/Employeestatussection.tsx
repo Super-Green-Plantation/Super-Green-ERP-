@@ -62,7 +62,7 @@ function ProbationStatus({ data, status }: {
 
 }) {
     const {
-        probationStartDate, monthsElapsed, periodNumber,
+        dateOfJoin, monthsElapsed, periodNumber,
         monthInPeriod, target, evaluation,
     } = data;
 
@@ -111,7 +111,7 @@ function ProbationStatus({ data, status }: {
             {/* Probation start date */}
             <div className="flex items-center gap-2 text-xs text-slate-500">
                 <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                <span>Started {new Date(probationStartDate).toLocaleDateString("en-LK", { year: "numeric", month: "long", day: "numeric" })}</span>
+                <span>Started {new Date(dateOfJoin).toLocaleDateString("en-LK", { year: "numeric", month: "long", day: "numeric" })}</span>
                 <ChevronRight className="w-3 h-3 text-slate-300" />
                 <span className="font-semibold text-slate-600">
                     {6 - monthsElapsed > 0 ? `${6 - monthsElapsed} month${6 - monthsElapsed !== 1 ? "s" : ""} remaining` : "Confirmation due"}

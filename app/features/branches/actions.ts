@@ -237,7 +237,9 @@ export async function searchEmployees(searchText: string) {
         { nameWithInitials: { contains: searchText, mode: "insensitive" } },
       ],
     },
-    include: { branches: { include: { branch: true } } },
+    include: { 
+      position: { include: { orc: true } },
+      branches: { include: { branch: true } } },
     take: 10, // ✅ limit for dropdown
   });
 }
