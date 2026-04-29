@@ -622,11 +622,16 @@ export async function updateInvestmentDocuments(
 }
 
 
-export async function searchInvestments(searchText: string, branchId?: number) {
+export async function searchInvestments(
+  searchText: string,
+  branchId?: number,
+  month?: string, // "2026-04" format
+  page = 1,
+  pageSize = 10
+) {
   const dbUser = await getCurrentUserWithRole();
   if (!dbUser) throw new Error("User not found");
 
-  // base search — by client NIC or proposal form number on the investment
   let whereCondition: any = {
     OR: [
       { client: { nic: { contains: searchText, mode: "insensitive" } } },
@@ -635,18 +640,12 @@ export async function searchInvestments(searchText: string, branchId?: number) {
     ],
   };
 
-  // branch filter
-  if (branchId) {
-    whereCondition.branchId = branchId;
-  }
+  if (branchId) whereCondition.branchId = branchId;
 
   // role-based access
   switch (dbUser.role) {
-    case "ADMIN":
-    case "HR":
-    case "DEV":
+    case "ADMIN": case "HR": case "DEV":
       break;
-
     case "EMPLOYEE": {
       if (!dbUser.member?.id) throw new Error("Member not found");
       whereCondition = {
@@ -655,35 +654,37 @@ export async function searchInvestments(searchText: string, branchId?: number) {
       };
       break;
     }
-
-    case "BRANCH_MANAGER":
-    case "REGIONAL_MANAGER":
-    case "AGM": {
-      const branchIds = dbUser.member?.branches?.map((mb) => mb.branchId) ?? [];
+    case "BRANCH_MANAGER": case "REGIONAL_MANAGER": case "AGM": {
+      const branchIds = dbUser.member?.branches?.map(mb => mb.branchId) ?? [];
       if (branchIds.length === 0) throw new Error("No branches assigned");
-      whereCondition = {
-        ...whereCondition,
-        branchId: { in: branchIds },
-      };
+      whereCondition.branchId = { in: branchIds };
       break;
     }
-
     default:
       throw new Error("Unauthorized role");
   }
 
-  const investments = await prisma.investment.findMany({
-    where: whereCondition,
-    include: {
-      client: true,
-      plan: true,
-      advisor: true,
-    },
-    orderBy: { investmentDate: "desc" },
-    take: 20,
-  });
+  // Apply month filter AFTER role switch
+  if (month && month !== "all") {
+    const [year, mon] = month.split("-").map(Number);
+    whereCondition.investmentDate = {
+      gte: new Date(year, mon - 1, 1),
+      lte: new Date(year, mon, 0, 23, 59, 59, 999),
+    };
+  }
 
-  return { investments, total: investments.length };
+  const [investments, total] = await Promise.all([
+    prisma.investment.findMany({
+      where: whereCondition,
+      include: { client: true, plan: true, advisor: true },
+      orderBy: { investmentDate: "desc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+    prisma.investment.count({ where: whereCondition }),
+  ]);
+
+  return { investments, total, totalPages: Math.ceil(total / pageSize) };
 }
 
 export async function getInvestmentSummary(filters: {

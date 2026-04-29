@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useInvestments } from "@/app/hooks/useInvestments";
 import Loading from "@/app/components/Status/Loading";
 import Error from "@/app/components/Status/Error";
@@ -24,6 +24,19 @@ import { ProposalReportExport } from "@/app/components/Buttons/ProposalReportExp
 import { useQuery } from "@tanstack/react-query";
 import { getBranches } from "../branches/actions";
 import { getInvestmentSummary, searchInvestments } from "./actions";
+
+const getMonthOptions = () => {
+  const options = [];
+  const now = new Date();
+  for (let i = 0; i < 24; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const label = d.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+    options.push({ value, label });
+  }
+  return options;
+};
+
 
 const fmt = (n: number) =>
   n >= 1_000_000
@@ -76,16 +89,32 @@ export default function InvestmentsPage() {
   const [searchText, setSearchText] = useState("");
   const [branchId, setBranchId] = useState<string>("all");
 
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState<string>("all"); // "2026-04" format or "all"
+
+  const dateFilters = useMemo(() => {
+    if (selectedMonth === "all") return { from: undefined, to: undefined };
+    const [year, month] = selectedMonth.split("-").map(Number);
+    const from = new Date(year, month - 1, 1);
+    const to = new Date(year, month, 0, 23, 59, 59, 999); // last day of month
+    return { from, to };
+  }, [selectedMonth]);
 
   const { data: summary } = useQuery({
-    queryKey: ["investment-summary", branchId, dateFrom, dateTo],
-    queryFn: () => getInvestmentSummary({
-      branchId: branchId !== "all" ? Number(branchId) : undefined,
-      from: dateFrom ? new Date(dateFrom) : undefined,
-      to: dateTo ? new Date(dateTo) : undefined,
-    }),
+    queryKey: ["investment-summary", branchId, selectedMonth],
+    queryFn: () => {
+      let from: Date | undefined;
+      let to: Date | undefined;
+      if (selectedMonth !== "all") {
+        const [year, mon] = selectedMonth.split("-").map(Number);
+        from = new Date(year, mon - 1, 1);
+        to = new Date(year, mon, 0, 23, 59, 59, 999);
+      }
+      return getInvestmentSummary({
+        branchId: branchId !== "all" ? Number(branchId) : undefined,
+        from,
+        to,
+      });
+    },
   });
 
   const { data: branchData } = useQuery({
@@ -100,18 +129,19 @@ export default function InvestmentsPage() {
 
   const { data, isLoading, isError } = useInvestments(currentPage);
 
-  const isFiltered = searchText.trim() !== "" || branchId !== "all";
+  const isFiltered = searchText.trim() !== "" || branchId !== "all" || selectedMonth !== "all";
 
   const { data: filteredData, isFetching: isFilterFetching } = useQuery({
-    queryKey: ["investments-filtered", searchText, branchId, currentPage],
-    queryFn: async () => {
-      return await searchInvestments(
-        searchText,
-        branchId !== "all" ? Number(branchId) : undefined
-      );
-    },
+    queryKey: ["investments-filtered", searchText, branchId, selectedMonth, currentPage],
+    queryFn: () => searchInvestments(
+      searchText,
+      branchId !== "all" ? Number(branchId) : undefined,
+      selectedMonth,  // pass the string directly
+      currentPage
+    ),
     enabled: isFiltered,
   });
+
 
   useEffect(() => {
     if (!userLoading && userData) {
@@ -127,15 +157,17 @@ export default function InvestmentsPage() {
     ? (filteredData?.investments ?? [])
     : (data?.investments ?? []);
 
-  const totalPages = isFiltered ? 1 : (data?.totalPages ?? 1);
+  const totalPages = isFiltered
+    ? (filteredData?.totalPages ?? 1)  // was hardcoded to 1
+    : (data?.totalPages ?? 1);
+
   const total = isFiltered ? (filteredData?.total ?? 0) : (data?.total ?? 0);
   const isTableFetching = isFiltered && isFilterFetching;
 
   const handleClear = () => {
     setSearchText("");
     setBranchId("all");
-    setDateFrom("");
-    setDateTo("");
+    setSelectedMonth("all");
     setCurrentPage(1);
   };
 
@@ -188,36 +220,6 @@ export default function InvestmentsPage() {
       {/* Date range + Summary cards */}
       <div className="space-y-4">
 
-        {/* Date pickers */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 px-4 py-2.5 bg-card border border-border rounded-xl">
-            <Calendar className="w-4 h-4 text-muted-foreground shrink-0" />
-            <input
-              type="date"
-              value={dateFrom}
-              onChange={e => { setDateFrom(e.target.value); setCurrentPage(1); }}
-              className="bg-transparent text-sm font-semibold text-foreground outline-none w-36"
-            />
-          </div>
-          <span className="text-xs font-bold text-muted-foreground">to</span>
-          <div className="flex items-center gap-2 px-4 py-2.5 bg-card border border-border rounded-xl">
-            <Calendar className="w-4 h-4 text-muted-foreground shrink-0" />
-            <input
-              type="date"
-              value={dateTo}
-              onChange={e => { setDateTo(e.target.value); setCurrentPage(1); }}
-              className="bg-transparent text-sm font-semibold text-foreground outline-none w-36"
-            />
-          </div>
-          {(dateFrom || dateTo) && (
-            <button
-              onClick={() => { setDateFrom(""); setDateTo(""); }}
-              className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-muted-foreground hover:text-destructive transition-colors"
-            >
-              <X className="w-3.5 h-3.5" /> Clear dates
-            </button>
-          )}
-        </div>
 
         {/* Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -229,12 +231,9 @@ export default function InvestmentsPage() {
               <span className="text-sm font-bold text-muted-foreground mr-1">Rs.</span>
               {(summary?.totalAmount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
             </p>
-            {(dateFrom || dateTo) && (
+            {selectedMonth !== "all" && (
               <p className="text-[10px] text-muted-foreground font-medium">
-                {dateFrom && dateTo
-                  ? `${new Date(dateFrom).toLocaleDateString("en-GB", { day: "numeric", month: "short" })} – ${new Date(dateTo).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`
-                  : dateFrom ? `From ${new Date(dateFrom).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`
-                    : `Until ${new Date(dateTo).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}`}
+                {new Date(dateFilters.from!).toLocaleDateString("en-GB", { month: "long", year: "numeric" })}
               </p>
             )}
           </div>
@@ -303,6 +302,21 @@ export default function InvestmentsPage() {
           </select>
           <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
         </div>
+
+        <div className="relative w-full md:w-64">
+          <select
+            value={selectedMonth}
+            onChange={e => { setSelectedMonth(e.target.value); setCurrentPage(1); }}
+            className="w-full appearance-none pl-4 pr-10 py-3 bg-background border-2 border-teal-800 rounded-full text-sm font-semibold text-foreground outline-none cursor-pointer focus:ring-2 focus:ring-teal-600"
+          >
+            <option value="all">All Time</option>
+            {getMonthOptions().map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+        </div>
+
 
         {isFiltered && (
           <button
