@@ -383,10 +383,6 @@ export async function getCommissionByBranch(branchId: number) {
       orderBy: { createdAt: "desc" },
 
     });
-
-    console.log(commissions);
-
-
     return serializeData(commissions);
   } catch (error) {
     console.error("Error fetching commissions by branch:", error);
@@ -430,10 +426,7 @@ async function getUplineChain(advisorRank: number, branchId: number) {
     },
     orderBy: { position: { rank: "asc" } },
   });
-
-  console.log("branch Uplines : ", branchUplines);
-
-
+  
   const highestBranchRank = branchUplines.length > 0
     ? Math.max(...branchUplines.map(m => m.position?.rank ?? 0))
     : advisorRank;

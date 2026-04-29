@@ -39,7 +39,6 @@ export default function PositionAccordion({
   const rankColor = RANK_COLORS[position.rank] ?? RANK_COLORS[1];
   const hasTargets = position.positionTargets?.length > 0;
   const [probation, setProbation] = useState(position.isProbation);
-  console.log(position);
 
   return (
     <>{probation && (

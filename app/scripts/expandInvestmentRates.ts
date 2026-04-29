@@ -44,10 +44,8 @@ async function run() {
     });
 
     updated++;
-    console.log(`Updated inv #${inv.id} → [${expanded.join(", ")}]`);
   }
 
-  console.log(`Done. ${updated} investments updated.`);
 }
 
 run().catch(console.error).finally(() => prisma.$disconnect());

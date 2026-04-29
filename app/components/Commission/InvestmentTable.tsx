@@ -16,7 +16,6 @@ const InvestmentTable = () => {
 
   const getUser = async () => {
     const { dbUser } = await fetch("/api/me").then((res) => res.json());
-    console.log("user", dbUser);
     setDbUser(dbUser);
   }
 
@@ -40,8 +39,6 @@ useEffect(() => {
 
   loadInvestments();
 }, [dbUser, investments]);
-
-  console.log("commission", investmentData);
 
   if (isLoading) return <Loading />;
   if (isError) return <Error />;

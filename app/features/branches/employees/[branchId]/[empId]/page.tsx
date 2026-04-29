@@ -109,7 +109,6 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
     const fetchReportingPersons = async () => {
       const res = await getReportingPersons(empNos);
       setReportingPeople(res.employees);
-      console.log("Reporting Persons:", res.employees);
     };
 
     fetchReportingPersons();
@@ -146,11 +145,7 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
   // Calculate target progress
   let targetValue = 0;
   let achievedValue = 0;
-  let targetLabel = "Monthly Target";
-
-  console.log("emppp- - " , employee);
-  console.log("performance- - " , performance);
-  
+  let targetLabel = "Monthly Target";  
 
   if (performance?.status === "PROBATION") {
     targetValue = performance.target?.targetAmount || 0;

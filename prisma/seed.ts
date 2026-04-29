@@ -12,7 +12,7 @@ export const supabaseAdmin = createClient(
 );
 
 async function main() {
-  // 1️⃣ Create auth user
+  //  Create auth user
   const { data, error } = await supabaseAdmin.auth.admin.createUser({
     email: "admin@company.com",
     password: "Admin@123",
@@ -21,7 +21,7 @@ async function main() {
 
   if (error) throw error;
 
-  // 2️⃣ Create authorization record
+  //  Create authorization record
   await prisma.user.upsert({
     where: { id: data.user.id },
     update: {},
@@ -33,15 +33,6 @@ async function main() {
       branchId: null,
     },
   });
-
-  // await prisma.member.create({
-
-  //   data: {
-  //     nameWithInitials: "Admin User",
-  //     empNo: "EMP000",
-  //     positionId: 0
-  //   }
-  // });
 
   console.log("✅ Admin seeded");
 }

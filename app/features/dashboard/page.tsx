@@ -64,21 +64,21 @@ const PrivilegedView = ({ data, userName, userRole, achieved, target, percentage
 
   const modules = [
     {
-      title: "Client Management Dashboard",
+      title: "Client Management",
       tag: `ACTIVE: ${data.totClients}`,
       author: "System",
       image: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80",
       href: "/features/clients"
     },
     {
-      title: "Financial Investment Tracking",
+      title: "Investment",
       tag: `MODULE`,
       author: "Finance",
       image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80",
       href: "/features/investments"
     },
     {
-      title: "Employee Payroll & HR System",
+      title: "Payroll & HR System",
       tag: `STAFF: ${data.totMembers}`,
       author: "HR",
       image: "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=800&q=80",
@@ -94,10 +94,6 @@ const PrivilegedView = ({ data, userName, userRole, achieved, target, percentage
   useEffect(() => {
     fetchChartData();
   }, []);
-
-  console.log(data);
-
-
   return (
     <div className="max-w-7xl mx-auto min-h-screen bg-transparent  sm:p-8">
       {/* Premium Minimal Header */}
@@ -106,7 +102,6 @@ const PrivilegedView = ({ data, userName, userRole, achieved, target, percentage
           <div className="flex items-center gap-3">
             <ThemeToggle />
             <div className="h-6 w-px bg-border/50 mx-2 hidden sm:block"></div>
-            <p className="text-sm font-bold text-foreground tracking-tight hidden sm:block">Enterprise Hub</p>
           </div>
 
           <div className="flex items-center gap-3 bg-card/60 backdrop-blur-md border border-border/50 px-4 py-2 rounded-2xl shadow-sm text-card-foreground sm:hidden">
@@ -206,7 +201,7 @@ const PrivilegedView = ({ data, userName, userRole, achieved, target, percentage
               icon={<LayoutGrid className="w-6 h-6 text-accent" />}
               title="Branch Network"
               value={data.totMembers.toLocaleString()}
-              subValue="Islan wide staff distribution"
+              subValue="Islan wide staff"
               trend="neutral"
             />
           </div>

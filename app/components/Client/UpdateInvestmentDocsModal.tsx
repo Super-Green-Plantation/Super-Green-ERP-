@@ -1,11 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { X, FileText, CheckCircle2, CloudLightning, Loader2, UploadCloud, Eye } from "lucide-react";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
+import { usePermission } from "@/app/hooks/usePermission";
+import { PERMISSIONS } from "@/lib/auth/permissions";
+import { Member } from "@/app/types/member";
 
 interface UpdateInvestmentDocsModalProps {
+    user: any | null;
     isOpen: boolean;
     onClose: () => void;
     investmentId: number;
@@ -17,6 +21,8 @@ interface UpdateInvestmentDocsModalProps {
     };
     onSave: (files: Record<string, string | null>) => void;
 }
+
+
 
 const BUCKET = "kyc-documents";
 
@@ -44,6 +50,7 @@ const uploadToSupabase = async (investmentId: number, key: string, file: File): 
 const isImageUrl = (url: string) => /\.(jpg|jpeg|png|webp|gif)(\?|$)/i.test(url);
 
 const UpdateInvestmentDocsModal = ({
+    user,
     isOpen,
     onClose,
     investmentId,
@@ -52,6 +59,8 @@ const UpdateInvestmentDocsModal = ({
     onSave,
 }: UpdateInvestmentDocsModalProps) => {
     const [isUploading, setIsUploading] = useState(false);
+
+    const canEdit = usePermission(user?.role, PERMISSIONS.UPDATE_CLIENTS_DOCUMENT);
 
     // track new files selected by the user
     const [newFiles, setNewFiles] = useState<Record<string, File | null>>({
@@ -144,10 +153,6 @@ const UpdateInvestmentDocsModal = ({
                         const newFile = newFiles[doc.id];
                         const isClearedExisting = cleared[doc.id];
 
-                        // what to actually show in the preview zone:
-                        // 1. new file selected → show new file preview
-                        // 2. existing url present and not cleared → show existing preview
-                        // 3. cleared or never existed → show empty upload zone
                         const showNewPreview = !!newFile;
                         const showExistingPreview = !newFile && !!existingUrl && !isClearedExisting;
                         const showEmpty = !showNewPreview && !showExistingPreview;
@@ -163,12 +168,12 @@ const UpdateInvestmentDocsModal = ({
                                 </label>
 
                                 <div className={`relative flex flex-col items-center justify-center p-5 border-2 border-dashed rounded-2xl transition-all min-h-28 ${showExistingPreview
-                                        ? "border-emerald-200 bg-emerald-50/30"
-                                        : "border-slate-200 bg-slate-50/50 group-hover:bg-white group-hover:border-blue-400 cursor-pointer"
+                                    ? "border-emerald-200 bg-emerald-50/30"
+                                    : "border-slate-200 bg-slate-50/50 group-hover:bg-white group-hover:border-blue-400 cursor-pointer"
                                     }`}>
 
                                     {/* file input — only active when not showing existing */}
-                                    {!showExistingPreview && (
+                                    {!showExistingPreview && canEdit && (
                                         <input
                                             type="file"
                                             accept="image/*,application/pdf"
@@ -187,13 +192,16 @@ const UpdateInvestmentDocsModal = ({
                                             ) : (
                                                 <img src={newPreviewUrl!} alt="Preview" className="w-16 h-16 object-cover rounded-lg border border-slate-200" />
                                             )}
-                                            <button
-                                                type="button"
-                                                onClick={e => { e.stopPropagation(); handleFileChange(doc.id, null); }}
-                                                className="mt-1 px-3 py-1 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white text-[10px] font-bold rounded-full border border-red-200 transition-colors z-20 relative"
-                                            >
-                                                Remove
-                                            </button>
+                                            {canEdit && (
+                                                <button
+                                                    type="button"
+                                                    onClick={e => { e.stopPropagation(); handleFileChange(doc.id, null); }}
+                                                    className="mt-1 px-3 py-1 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white text-[10px] font-bold rounded-full border border-red-200 transition-colors z-20 relative"
+                                                >
+                                                    Remove
+                                                </button>
+                                            )}
+
                                         </div>
                                     )}
 
@@ -218,22 +226,29 @@ const UpdateInvestmentDocsModal = ({
                                                     <Eye size={10} /> View
                                                 </a>
                                                 {/* clicking Replace re-activates the file input */}
-                                                <label className="flex items-center gap-1 px-3 py-1 bg-slate-100 text-slate-600 hover:bg-slate-200 text-[10px] font-bold rounded-full border border-slate-200 transition-colors cursor-pointer">
-                                                    <UploadCloud size={10} /> Replace
-                                                    <input
-                                                        type="file"
-                                                        accept="image/*,application/pdf"
-                                                        className="hidden"
-                                                        onChange={e => handleFileChange(doc.id, e.target.files?.[0] || null)}
-                                                    />
-                                                </label>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => handleClearExisting(doc.id)}
-                                                    className="px-3 py-1 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white text-[10px] font-bold rounded-full border border-red-200 transition-colors"
-                                                >
-                                                    Remove
-                                                </button>
+
+                                                {canEdit && (
+                                                    <div>
+                                                        <label className="flex items-center gap-1 px-3 py-1 bg-slate-100 text-slate-600 hover:bg-slate-200 text-[10px] font-bold rounded-full border border-slate-200 transition-colors cursor-pointer">
+                                                            <UploadCloud size={10} /> Replace
+                                                            <input
+                                                                type="file"
+                                                                accept="image/*,application/pdf"
+                                                                className="hidden"
+                                                                onChange={e => handleFileChange(doc.id, e.target.files?.[0] || null)}
+                                                            />
+                                                        </label>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleClearExisting(doc.id)}
+                                                            className="px-3 py-1 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white text-[10px] font-bold rounded-full border border-red-200 transition-colors"
+                                                        >
+                                                            Remove
+                                                        </button>
+                                                    </div>
+
+                                                )}
+
                                             </div>
                                         </div>
                                     )}
@@ -252,35 +267,42 @@ const UpdateInvestmentDocsModal = ({
                         );
                     })}
 
-                    <div className="p-4 bg-orange-50 border border-orange-100 rounded-2xl flex gap-3">
-                        <div className="w-5 h-5 rounded-full bg-orange-500 text-white flex items-center justify-center shrink-0 mt-0.5">
-                            <span className="text-[10px] font-bold">!</span>
-                        </div>
-                        <p className="text-[11px] font-bold text-orange-700 leading-relaxed">
-                            Uploading replaces existing files for this investment. This action is permanent.
-                        </p>
-                    </div>
-                </div>
 
-                {/* Footer */}
-                <div className="px-8 py-6 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3">
-                    <button onClick={onClose} className="px-6 py-3 text-[11px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-900 transition-colors">
-                        Cancel
-                    </button>
-                    <button
-                        disabled={isUploading}
-                        onClick={handleUpdate}
-                        className="flex items-center gap-2 px-8 py-3.5 bg-slate-900 hover:bg-blue-600 disabled:bg-slate-400 text-white rounded-2xl text-[11px] font-bold uppercase tracking-[0.15em] transition-all shadow-xl shadow-slate-200 active:scale-95"
-                    >
-                        {isUploading ? (
-                            <><Loader2 size={14} className="animate-spin" /> Uploading...</>
-                        ) : (
-                            <><CheckCircle2 size={14} /> Commit Changes</>
-                        )}
-                    </button>
                 </div>
+                {canEdit && (
+                    <div>
+                        <div className="p-4 bg-orange-50 border border-orange-100 rounded-2xl flex gap-3">
+                            <div className="w-5 h-5 rounded-full bg-orange-500 text-white flex items-center justify-center shrink-0 mt-0.5">
+                                <span className="text-[10px] font-bold">!</span>
+                            </div>
+                            <p className="text-[11px] font-bold text-orange-700 leading-relaxed">
+                                Uploading replaces existing files for this investment. This action is permanent.
+                            </p>
+                        </div>
+
+                        < div className="px-8 py-6 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3">
+                            <button onClick={onClose} className="px-6 py-3 text-[11px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-900 transition-colors">
+                                Cancel
+                            </button>
+                            <button
+                                disabled={isUploading}
+                                onClick={handleUpdate}
+                                className="flex items-center gap-2 px-8 py-3.5 bg-slate-900 hover:bg-blue-600 disabled:bg-slate-400 text-white rounded-2xl text-[11px] font-bold uppercase tracking-[0.15em] transition-all shadow-xl shadow-slate-200 active:scale-95"
+                            >
+                                {isUploading ? (
+                                    <><Loader2 size={14} className="animate-spin" /> Uploading...</>
+                                ) : (
+                                    <><CheckCircle2 size={14} /> Commit Changes</>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+
+                )}
+
+
             </div>
-        </div>
+        </div >
     );
 };
 

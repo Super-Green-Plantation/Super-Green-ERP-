@@ -32,9 +32,6 @@ export async function getEmployeePerformance(memberId: number) {
     },
   });
 
-  console.log("member --- ", member);
-  
-
   if (!member) return null;
 
   // ── PROBATION ──────────────────────────────────────────────────────────────
@@ -58,9 +55,6 @@ export async function getEmployeePerformance(memberId: number) {
     ) ?? null;
 
     const evaluation = member.monthlyEvaluations[0] ?? null;
-
-    console.log("target==============================: ", target);
-    
 
     return {
       status: "PROBATION" as const,

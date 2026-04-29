@@ -24,7 +24,7 @@ export async function getEvaluationPreview(branchId: number, year: number, month
               where: { year, month },
             },
             monthlyPayrolls: { where: { year, month }, },
-            
+
           },
         },
       },
@@ -42,8 +42,6 @@ export async function getEvaluationPreview(branchId: number, year: number, month
       let targetHit = false;
       let bonusEarned = 0;
       let excessBonus = 0;
-
-      console.log("probation check:", member.empNo, member.status, member.probationStartDate);
 
       if (member.status === "PROBATION" && member.probationStartDate) {
         const start = new Date(member.probationStartDate);

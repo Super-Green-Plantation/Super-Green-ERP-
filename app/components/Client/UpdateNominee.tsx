@@ -31,10 +31,6 @@ export const UpdateNominee = ({
         ...initialData 
     });
 
-    console.log("nimineee",initialData);
-    console.log("nimineee formData",formData.nominee);
-    
-
     const handleChange = (section: string, field: string, value: string) => {
         setFormData((prev: any) => ({
             ...prev,

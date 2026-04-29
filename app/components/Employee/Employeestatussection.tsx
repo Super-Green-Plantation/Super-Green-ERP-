@@ -194,9 +194,6 @@ function PermanentStatus({ data, status }: {
     status: "PROBATION" | "PERMANENT" | "MANAGEMENT";
 
 }) {
-
-    console.log(data);
-
     const { salary, currentPayroll, payrollHistory } = data;
 
     if (!salary) {
@@ -339,8 +336,6 @@ export default function EmployeeStatusSection({
 }) {
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
-
-console.log(memberId);
 
     useEffect(() => {
         getEmployeePerformance(memberId).then((res) => {

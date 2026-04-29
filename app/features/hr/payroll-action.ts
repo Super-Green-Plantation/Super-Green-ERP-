@@ -4,25 +4,6 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { calculatePayroll } from "./payroll-utils";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-type PayrollBreakdown = {
-    monthlyTarget: number;
-    volumeAchieved: number;
-    incentiveEarned: number;
-    allowanceEarned: number;
-    orcEarned: number;
-    commissionEarned: number;
-    epfDeduction: number;   // employee pays this (deducted from gross)
-    epfEmployer: number;    // employer pays this (not deducted, shown for info)
-    etfEmployer: number;    // employer pays this (not deducted, shown for info)
-    incentiveHit: boolean;
-    allowanceHit: boolean;
-    grossPay: number;       // basic + incentive + allowance + orc + commission
-    netPay: number;         // grossPay - epfDeduction
-};
-
-
 export async function getPayrollPreview(
     branchId: number,
     year: number,
@@ -43,7 +24,6 @@ export async function getPayrollPreview(
                     monthlyPayrolls: { where: { year, month } },
                     commissions: {
                         where: {
-                            // type: "PERSONAL",
                             investment: {
                                 investmentDate: { gte: startDate, lt: endDate },
                             },
@@ -54,10 +34,7 @@ export async function getPayrollPreview(
             },
         },
     });
-
-    console.log("branch member", branchMembers);
-
-
+ 
     const rows = branchMembers.map(({ member }: any) => {
         const salary = member.position?.salary;
         const existing = member.monthlyPayrolls?.[0] ?? null;
@@ -95,8 +72,8 @@ export async function getPayrollPreview(
             actualCommissionEarned,
             member.status,
             volumeAchieved,
-            0,        // orcVolume — wire up later
-            orcRate,  // ← pass in
+            0,        
+            orcRate,  
         ) : null;
         return {
             actualCommissionEarned,
@@ -154,11 +131,6 @@ export async function runMonthlyPayroll(
     for (const { member } of branchMembers) {
         const salary = member.position?.salary;
 
-        // if (!salary) {
-        //     errors.push(`${member.nameWithInitials}: no salary config for position`);
-        //     continue;
-        // }
-
         const alreadyProcessed = member.monthlyPayrolls?.length > 0;
         if (alreadyProcessed && !force) {
             skipped++;
@@ -166,21 +138,11 @@ export async function runMonthlyPayroll(
         }
 
         const volumeAchieved = volumes[member.id] ?? 0;
-
-        console.log("commissions for", member.empNo, JSON.stringify(member.commissions));
         
         const actualCommissionEarned = member.commissions.reduce(
             (sum: number, c: any) => sum + Number(c.amount),
             0
         );
-
-        console.log("calculatePayroll inputs:", {
-            empNo: member.empNo,
-            actualCommissionEarned,
-            status: member.status,
-            volumeAchieved,
-        });
-
 
         const normalizedSalary = {
             ...salary,
@@ -189,7 +151,6 @@ export async function runMonthlyPayroll(
             monthlyTarget: Number(salary?.monthlyTarget),
             incentiveAmount: Number(salary?.incentiveAmount),
             allowanceAmount: Number(salary?.allowanceAmount),
-            // orcRate: Number(salary?.orcRate),
             commRateLow: Number(salary?.commRateLow),
             commRateHigh: Number(salary?.commRateHigh),
             commThreshold: Number(salary?.commThreshold),
@@ -200,18 +161,13 @@ export async function runMonthlyPayroll(
             allowanceThresholdProbation: Number(salary?.allowanceThresholdProbation),
         };
 
-
-
         const breakdown = calculatePayroll(
             normalizedSalary,
-            actualCommissionEarned,  // commissionEarned
-            member.status,           // memberStatus
-            volumeAchieved,          // volumeAchieved
-            0,                       // orcVolume — wire up later
+            actualCommissionEarned,
+            member.status, 
+            volumeAchieved,
+            0, 
         );
-
-        console.log("breakdown:", JSON.stringify(breakdown));
-
         try {
             await prisma.monthlyPayroll.upsert({
                 where: { memberId_year_month: { memberId: member.id, year, month } },
@@ -228,11 +184,7 @@ export async function runMonthlyPayroll(
     return { success: true, processed, skipped, errors };
 }
 
-// ─── getPayrollHistory ────────────────────────────────────────────────────────
-/**
- * Loads all MonthlyPayroll records for a single employee, ordered newest first.
- * Used on the individual employee payroll history page.
- */
+
 export async function getPayrollHistory(memberId: number) {
     return prisma.monthlyPayroll.findMany({
         where: { memberId },

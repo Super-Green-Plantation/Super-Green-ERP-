@@ -116,7 +116,6 @@ export async function createInvestment(data: {
 }
 
 export async function getInvestmentById(id: number) {
-  console.log("inv no. ", Number(id));
 
   try {
 

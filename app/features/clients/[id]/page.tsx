@@ -12,6 +12,7 @@ import { useClient } from "@/app/hooks/useClient";
 
 import SendDocumentLinkButton from "@/app/components/Buttons/SendDocumentLinkButton";
 import UpdateBeneficiary from "@/app/components/Client/UpdateBeneficiary";
+import UpdateInvestmentDocsModal from "@/app/components/Client/UpdateInvestmentDocsModal";
 import UpdateNominee from "@/app/components/Client/UpdateNominee";
 import { DocPreview } from "@/app/components/Doc/DocPreview";
 import { ProposalTemplate } from "@/app/components/Doc/ProposalTemplate";
@@ -21,15 +22,12 @@ import { generateClientApplicationPDF } from "@/app/pdf/ClientApplication";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Banknote,
-  Briefcase,
-  Calendar,
   CheckCircle2,
   Download,
   HeartHandshake,
   Mail,
   MapPin,
   Pen,
-  Pencil,
   Phone,
   ShieldCheck,
   Trash2,
@@ -38,8 +36,8 @@ import {
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
-import UpdateInvestmentDocsModal from "@/app/components/Client/UpdateInvestmentDocsModal";
 import { updateInvestmentDocuments } from "../../investments/actions";
+import { getCurrentUser } from "@/lib/auth";
 
 export default function ApplicationViewPage() {
   const queryClient = useQueryClient();
@@ -59,7 +57,13 @@ export default function ApplicationViewPage() {
   const [updateNominee, setUpdateNominee] = useState(false);
   const [selectNominee, setSelectNominee] = useState<any>(null);
 
-  console.log("investments : ", formData?.investments);
+  const [user, setUser] = useState<any | null>(null);
+
+  useEffect(() => {
+    fetch("/api/me")
+      .then((res) => res.json())
+      .then((data) => setUser(data));
+  }, []);
 
 
   useEffect(() => {
@@ -67,8 +71,6 @@ export default function ApplicationViewPage() {
     const fetchPlan = async () => {
       const planId = Number(formData.investment.planId);
       const res = await getFinancialPlanById(planId);
-      console.log(res);
-
       setPlan(res);
     };
 
@@ -94,19 +96,6 @@ export default function ApplicationViewPage() {
     }
   };
 
-  const getUrl = async () => {
-    try {
-      const res = await generateUploadUrl(Number(id));
-      console.log(res);
-    } catch (error) {
-      console.log(error);
-
-    }
-  }
-
-  useEffect(() => {
-    getUrl();
-  }, [])
 
   const handleDetailsUpdate = async (updatedPayload: any) => {
     try {
@@ -152,9 +141,6 @@ export default function ApplicationViewPage() {
 
   if (isLoading) return <Loading />;
   if (isError) return <ErrorMessage />;
-
-  console.log(formData);
-
 
   return (
     <div className="max-w-7xl mx-auto space-y-10 min-h-screen p-4 md:p-8 pb-24">
@@ -435,6 +421,7 @@ export default function ApplicationViewPage() {
       />
 
       <UpdateInvestmentDocsModal
+        user={user}
         isOpen={docsModal.open}
         onClose={() => setDocsModal(prev => ({ ...prev, open: false }))}
         investmentId={docsModal.investmentId}

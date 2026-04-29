@@ -139,11 +139,6 @@ export async function getClientById(id: number) {
     },
   });
 
-  console.log("server's client : ", client);
-
-
-
-
   if (!client) {
     throw new Error("Client not accessible");
   }
@@ -212,9 +207,6 @@ export async function saveClient(data: {
   if (!applicant.fullName || !applicant.address || !applicant.branchId) {
     return { success: false, error: "Missing required fields: fullName, address, branchId" };
   }
-  console.log("data : " + JSON.stringify(data));
-
-
   try {
     const currentUser = await getCurrentUserWithRole();
 
@@ -855,7 +847,6 @@ export async function searchClients(searchText: string) {
 }
 
 export async function updateBeneficiary(data: any) {
-  console.log("beni data", data);
   try {
 
     const updatedBeneficiary = await prisma.beneficiary.update({
@@ -880,7 +871,6 @@ export async function updateBeneficiary(data: any) {
 }
 
 export async function updateNominee(data: any) {
-  console.log(data);
 
   try {
     const updatedNominee = await prisma.nominee.update({

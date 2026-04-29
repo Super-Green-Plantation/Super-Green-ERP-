@@ -40,7 +40,6 @@ const Page = () => {
 
   const getUser = async () => {
     const { dbUser } = await fetch("/api/me").then((res) => res.json());
-    console.log("user", dbUser);
     setDbUser(dbUser);
   }
 

@@ -55,9 +55,6 @@ const EmpTable = ({ onEdit, onRefresh, branchId, searchQuery }: EmpTableProps) =
     isError,
   } = useEmployees(branchId);
 
-  console.log(data);
-
-
   const allEmployees = data?.pages.flatMap((page) => page.emp) ?? [];
 
   const filteredEmployees = useMemo(() => {
@@ -119,9 +116,6 @@ const EmpTable = ({ onEdit, onRefresh, branchId, searchQuery }: EmpTableProps) =
   const getLoggedUserRole = async () => {
     const role = await fetch("/api/me").then((res) => res.json());
     setUserRole(role.role);
-    console.log("user", role.role);
-
-    // return user.role;
   }
   useEffect(() => {
     getLoggedUserRole();

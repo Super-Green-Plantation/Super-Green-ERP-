@@ -3,7 +3,6 @@ import Link from 'next/link'
 import React from 'react'
 
 const Table = (data: any) => {
-    console.log(data);
 
     return (
         <div className="w-full overflow-hidden">

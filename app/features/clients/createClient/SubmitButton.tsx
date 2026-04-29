@@ -85,8 +85,6 @@ const { reset } = form;
 
       // 2. Submit the form with all values (including now-set document URLs)
       const data = form.getValues();
-      console.log("Submitting:", data);
-
       const res = await saveClient(data, dbUser?.email);
 
       if (!res.success) {

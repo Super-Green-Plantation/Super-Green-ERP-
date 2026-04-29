@@ -31,8 +31,5 @@ export async function suspendInactiveUsers() {
         data: { status: false },
     });
 
-    console.log(`Suspended ${userIds.length} inactive users:`,
-        inactiveMembers.map(m => m.empNo));
-
     return { suspended: userIds.length, members: inactiveMembers };
 }

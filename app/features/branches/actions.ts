@@ -270,12 +270,7 @@ export async function getBranchThisMonthProposalCount() {
     const countMap = new Map(
       proposalGroups.map(g => [g.branchId, g._count.proposalFormNo])
     );
-
-    console.log(branches.map(branch => ({
-     
-      proposalCount: countMap.get(branch.id) ?? 0,
-    })))
-
+    
     return branches.map(branch => ({
       branchId: branch.id,
       branchName: branch.name,

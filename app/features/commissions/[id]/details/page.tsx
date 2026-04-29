@@ -29,7 +29,6 @@ const InvestmentDetails = () => {
   
   
   const [data, setData] = useState<any>(null);
-  console.log(data);
   const [loading, setLoading] = useState(true);
   const queryClient = useQueryClient();
 

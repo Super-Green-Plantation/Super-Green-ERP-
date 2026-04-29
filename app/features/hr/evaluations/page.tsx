@@ -92,9 +92,6 @@ export default function EvaluationsPage() {
     } finally { setRunning(false); }
   };
 
-  console.log(previews);
-
-
   const probationCount = previews.filter(p => p.status === "PROBATION").length;
   const permanentCount = previews.length - probationCount;
   const targetHitCount = previews.filter(p => p.targetHit).length;
