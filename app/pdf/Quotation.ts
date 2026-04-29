@@ -51,15 +51,15 @@ export interface QuotationPDFData {
 // - Brand Colors -
 
 const C = {
-  green:      [22, 101, 52]   as [number, number, number],
+  green: [22, 101, 52] as [number, number, number],
   greenLight: [220, 252, 231] as [number, number, number],
-  greenMid:   [74, 222, 128]  as [number, number, number],
-  dark:       [17, 24, 39]    as [number, number, number],
-  mid:        [75, 85, 99]    as [number, number, number],
-  light:      [156, 163, 175] as [number, number, number],
-  border:     [229, 231, 235] as [number, number, number],
-  bg:         [249, 250, 251] as [number, number, number],
-  white:      [255, 255, 255] as [number, number, number],
+  greenMid: [74, 222, 128] as [number, number, number],
+  dark: [17, 24, 39] as [number, number, number],
+  mid: [75, 85, 99] as [number, number, number],
+  light: [156, 163, 175] as [number, number, number],
+  border: [229, 231, 235] as [number, number, number],
+  bg: [249, 250, 251] as [number, number, number],
+  white: [255, 255, 255] as [number, number, number],
 };
 
 // - Helpers -
@@ -77,10 +77,10 @@ const addOneMonth = (d: Date) => {
 };
 
 const FREQ_LABELS: Record<PaymentFrequency, string> = {
-  MONTHLY:     "Monthly",
-  QUARTERLY:   "Quarterly (Every 3 Months)",
+  MONTHLY: "Monthly",
+  QUARTERLY: "Quarterly (Every 3 Months)",
   SEMI_ANNUAL: "Semi-Annual (Every 6 Months)",
-  ANNUAL:      "Annual (Yearly)",
+  ANNUAL: "Annual (Yearly)",
 };
 
 const FREQ_PERIODS: Record<PaymentFrequency, number> = {
@@ -88,14 +88,14 @@ const FREQ_PERIODS: Record<PaymentFrequency, number> = {
 };
 
 const PLAN_LABELS: Record<PlanType, string> = {
-  CHILD:   "Child Plan (Ran Aswanu)",
-  MARGE:   "Marge Plan",
+  CHILD: "Child Plan (Ran Aswanu)",
+  MARGE: "Marge Plan",
   PENSION: "Pension Plan",
 };
 
 function getPayingYears(planType: PlanType, duration: number) {
-  if (planType === "CHILD")  return 3;
-  if (planType === "MARGE")  return 5;
+  if (planType === "CHILD") return 3;
+  if (planType === "MARGE") return 5;
   return duration;
 }
 
@@ -277,12 +277,12 @@ function drawPage1(doc: jsPDF, data: QuotationPDFData, logo: string | null) {
   autoTable(doc, {
     startY: y,
     body: [
-      ["Plan Type",           PLAN_LABELS[data.planType]],
-      ["Plan Duration",       `${data.duration} Years`],
-      ["Paying Term",         `${payingYears} Year${payingYears > 1 ? "s" : ""}`],
-      ["Payment Frequency",   FREQ_LABELS[data.frequency]],
+      ["Plan Type", PLAN_LABELS[data.planType]],
+      ["Plan Duration", `${data.duration} Years`],
+      ["Paying Term", `${payingYears} Year${payingYears > 1 ? "s" : ""}`],
+      ["Payment Frequency", FREQ_LABELS[data.frequency]],
       ["Premium per Payment", lkr(data.premium)],
-      ["Total Payments",      `${totalPayments} payments over ${payingYears} year${payingYears > 1 ? "s" : ""}`],
+      ["Total Payments", `${totalPayments} payments over ${payingYears} year${payingYears > 1 ? "s" : ""}`],
     ],
     theme: "plain",
     styles: { fontSize: 8.5, cellPadding: { top: 3, bottom: 3, left: 5, right: 5 } },
@@ -307,11 +307,11 @@ function drawPage1(doc: jsPDF, data: QuotationPDFData, logo: string | null) {
   const docCharge = data.documentCharge ?? 500;
   const grossInterest = data.interestEarned + docCharge; // reverse to show gross
   const finBody: [string, string][] = [
-    ["Total Amount Invested",  lkr(data.totalInvested)],
-    ["Annual Interest Rate",   `${data.interestRate.toFixed(1)}%`],
-    ["Gross Interest Earned",  lkr(grossInterest)],
-    ["Document Charge",        `- ${lkr(docCharge)}`],
-    ["Net Interest Earned",    lkr(data.interestEarned)],
+    ["Total Amount Invested", lkr(data.totalInvested)],
+    ["Annual Interest Rate", `${data.interestRate.toFixed(1)}%`],
+    ["Gross Interest Earned", lkr(grossInterest)],
+    ["Document Charge", `- ${lkr(docCharge)}`],
+    ["Net Interest Earned", lkr(data.interestEarned)],
   ];
   if (data.planType === "PENSION") {
     finBody.push(["Monthly Pension Payout", `${lkr(data.maturityAmount * 0.1)} - 10 months`]);
@@ -417,7 +417,7 @@ function drawPage1(doc: jsPDF, data: QuotationPDFData, logo: string | null) {
   doc.setFontSize(7.5);
   doc.setTextColor(...C.light);
   // Footer - was pageH - 5
-doc.text("Super Green Plantation (Pvt) Ltd.  |  Page 1 of 2", pw / 2, pageH - 8, { align: "center" });
+  doc.text("Super Green Plantation (Pvt) Ltd.  |  Page 1 of 2", pw / 2, pageH - 8, { align: "center" });
 }
 
 // - Page 2: Plan Conditions -
@@ -503,28 +503,58 @@ function drawPage2(doc: jsPDF, data: QuotationPDFData, logo: string | null) {
 
   y += 5;
 
- 
+
 
   // General disclaimer
   const genDiscText =
-    "T & C Apply " 
-   
+    "T & C Apply "
+
   const gdLines = doc.splitTextToSize(genDiscText, pw - 15);
   const gdH = gdLines.length * 4.8 + 12;
-  doc.setFillColor(...C.greenLight);
-  doc.setDrawColor(...C.greenMid);
-  doc.roundedRect(14, y, pw - 28, gdH, 2, 2, "FD");
+  // doc.setFillColor(...C.greenLight);
+  // doc.setDrawColor(...C.greenMid);
+  // doc.roundedRect(14, y, pw - 28, gdH, 2, 2, "FD");
+  // doc.setFontSize(8);
+  // doc.setFont("helvetica", "italic");
+  // doc.setTextColor(...C.green);
+  // doc.text(gdLines, 19, y + 8);
+
+  // --- Client Acceptance Section ---
+  y += gdH + 10; // Move cursor below the T&C box
+
+  // Acceptance Sentence
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(0, 0, 0); // Default black for readability
+
+  doc.text("I hereby agree to the terms and conditions mentioned above.", 18, y);
+
+  // Signature Area
+  y += 15;
+  doc.setLineWidth(0.5);
+  doc.line(19, y, 80, y);          // Client Line
+  doc.line(pw - 80, y, pw - 19, y); // Date Line
+
+  y += 5;
   doc.setFontSize(8);
-  doc.setFont("helvetica", "italic");
-  doc.setTextColor(...C.green);
-  doc.text(gdLines, 19, y + 8);
+  doc.setFont("helvetica", "normal");
+  doc.text("Authorized Client Signature", 19, y);
+  doc.text("Date", pw - 80, y);
+
+
 
   // Footer
   doc.setFontSize(7.5);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...C.light);
   doc.text("Super Green Plantation (Pvt) Ltd.  |  Page 2 of 2", pw / 2, pageH - 5, { align: "center" });
+
+
+
+
 }
+
+
 
 // - Main Export -
 

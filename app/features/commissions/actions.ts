@@ -168,13 +168,13 @@ export async function processCommissions(data: {
     const manualMembers =
       manualEmpNos.length > 0
         ? await prisma.member.findMany({
-            where: { empNo: { in: manualEmpNos } },
-            include: {
-              position: {
-                include: { orc: true, salary: true },
-              },
+          where: { empNo: { in: manualEmpNos } },
+          include: {
+            position: {
+              include: { orc: true, salary: true },
             },
-          })
+          },
+        })
         : [];
 
     const result = await prisma.$transaction(async (tx) => {
@@ -206,24 +206,24 @@ export async function processCommissions(data: {
       if (!advisor.position)
         throw new ApiError("POSITION_MISSING", "Advisor has no position");
 
-      if (advisor.status !== "PROBATION" && !advisor.position.salary) {
-        throw new ApiError(
-          "SALARY_CONFIG_MISSING",
-          "No salary config for position"
-        );
+      const isManagement = advisor.position.type === "MANAGEMENT";
+
+      // Only enforce salary config for non-management, non-probation employees
+      if (!isManagement && advisor.status !== "PROBATION" && !advisor.position.salary) {
+        throw new ApiError("SALARY_CONFIG_MISSING", "No salary config for position");
       }
 
       const now = new Date();
       const year = now.getFullYear();
       const month = now.getMonth() + 1;
 
-      const commThreshold = Number(
-        advisor.position.salary?.commThreshold ?? 500000
-      );
-      const isPermanent = advisor.status === "PERMANENT";
+      const commThreshold = Number(advisor.position.salary?.commThreshold ?? 500000);
       const isHighRate = investment.amount >= commThreshold;
 
-      const commRate = isPermanent
+      // Management treated as permanent for commission rate purposes
+      const isPermanentOrManagement = advisor.status === "PERMANENT" || isManagement;
+
+      const commRate = isPermanentOrManagement
         ? isHighRate
           ? Number(advisor.position.salary?.commRateHigh ?? 0.08)
           : Number(advisor.position.salary?.commRateLow ?? 0.05)
@@ -232,25 +232,42 @@ export async function processCommissions(data: {
           : 0.07;
 
       const personalCommissionAmount = investment.amount * commRate;
-
+      
       await tx.investment.update({
         where: { id: investmentId },
         data: { commissionsProcessed: true, advisorId: advisor.id },
       });
 
-      await tx.monthlyPayroll.upsert({
-        where: { memberId_year_month: { memberId: advisor.id, year, month } },
-        update: { volumeAchieved: { increment: investment.amount } },
-        create: {
-          memberId: advisor.id,
-          year,
-          month,
-          basicSalaryPermanent: 0,
-          monthlyTarget: 0,
-          volumeAchieved: investment.amount,
-        },
-      });
+      // await tx.monthlyPayroll.upsert({
+      //   where: { memberId_year_month: { memberId: advisor.id, year, month } },
+      //   update: { volumeAchieved: { increment: investment.amount } },
+      //   create: {
+      //     memberId: advisor.id,
+      //     year,
+      //     month,
+      //     basicSalaryPermanent: 0,
+      //     monthlyTarget: 0,
+      //     volumeAchieved: investment.amount,
+      //   },
+      // });
 
+      const payrollMemberIds = [
+        advisor.id,
+        ...uplines.filter(u => !disabledSet.has(u.empNo)).map(u => u.id),
+        ...manualMembers.filter(m => !disabledSet.has(m.empNo)).map(m => m.id),
+      ];
+
+      await Promise.all(
+        payrollMemberIds.map(memberId =>
+          tx.monthlyPayroll.upsert({
+            where: { memberId_year_month: { memberId, year, month } },
+            update: { volumeAchieved: { increment: investment.amount } },
+            create: { memberId, year, month, basicSalaryPermanent: 0, monthlyTarget: 0, volumeAchieved: investment.amount },
+          })
+        )
+      );
+
+      // Step 3 — advisor commission
       const updatedAdvisor = await tx.member.update({
         where: { empNo },
         data: { totalCommission: { increment: personalCommissionAmount } },
@@ -263,129 +280,63 @@ export async function processCommissions(data: {
           branchId,
           amount: personalCommissionAmount,
           type: "PERSONAL",
-          refNumber: generateCommissionRef(),
+          refNumber: generateCommissionRef()
         } as any,
         include: { member: { include: { position: true } } },
       });
-
       createdCommissions.push(personalCommissionRecord);
 
-      // --- Upline commissions (hierarchy chain) ---
+
+      // upline commissions (no payroll upserts here anymore)
       for (const upline of uplines) {
-        // Fully skip disabled members — no volume, no commission
         if (disabledSet.has(upline.empNo)) continue;
-
-        await tx.monthlyPayroll.upsert({
-          where: {
-            memberId_year_month: { memberId: upline.id, year, month },
-          },
-          update: { volumeAchieved: { increment: investment.amount } },
-          create: {
-            memberId: upline.id,
-            year,
-            month,
-            basicSalaryPermanent: 0,
-            monthlyTarget: 0,
-            volumeAchieved: investment.amount,
-          },
-        });
-
         if (!upline.position?.orc) continue;
 
-        const orcRate =
-          upline.status === "PERMANENT"
-            ? upline.position.orc.ratePermanent
-            : upline.position.orc.rateNonPermanent;
+        const orcRate = upline.status === "PERMANENT"
+          ? upline.position.orc.ratePermanent
+          : upline.position.orc.rateNonPermanent;
 
         const uplineRate = Number(orcRate);
         if (uplineRate === 0) continue;
-        if (uplineRate > 1)
-          throw new ApiError("ORC_RATE_TOO_HIGH", "ORC rate too high");
+        if (uplineRate > 1) throw new ApiError("ORC_RATE_TOO_HIGH", "ORC rate too high");
 
         const uplineAmount = investment.amount * uplineRate;
 
-        await tx.member.update({
-          where: { empNo: upline.empNo },
-          data: { totalCommission: { increment: uplineAmount } },
-        });
+        await tx.member.update({ where: { empNo: upline.empNo }, data: { totalCommission: { increment: uplineAmount } } });
 
         const uplineCommissionRecord = await tx.commission.create({
-          data: {
-            investmentId,
-            memberEmpNo: upline.empNo,
-            amount: uplineAmount,
-            type: "UPLINE",
-            refNumber: generateCommissionRef(),
-            branchId,
-          } as any,
+          data: { investmentId, memberEmpNo: upline.empNo, amount: uplineAmount, type: "UPLINE", refNumber: generateCommissionRef(), branchId } as any,
           include: { member: { include: { position: true } } },
         });
-
         createdCommissions.push(uplineCommissionRecord);
       }
 
       // --- Manually added members (flat, same ORC formula) ---
       for (const manual of manualMembers) {
-        // Already filtered to enabled-only before passing in, but guard anyway
         if (disabledSet.has(manual.empNo)) continue;
-
-
-        await tx.monthlyPayroll.upsert({
-          where: {
-            memberId_year_month: { memberId: manual.id, year, month },
-          },
-          update: { volumeAchieved: { increment: investment.amount } },
-          create: {
-            memberId: manual.id,
-            year,
-            month,
-            basicSalaryPermanent: 0,
-            monthlyTarget: 0,
-            volumeAchieved: investment.amount,
-          },
-        });
-
         if (!manual.position?.orc) continue;
 
-        const orcRate =
-          manual.status === "PERMANENT"
-            ? manual.position.orc.ratePermanent
-            : manual.position.orc.rateNonPermanent;
+        const orcRate = manual.status === "PERMANENT"
+          ? manual.position.orc.ratePermanent
+          : manual.position.orc.rateNonPermanent;
 
         const manualRate = Number(orcRate);
         if (manualRate === 0) continue;
-        if (manualRate > 1)
-          throw new ApiError("ORC_RATE_TOO_HIGH", "ORC rate too high");
+        if (manualRate > 1) throw new ApiError("ORC_RATE_TOO_HIGH", "ORC rate too high");
 
         const manualAmount = investment.amount * manualRate;
 
-        await tx.member.update({
-          where: { empNo: manual.empNo },
-          data: { totalCommission: { increment: manualAmount } },
-        });
+        await tx.member.update({ where: { empNo: manual.empNo }, data: { totalCommission: { increment: manualAmount } } });
 
         const manualCommissionRecord = await tx.commission.create({
-          data: {
-            investmentId,
-            memberEmpNo: manual.empNo,
-            amount: manualAmount,
-            type: "UPLINE",
-            refNumber: generateCommissionRef(),
-            branchId,
-          } as any,
+          data: { investmentId, memberEmpNo: manual.empNo, amount: manualAmount, type: "UPLINE", refNumber: generateCommissionRef(), branchId } as any,
           include: { member: { include: { position: true } } },
         });
-
         createdCommissions.push(manualCommissionRecord);
       }
 
-      return serializeData({
-        alreadyProcessed: false,
-        investment,
-        advisor: updatedAdvisor,
-        commissions: createdCommissions,
-      });
-    });
+      return serializeData({ alreadyProcessed: false, investment, advisor: updatedAdvisor, commissions: createdCommissions });
+    }, { timeout: 15000 });
 
     revalidatePath("/features/commissions");
 

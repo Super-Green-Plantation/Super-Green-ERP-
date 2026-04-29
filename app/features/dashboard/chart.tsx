@@ -25,8 +25,8 @@ const BRANCH_COLORS = [
 ];
 
 const MONTH_NAMES = [
-  "January","February","March","April","May","June",
-  "July","August","September","October","November","December",
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
 ];
 
 interface Props {
@@ -53,26 +53,26 @@ export function ClientRegistrationChart({ initialData }: Props) {
   const labels = view === "daily"
     ? data.days.map((d) => new Date(d + "T00:00:00").getDate().toString())
     : (() => {
-        const weeks: string[] = [];
-        data.days.forEach((_, i) => {
-          const w = Math.floor(i / 7) + 1;
-          if (!weeks.includes(`W${w}`)) weeks.push(`W${w}`);
-        });
-        return weeks;
-      })();
+      const weeks: string[] = [];
+      data.days.forEach((_, i) => {
+        const w = Math.floor(i / 7) + 1;
+        if (!weeks.includes(`W${w}`)) weeks.push(`W${w}`);
+      });
+      return weeks;
+    })();
 
   const datasets = data.branches.map((branch, i) => ({
     label: branch.branchName,
     data: view === "daily"
       ? branch.daily
       : (() => {
-          const weeks: number[] = [];
-          branch.daily.forEach((v, i) => {
-            const w = Math.floor(i / 7);
-            weeks[w] = (weeks[w] || 0) + v;
-          });
-          return weeks;
-        })(),
+        const weeks: number[] = [];
+        branch.daily.forEach((v, i) => {
+          const w = Math.floor(i / 7);
+          weeks[w] = (weeks[w] || 0) + v;
+        });
+        return weeks;
+      })(),
     backgroundColor: BRANCH_COLORS[i % BRANCH_COLORS.length],
     borderRadius: 2,
     borderSkipped: false,
@@ -81,6 +81,18 @@ export function ClientRegistrationChart({ initialData }: Props) {
   const isCurrentMonth =
     data.month === new Date().getMonth() &&
     data.year === new Date().getFullYear();
+
+  // Add near the top
+  const formatLKR = (v: number) =>
+    new Intl.NumberFormat("en-LK", {
+      style: "currency",
+      currency: "LKR",
+      maximumFractionDigits: 0,
+    }).format(v);
+
+  // Inside the component, before return
+  const grandTotal = data.branches.reduce((sum, b) => sum + b.totalAmount, 0);
+
 
   return (
     <div className="flex flex-col gap-3 ">
@@ -111,18 +123,25 @@ export function ClientRegistrationChart({ initialData }: Props) {
             <button
               key={v}
               onClick={() => setView(v)}
-              className={`text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-md transition-all ${
-                view === v
-                  ? "bg-background text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
+              className={`text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-md transition-all ${view === v
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+                }`}
             >
               {v}
             </button>
           ))}
         </div>
+
+
       </div>
 
+      <div className="flex items-center justify-between px-0.5">
+        <span className="text-xs font-semibold text-foreground/80">
+          {formatLKR(grandTotal)}
+        </span>
+      </div>
+      
       {/* Chart */}
       <div className={`relative h-48 transition-opacity ${isPending ? "opacity-40" : "opacity-100"}`}>
         <Bar

@@ -14,7 +14,7 @@ import {
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getClientRegistrationByBranch } from "./actions";
-import { ClientRegistrationChart } from "./sparkline";
+import { ClientRegistrationChart } from "./chart";
 
 const DashboardPage = () => {
   const { data, isLoading, isError } = useDashboard();
@@ -49,9 +49,12 @@ type ClientRegChartData = {
     branchId: number;
     branchName: string;
     daily: number[];
+    dailyAmount: number[];  // ← new
     total: number;
+    totalAmount: number;    // ← new
   }[];
 };
+
 
 // 2. Fix the useState — pass initialData as the default value
 
@@ -93,7 +96,7 @@ const PrivilegedView = ({ data, userName, userRole, achieved, target, percentage
   }, []);
 
   console.log(data);
-  
+
 
   return (
     <div className="max-w-7xl mx-auto min-h-screen bg-transparent  sm:p-8">
@@ -188,7 +191,7 @@ const PrivilegedView = ({ data, userName, userRole, achieved, target, percentage
             <FloatingKpiCard
               icon={<TrendingUp className="w-6 h-6 text-accent" />}
               title="Investment Capital"
-              value={`Rs. ${(achieved / 1000000).toFixed(2)}M`}
+              value={`Rs. ${(Math.floor(achieved / 10000) / 100).toFixed(2)}M`}
               subValue="Real-time aggregation"
               trend="up"
             />
@@ -545,7 +548,6 @@ const RestrictedView = ({ data, userName, userRole, achieved, target, percentage
   );
 };
 
-// --- Atomic Components ---
 
 function FloatingKpiCard({ icon, title, value, subValue, trend }: { icon: React.ReactNode, title: string, value: string, subValue: string, trend: 'up' | 'down' | 'neutral' }) {
   return (
@@ -566,8 +568,6 @@ function FloatingKpiCard({ icon, title, value, subValue, trend }: { icon: React.
     </div>
   );
 }
-
-
 
 function UserAvatar({ seed, className = "w-8 h-8" }: { seed: string, className?: string }) {
 

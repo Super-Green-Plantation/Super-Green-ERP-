@@ -116,10 +116,10 @@ export default async function Dashboard() {
 export async function getClientRegistrationByBranch(year?: number, month?: number) {
   const now = new Date();
   const y = year ?? now.getFullYear();
-  const m = month ?? now.getMonth(); // 0-indexed
+  const m = month ?? now.getMonth();
 
   const from = new Date(y, m, 1);
-  const to = new Date(y, m + 1, 0, 23, 59, 59); // last day of month
+  const to = new Date(y, m + 1, 0, 23, 59, 59);
 
   const branches = await prisma.branch.findMany({
     select: { id: true, name: true },
@@ -130,35 +130,35 @@ export async function getClientRegistrationByBranch(year?: number, month?: numbe
     by: ["branchId", "investmentDate"],
     where: { investmentDate: { gte: from, lte: to } },
     _count: { id: true },
+    _sum: { amount: true },           // ← add this
   });
 
-  // Build day array for the month
-  const daysInMonth = to.getDate();
-  const days = Array.from({ length: daysInMonth }, (_, i) => {
-    const d = new Date(y, m, i + 1);
-    return d.toISOString().slice(0, 10);
-  });
+  const daysInMonth = new Date(y, m + 1, 0).getDate();
+  const days = Array.from({ length: daysInMonth }, (_, i) =>
+    new Date(y, m, i + 1).toISOString().slice(0, 10)
+  );
 
   const branchData = branches.map((branch) => {
-    const dailyMap: Record<string, number> = {};
+    const dailyCountMap: Record<string, number> = {};
+    const dailyAmountMap: Record<string, number> = {};
+
     for (const reg of registrations) {
       if (reg.branchId === branch.id) {
         const day = new Date(reg.investmentDate).toISOString().slice(0, 10);
-        dailyMap[day] = (dailyMap[day] || 0) + reg._count.id;
+        dailyCountMap[day] = (dailyCountMap[day] || 0) + reg._count.id;
+        dailyAmountMap[day] = (dailyAmountMap[day] || 0) + (reg._sum.amount ?? 0);
       }
     }
+
     return {
       branchId: branch.id,
       branchName: branch.name,
-      daily: days.map((d) => dailyMap[d] ?? 0),
-      total: Object.values(dailyMap).reduce((a, b) => a + b, 0),
+      daily: days.map((d) => dailyCountMap[d] ?? 0),
+      dailyAmount: days.map((d) => dailyAmountMap[d] ?? 0),   // ← new
+      total: Object.values(dailyCountMap).reduce((a, b) => a + b, 0),
+      totalAmount: Object.values(dailyAmountMap).reduce((a, b) => a + b, 0),  // ← new
     };
   });
 
-  return {
-    year: y,
-    month: m,
-    days,           // ["2025-03-01", "2025-03-02", ...]
-    branches: branchData,
-  };
+  return { year: y, month: m, days, branches: branchData };
 }

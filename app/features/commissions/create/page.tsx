@@ -33,8 +33,10 @@ import { Branch } from "@/app/types/branch";
 import { Client } from "@/app/types/client";
 import { Member } from "@/app/types/member";
 import { ClientDetailsCard } from "./components/ClientDetailsCard";
+import { useQueryClient } from "@tanstack/react-query";
 
 const Page = () => {
+  const queryClient = useQueryClient();
   /* --- Core states --- */
   const [branches, setBranches] = useState([]);
   const [selectedBranchId, setSelectedBranchId] = useState<number | null>(null);
