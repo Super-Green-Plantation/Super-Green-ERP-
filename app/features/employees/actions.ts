@@ -115,9 +115,10 @@ export async function createEmployee(data: EmpData) {
           branches: {
             create: data.branchIds.map((branchId) => ({ branchId })),
           },
-          probationStartDate: data.probationStartDate ? data.probationStartDate : data.dateOfJoin ,
+          probationStartDate: data.probationStartDate ? data.probationStartDate : data.dateOfJoin,
 
           profilePic: data.profilePic,
+          channel: data.channel,
         },
       });
 
@@ -219,21 +220,12 @@ export async function getEmployeesByBranch(
   };
 }
 // Get employee by code
-export async function getEmployeeByCode(empCode: string) {
-  try {
-    const employee = await prisma.member.findUnique({
-      where: { empNo: empCode },
-    });
-
-    if (!employee) {
-      throw new Error("Employee not found");
-    }
-
-    return { employee };
-  } catch (error) {
-    console.error("Error fetching employee:", error);
-    throw error;
-  }
+// actions.ts
+export async function getMembersByEmpNos(empNos: string[]) {
+  return prisma.member.findMany({
+    where: { empNo: { in: empNos } },
+    select: { id: true, nameWithInitials: true, empNo: true, position: { select: { title: true } } },
+  });
 }
 
 export async function getReportingPersons(empCodes: string[]) {
@@ -261,34 +253,6 @@ export async function getEmployeeById(empNo: string) {
   } catch (error) {
     console.error("Error fetching employee hierarchy:", error);
     throw error;
-  }
-}
-
-// Update employee commission
-export async function updateEmployeeCommission(empNo: string, commission: number) {
-  try {
-    await requirePermission("UPDATE_EMPLOYEES");
-    const member = await prisma.member.findUnique({
-      where: { empNo },
-      select: { totalCommission: true },
-    });
-
-    if (!member) {
-      return { success: false, error: "Member not found" };
-    }
-
-    const updated = await prisma.member.update({
-      where: { empNo },
-      data: {
-        totalCommission: member.totalCommission + Number(commission),
-      },
-    });
-
-    revalidatePath("/features/employees");
-    return { success: true, member: updated };
-  } catch (err) {
-    console.error("Error updating commission:", err);
-    return { success: false, error: "Failed to update commission" };
   }
 }
 
@@ -364,12 +328,12 @@ export async function updateEmployee(memberId: number, data: EmpData) {
 
         // ✅ Send welcome email (non-blocking)
         try {
-          await sendWelcomeEmail({
-            to: data.email,
-            name: data.nameWithInitials ?? "",
-            empNo: data.empNo,
-            tempPassword,
-          });
+          // await sendWelcomeEmail({
+          //   to: data.email,
+          //   name: data.nameWithInitials ?? "",
+          //   empNo: data.empNo,
+          //   tempPassword,
+          // });
         } catch (e) {
           console.warn("Welcome email failed:", e);
         }
@@ -382,6 +346,7 @@ export async function updateEmployee(memberId: number, data: EmpData) {
     const updated = await prisma.$transaction(async (tx) => {
       // remove old branches
       await tx.memberBranch.deleteMany({ where: { memberId } });
+
 
       return await tx.member.update({
         where: { id: memberId },
@@ -421,16 +386,24 @@ export async function updateEmployee(memberId: number, data: EmpData) {
           appointmentLetter: data.appointmentLetter || null,
           confirmation: data.confirmation || null,
           remark: data.remark || null,
-          probationStartDate: data.probationStartDate || null,
+          probationStartDate: data.probationStartDate || data.dateOfJoin || null,
+
           isActive: data.isActive,
+          channel: data.channel,
 
           // Banking
           accNo: data.accNo || null,
           bank: data.bank || null,
           bankBranch: data.bankBranch || null,
+          etfNo: data.etfNo || null,
         },
       });
     });
+
+    const positionId = Number(data.positionId);
+    if (!positionId) {
+      return { success: false, error: "Invalid position selected" };
+    }
 
     // =========================
     // 📝 LOG ACTIVITY
@@ -478,7 +451,7 @@ export async function updateEmployee(memberId: number, data: EmpData) {
     if (createdSupabaseUserId) {
       await supabaseAdmin.auth.admin
         .deleteUser(createdSupabaseUserId)
-        .catch(() => {});
+        .catch(() => { });
     }
 
     return { success: false, error: message };
@@ -548,31 +521,6 @@ export async function deleteEmployee(id: number) {
     console.error("Failed to delete employee:", error);
     return { success: false, error: "Failed to delete employee" };
   }
-}
-
-export async function toggleEmployeeStatus(id: number, currentStatus: "PROBATION" | "PERMANENT" | "MANAGEMENT") {
-
-  await requirePermission("UPDATE_EMPLOYEES");
-
-  const newStatus = currentStatus === "PROBATION" ? "PERMANENT" : "PROBATION";
-  const currentUser = await getCurrentUserWithRole();
-
-  await prisma.member.update({
-    where: { id },
-    data: { status: newStatus },
-  });
-
-  revalidatePath("/features/employees");
-
-  void logActivity({
-    action: ActivityAction.UPDATE,
-    entity: ActivityEntity.MEMBER,
-    entityId: id,
-    performedById: currentUser?.member?.id ?? 0,
-    metadata: { before: { status: currentStatus }, after: { status: newStatus } },
-  });
-
-  return { success: true, newStatus: newStatus as "PROBATION" | "PERMANENT" };
 }
 
 
@@ -652,5 +600,22 @@ export async function getUplineMembers(positionId: number, branchIds: number[]) 
     orderBy: {
       position: { rank: "desc" },
     },
+  });
+}
+
+export async function searchEmployees(searchText: string) {
+  return prisma.member.findMany({
+    where: {
+      OR: [
+        { nic: { contains: searchText, mode: "insensitive" } },
+        { empNo: { contains: searchText, mode: "insensitive" } },
+        { nameWithInitials: { contains: searchText, mode: "insensitive" } },
+      ],
+    },
+    include: {
+      position: { include: { orc: true } },
+      branches: { include: { branch: true } }
+    },
+    take: 10, // ✅ limit for dropdown
   });
 }

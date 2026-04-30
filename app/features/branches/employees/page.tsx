@@ -4,11 +4,12 @@ import Heading from "@/app/components/Heading";
 import { Search, Users } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getBranchById, getBranchesByMemberId, getBranchThisMonthProposalCount, searchEmployees } from "../actions";
+import { getBranchById, getBranchesByMemberId, getBranchThisMonthProposalCount } from "../actions";
 import { useBranches } from "@/app/hooks/useBranches";
 import Loading from "@/app/components/Status/Loading";
 import Error from "@/app/components/Status/Error";
 import { ProposalReportExport } from "@/app/components/Buttons/ProposalReportExport";
+import { searchEmployees } from "../../employees/actions";
 
 interface Branch {
   id: number;

@@ -199,20 +199,21 @@ export default function InvestmentsPage() {
             <p className="text-sm font-bold text-foreground">{total} total investments</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
           {investments.length > 0 && (
             <button
               onClick={() => generateInvestmentsReportPDF(investments)}
-              className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-emerald-600 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all active:scale-95"
+              className="flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-emerald-600 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all active:scale-95"
             >
-              <Download className="w-4 h-4 text-emerald-400" /> Export
+              <Download className="w-4 h-4 text-emerald-400" />
+              <span>Export</span>
             </button>
           )}
           <Link
             href="/features/investments/create"
-            className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-blue-600 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-lg active:scale-95"
+            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-blue-600 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-lg active:scale-95"
           >
-            <BanknoteArrowUp className="w-4 h-4" /> New Investment
+            New Investment
           </Link>
         </div>
       </div>
@@ -264,7 +265,8 @@ export default function InvestmentsPage() {
 
       {/* Search & Filter */}
       <div className="flex flex-col md:flex-row gap-3 items-center">
-        <div className="lg:col-span-2 border-2 border-teal-800 rounded-full flex-1">
+
+        <div className="flex lg:col-span-2 border-2 border-teal-800 rounded-full flex-1">
           <div className="relative flex-1 w-full">
             {isTableFetching ? (
               <Loader2 className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-teal-700 animate-spin" />

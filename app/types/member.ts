@@ -55,6 +55,7 @@ export interface Member {
 
   // In formData initial state
   status: "PROBATION" | "PERMANENT" | "MANAGEMENT";
+  channel: "Chanel_01" |"Chanel_02" | "Micro" ;
   probationStartDate: string | null;
 
   // --- Timestamps ---
@@ -128,6 +129,7 @@ export interface EmpData {
   // name: string;
   empNo: string;
   epfNo: string;
+  etfNo: string;
   positionId: number;
 
   // Replaces branchId — always at least one entry (the current branch)
@@ -157,6 +159,7 @@ export interface EmpData {
   remark?: string;
 
   status: "PROBATION" | "PERMANENT" | "MANAGEMENT";
+  channel: "Chanel_01" |"Chanel_02" | "Micro" ;
   probationStartDate: string | null;
 
   // Banking
@@ -199,6 +202,7 @@ export type FormData = {
   bankBranch: string;
 
   status: "PROBATION" | "PERMANENT" | "MANAGEMENT";
+  channel: "Chanel_01" |"Chanel_02" | "Micro" ;
   probationStartDate: string;
 
   profilePic: string;

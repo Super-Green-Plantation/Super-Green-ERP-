@@ -22,7 +22,7 @@ import ClientSelector from "./components/ClientSelector";
 import MemberList from "./components/MemberList";
 
 // Actions & Types
-import { getBranchById, getBranches, searchEmployees } from "@/app/features/branches/actions";
+import { getBranchById, getBranches } from "@/app/features/branches/actions";
 import { getClientById, getClientsByBranch } from "@/app/features/clients/actions";
 import {
   getEligibleCommissions,
@@ -34,6 +34,7 @@ import { Client } from "@/app/types/client";
 import { Member } from "@/app/types/member";
 import { ClientDetailsCard } from "./components/ClientDetailsCard";
 import { useQueryClient } from "@tanstack/react-query";
+import { searchEmployees } from "../../employees/actions";
 
 const Page = () => {
   const queryClient = useQueryClient();

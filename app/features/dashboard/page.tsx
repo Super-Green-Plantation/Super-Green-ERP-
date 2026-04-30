@@ -351,50 +351,7 @@ const PrivilegedView = ({ data, userName, userRole, achieved, target, percentage
             </div>
           </div>
 
-          {/* Key Personnel Panel */}
-          <div className="bg-card/60 backdrop-blur-xl rounded-[2.5rem] p-8 shadow-sm border border-border/50 flex-1 relative overflow-hidden text-card-foreground">
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h2 className="font-bold text-xl tracking-tighter text-foreground leading-none">Command Structure</h2>
-                <p className="text-[10px] text-muted-foreground mt-2 uppercase tracking-widest font-bold">Core Oversight Team</p>
-              </div>
-
-            </div>
-
-            <div className="space-y-6">
-              {data.keyPersonnel?.map((p: any, i: number) => {
-                const branchId = p.branches?.[0]?.branchId;
-                const empId = p.id;
-                const profileHref = branchId && empId ? `/features/branches/employees/${branchId}/${empId}` : "#";
-
-                return (
-                  <div key={p.id} className="flex items-center justify-between gap-4 group cursor-pointer hover:bg-muted/30 p-2 rounded-2xl transition-all">
-                    <div className="flex items-center gap-4">
-                      <div className="relative">
-                        <div className="w-14 h-14 rounded-2xl border-2 border-border/50 overflow-hidden shadow-md group-hover:scale-110 transition-transform">
-                          <UserAvatar seed={p.nameWithInitials} className="w-full h-full" />
-                        </div>
-                        <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-[6px] border-2 border-card bg-emerald-500`}></div>
-                      </div>
-                      <div>
-                        <p className="font-bold text-sm text-foreground tracking-tight group-hover:text-primary transition-colors">{p.nameWithInitials}</p>
-                        <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest mt-1">{p.position?.title || "Agent"}</p>
-                      </div>
-                    </div>
-                    <Link href={profileHref}
-                      className="text-[10px] font-bold text-primary px-4 py-2 rounded-xl bg-primary/5 border border-primary/20 hover:bg-primary hover:text-white transition-all tracking-widest uppercase">
-                      Profile
-                    </Link>
-                  </div>
-                );
-              })}
-            </div>
-
-            <Link href="/features/branches"
-              className="w-full px-6 py-5 mt-10 rounded-[1.5rem] bg-muted/50 text-foreground font-bold text-xs uppercase tracking-widest hover:bg-primary hover:text-white transition-all border border-border/50 block text-center hover:shadow-lg hover:shadow-primary/20">
-              Global Directory
-            </Link>
-          </div>
+         
 
         </aside>
       </div>

@@ -228,21 +228,7 @@ export async function getBranchEmployees(branchId: number) {
 
 //search employee
 
-export async function searchEmployees(searchText: string) {
-  return prisma.member.findMany({
-    where: {
-      OR: [
-        { nic: { contains: searchText, mode: "insensitive" } },
-        { empNo: { contains: searchText, mode: "insensitive" } },
-        { nameWithInitials: { contains: searchText, mode: "insensitive" } },
-      ],
-    },
-    include: { 
-      position: { include: { orc: true } },
-      branches: { include: { branch: true } } },
-    take: 10, // ✅ limit for dropdown
-  });
-}
+
 
 export async function getBranchThisMonthProposalCount() {
   try {

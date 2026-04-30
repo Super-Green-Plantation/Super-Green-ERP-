@@ -1,7 +1,6 @@
 "use client";
 
 import { getEmployeePerformance } from "@/app/features/branches/employees/[branchId]/[empId]/getEmployeePerfomance";
-import { toggleEmployeeStatus } from "@/app/features/employees/actions";
 import {
     Award,
     Banknote,

@@ -166,7 +166,7 @@ const Sidebar = ({ role, loading, isCollapsed, setIsCollapsed, onNavigate }: Sid
                 }}
                 className={`
                   flex items-center gap-4
-                  px-4 py-3 rounded-xl
+                  px-4 py-3 rounded-sm
                   text-sm font-bold
                   transition-all duration-200
                   group

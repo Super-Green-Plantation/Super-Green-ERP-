@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Spinner } from "@/components/ui/spinner";
 import {
   X,
   Mail,
   Hash,
-  DollarSign,
   Phone as PhoneIcon,
   User,
   MapPin,
@@ -14,73 +13,87 @@ import {
   CreditCard,
   Building2,
   Calendar,
-  FileText,
   Users,
   ChevronDown,
   Check,
   Upload,
+  Search,
 } from "lucide-react";
 import { EmpModalProps, FormData, Member } from "@/app/types/member";
 import { getBranchById, getBranches } from "@/app/features/branches/actions";
 import { useParams } from "next/navigation";
 import { Branch } from "@/app/types/branch";
-import { createEmployee, getPositions, getUplineMembers, updateEmployee, uploadProfilePic } from "@/app/features/employees/actions";
+import {
+  createEmployee,
+  getPositions,
+  getUplineMembers,
+  updateEmployee,
+  uploadProfilePic,
+  searchEmployees,
+  getMembersByEmpNos,
+} from "@/app/features/employees/actions";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { inputStyles, inputStylesNoIcon, labelStyles, tabBtn } from "@/app/const/styles";
 
+// ─── Types ────────────────────────────────────────────────────────────────────
 
+type MemberSummary = {
+  id: number;
+  nameWithInitials: string | null;
+  empNo: string;
+  position: { title: string };
+};
 
+// ─── Component ────────────────────────────────────────────────────────────────
 
 const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
   const { branchId } = useParams<{ branchId: string }>();
   const queryClient = useQueryClient();
 
+  // ── UI State ──────────────────────────────────────────────────────────────
+  const [activeTab, setActiveTab] = useState<"basic" | "personal" | "employment">("basic");
+  const [loading, setLoading] = useState(false);
+  const [uploadingPic, setUploadingPic] = useState(false);
+
+  // ── Data State ────────────────────────────────────────────────────────────
   const [currentBranch, setCurrentBranch] = useState<Branch | null>(null);
   const [allBranches, setAllBranches] = useState<Branch[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [positions, setPositions] = useState<{ id: number; title: string; rank: number; type: string; isProbation: boolean }[]>([]);
+  const [uplineSuggestions, setUplineSuggestions] = useState<MemberSummary[]>([]);
 
+  // ── Profile Pic ───────────────────────────────────────────────────────────
   const [profilePicFile, setProfilePicFile] = useState<File | null>(null);
   const [profilePicPreview, setProfilePicPreview] = useState<string>("");
-  const [uploadingPic, setUploadingPic] = useState(false);
-  const [positions, setPositions] = useState<{ id: number; title: string; rank: number; type: string; isProbation: boolean }[]>([]);
-  const [activeTab, setActiveTab] = useState<"basic" | "personal" | "employment">("basic");
-  const [uplineSuggestions, setUplineSuggestions] = useState<{ id: number; nameWithInitials: string | null; empNo: string; position: { title: string } }[]>([]);
 
+  // ── Reporting Persons ─────────────────────────────────────────────────────
+  const [searchText, setSearchText] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState<MemberSummary[]>([]);
+  const [selectedReportingMembers, setSelectedReportingMembers] = useState<MemberSummary[]>([]);
+
+  // ── Form Data ─────────────────────────────────────────────────────────────
   const [formData, setFormData] = useState<FormData>({
-    // --- Core (required) ---
     empNo: "",
     epfNo: "",
     etfNo: "",
     positionId: "",
-
-    // --- Branch(es) ---
-    branchIds: [Number(branchId)], // always startෆs with current branch
-
-    // --- Basic contact ---
+    branchIds: [Number(branchId)],
     email: "",
     phone: "",
     phone2: "",
     totalCommission: 0,
-
-    // --- Name variants ---
     nameWithInitials: "",
-
-    // --- Personal ---
     nic: "",
     dob: "",
     gender: "",
     civilStatus: "",
     address: "",
-
-    // --- Employment ---
-    reportingPersons: [],  // name / empNo of supervisor
+    reportingPersons: [],
     dateOfJoin: "",
-    appointmentLetter: "", // file URL or ref
-    confirmation: "",      // file URL or ref
+    appointmentLetter: "",
+    confirmation: "",
     remark: "",
-
-    // --- Banking ---
     accNo: "",
     bank: "",
     bankBranch: "",
@@ -88,51 +101,45 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
     probationStartDate: "",
     profilePic: "",
     isActive: true,
+    channel: "Chanel_01" as "Chanel_01" | "Chanel_02" | "Micro",
   });
 
-  useEffect(() => {
-    getPositions().then(setPositions);
-  }, []);
+  // ─── Derived ──────────────────────────────────────────────────────────────
 
+  const selectedPosition = positions.find((p) => p.id === Number(formData.positionId));
 
+  const canHaveMultipleBranches = (pos?: typeof positions[number]) => {
+    if (!pos) return false;
+    if (pos.type === "PROBATION") return pos.rank >= 4;
+    if (pos.type === "PERMANENT") return pos.rank >= 16;
+    return false;
+  };
+
+  const isMultiBranch = canHaveMultipleBranches(selectedPosition);
+  const homeBranch = allBranches.find((b) => b.id === formData.branchIds[0]);
+
+  // ─── Effects ──────────────────────────────────────────────────────────────
+
+  // Load static data
+  useEffect(() => { getPositions().then(setPositions); }, []);
+  useEffect(() => { if (!branchId) return; getBranchById(Number(branchId)).then(setCurrentBranch); }, [branchId]);
+  useEffect(() => { getBranches().then((b: Branch[]) => setAllBranches(b)); }, []);
+
+  // Edit mode — seed profile pic preview
   useEffect(() => {
     if (mode === "edit" && initialData?.profilePic) {
       setProfilePicPreview(initialData.profilePic);
     }
   }, [mode, initialData]);
 
-  const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setProfilePicFile(file);
-    setProfilePicPreview(URL.createObjectURL(file));
-  };
-
-  const canHaveMultipleBranches = (pos?: typeof positions[number]) => {
-    if (!pos) return false;
-
-    if (pos.type === "PROBATION") {
-      return pos.rank >= 4; // JRM+
-    } else if (pos.type === "PERMANENT") {
-      return pos.rank >= 16; // PERMANENT JRM+
+  // Edit mode — seed selected reporting members from empNos
+  useEffect(() => {
+    if (mode === "edit" && initialData?.reportingPersons?.length) {
+      getMembersByEmpNos(initialData.reportingPersons).then(setSelectedReportingMembers);
     }
-  };
+  }, [mode, initialData]);
 
-  const selectedPosition = positions.find(p => p.id === Number(formData.positionId));
-  const isMultiBranch = canHaveMultipleBranches(selectedPosition);
-
-  // Fetch current branch info
-  useEffect(() => {
-    if (!branchId) return;
-    getBranchById(Number(branchId)).then(setCurrentBranch);
-  }, [branchId]);
-
-  // Fetch all branches for multi-select
-  useEffect(() => {
-    getBranches().then((branches: Branch[]) => setAllBranches(branches));
-  }, []);
-
-  // Populate form in edit mode
+  // Edit mode — populate form
   useEffect(() => {
     if (mode === "edit" && initialData) {
       const existingBranchIds =
@@ -150,9 +157,7 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
         phone2: initialData.phone2 ?? "",
         totalCommission: initialData.totalCommission ?? 0,
         nic: initialData.nic ?? "",
-        dob: initialData.dob
-          ? new Date(initialData.dob).toISOString().slice(0, 10)
-          : "",
+        dob: initialData.dob ? new Date(initialData.dob).toISOString().slice(0, 10) : "",
         gender: initialData.gender ?? "",
         civilStatus: initialData.civilStatus ?? "",
         address: initialData.address ?? "",
@@ -165,23 +170,61 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
         profilePic: "",
         bankBranch: initialData.bankBranch ?? "",
         status: initialData.status ?? "PROBATION",
-        dateOfJoin: initialData.dateOfJoin
-          ? new Date(initialData.dateOfJoin).toISOString().slice(0, 10)
-          : "",
-
+        dateOfJoin: initialData.dateOfJoin ? new Date(initialData.dateOfJoin).toISOString().slice(0, 10) : "",
         probationStartDate: initialData.probationStartDate
           ? new Date(initialData.probationStartDate).toISOString().slice(0, 10)
           : "",
         isActive: initialData.isActive ?? true,
+        channel: initialData.channel ?? "Chanel_01",
       });
     }
-
   }, [mode, initialData, branchId]);
 
-  const handlePositionChange = (value: string) => {
-    const pos = positions.find(p => p.id === Number(value));
-    const isMulti = canHaveMultipleBranches(pos);
+  // Load upline suggestions when position or branches change
+  useEffect(() => {
+    if (!formData.positionId) return;
+    getUplineMembers(Number(formData.positionId), formData.branchIds).then(setUplineSuggestions);
+  }, [formData.positionId, formData.branchIds]);
 
+  // Debounced search
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (searchText.trim().length >= 2) {
+        setIsSearching(true);
+        try {
+          const results = await searchEmployees(searchText);
+          setSearchResults(
+            results.map((m: any) => ({
+              id: m.id,
+              nameWithInitials: m.nameWithInitials,
+              empNo: m.empNo,
+              position: { title: m.position.title },
+            }))
+          );
+        } catch (err) {
+          console.error("Search error:", err);
+        } finally {
+          setIsSearching(false);
+        }
+      } else {
+        setSearchResults([]);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchText]);
+
+  // ─── Handlers ─────────────────────────────────────────────────────────────
+
+  const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setProfilePicFile(file);
+    setProfilePicPreview(URL.createObjectURL(file));
+  };
+
+  const handlePositionChange = (value: string) => {
+    const pos = positions.find((p) => p.id === Number(value));
+    const isMulti = canHaveMultipleBranches(pos);
     setFormData((prev) => ({
       ...prev,
       positionId: value,
@@ -191,11 +234,9 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
 
   const toggleBranch = (id: number) => {
     setFormData((prev) => {
-      const currentBranchNum = Number(branchId);
-      // Current branch cannot be deselected
-      if (id === currentBranchNum) return prev;
-
       const already = prev.branchIds.includes(id);
+      // Prevent deselecting the last branch
+      if (already && prev.branchIds.length === 1) return prev;
       return {
         ...prev,
         branchIds: already
@@ -205,22 +246,31 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
     });
   };
 
-  const toggleReportingPerson = (empNo: string) => {
+  const toggleReportingPerson = (member: MemberSummary) => {
+    const empNo = String(member.empNo);
     setFormData((prev) => ({
       ...prev,
       reportingPersons: prev.reportingPersons.includes(empNo)
-        ? prev.reportingPersons.filter((id) => id !== empNo)
+        ? prev.reportingPersons.filter((e) => e !== empNo)
         : [...prev.reportingPersons, empNo],
     }));
+    setSelectedReportingMembers((prev) => {
+      const exists = prev.find((m) => m.empNo === empNo);
+      return exists ? prev.filter((m) => m.empNo !== empNo) : [...prev, member];
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      let profilePicUrl: string | undefined = formData.profilePic;
+      const positionId = Number(formData.positionId);
+      if (!positionId) {
+        toast.error("Please select a position");
+        return;
+      }
 
-      // Upload profile pic if a new file was selected
+      let profilePicUrl: string | undefined = formData.profilePic;
       if (profilePicFile) {
         setUploadingPic(true);
         const uploadRes = await uploadProfilePic(profilePicFile, formData.empNo);
@@ -235,9 +285,9 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
       const payload = {
         ...formData,
         profilePic: profilePicUrl,
-        positionId: Number(formData.positionId),
-        branchIds: isMultiBranch ? formData.branchIds : [Number(branchId)],
-        probationStartDate: formData.probationStartDate
+        positionId,
+        branchIds: formData.branchIds,
+        probationStartDate: formData.probationStartDate,
       };
 
       if (mode === "add") {
@@ -258,31 +308,24 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
     } catch (err: any) {
       console.error(err);
       let msg = "Error saving employee details";
-
       if (err instanceof Error) {
-        if (err.message.includes("already been registered")) {
-          msg = "This email is already used by another employee.";
-        } else if (err.message.includes("Auth user creation failed")) {
-          msg = "Failed to create user in authentication system.";
-        } else {
-          msg = err.message; // fallback
-        }
+        if (err.message.includes("already been registered")) msg = "This email is already used by another employee.";
+        else if (err.message.includes("Auth user creation failed")) msg = "Failed to create user in authentication system.";
+        else msg = err.message;
       }
-
       toast.error(msg);
     } finally {
       setLoading(false);
     }
   };
 
+  // ─── Render ───────────────────────────────────────────────────────────────
 
-  useEffect(() => {
-    if (!formData.positionId) return;
-    getUplineMembers(Number(formData.positionId), formData.branchIds)
-      .then(setUplineSuggestions);
-  }, [formData.positionId, formData.branchIds]);
+  // Members already selected — exclude from suggestions and search results
+  const selectedEmpNos = new Set(formData.reportingPersons);
 
-
+  const filteredUpline = uplineSuggestions.filter((m) => !selectedEmpNos.has(String(m.empNo)));
+  const filteredSearch = searchResults.filter((m) => !selectedEmpNos.has(String(m.empNo)));
 
   return (
     <div className="fixed inset-0 z-100 flex items-center justify-center bg-background/80 backdrop-blur-sm px-6 py-6 overflow-y-auto animate-in fade-in duration-300">
@@ -295,77 +338,48 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
           <h2 className="text-xl font-bold text-foreground uppercase tracking-tight">
             {mode === "add" ? "Register Team Member" : "Update Profile Records"}
           </h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-muted rounded-full text-muted-foreground hover:text-foreground transition-all border border-transparent hover:border-border"
-          >
+          <button onClick={onClose} className="p-2 hover:bg-muted rounded-full text-muted-foreground hover:text-foreground transition-all border border-transparent">
             <X className="w-6 h-6" />
           </button>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="px-8 pt-6 flex gap-3 border-b border-border pb-4 bg-muted/10">
-          <button type="button" className={tabBtn(activeTab === "basic")} onClick={() => setActiveTab("basic")}>
-            Identity
-          </button>
-          <button type="button" className={tabBtn(activeTab === "personal")} onClick={() => setActiveTab("personal")}>
-            Bio Data
-          </button>
-          <button type="button" className={tabBtn(activeTab === "employment")} onClick={() => setActiveTab("employment")}>
-            Employment
-          </button>
+        {/* Tabs */}
+        <div className="flex border-b border-border bg-muted/5 p-1 mx-8 mt-6 rounded-2xl">
+          <button type="button" onClick={() => setActiveTab("basic")} className={tabBtn(activeTab === "basic")}>Basic Info</button>
+          <button type="button" onClick={() => setActiveTab("personal")} className={tabBtn(activeTab === "personal")}>Personal</button>
+          <button type="button" onClick={() => setActiveTab("employment")} className={tabBtn(activeTab === "employment")}>Employment</button>
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div className="p-6 space-y-4 max-h-[65vh] overflow-y-auto">
+          <div className="p-8 max-h-[60vh] overflow-y-auto custom-scrollbar">
 
-            {/* ── TAB: BASIC INFO ── */}
+            {/* ── TAB: BASIC INFO ─────────────────────────────────────────── */}
             {activeTab === "basic" && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
                 {/* Full Name */}
                 <div className="md:col-span-2">
-                  <label className={labelStyles}>Name with Initials <span className="text-red-400">*</span></label>
+                  <label className={labelStyles}>Full Name (with initials)</label>
                   <div className="relative">
                     <User className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
                     <input
-                      placeholder="e.g. J.M. Doe"
+                      placeholder="e.g. A.B.C. Perera"
                       value={formData.nameWithInitials}
                       onChange={(e) => setFormData({ ...formData, nameWithInitials: e.target.value })}
+                      className={inputStyles}
                       required
-                      className={inputStyles}
                     />
                   </div>
                 </div>
-
-                {/* Emp No */}
-                <div className="w-full">
-                  <label className={labelStyles}>Employee ID <span className="text-red-400">*</span></label>
-                  <div className="relative">
-                    <Hash className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                    <input
-                      placeholder="EMP-001"
-                      value={formData.empNo}
-                      onChange={(e) => setFormData({ ...formData, empNo: e.target.value })}
-
-                      className={inputStyles}
-                    />
-                  </div>
-                </div>
-
-
-
-
-
 
                 {/* Email */}
-                <div className="md:col-span-2">
+                <div>
                   <label className={labelStyles}>Email Address</label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
                     <input
                       type="email"
-                      placeholder="email@example.com"
+                      placeholder="name@company.com"
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       className={inputStyles}
@@ -373,9 +387,24 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                   </div>
                 </div>
 
+                {/* Emp No */}
+                <div>
+                  <label className={labelStyles}>Employee ID</label>
+                  <div className="relative">
+                    <Hash className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                    <input
+                      placeholder="EMP-001"
+                      value={formData.empNo}
+                      onChange={(e) => setFormData({ ...formData, empNo: e.target.value })}
+                      className={inputStyles}
+                      required
+                    />
+                  </div>
+                </div>
+
                 {/* Phone 1 */}
                 <div>
-                  <label className={labelStyles}>Contact No. 1</label>
+                  <label className={labelStyles}>Primary Phone</label>
                   <div className="relative">
                     <PhoneIcon className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
                     <input
@@ -389,7 +418,7 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
 
                 {/* Phone 2 */}
                 <div>
-                  <label className={labelStyles}>Contact No. 2</label>
+                  <label className={labelStyles}>Secondary Phone</label>
                   <div className="relative">
                     <PhoneIcon className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
                     <input
@@ -401,40 +430,22 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                   </div>
                 </div>
 
-                {/* Commission */}
-                <div>
-                  <label className={labelStyles}>Commission ($)</label>
-                  <div className="relative">
-                    <DollarSign className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                    <input
-                      type="number"
-                      value={formData.totalCommission}
-                      onChange={(e) => setFormData({ ...formData, totalCommission: Number(e.target.value) })}
-                      className={inputStyles}
-                    />
-                  </div>
-                </div>
-
-                {/* Employment Status / Position Type */}
+                {/* Employment Type */}
                 <div>
                   <label className={labelStyles}>Employment Type</label>
                   <div className="flex gap-2">
                     {(["PROBATION", "PERMANENT", "MANAGEMENT"] as const).map((s) => {
                       const isActive = formData.status === s;
                       const activeStyle =
-                        s === "PERMANENT"
-                          ? "bg-emerald-600 text-white border-emerald-600"
-                          : s === "MANAGEMENT"
-                            ? "bg-blue-600 text-white border-blue-600"
-                            : "bg-amber-500 text-white border-amber-500";
-
+                        s === "PERMANENT" ? "bg-emerald-600 text-white border-emerald-600"
+                        : s === "MANAGEMENT" ? "bg-blue-600 text-white border-blue-600"
+                        : "bg-amber-500 text-white border-amber-500";
                       return (
                         <button
                           key={s}
                           type="button"
-                          onClick={() => setFormData({ ...formData, status: s, positionId: "" })} // reset position on type change
-                          className={`flex-1 py-2 px-2 rounded-lg text-xs font-bold uppercase tracking-wider border transition-all
-            ${isActive ? activeStyle : "bg-white text-gray-400 border-gray-200 hover:border-gray-300"}`}
+                          onClick={() => setFormData({ ...formData, status: s, positionId: "" })}
+                          className={`flex-1 py-2 px-2 rounded-lg text-xs font-bold uppercase tracking-wider border transition-all ${isActive ? activeStyle : "bg-white text-gray-400 border-gray-200 hover:border-gray-300"}`}
                         >
                           {s === "PERMANENT" ? "Permanent" : s === "MANAGEMENT" ? "Management" : "Probation"}
                         </button>
@@ -443,7 +454,7 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                   </div>
                 </div>
 
-                {/* Probation Start Date — only show when on probation */}
+                {/* Probation Start Date */}
                 {formData.status === "PROBATION" && (
                   <div>
                     <label className={labelStyles}>Probation Start Date</label>
@@ -452,86 +463,69 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                       <input
                         type="date"
                         value={formData.probationStartDate || ""}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            probationStartDate: e.target.value,
-                          })
-                        }
+                        onChange={(e) => setFormData({ ...formData, probationStartDate: e.target.value })}
                         className={inputStyles}
                       />
                     </div>
                   </div>
                 )}
 
-                {/* Designation */}
+                {/* Position */}
                 <div>
-                  <label className={labelStyles} >
-                    Designation / Role <span className="text-red-400">*</span>
-                  </label>
+                  <label className={labelStyles}>Designation / Position</label>
                   <div className="relative">
                     <Briefcase className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
                     <select
                       value={formData.positionId}
                       onChange={(e) => handlePositionChange(e.target.value)}
-                      required
                       className={inputStyles + " appearance-none pr-10"}
+                      required
                     >
-                      <option value="" disabled>Select Position</option>
-                      {positions
-                        .filter(p => p.type === formData.status)
-                        .map(p => (
-                          <option key={p.id} value={p.id}>{p.title}</option>
-                        ))}
+                      <option value="">Select Position</option>
+                      {positions.map((p) => (
+                        <option key={p.id} value={p.id}>{p.title} ({p.type})</option>
+                      ))}
                     </select>
-                    <ChevronDown className="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none" />
+                    <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-400">
+                      <ChevronDown className="w-4 h-4" />
+                    </div>
                   </div>
                 </div>
 
-                {/* ── BRANCH SECTION ── */}
-                <div className="md:col-span-2">
+                {/* Branch(es) */}
+                <div>
+                  <label className={labelStyles}>Assigned Branch(es)</label>
                   {!isMultiBranch ? (
-                    /* Single branch — read-only display */
                     <div className="relative">
                       <MapPin className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
                       <input
-                        value={currentBranch?.name ?? "Loading..."}
-                        disabled
+                        value={homeBranch?.name || "Loading..."}
+                        readOnly
                         className={inputStyles + " bg-gray-50 text-gray-500 cursor-not-allowed"}
                       />
                     </div>
                   ) : (
-                    /* Multi-branch badge selector */
                     <div className="border border-gray-200 rounded-lg p-3 bg-gray-50/50">
-                      {/* Current branch — always selected, locked */}
                       <p className="text-xs text-gray-400 mb-2">
-                        Current branch is pre-selected. Click others to add or remove.
+                        Click branches to assign or remove. At least one must be selected.
                       </p>
                       <div className="flex flex-wrap gap-2">
                         {allBranches.map((b) => {
-                          const isCurrentBranch = b.id === Number(branchId);
                           const isSelected = formData.branchIds.includes(b.id);
                           return (
                             <button
                               key={b.id}
                               type="button"
                               onClick={() => toggleBranch(b.id)}
-                              disabled={isCurrentBranch}
-                              className={`
-                                inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all
-                                ${isSelected
+                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer ${
+                                isSelected
                                   ? "bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-200"
                                   : "bg-white text-gray-600 border-gray-200 hover:border-blue-400 hover:text-blue-600"
-                                }
-                                ${isCurrentBranch ? "opacity-80 cursor-not-allowed ring-1 ring-blue-300" : "cursor-pointer"}
-                              `}
+                              }`}
                             >
                               {isSelected && <Check className="w-3 h-3" />}
                               <MapPin className="w-3 h-3" />
                               {b.name}
-                              {isCurrentBranch && (
-                                <span className="text-[10px] opacity-70 ml-0.5">(current)</span>
-                              )}
                             </button>
                           );
                         })}
@@ -545,10 +539,11 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                     </div>
                   )}
                 </div>
+
               </div>
             )}
 
-            {/* ── TAB: PERSONAL ── */}
+            {/* ── TAB: PERSONAL ───────────────────────────────────────────── */}
             {activeTab === "personal" && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
@@ -623,8 +618,6 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                   </div>
                 </div>
 
-
-
                 {/* Address */}
                 <div className="md:col-span-2">
                   <label className={labelStyles}>Residential Address</label>
@@ -644,43 +637,24 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                 <div className="md:col-span-2">
                   <label className={labelStyles}>Profile Picture</label>
                   <div className="flex items-center gap-4">
-                    {/* Preview */}
                     <div className="w-16 h-16 rounded-full border-2 border-gray-200 overflow-hidden bg-gray-100 shrink-0 flex items-center justify-center">
-                      {profilePicPreview ? (
-                        <img
-                          src={profilePicPreview}
-                          alt="Profile"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <User className="w-7 h-7 text-gray-300" />
-                      )}
+                      {profilePicPreview
+                        ? <img src={profilePicPreview} alt="Profile" className="w-full h-full object-cover" />
+                        : <User className="w-7 h-7 text-gray-300" />
+                      }
                     </div>
-
-                    {/* Upload button */}
                     <div className="flex-1">
                       <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-colors">
                         <Upload className="w-4 h-4" />
                         {profilePicPreview ? "Change Photo" : "Upload Photo"}
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleProfilePicChange}
-                          className="hidden"
-                        />
+                        <input type="file" accept="image/*" onChange={handleProfilePicChange} className="hidden" />
                       </label>
                       <p className="text-xs text-gray-400 mt-1">JPG, PNG up to 2MB</p>
                     </div>
-
-                    {/* Remove button */}
                     {profilePicPreview && (
                       <button
                         type="button"
-                        onClick={() => {
-                          setProfilePicPreview("");
-                          setProfilePicFile(null);
-                          setFormData((prev) => ({ ...prev, profilePic: "" }));
-                        }}
+                        onClick={() => { setProfilePicPreview(""); setProfilePicFile(null); setFormData((prev) => ({ ...prev, profilePic: "" })); }}
                         className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                       >
                         <X className="w-4 h-4" />
@@ -692,54 +666,114 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
               </div>
             )}
 
-            {/* ── TAB: EMPLOYMENT & BANK ── */}
+            {/* ── TAB: EMPLOYMENT & BANK ──────────────────────────────────── */}
             {activeTab === "employment" && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
-                {/* Reporting Person */}
+                {/* ── Reporting Persons ─────────────────────────────────── */}
                 <div className="md:col-span-2">
                   <label className={labelStyles}>Reporting Persons</label>
+                  <div className="border border-gray-200 rounded-lg p-3 bg-gray-50/50 space-y-3">
 
-                  <div className="border border-gray-200 rounded-lg p-3 bg-gray-50/50">
-                    <p className="text-xs text-gray-400 mb-2">
-                      Select one or more reporting persons.
-                    </p>
-
-                    <div className="flex flex-wrap gap-2">
-                      {uplineSuggestions.map((m) => {
-                        const empNo = String(m.empNo);
-                        const isSelected = formData.reportingPersons.includes(empNo);
-
-                        return (
-                          <button
-                            key={m.id}
-                            type="button"
-                            onClick={() => toggleReportingPerson(empNo)}
-                            className={`
-        inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all
-        ${isSelected
-                                ? "bg-blue-600 text-white border-blue-600"
-                                : "bg-white text-gray-600 border-gray-200"}
-      `}
-                          >
-                            {isSelected && <Check className="w-3 h-3" />}
-                            <User className="w-3 h-3" />
-                              {m.nameWithInitials}
-                              <p className="text-[10px] text-green-800 p-1 bg-green-100 rounded-full">{m.position.title}</p>
-                          </button>
-                        );
-                      })}
-
-                      {uplineSuggestions.length === 0 && (
-                        <span className="text-xs text-gray-400">
-                          No higher-rank members found.
-                        </span>
+                    {/* Search Bar */}
+                    <div className="relative">
+                      <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Search by Name, Emp No, or NIC..."
+                        value={searchText}
+                        onChange={(e) => setSearchText(e.target.value)}
+                        className={inputStyles + " pl-10"}
+                      />
+                      {isSearching && (
+                        <div className="absolute right-3 top-2.5">
+                          <Spinner className="w-4 h-4 border-primary/30 border-t-primary" />
+                        </div>
                       )}
                     </div>
 
-                    <p className="text-xs text-gray-400 mt-2">
-                      {formData.reportingPersons.length} selected
-                    </p>
+                    {/* ── Currently Selected ─────────────────────────────── */}
+                    {selectedReportingMembers.length > 0 && (
+                      <div>
+                        <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-2">
+                          Selected ({selectedReportingMembers.length})
+                        </p>
+                        <div className="flex flex-wrap gap-2 p-2 bg-emerald-50/50 rounded-lg border border-emerald-100">
+                          {selectedReportingMembers.map((m) => (
+                            <button
+                              key={`selected-${m.id}`}
+                              type="button"
+                              onClick={() => toggleReportingPerson(m)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700"
+                            >
+                              <Check className="w-3 h-3" />
+                              <User className="w-3 h-3" />
+                              {m.nameWithInitials}
+                              <span className="text-[10px] opacity-75">({m.position.title})</span>
+                              <X className="w-3 h-3 ml-0.5 opacity-75" />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ── Search Results ─────────────────────────────────── */}
+                    {searchText.trim().length >= 2 && (
+                      <div>
+                        <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-2">
+                          Search Results
+                          {filteredSearch.length === 0 && !isSearching && (
+                            <span className="text-gray-400 normal-case font-normal ml-1">— no results</span>
+                          )}
+                        </p>
+                        {filteredSearch.length > 0 && (
+                          <div className="flex flex-wrap gap-2 p-2 bg-blue-50/50 rounded-lg border border-blue-100">
+                            {filteredSearch.map((m) => (
+                              <button
+                                key={`search-${m.id}`}
+                                type="button"
+                                onClick={() => toggleReportingPerson(m)}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all bg-white text-gray-600 border-gray-200 hover:border-blue-400 hover:text-blue-600"
+                              >
+                                <User className="w-3 h-3" />
+                                {m.nameWithInitials}
+                                <span className="text-[10px] opacity-70">({m.position.title})</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* ── Upline Suggestions (shown when not searching) ──── */}
+                    {!searchText && (
+                      <div>
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                          Suggested Uplines
+                        </p>
+                        {filteredUpline.length > 0 ? (
+                          <div className="flex flex-wrap gap-2">
+                            {filteredUpline.map((m) => (
+                              <button
+                                key={`upline-${m.id}`}
+                                type="button"
+                                onClick={() => toggleReportingPerson(m)}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all bg-white text-gray-600 border-gray-200 hover:border-blue-400 hover:text-blue-600"
+                              >
+                                <User className="w-3 h-3" />
+                                {m.nameWithInitials}
+                                <span className="text-[10px] opacity-70">({m.position.title})</span>
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400">
+                            No higher-rank members found. Use search to find others.
+                          </span>
+                        )}
+                      </div>
+                    )}
+
                   </div>
                 </div>
 
@@ -757,40 +791,59 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                   </div>
                 </div>
 
-                <div className="w-full">
-                  <label className={labelStyles}>EPF Number </label>
+                {/* EPF */}
+                <div>
+                  <label className={labelStyles}>EPF Number</label>
                   <div className="relative">
                     <Hash className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
                     <input
                       placeholder="EPF-001"
                       value={formData.epfNo}
                       onChange={(e) => setFormData({ ...formData, epfNo: e.target.value })}
-
                       className={inputStyles}
                     />
                   </div>
-
                 </div>
 
-                <div className="w-full">
-                  <label className={labelStyles}>ETF Number </label>
+                {/* ETF */}
+                <div>
+                  <label className={labelStyles}>ETF Number</label>
                   <div className="relative">
                     <Hash className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
                     <input
                       placeholder="ETF-001"
                       value={formData.etfNo}
                       onChange={(e) => setFormData({ ...formData, etfNo: e.target.value })}
-
                       className={inputStyles}
                     />
                   </div>
-
                 </div>
 
-                {/* Active Status Toggle */}
+                {/* Channel */}
+                <div className="md:col-span-2">
+                  <label className={labelStyles}>Employee Channel</label>
+                  <div className="flex gap-2 p-1 bg-gray-100 rounded-xl">
+                    {(["Chanel_01", "Chanel_02", "Micro"] as const).map((ch) => (
+                      <button
+                        key={ch}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, channel: ch })}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all ${
+                          formData.channel === ch
+                            ? "bg-white text-blue-600 shadow-sm ring-1 ring-black/5"
+                            : "text-gray-500 hover:text-gray-700"
+                        }`}
+                      >
+                        {formData.channel === ch && <Check className="w-3.5 h-3.5" />}
+                        {ch.replace("_", " ")}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Active Status */}
                 <div className="md:col-span-2">
                   <label className={labelStyles}>Employment Status</label>
-
                   <div className="flex items-center justify-between border border-gray-200 rounded-xl px-4 py-3 bg-gray-50/50">
                     <div>
                       <p className="text-sm font-semibold text-gray-700">
@@ -802,23 +855,12 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                           : "Employee is disabled and won't appear in active workflows"}
                       </p>
                     </div>
-
-                    {/* Toggle */}
                     <button
                       type="button"
-                      onClick={() =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          isActive: !prev.isActive,
-                        }))
-                      }
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all ${formData.isActive ? "bg-emerald-600" : "bg-gray-300"
-                        }`}
+                      onClick={() => setFormData((prev) => ({ ...prev, isActive: !prev.isActive }))}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all ${formData.isActive ? "bg-emerald-600" : "bg-gray-300"}`}
                     >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-all ${formData.isActive ? "translate-x-6" : "translate-x-1"
-                          }`}
-                      />
+                      <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-all ${formData.isActive ? "translate-x-6" : "translate-x-1"}`} />
                     </button>
                   </div>
                 </div>
@@ -835,7 +877,7 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                   />
                 </div>
 
-                {/* Divider */}
+                {/* Banking Divider */}
                 <div className="md:col-span-2">
                   <div className="flex items-center gap-3">
                     <Building2 className="w-4 h-4 text-gray-400 shrink-0" />
@@ -885,8 +927,10 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                     />
                   </div>
                 </div>
+
               </div>
             )}
+
           </div>
 
           {/* Footer */}
