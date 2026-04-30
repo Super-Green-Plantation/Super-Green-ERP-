@@ -225,11 +225,6 @@ export async function getBranchEmployees(branchId: number) {
   }
 }
 
-
-//search employee
-
-
-
 export async function getBranchThisMonthProposalCount() {
   try {
     const now = new Date();

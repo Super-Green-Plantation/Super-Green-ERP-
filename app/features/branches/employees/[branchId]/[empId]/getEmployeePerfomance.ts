@@ -54,6 +54,12 @@ export async function getEmployeePerformance(memberId: number) {
         Number(t.monthNumber) === monthInPeriod
     ) ?? null;
 
+    const currentPayroll =
+      member.monthlyPayrolls[0]?.year === currentYear &&
+        member.monthlyPayrolls[0]?.month === currentMonth
+        ? member.monthlyPayrolls[0]
+        : null;
+
     const evaluation = member.monthlyEvaluations[0] ?? null;
 
     return {
@@ -64,6 +70,7 @@ export async function getEmployeePerformance(memberId: number) {
       monthInPeriod,
       target,
       evaluation, // has volumeAchieved, bonusEarned, targetHit
+      currentPayroll,
     };
   }
 

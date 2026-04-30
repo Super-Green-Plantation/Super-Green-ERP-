@@ -2,20 +2,11 @@
 
 import { getEmployeePerformance } from "@/app/features/branches/employees/[branchId]/[empId]/getEmployeePerfomance";
 import {
-    Award,
-    Banknote,
-    Calendar,
-    Car,
-    CheckCircle2,
-    ChevronRight,
-    Clock, Loader2,
-    Target,
-    TrendingUp
+    Award, Banknote, Calendar, Car, CheckCircle2,
+    ChevronRight, Clock, Loader2, Target, TrendingUp
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import Loading from "../Status/Loading";
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const fmt = (n: number) =>
     `Rs. ${Number(n).toLocaleString("en-LK", { maximumFractionDigits: 0 })}`;
@@ -34,17 +25,12 @@ function ProgressBar({ achieved, target, color = "bg-blue-500" }: {
     const pct = target > 0 ? Math.min((achieved / target) * 100, 100) : 0;
     return (
         <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-            <div
-                className={`h-full rounded-full transition-all duration-700 ${color}`}
-                style={{ width: `${pct}%` }}
-            />
+            <div className={`h-full rounded-full transition-all duration-700 ${color}`} style={{ width: `${pct}%` }} />
         </div>
     );
 }
 
-function StatPill({ label, value, highlight = false }: {
-    label: string; value: string; highlight?: boolean;
-}) {
+function StatPill({ label, value, highlight = false }: { label: string; value: string; highlight?: boolean }) {
     return (
         <div className={`rounded-xl p-3 border ${highlight ? "bg-emerald-50 border-emerald-100" : "bg-slate-50 border-slate-100"}`}>
             <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1">{label}</p>
@@ -53,52 +39,26 @@ function StatPill({ label, value, highlight = false }: {
     );
 }
 
-// ─── Probation Section ────────────────────────────────────────────────────────
+function ProbationStatus({ data, status, orc }: { data: any; status: string; orc: number }) {
+    const { dateOfJoin, monthsElapsed, periodNumber, monthInPeriod, target, evaluation, currentPayroll } = data;
 
-function ProbationStatus({ data, status }: {
-    data: any;
-    status: "PROBATION" | "PERMANENT" | "MANAGEMENT";
-
-}) {
-    const {
-        dateOfJoin, monthsElapsed, periodNumber,
-        monthInPeriod, target, evaluation,
-    } = data;
-
-    const volumeAchieved = evaluation?.volumeAchieved ?? 0;
+    // ✅ Prefer evaluated volume, fall back to live payroll accumulator
+    const volumeAchieved = evaluation?.volumeAchieved ?? currentPayroll?.volumeAchieved ?? 0;
     const targetAmount = target?.targetAmount ?? 0;
     const bonusEarned = evaluation?.bonusEarned ?? 0;
     const targetHit = evaluation?.targetHit ?? false;
-    const partialHit =
-        !targetHit &&
-        target?.partialThreshold > 0 &&
-        volumeAchieved >= target.partialThreshold;
+    const partialHit = !targetHit && target?.partialThreshold > 0 && volumeAchieved >= target.partialThreshold;
 
-    const progressColor = targetHit
-        ? "bg-emerald-500"
-        : partialHit
-            ? "bg-amber-400"
-            : "bg-blue-400";
-
-    // Progress bar compares against full target
-    const progressPct = targetAmount > 0
-        ? Math.min((volumeAchieved / targetAmount) * 100, 100)
-        : 0;
+    const progressColor = targetHit ? "bg-emerald-500" : partialHit ? "bg-amber-400" : "bg-blue-400";
+    const progressPct = targetAmount > 0 ? Math.min((volumeAchieved / targetAmount) * 100, 100) : 0;
 
     return (
         <div className="space-y-4">
-            {/* Status badge + period indicator */}
+            {/* Badges */}
             <div className="flex flex-wrap items-center gap-2">
-                <button
-
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 border text-[11px] font-bold uppercase tracking-wider rounded-full transition-all hover:opacity-80 active:scale-95 ${status === "PERMANENT"
-                        ? "bg-emerald-50 border-emerald-200 text-emerald-700"
-                        : "bg-amber-50 border-amber-200 text-amber-700"
-                        }`}
-                >
-
-                    {status === "PERMANENT" ? "Permanent" : "Probation"}
-                </button>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 border border-amber-200 text-amber-700 text-[11px] font-bold uppercase tracking-wider rounded-full">
+                    Probation
+                </span>
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-100 text-blue-600 text-[11px] font-bold uppercase tracking-wider rounded-full">
                     Period {periodNumber} — Month {monthInPeriod}
                 </span>
@@ -107,7 +67,7 @@ function ProbationStatus({ data, status }: {
                 </span>
             </div>
 
-            {/* Probation start date */}
+            {/* Start date */}
             <div className="flex items-center gap-2 text-xs text-slate-500">
                 <Calendar className="w-3.5 h-3.5 text-slate-400" />
                 <span>Started {new Date(dateOfJoin).toLocaleDateString("en-LK", { year: "numeric", month: "long", day: "numeric" })}</span>
@@ -123,9 +83,7 @@ function ProbationStatus({ data, status }: {
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <Target className="w-4 h-4 text-blue-500" />
-                            <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">
-                                This Month's Target
-                            </span>
+                            <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">This Month's Target</span>
                         </div>
                         {evaluation ? (
                             targetHit ? (
@@ -133,72 +91,60 @@ function ProbationStatus({ data, status }: {
                                     <CheckCircle2 className="w-3 h-3" /> Target Hit
                                 </span>
                             ) : partialHit ? (
-                                <span className="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full">
-                                    Partial
-                                </span>
+                                <span className="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full">Partial</span>
                             ) : (
-                                <span className="text-[10px] font-bold text-slate-400 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-full">
-                                    In Progress
-                                </span>
+                                <span className="text-[10px] font-bold text-slate-400 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-full">In Progress</span>
                             )
                         ) : (
-                            <span className="text-[10px] font-bold text-slate-300 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-full">
-                                Not Evaluated
-                            </span>
+                            <span className="text-[10px] font-bold text-slate-300 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-full">Not Evaluated</span>
                         )}
                     </div>
 
                     <div>
                         <div className="flex justify-between items-end mb-1.5">
-                            <span className="text-xs font-bold text-slate-500">
-                                {fmtM(volumeAchieved)} achieved
-                            </span>
-                            <span className="text-xs text-slate-400">
-                                / {fmtM(targetAmount)} target
-                            </span>
+                            <span className="text-xs font-bold text-slate-500">{fmtM(volumeAchieved)} achieved</span>
+                            <span className="text-xs text-slate-400">/ {fmtM(targetAmount)} target</span>
                         </div>
                         <ProgressBar achieved={volumeAchieved} target={targetAmount} color={progressColor} />
-                        <p className="text-[10px] text-slate-400 mt-1 text-right">
-                            {progressPct.toFixed(1)}%
-                        </p>
+                        <p className="text-[10px] text-slate-400 mt-1 text-right">{progressPct.toFixed(1)}%</p>
                     </div>
 
-                    {/* Bonus & partial threshold */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1">
                         <StatPill label="Full Bonus" value={fmt(target.bonusAmount)} />
                         {target.partialThreshold > 0 && (
                             <StatPill label={`Partial (${fmtM(target.partialThreshold)})`} value={fmt(target.partialBonus)} />
                         )}
-                        <StatPill
-                            label="Bonus Earned"
-                            value={fmt(bonusEarned)}
-                            highlight={bonusEarned > 0}
-                        />
+                        <StatPill label="Bonus Earned" value={fmt(bonusEarned)} highlight={bonusEarned > 0} />
                     </div>
                 </div>
             ) : (
                 <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 text-xs text-amber-600 font-medium">
-                    No target configured for Period {periodNumber}, Month {monthInPeriod}.
-                    Set it up in HR → Targets.
+                    No target configured for Period {periodNumber}, Month {monthInPeriod}. Set it up in HR → Targets.
                 </div>
             )}
+
+            {/* ORC */}
+            <div className="grid grid-cols-2 gap-3 pt-2">
+                <div className="p-4 bg-green-400/20 rounded-xl border border-secondary/10">
+                    <p className="text-[9px] font-bold text-green-800 uppercase tracking-widest mb-1">ORC Yield</p>
+                    <p className="text-base font-bold text-green-800">{orc}%</p>
+                </div>
+                <div className="p-4 bg-primary/5 rounded-xl border border-primary/10">
+                    <p className="text-[9px] font-bold text-primary/60 uppercase tracking-widest mb-1">Status</p>
+                    <p className="text-base font-bold text-primary">{status}</p>
+                </div>
+            </div>
         </div>
     );
 }
 
-// ─── Permanent Section ────────────────────────────────────────────────────────
-
-function PermanentStatus({ data, status }: {
-    data: any;
-    status: "PROBATION" | "PERMANENT" | "MANAGEMENT";
-
-}) {
+function PermanentStatus({ data, status, orc }: { data: any; status: string; orc: number }) {
     const { salary, currentPayroll, payrollHistory } = data;
 
     if (!salary) {
         return (
             <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 text-xs text-slate-400 font-medium">
-                No salary configuration found for this position. Set it up in Target page.
+                No salary configuration found for this position.
             </div>
         );
     }
@@ -209,73 +155,45 @@ function PermanentStatus({ data, status }: {
     const allowanceEarned = currentPayroll?.allowanceEarned ?? 0;
     const netPay = currentPayroll?.netPay ?? 0;
 
-    const progressPct = monthlyTarget > 0
-        ? Math.min((volumeAchieved / monthlyTarget) * 100, 100)
-        : 0;
-    const progressColor = progressPct >= 100
-        ? "bg-emerald-500"
-        : progressPct >= 75
-            ? "bg-blue-400"
-            : "bg-slate-300";
-
-
+    const progressPct = monthlyTarget > 0 ? Math.min((volumeAchieved / monthlyTarget) * 100, 100) : 0;
+    const progressColor = progressPct >= 100 ? "bg-emerald-500" : progressPct >= 75 ? "bg-blue-400" : "bg-slate-300";
 
     return (
         <div className="space-y-4">
-            {/* Status badge */}
+            {/* Badges */}
             <div className="flex flex-wrap items-center gap-2">
-                <span
-
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 border text-[11px] font-bold uppercase tracking-wider rounded-full transition-all hover:opacity-80 active:scale-95 ${status === "PERMANENT"
-                        ? "bg-emerald-50 border-emerald-200 text-emerald-700"
-                        : "bg-amber-50 border-amber-200 text-amber-700"
-                        }`}
-                >
-
-                    {status === "PERMANENT" ? "Permanent" : "Probation"}
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-[11px] font-bold uppercase tracking-wider rounded-full">
+                    Permanent
                 </span>
                 {currentPayroll ? (
                     <span className="text-xs text-slate-400 font-medium">
-                        Payroll processed for {MONTH_NAMES[currentPayroll.month]} {currentPayroll.year}
+                        Payroll for {MONTH_NAMES[currentPayroll.month]} {currentPayroll.year}
                     </span>
                 ) : (
-                    <span className="text-xs text-slate-400 font-medium">
-                        No payroll run yet this month
-                    </span>
+                    <span className="text-xs text-slate-400 font-medium">No payroll run yet this month</span>
                 )}
             </div>
 
-            {/* Current month performance */}
+            {/* Current month */}
             <div className="bg-white border border-slate-100 rounded-xl p-4 space-y-3">
                 <div className="flex items-center gap-2">
                     <Target className="w-4 h-4 text-emerald-500" />
-                    <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">
-                        This Month
-                    </span>
+                    <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">This Month's Target</span>
                 </div>
-
                 <div>
                     <div className="flex justify-between items-end mb-1.5">
-                        <span className="text-xs font-bold text-slate-500">
-                            {fmtM(volumeAchieved)} achieved
-                        </span>
-                        <span className="text-xs text-slate-400">
-                            / {fmtM(monthlyTarget)} target
-                        </span>
+                        <span className="text-xs font-bold text-slate-500">{fmtM(volumeAchieved)} achieved</span>
+                        <span className="text-xs text-slate-400">/ {fmtM(monthlyTarget)} target</span>
                     </div>
                     <ProgressBar achieved={volumeAchieved} target={monthlyTarget} color={progressColor} />
-                    <p className="text-[10px] text-slate-400 mt-1 text-right">
-                        {progressPct.toFixed(1)}%
-                    </p>
+                    <p className="text-[10px] text-slate-400 mt-1 text-right">{progressPct.toFixed(1)}%</p>
                 </div>
-
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
                     <StatPill label="Incentive Target" value={fmt(salary.incentiveAmount)} />
                     <StatPill label="Incentive Earned" value={fmt(incentiveEarned)} highlight={incentiveEarned > 0} />
                     <StatPill label="Allowance Target" value={fmt(salary.allowanceAmount)} />
                     <StatPill label="Allowance Earned" value={fmt(allowanceEarned)} highlight={allowanceEarned > 0} />
                 </div>
-
                 {currentPayroll && (
                     <div className="pt-2 border-t border-slate-100 flex justify-between items-center">
                         <span className="text-xs text-slate-400 font-medium">Net Pay this month</span>
@@ -284,14 +202,24 @@ function PermanentStatus({ data, status }: {
                 )}
             </div>
 
-            {/* Payroll history — last 6 months */}
+            {/* ORC */}
+            <div className="grid grid-cols-2 gap-3">
+                <div className="p-4 bg-green-400/30 rounded-xl border border-secondary/10">
+                    <p className="text-[9px] font-bold text-green-800 uppercase tracking-widest mb-1">ORC Yield</p>
+                    <p className="text-base font-bold text-green-800">{orc}%</p>
+                </div>
+                <div className="p-4 bg-primary/5 rounded-xl border border-primary/10">
+                    <p className="text-[9px] font-bold text-primary/60 uppercase tracking-widest mb-1">Status</p>
+                    <p className="text-base font-bold text-primary">{status}</p>
+                </div>
+            </div>
+
+            {/* History */}
             {payrollHistory.length > 0 && (
                 <div className="bg-white border border-slate-100 rounded-xl overflow-hidden">
                     <div className="px-4 py-3 border-b border-slate-50 flex items-center gap-2">
                         <Banknote className="w-4 h-4 text-violet-500" />
-                        <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">
-                            Payroll History
-                        </span>
+                        <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">Payroll History</span>
                     </div>
                     <div className="divide-y divide-slate-50">
                         {payrollHistory.map((p: any) => (
@@ -307,12 +235,8 @@ function PermanentStatus({ data, status }: {
                                     />
                                 </div>
                                 <div className="flex items-center gap-3 shrink-0">
-                                    {p.incentiveHit && (
-                                        <Award className="w-3.5 h-3.5 text-emerald-500" />
-                                    )}
-                                    {p.allowanceHit && (
-                                        <Car className="w-3.5 h-3.5 text-blue-500" />
-                                    )}
+                                    {p.incentiveHit && <Award className="w-3.5 h-3.5 text-emerald-500" />}
+                                    {p.allowanceHit && <Car className="w-3.5 h-3.5 text-blue-500" />}
                                     <span className="text-xs font-bold text-slate-700">{fmt(p.netPay)}</span>
                                 </div>
                             </div>
@@ -329,9 +253,11 @@ function PermanentStatus({ data, status }: {
 export default function EmployeeStatusSection({
     memberId,
     status,
+    orc,
 }: {
     memberId: number;
     status: "PROBATION" | "PERMANENT" | "MANAGEMENT";
+    orc: number; // ✅ passed in from parent, already computed
 }) {
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -343,7 +269,7 @@ export default function EmployeeStatusSection({
         });
     }, [memberId]);
 
-    if (loading) return <Loading />
+    if (loading) return <Loading />;
     if (!data) return null;
 
     return (
@@ -355,21 +281,11 @@ export default function EmployeeStatusSection({
                 </h2>
             </div>
             <div className="p-4 sm:p-6">
-                {
-                    data.status === "PROBATION" ? (
-                        <ProbationStatus data={data}
-                            status={status}
-
-                        />
-                    ) : (
-                        <PermanentStatus
-                            data={data}
-                            status={status}
-
-                        />
-                    )
-                }
-
+                {data.status === "PROBATION" ? (
+                    <ProbationStatus data={data} status={status} orc={orc} />
+                ) : (
+                    <PermanentStatus data={data} status={status} orc={orc} />
+                )}
             </div>
         </section>
     );

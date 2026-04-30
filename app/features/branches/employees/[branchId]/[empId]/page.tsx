@@ -53,13 +53,13 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
   const [isPermeant, setIsPermeant] = useState(false)
   const [activeTab, setActiveTab] = useState<"commissions" | "paysheets">(isPermeant ? "paysheets" : "commissions");
 
-    const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; branchId: number | null }>({
+  const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; branchId: number | null }>({
     open: false,
     branchId: null,
   });
 
-    const queryClient = useQueryClient();
-    const router = useRouter();
+  const queryClient = useQueryClient();
+  const router = useRouter();
 
   useEffect(() => {
     if (employee?.status === "PERMANENT") {
@@ -122,18 +122,18 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["employees", branchId] });
       toast.success("Employee deleted successfully");
-      
+
     },
     onError: () => {
       toast.error("Failed to delete employee");
     },
   });
 
-   const handleDeleteClick = (branchId: number) => {
+  const handleDeleteClick = (branchId: number) => {
     setDeleteDialog({ open: true, branchId });
   };
-  
-    const handleDeleteConfirm = async () => {
+
+  const handleDeleteConfirm = async () => {
     if (!deleteDialog.branchId) return;
     deleteMutation.mutate(deleteDialog.branchId);
     router.push(`/features/branches/employees/${branchId}`);
@@ -145,11 +145,17 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
   // Calculate target progress
   let targetValue = 0;
   let achievedValue = 0;
-  let targetLabel = "Monthly Target";  
+  let targetLabel = "Monthly Target";
 
   if (performance?.status === "PROBATION") {
     targetValue = performance.target?.targetAmount || 0;
-    achievedValue = performance.evaluation?.volumeAchieved || 0;
+
+    // ✅ Prefer evaluation if available, fall back to payroll
+    achievedValue =
+      performance.evaluation?.volumeAchieved ||
+      performance.currentPayroll?.volumeAchieved ||
+      0;
+
     targetLabel = `Probation Target (P${performance.periodNumber} M${performance.monthInPeriod})`;
   } else if (performance?.status === "PERMANENT") {
     targetValue = performance.salary?.monthlyTarget || 0;
@@ -239,55 +245,12 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
         {/* ── Main Column: Calibration ── */}
         <div className="lg:col-span-8 space-y-8">
 
-          {/* Real-time Performance Calibration */}
           {!isManagement && (
-            <section className="bg-card/50 backdrop-blur-md rounded-[2.5rem] p-8 sm:p-10 border border-border/50 shadow-sm">
-              <div className="flex items-center justify-between mb-8">
-                <h3 className="text-2xl font-bold text-foreground flex items-center gap-4">
-                  Performance Calibration
-                </h3>
-              </div>
-
-              <div className="space-y-10">
-                {/* Main Volume Progress */}
-                <div className="space-y-4">
-                  <div className="flex justify-between items-end">
-                    <div>
-                      <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">{targetLabel}</span>
-                      <p className="text-xs text-primary font-bold mt-1">Goal: {targetValue.toLocaleString()}</p>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-2xl font-bold text-primary">{achievedValue.toLocaleString()}</span>
-                      <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1">Achieved Volume</p>
-                    </div>
-                  </div>
-                  <div className="h-4 w-full bg-muted/20 rounded-full overflow-hidden border border-border/30">
-                    <div
-                      className={`h-full bg-teal-700 rounded-full shadow-lg shadow-secondary/10 transition-all duration-1000 ease-out`}
-                      style={{ width: `${progressPercentage}%` }}
-                    />
-                  </div>
-                  <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">
-                    <span>0% Start</span>
-                    <span>{progressPercentage}% Progress</span>
-                    <span>100% Target</span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-border/30">
-                  <div className="p-6 bg-primary/5 rounded-2xl border border-primary/10">
-                    <p className="text-[10px] font-bold text-primary/60 uppercase tracking-widest mb-1">Status Calibration</p>
-                    <p className="text-lg font-bold text-primary">{employee.status}</p>
-                    <p className="text-xs text-muted-foreground mt-1">Current employment lifecycle phase.</p>
-                  </div>
-                  <div className="p-6 bg-secondary/5 rounded-2xl border border-secondary/10">
-                    <p className="text-[10px] font-bold text-secondary/60 uppercase tracking-widest mb-1">Overriding Rate (ORC)</p>
-                    <p className="text-lg font-bold text-secondary">{orc}% Yield</p>
-                    <p className="text-xs text-muted-foreground mt-1">Strategic yield on branch performance.</p>
-                  </div>
-                </div>
-              </div>
-            </section>
+            <EmployeeStatusSection
+              memberId={employee.id}
+              status={employee.status}
+              orc={orc}  // ✅ pass it in
+            />
           )}
 
 
@@ -321,74 +284,66 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
 
         {/* ── Sidebar Column ── */}
         <aside className="lg:col-span-4 space-y-8">
+          <div>
+            <h3 className="text-sm font-semibold text-gray-700 mb-3">
+              Reporting Persons
+            </h3>
 
-          {/* Employment Cycle Section */}
-          {!isManagement && (
-            <EmployeeStatusSection
-              memberId={employee.id}
-              status={employee.status}
-            />
-          )}
+            <div className="grid md:grid-cols-1 sm:grid-cols-2 gap-3">
+              {reportingPeople.map((person) => {
+                const branchId = person.branches?.[0]?.branchId;
 
+                return (
+                  <Link
+                    key={person.id}
+                    href={`/features/branches/employees/${branchId}/${person.id}`}
+                    className="group border rounded-xl p-3 bg-white hover:shadow-md transition-all"
+                  >
+                    <div className="flex items-center gap-3">
+
+                      {/* Profile Image */}
+                      <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+                        {person.profilePic ? (
+                          <img
+                            src={person.profilePic}
+                            alt={person.nameWithInitials ?? "profile"}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-xs text-gray-400">No Img</span>
+                        )}
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-800 truncate group-hover:text-blue-600">
+                          {person.nameWithInitials ?? "Unnamed"}
+                        </p>
+
+                        <p className="text-xs text-gray-500">
+                          {person.position?.title ?? "No Position"}
+                        </p>
+
+                        <p className="text-xs text-gray-400">
+                          {person.empNo}
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+
+            {reportingPeople.length === 0 && (
+              <p className="text-xs text-gray-400 mt-2">
+                No reporting persons assigned.
+              </p>
+            )}
+          </div>
         </aside>
       </div>
 
-      <div>
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">
-          Reporting Persons
-        </h3>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {reportingPeople.map((person) => {
-            const branchId = person.branches?.[0]?.branchId;
-
-            return (
-              <Link
-                key={person.id}
-                href={`/features/branches/employees/${branchId}/${person.id}`}
-                className="group border rounded-xl p-3 bg-white hover:shadow-md transition-all"
-              >
-                <div className="flex items-center gap-3">
-
-                  {/* Profile Image */}
-                  <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
-                    {person.profilePic ? (
-                      <img
-                        src={person.profilePic}
-                        alt={person.nameWithInitials ?? "profile"}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-xs text-gray-400">No Img</span>
-                    )}
-                  </div>
-
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-800 truncate group-hover:text-blue-600">
-                      {person.nameWithInitials ?? "Unnamed"}
-                    </p>
-
-                    <p className="text-xs text-gray-500">
-                      {person.position?.title ?? "No Position"}
-                    </p>
-
-                    <p className="text-xs text-gray-400">
-                      {person.empNo}
-                    </p>
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-
-        {reportingPeople.length === 0 && (
-          <p className="text-xs text-gray-400 mt-2">
-            No reporting persons assigned.
-          </p>
-        )}
-      </div>
 
       {/* ── Financial Statement Feed ── */}
       <section className="pt-12 border-t border-border/50">
@@ -401,19 +356,19 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
 
           <div className="flex items-center gap-4 flex-wrap">
             <div className="flex bg-card/50 p-1 rounded-xl border border-border/40 backdrop-blur-md">
-              
-              {(isPermeant || isManagement) &&(
+
+              {(isPermeant || isManagement) && (
                 <button
-                onClick={() => setActiveTab("paysheets")}
-                className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === "paysheets"
-                  ? "bg-primary/50 text-white shadow-md"
-                  : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
-                  }`}
-              >
-                Salary Slips
-              </button>
+                  onClick={() => setActiveTab("paysheets")}
+                  className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === "paysheets"
+                    ? "bg-primary/50 text-white shadow-md"
+                    : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
+                    }`}
+                >
+                  Salary Slips
+                </button>
               )}
-              
+
               {!isManagement && (
                 <button
                   onClick={() => setActiveTab("commissions")}
@@ -432,8 +387,8 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
         </div>
 
         {activeTab === "paysheets" ? (
-         <PaySheet payrolls={payrolls} member={employee} />
-          
+          <PaySheet payrolls={payrolls} member={employee} />
+
         ) : (
           allCommission && (
             <div className="bg-card/30 rounded-[3rem] p-2 sm:p-6 border border-border/40 backdrop-blur-sm animate-in fade-in slide-in-from-bottom-10 duration-1000">
@@ -464,9 +419,9 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
                 Permanent delete from core enterprise records.
               </p>
             </div>
-            <button 
-            onClick={() => handleDeleteClick(Number(params.empId))}
-            className="flex items-center gap-3 px-8 py-4 bg-red-600 text-white rounded-[1.5rem] text-xs font-bold uppercase tracking-widest shadow-xl shadow-red-600/20 hover:scale-105 transition-all">
+            <button
+              onClick={() => handleDeleteClick(Number(params.empId))}
+              className="flex items-center gap-3 px-8 py-4 bg-red-600 text-white rounded-[1.5rem] text-xs font-bold uppercase tracking-widest shadow-xl shadow-red-600/20 hover:scale-105 transition-all">
               <Trash2 className="w-4 h-4" /> Delete This Record
             </button>
           </div>
@@ -486,15 +441,15 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
       }
 
       <ConfirmDialog
-              open={deleteDialog.open}
-              onClose={() => setDeleteDialog({ open: false, branchId: null })}
-              onConfirm={handleDeleteConfirm}
-              title="Delete Employee"
-              description="This will permanently delete this employee and all associated data. This action cannot be undone."
-              confirmLabel="Delete Employee"
-              cancelLabel="Keep it"
-              variant="danger"
-            />
+        open={deleteDialog.open}
+        onClose={() => setDeleteDialog({ open: false, branchId: null })}
+        onConfirm={handleDeleteConfirm}
+        title="Delete Employee"
+        description="This will permanently delete this employee and all associated data. This action cannot be undone."
+        confirmLabel="Delete Employee"
+        cancelLabel="Keep it"
+        variant="danger"
+      />
     </main >
   );
 };
