@@ -4,7 +4,7 @@ import { serializeData } from "@/app/utils/serializers";
 import { getCurrentUserWithRole } from "@/lib/getCurrentUserWithRole";
 import { logActivity } from "@/lib/logActivity";
 import { prisma } from "@/lib/prisma";
-import { ActivityAction, ActivityEntity } from "@prisma/client";
+import { ActivityAction, ActivityEntity, PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { requirePermission } from "@/lib/auth/withPermission";
 
@@ -261,4 +261,25 @@ export async function getBranchThisMonthProposalCount() {
     console.error("Error fetching branch proposal counts:", error);
     throw new Error("Failed to fetch branch proposal counts");
   }
+}
+
+// lib/branch.ts
+
+export async function getDescendantBranchIds(
+  branchId: number,
+  db: PrismaClient = prisma
+): Promise<number[]> {
+  // Fetch all children recursively
+  const children = await db.branch.findMany({
+    where: { parentId: branchId },
+    select: { id: true },
+  });
+
+  const childIds = children.map((c) => c.id);
+
+  const nestedIds = await Promise.all(
+    childIds.map((id) => getDescendantBranchIds(id, db))
+  );
+
+  return [branchId, ...childIds, ...nestedIds.flat()];
 }

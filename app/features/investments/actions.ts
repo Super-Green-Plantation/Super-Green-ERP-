@@ -4,8 +4,9 @@ import { serializeData } from "@/app/utils/serializers";
 import { getCurrentUserWithRole } from "@/lib/getCurrentUserWithRole";
 import { logActivity } from "@/lib/logActivity";
 import { prisma } from "@/lib/prisma";
-import { ActivityAction, ActivityEntity } from "@prisma/client";
+import { ActivityAction, ActivityEntity, Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+import { getDescendantBranchIds } from "../branches/actions";
 
 // Generate investment reference number
 function generateInvestmentNumber() {
@@ -687,6 +688,54 @@ export async function searchInvestments(
   return { investments, total, totalPages: Math.ceil(total / pageSize) };
 }
 
+// export async function getInvestmentSummary(filters: {
+//   branchId?: number;
+//   from?: Date;
+//   to?: Date;
+// }) {
+//   const dbUser = await getCurrentUserWithRole();
+//   if (!dbUser) throw new Error("User not found");
+
+//   let whereCondition: any = {};
+
+//   if (filters.branchId) whereCondition.branchId = filters.branchId;
+
+//   if (filters.from || filters.to) {
+//     whereCondition.investmentDate = {
+//       ...(filters.from && { gte: filters.from }),
+//       ...(filters.to && { lte: filters.to }),
+//     };
+//   }
+
+//   // role-based access
+//   switch (dbUser.role) {
+//     case "ADMIN": case "HR": case "DEV": break;
+//     case "BRANCH_MANAGER": case "REGIONAL_MANAGER": case "AGM": {
+//       const branchIds = dbUser.member?.branches?.map(mb => mb.branchId) ?? [];
+//       whereCondition.branchId = { in: branchIds };
+//       break;
+//     }
+//     default: throw new Error("Unauthorized");
+//   }
+
+//   const [totalAmount, proposalCount, investmentCount] = await Promise.all([
+//     prisma.investment.aggregate({
+//       where: whereCondition,
+//       _sum: { amount: true },
+//     }),
+//     prisma.investment.count({
+//       where: { ...whereCondition, proposalFormNo: { not: null } },
+//     }),
+//     prisma.investment.count({ where: whereCondition }),
+//   ]);
+
+//   return {
+//     totalAmount: totalAmount._sum.amount ?? 0,
+//     proposalCount,
+//     investmentCount,
+//   };
+// }
+
 export async function getInvestmentSummary(filters: {
   branchId?: number;
   from?: Date;
@@ -695,9 +744,13 @@ export async function getInvestmentSummary(filters: {
   const dbUser = await getCurrentUserWithRole();
   if (!dbUser) throw new Error("User not found");
 
-  let whereCondition: any = {};
+  let whereCondition: Prisma.InvestmentWhereInput = {};
 
-  if (filters.branchId) whereCondition.branchId = filters.branchId;
+  // Resolve branchId filter to include descendants
+  if (filters.branchId) {
+    const allBranchIds = await getDescendantBranchIds(filters.branchId);
+    whereCondition.branchId = { in: allBranchIds };
+  }
 
   if (filters.from || filters.to) {
     whereCondition.investmentDate = {
@@ -706,15 +759,41 @@ export async function getInvestmentSummary(filters: {
     };
   }
 
-  // role-based access
+  // Role-based access
   switch (dbUser.role) {
-    case "ADMIN": case "HR": case "DEV": break;
-    case "BRANCH_MANAGER": case "REGIONAL_MANAGER": case "AGM": {
-      const branchIds = dbUser.member?.branches?.map(mb => mb.branchId) ?? [];
-      whereCondition.branchId = { in: branchIds };
+    case "ADMIN":
+    case "HR":
+    case "DEV":
+      break;
+
+    case "BRANCH_MANAGER":
+    case "REGIONAL_MANAGER":
+    case "AGM": {
+      const directBranchIds =
+        dbUser.member?.branches?.map((mb) => mb.branchId) ?? [];
+
+      // Expand each assigned branch to include its descendants
+      const allBranchIdSets = await Promise.all(
+        directBranchIds.map((id) => getDescendantBranchIds(id))
+      );
+      const allBranchIds = [...new Set(allBranchIdSets.flat())];
+
+      // If a branchId filter was already applied, intersect — don't override
+      if (filters.branchId) {
+        const filterSet = new Set(
+          (whereCondition.branchId as { in: number[] }).in
+        );
+        whereCondition.branchId = {
+          in: allBranchIds.filter((id) => filterSet.has(id)),
+        };
+      } else {
+        whereCondition.branchId = { in: allBranchIds };
+      }
       break;
     }
-    default: throw new Error("Unauthorized");
+
+    default:
+      throw new Error("Unauthorized");
   }
 
   const [totalAmount, proposalCount, investmentCount] = await Promise.all([
