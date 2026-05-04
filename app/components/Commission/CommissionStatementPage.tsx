@@ -8,8 +8,8 @@ import {
 const fmt = (n: number) => n.toLocaleString("en-LK", { minimumFractionDigits: 2 });
 
 const MONTHS = [
-  "January","February","March","April","May","June",
-  "July","August","September","October","November","December",
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
 ];
 
 const CommissionStatementPage = ({ data }: { data: any }) => {
@@ -24,7 +24,7 @@ const CommissionStatementPage = ({ data }: { data: any }) => {
     const map: Record<string, { year: number; month: number; items: any[] }> = {};
 
     for (const c of commissions) {
-      const date = new Date(c.createdAt);
+      const date = new Date(c.investment?.investmentDate ?? c.createdAt);
       const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
       if (!map[key]) map[key] = { year: date.getFullYear(), month: date.getMonth() + 1, items: [] };
       map[key].items.push(c);
@@ -46,7 +46,7 @@ const CommissionStatementPage = ({ data }: { data: any }) => {
 
   return (
     <div className="max-w-5xl mx-auto rounded-[2.5rem] sm:rounded-[3.5rem] p-4 sm:p-8 relative overflow-hidden group">
-      
+
       {/* Decorative background element */}
       <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[80px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
@@ -95,15 +95,15 @@ const CommissionStatementPage = ({ data }: { data: any }) => {
             <span className="text-xs sm:text-sm font-medium text-muted-foreground mr-1 sm:mr-1.5">Rs.</span>
             {totalVolume.toLocaleString()}
           </h2>
-          <div  className="pt-5">
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.3em] mb-3 sm:mb-4">Transactions</p>
-          <h2 className="text-xl sm:text-3xl lg:text-4xl font-extrabold text-foreground tracking-tighter leading-none">
-            {commissions.length}
-          </h2>
-        </div>
+          <div className="pt-5">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.3em] mb-3 sm:mb-4">Transactions</p>
+            <h2 className="text-xl sm:text-3xl lg:text-4xl font-extrabold text-foreground tracking-tighter leading-none">
+              {commissions.length}
+            </h2>
+          </div>
         </div>
 
-       
+
       </div>
 
       {/* Monthly Sections */}
@@ -159,7 +159,7 @@ const CommissionStatementPage = ({ data }: { data: any }) => {
                                   {item.investment?.client?.fullName || `Client #${item.investment?.clientId}`}
                                 </p>
                                 <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest mt-1">
-                                  DATED: {new Date(item.createdAt).toLocaleDateString("en-GB")}
+                                  DATED: {new Date(item.investmentDate).toLocaleDateString("en-GB")}
                                 </p>
                               </div>
                             </div>
@@ -209,26 +209,33 @@ const CommissionStatementPage = ({ data }: { data: any }) => {
       {/* Grand Total Footer Card */}
       <div className="mt-8 sm:mt-12 bg-primary dark:bg-primary/50 rounded-[2rem] sm:rounded-[2.5rem] p-6 sm:p-10 text-white shadow-2xl shadow-primary/30 relative overflow-hidden group/footer">
         <div className="absolute top-0 right-0 p-20 bg-white/10 rounded-full blur-[80px] pointer-events-none group-hover/footer:scale-125 transition-transform duration-1000" />
-        <div className="relative z-10 flex flex-col sm:flex-row justify-between items-center gap-6 sm:gap-10">
-          <div className="w-full sm:w-auto">
-            <p className="text-[10px] sm:text-[11px] font-bold text-white/50 uppercase tracking-[0.3em] sm:tracking-[0.5em] mb-4 text-center sm:text-left">Cumulative All-Time Archive</p>
-            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
-               <div className="w-full sm:w-auto px-5 py-3 sm:py-2 bg-white/10 rounded-xl border border-white/10 border-dashed flex sm:block justify-between items-center">
-                  <span className="text-lg sm:text-xl font-bold">{commissions.length}</span>
-                  <span className="text-[9px] sm:text-[10px] text-white/40 font-bold uppercase sm:ml-3 tracking-widest whitespace-nowrap">Transactions</span>
-               </div>
-               <div className="w-full sm:w-auto px-5 py-3 sm:py-2 bg-white/10 rounded-xl border border-white/10 border-dashed flex sm:block justify-between items-center">
-                  <span className="text-lg sm:text-xl font-bold">Rs. {Math.round(totalVolume/1000000)}M</span>
-                  <span className="text-[9px] sm:text-[10px] text-white/40 font-bold uppercase sm:ml-3 tracking-widest whitespace-nowrap">Volume</span>
-               </div>
+
+        <div className="relative z-10 flex flex-col xl:flex-row justify-between items-center gap-8">
+          {/* Left Side: Archive Stats */}
+          <div className="w-full xl:w-auto">
+            <p className="text-[10px] font-bold text-white/50 uppercase tracking-[0.3em] mb-4 text-center xl:text-left">
+              Cumulative All-Time Archive
+            </p>
+            <div className="flex flex-row justify-center xl:justify-start items-center gap-4">
+              <div className="px-5 py-3 bg-white/10 rounded-xl border border-white/10 border-dashed">
+                <span className="text-lg font-bold block">{commissions.length}</span>
+                <span className="text-[9px] text-white/40 font-bold uppercase tracking-widest">Transactions</span>
+              </div>
+              <div className="px-5 py-3 bg-white/10 rounded-xl border border-white/10 border-dashed">
+                <span className="text-lg font-bold block">Rs. {Math.round(totalVolume / 1000000)}M</span>
+                <span className="text-[9px] text-white/40 font-bold uppercase tracking-widest">Volume</span>
+              </div>
             </div>
           </div>
-          <div className=" sm:text-right w-full sm:w-auto p-6 sm:p-0 sm:bg-transparent rounded-2xl sm:rounded-3xl border border-white/5 sm:border-0 border-dashed">
-            <p className="text-[10px] sm:text-[11px] text-white/50 font-bold uppercase tracking-[0.3em] sm:tracking-[0.5em] mb-2 sm:mb-4">Total Payout Disbursed</p>
-            <p className="text-xl sm:text-5xl lg:text-7xl font-black tracking-tighter shadow-sm">
-              <span className=" sm:text-xl text-sm mr-1 sm:mr-2 font-medium text-white/40">Rs.</span>
+
+          {/* Right Side: Total Payout (Fixed for overflow) */}
+          <div className="w-full xl:w-auto text-center xl:text-right border-t xl:border-t-0 border-white/10 pt-6 xl:pt-0">
+            <p className="text-[10px] text-white/50 font-bold uppercase tracking-[0.3em] mb-2">Total Payout Disbursed</p>
+            {/* Reduced font scale for better fit; added break-words */}
+            <div className="text-3xl sm:text-5xl font-black tracking-tight break-words">
+              <span className="text-base font-medium text-white/40 mr-1">Rs.</span>
               {fmt(totalEarned)}
-            </p>
+            </div>
           </div>
         </div>
       </div>
@@ -236,14 +243,14 @@ const CommissionStatementPage = ({ data }: { data: any }) => {
       {/* Footer Info */}
       <div className="mt-8 border-t border-border/50 pt-6 text-center px-4 sm:px-20 relative z-10">
         <div className="flex items-center justify-center gap-4 mb-6">
-           <div className="h-px w-12 bg-border"></div>
-           <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-[0.5em]">
-             Confidential Enterprise Audit
-           </p>
-           <div className="h-px w-12 bg-border"></div>
+          <div className="h-px w-12 bg-border"></div>
+          <p className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-[0.5em]">
+            Confidential Enterprise Audit
+          </p>
+          <div className="h-px w-12 bg-border"></div>
         </div>
         <p className="text-[11px] leading-relaxed text-muted-foreground/80 font-medium italic max-w-2xl mx-auto">
-          "The accuracy of this document is critical for enterprise transparency. This automated record 
+          "The accuracy of this document is critical for enterprise transparency. This automated record
           synchronizes all successfully processed investments as of {new Date().toLocaleDateString()}."
         </p>
       </div>

@@ -397,7 +397,7 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                       value={formData.empNo}
                       onChange={(e) => setFormData({ ...formData, empNo: e.target.value })}
                       className={inputStyles}
-                      required
+                      
                     />
                   </div>
                 </div>

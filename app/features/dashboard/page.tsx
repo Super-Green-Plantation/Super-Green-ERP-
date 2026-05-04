@@ -141,26 +141,21 @@ const PrivilegedView = ({ data, userName, userRole, achieved, target, percentage
 
             <div className="relative z-10 w-full">
               <div className="max-w-xl">
-
-
                 <h1 className="text-4xl sm:text-6xl font-bold text-white leading-[1.05] tracking-tighter mb-6">
                   {isMounted ? (new Date().getHours() < 12 ? "Good Morning" : new Date().getHours() < 18 ? "Good Afternoon" : "Good Evening") : "Welcome back"}, <br />
                   <span className="text-accent">Let's Get Started.</span>
                 </h1>
 
                 <p className="dark:text-white/70 text-base sm:text-lg max-w-md leading-relaxed mb-10 tracking-tight">
-                  Welcome back to your workspace. Monitor your activities, track performance, and manage your modules with real-time enterprise intelligence.
+                  Welcome back to your workspace. Monitor your activities, track performance, and manage your modules with real time.
                 </p>
 
                 <div className="flex flex-wrap items-center gap-4">
                   <Link href="/features/investments" className="bg-white text-[#002A24] px-8 py-4 rounded-2xl font-bold flex items-center gap-2 hover:bg-accent hover:text-white transition-all duration-300 shadow-xl">
                     Investments <ChevronRight className="w-4 h-4" />
                   </Link>
-
                 </div>
               </div>
-
-
             </div>
 
             <div className="absolute -bottom-10 -right-10 opacity-5 group-hover:scale-110 transition-transform duration-1000 hidden sm:block">
@@ -179,31 +174,6 @@ const PrivilegedView = ({ data, userName, userRole, achieved, target, percentage
                 <span className="text-[11px] text-muted-foreground/40 uppercase tracking-widest">Loading...</span>
               </div>
             )}
-          </div>
-
-          {/* Floating KPI Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            <FloatingKpiCard
-              icon={<TrendingUp className="w-6 h-6 text-accent" />}
-              title="Investment Capital"
-              value={`Rs. ${(Math.floor(achieved / 10000) / 100).toFixed(2)}M`}
-              subValue="Real-time aggregation"
-              trend="up"
-            />
-            <FloatingKpiCard
-              icon={<Users className="w-6 h-6 text-accent" />}
-              title="Active Participants"
-              value={data.totClients.toLocaleString()}
-              subValue="Verified investors"
-              trend="up"
-            />
-            <FloatingKpiCard
-              icon={<LayoutGrid className="w-6 h-6 text-accent" />}
-              title="Branch Network"
-              value={data.totMembers.toLocaleString()}
-              subValue="Islan wide staff"
-              trend="neutral"
-            />
           </div>
 
           {/* Curated Modules Grid */}
@@ -299,7 +269,6 @@ const PrivilegedView = ({ data, userName, userRole, achieved, target, percentage
               </div>
             </div>
           </section>
-
         </div>
 
         {/* Dynamic Sidebar */}
@@ -351,7 +320,30 @@ const PrivilegedView = ({ data, userName, userRole, achieved, target, percentage
             </div>
           </div>
 
-         
+          {/* Floating KPI Cards */}
+          <div className="grid grid-cols-1 gap-6">
+            <FloatingKpiCard
+              icon={<TrendingUp className="w-6 h-6 text-accent" />}
+              title="Investment Capital"
+              value={`Rs. ${(Math.floor(achieved / 10000) / 100).toFixed(2)}M`}
+              subValue="Real-time aggregation"
+              trend="up"
+            />
+            <FloatingKpiCard
+              icon={<Users className="w-6 h-6 text-accent" />}
+              title="Active Participants"
+              value={data.totClients.toLocaleString()}
+              subValue="Verified investors"
+              trend="up"
+            />
+            <FloatingKpiCard
+              icon={<LayoutGrid className="w-6 h-6 text-accent" />}
+              title="Branch Network"
+              value={data.totMembers.toLocaleString()}
+              subValue="Islan wide staff"
+              trend="neutral"
+            />
+          </div>
 
         </aside>
       </div>

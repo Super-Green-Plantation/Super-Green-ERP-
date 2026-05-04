@@ -15,16 +15,7 @@ export async function getEmployeePerformance(memberId: number) {
       status: true,
       dateOfJoin: true,
       positionId: true,
-      position: {
-        include: {
-          salary: true,
-          positionTargets: true,
-        },
-      },
-      monthlyEvaluations: {
-        where: { year: currentYear, month: currentMonth },
-        take: 1,
-      },
+      position: { include: { salary: true, positionTargets: true } },
       monthlyPayrolls: {
         orderBy: [{ year: "desc" }, { month: "desc" }],
         take: 6,
@@ -33,6 +24,19 @@ export async function getEmployeePerformance(memberId: number) {
   });
 
   if (!member) return null;
+
+  const latestPayroll = member.monthlyPayrolls[0] ?? null;
+  const refYear = latestPayroll?.year ?? currentYear;
+  const refMonth = latestPayroll?.month ?? currentMonth;
+
+  // Second query for evaluation using the correct ref month
+  const evaluation = await prisma.monthlyEvaluation.findUnique({
+    where: { memberId_year_month: { memberId, year: refYear, month: refMonth } },
+  });
+
+  if (!member) return null;
+
+
 
   // ── PROBATION ──────────────────────────────────────────────────────────────
   if (member.position.isProbation === true && member.dateOfJoin) {
@@ -54,13 +58,15 @@ export async function getEmployeePerformance(memberId: number) {
         Number(t.monthNumber) === monthInPeriod
     ) ?? null;
 
-    const currentPayroll =
-      member.monthlyPayrolls[0]?.year === currentYear &&
-        member.monthlyPayrolls[0]?.month === currentMonth
-        ? member.monthlyPayrolls[0]
-        : null;
+    // const currentPayroll =
+    //   member.monthlyPayrolls[0]?.year === currentYear &&
+    //     member.monthlyPayrolls[0]?.month === currentMonth
+    //     ? member.monthlyPayrolls[0]
+    //     : null;
 
-    const evaluation = member.monthlyEvaluations[0] ?? null;
+    const currentPayroll = member.monthlyPayrolls[0] ?? null;
+
+
 
     return {
       status: "PROBATION" as const,
@@ -78,16 +84,19 @@ export async function getEmployeePerformance(memberId: number) {
   const salary = member.position.salary ?? null;
 
   // Current month payroll (first in the ordered list if it matches)
-  const currentPayroll =
-    member.monthlyPayrolls[0]?.year === currentYear &&
-      member.monthlyPayrolls[0]?.month === currentMonth
-      ? member.monthlyPayrolls[0]
-      : null;
+  // const currentPayroll =
+  //   member.monthlyPayrolls[0]?.year === currentYear &&
+  //     member.monthlyPayrolls[0]?.month === currentMonth
+  //     ? member.monthlyPayrolls[0]
+  //     : null;
+
+  const currentPayroll = member.monthlyPayrolls[0] ?? null;
+
 
   return {
     status: "PERMANENT" as const,
     salary,
     currentPayroll,
-    payrollHistory: member.monthlyPayrolls, // up to last 6 months
+    payrollHistory: member.monthlyPayrolls.slice(1), // up to last 6 months
   };
 }

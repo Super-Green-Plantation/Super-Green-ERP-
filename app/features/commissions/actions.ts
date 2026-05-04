@@ -49,15 +49,15 @@ export async function getCommissionStats() {
           createdAt: { gte: last7Days[0] }
         }
       }),
+      // heatmap query
       prisma.commission.findMany({
-        take: 5,
-        orderBy: { createdAt: "desc" },
-        include: {
-          member: true,
+        where: {
           investment: {
-            include: { client: true, plan: true }
-          },
-          Branch: true
+            investmentDate: { gte: last7Days[0] }
+          }
+        },
+        select: {
+          investment: { select: { investmentDate: true } }
         }
       })
     ]);
@@ -232,7 +232,7 @@ export async function processCommissions(data: {
           : 0.07;
 
       const personalCommissionAmount = investment.amount * commRate;
-      
+
       await tx.investment.update({
         where: { id: investmentId },
         data: { commissionsProcessed: true, advisorId: advisor.id },
@@ -426,7 +426,7 @@ async function getUplineChain(advisorRank: number, branchId: number) {
     },
     orderBy: { position: { rank: "asc" } },
   });
-  
+
   const highestBranchRank = branchUplines.length > 0
     ? Math.max(...branchUplines.map(m => m.position?.rank ?? 0))
     : advisorRank;

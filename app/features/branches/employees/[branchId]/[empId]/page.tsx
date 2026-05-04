@@ -162,7 +162,7 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
     achievedValue = performance.currentPayroll?.volumeAchieved || 0;
   }
 
-  const progressPercentage = targetValue > 0 ? Math.min(Math.round((achievedValue / targetValue) * 100), 100) : 0;
+  // const progressPercentage = targetValue > 0 ? Math.min(Math.round((achievedValue / targetValue) * 100), 100) : 0;
 
 
   return (
