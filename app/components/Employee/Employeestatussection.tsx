@@ -42,7 +42,7 @@ function StatPill({ label, value, highlight = false }: { label: string; value: s
 function ProbationStatus({ data, status, orc }: { data: any; status: string; orc: number }) {
     const { dateOfJoin, monthsElapsed, periodNumber, monthInPeriod, target, evaluation, currentPayroll } = data;
 
-    // ✅ Prefer evaluated volume, fall back to live payroll accumulator
+    //  Prefer evaluated volume, fall back to live payroll accumulator
     const volumeAchieved = evaluation?.volumeAchieved ?? currentPayroll?.volumeAchieved ?? 0;
     const targetAmount = target?.targetAmount ?? 0;
     const bonusEarned = evaluation?.bonusEarned ?? 0;

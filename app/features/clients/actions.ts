@@ -26,7 +26,7 @@ export async function getAccessibleClients(page = 1, pageSize = 10, searchText =
       break;
 
     case "EMPLOYEE": {
-      // ✅ ONLY their own clients
+      //  ONLY their own clients
       if (!dbUser.member?.id) {
         throw new Error("Member not found for user");
       }
@@ -809,7 +809,7 @@ export async function searchClients(searchText: string) {
 
       whereCondition = {
         ...whereCondition,
-        createdById: dbUser.member.id, // ✅ only their clients
+        createdById: dbUser.member.id, //  only their clients
       };
       break;
     }
@@ -826,7 +826,7 @@ export async function searchClients(searchText: string) {
 
       whereCondition = {
         ...whereCondition,
-        branchId: { in: branchIds }, // ✅ branch-based access
+        branchId: { in: branchIds }, //  branch-based access
       };
       break;
     }

@@ -66,7 +66,7 @@ export async function upsertPositionTargets(
             positionId,
             periodNumber,
             monthNumber,
-            ...updateData, // ✅ safe now
+            ...updateData, //  safe now
           },
           update: updateData,
         });

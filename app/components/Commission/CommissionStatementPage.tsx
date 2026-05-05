@@ -1,39 +1,58 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   FileText, Wallet, BadgeCheck, UserCheck, TrendingUp, Calendar
 } from "lucide-react";
 
 const fmt = (n: number) => n.toLocaleString("en-LK", { minimumFractionDigits: 2 });
 
-const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
+const MONTH_NAMES_SHORT = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ];
 
 const CommissionStatementPage = ({ data }: { data: any }) => {
+  const now = new Date();
+  const [selectedYear, setSelectedYear] = useState<number | "all">("all");
+  const [selectedMonth, setSelectedMonth] = useState<number | "all">("all");
+
   const commissions: any[] = Array.isArray(data) ? data : (data?.res || data?.commissions || []);
 
-  const totalEarned = commissions.reduce((sum, c) => sum + c.amount, 0);
-  const totalVolume = commissions.reduce((sum, c) => sum + (c.investment?.amount || 0), 0);
+  // Filter before grouping
+  const filtered = useMemo(() => {
+    return commissions.filter((c) => {
+      const date = new Date(c.investment?.investmentDate ?? c.createdAt);
+      const yearMatch = selectedYear === "all" || date.getFullYear() === selectedYear;
+      const monthMatch = selectedMonth === "all" || date.getMonth() + 1 === selectedMonth;
+      return yearMatch && monthMatch;
+    });
+  }, [commissions, selectedYear, selectedMonth]);
+
+  // Derive available years from data
+  const availableYears = useMemo(() => {
+    const years = new Set(commissions.map((c) => {
+      return new Date(c.investment?.investmentDate ?? c.createdAt).getFullYear();
+    }));
+    return Array.from(years).sort((a, b) => b - a);
+  }, [commissions]);
+
+  const totalEarned = filtered.reduce((sum, c) => sum + c.amount, 0);
+  const totalVolume = filtered.reduce((sum, c) => sum + (c.investment?.amount || 0), 0);
   const memberNo = commissions[0]?.memberEmpNo || "N/A";
 
-  // Group by year-month, sorted newest first
   const grouped = useMemo(() => {
     const map: Record<string, { year: number; month: number; items: any[] }> = {};
-
-    for (const c of commissions) {
+    for (const c of filtered) {  // ← use filtered here, not commissions
       const date = new Date(c.investment?.investmentDate ?? c.createdAt);
       const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
       if (!map[key]) map[key] = { year: date.getFullYear(), month: date.getMonth() + 1, items: [] };
       map[key].items.push(c);
     }
-
     return Object.entries(map)
       .sort(([a], [b]) => b.localeCompare(a))
       .map(([, v]) => v);
-  }, [commissions]);
+  }, [filtered]);
 
   if (commissions.length === 0) {
     return (
@@ -47,64 +66,85 @@ const CommissionStatementPage = ({ data }: { data: any }) => {
   return (
     <div className="max-w-5xl mx-auto rounded-[2.5rem] sm:rounded-[3.5rem] p-4 sm:p-8 relative overflow-hidden group">
 
-      {/* Decorative background element */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[80px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-
-      {/* Header */}
       <div className="border-b border-border/50 pb-6 mb-8 flex flex-col sm:flex-row sm:justify-between sm:items-end gap-6 relative z-10">
         <div className="space-y-6">
-          <div className="flex items-center gap-5">
-            {/* <div className="p-4 sm:p-5 bg-primary/20 backdrop-blur-md rounded-[1.5rem] border border-primary/20 shrink-0 shadow-lg shadow-primary/5">
-              <FileText className="w-8 h-8 text-primary" />
-            </div> */}
-            <div>
-              <h1 className="text-3xl sm:text-5xl font-extrabold text-foreground tracking-tighter leading-none">
-                Financial <br /><span className="text-primary italic font-serif">Statement</span>
-              </h1>
-            </div>
+          <div>
+            <h1 className="text-3xl sm:text-5xl font-extrabold text-foreground tracking-tighter leading-none">
+              Financial <br /><span className="text-primary italic font-serif">Statement</span>
+            </h1>
           </div>
-          <div className="flex gap-10">
-            <div className="space-y-1">
-              <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.2em]">Advisor ID</p>
-              <p className="text-sm font-bold text-foreground">{memberNo}</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.2em]">Statement Date</p>
-              <p className="text-sm font-bold text-foreground">
-                {new Date().toLocaleDateString("en-GB")}
-              </p>
-            </div>
+
+          <div className="space-y-1">
+            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.2em]">Advisor ID</p>
+            <p className="text-sm font-bold text-foreground">{memberNo}</p>
           </div>
+
+        </div>
+
+        {/* Filter controls */}
+        <div className="flex items-center gap-2 shrink-0">
+          <select
+            value={selectedMonth}
+            onChange={e => setSelectedMonth(e.target.value === "all" ? "all" : Number(e.target.value))}
+            className="text-xs border border-border/50 rounded-xl px-3 py-2 bg-card/60 text-foreground backdrop-blur-md focus:outline-none focus:ring-1 focus:ring-primary/30"
+          >
+            <option value="all">All Months</option>
+            {MONTH_NAMES_SHORT.map((name, i) => (
+              <option key={i + 1} value={i + 1}>{name}</option>
+            ))}
+          </select>
+          <select
+            value={selectedYear}
+            onChange={e => setSelectedYear(e.target.value === "all" ? "all" : Number(e.target.value))}
+            className="text-xs border border-border/50 rounded-xl px-3 py-2 bg-card/60 text-foreground backdrop-blur-md focus:outline-none focus:ring-1 focus:ring-primary/30"
+          >
+            <option value="all">All Years</option>
+            {availableYears.map(y => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
         </div>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-8 sm:mb-12 relative z-10">
-        <div className="p-6 sm:p-10 bg-linear-to-br from-primary/50 via-primary/95 to-[#00574b] rounded-[2rem] sm:rounded-[2.5rem] text-white relative overflow-hidden shadow-2xl shadow-primary/20 group/card transition-transform hover:scale-[1.02] duration-500">
-          <Wallet className="absolute -right-8 -bottom-8 w-32 h-32 sm:w-40 sm:h-40 text-white/10 group-hover/card:scale-110 transition-transform duration-700" />
-          <p className="text-[10px] font-bold text-white/50 uppercase tracking-[0.3em] mb-3 sm:mb-4">Total Earned</p>
-          <h2 className="text-xl text-white sm:text-4xl lg:text-5xl font-extrabold tracking-tighter leading-none mb-2">
-            <span className="text-xs text-white sm:text-sm font-medium opacity-60 mr-1.5 sm:mr-2">Rs.</span>
-            {totalEarned.toLocaleString()}
-          </h2>
+      {filtered.length === 0 ? (
+        <div className="text-center py-10 text-gray-300">
+          <FileText className="w-8 h-8 mx-auto mb-2 opacity-30" />
+          <p className="text-xs font-bold uppercase tracking-widest">No records</p>
         </div>
+      ) : (
+        // Reduced gap and added a max-width container if needed
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6 relative z-10">
 
-        <div className="p-6 sm:p-10 bg-card/60 backdrop-blur-md border border-border/50 rounded-[2rem] sm:rounded-[2.5rem] shadow-sm hover:bg-muted/50 transition-all duration-300">
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.3em] mb-3 sm:mb-4">Total Volume</p>
-          <h2 className="text-xl sm:text-3xl lg:text-4xl font-extrabold text-foreground tracking-tighter leading-none">
-            <span className="text-xs sm:text-sm font-medium text-muted-foreground mr-1 sm:mr-1.5">Rs.</span>
-            {totalVolume.toLocaleString()}
-          </h2>
-          <div className="pt-5">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.3em] mb-3 sm:mb-4">Transactions</p>
-            <h2 className="text-xl sm:text-3xl lg:text-4xl font-extrabold text-foreground tracking-tighter leading-none">
-              {commissions.length}
+          {/* Card 1: Total Earned */}
+          <div className="p-4 bg-linear-to-br from-primary/50 via-primary/95 to-[#00574b] rounded-2xl text-white relative overflow-hidden transition-transform hover:scale-[1.01] duration-300">
+            <Wallet className="absolute -right-4 -bottom-4 w-20 h-20 text-white/10" />
+            <p className="text-[9px] font-bold text-white/50 uppercase tracking-[0.2em] mb-1">Total Earned</p>
+            <h2 className="text-2xl font-extrabold tracking-tighter text-white">
+              <span className="text-[10px] font-medium opacity-60 mr-1">Rs.</span>
+              {totalEarned.toLocaleString()}
             </h2>
           </div>
+
+          {/* Card 2: Total Volume & Transactions */}
+          <div className="p-4 bg-card/60 backdrop-blur-md border border-border/50 rounded-2xl flex flex-col justify-between gap-3">
+            <div>
+              <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.2em] mb-1">Total Volume</p>
+              <h2 className="text-xl font-extrabold text-foreground tracking-tighter">
+                <span className="text-[10px] text-muted-foreground mr-1">Rs.</span>
+                {totalVolume.toLocaleString()}
+              </h2>
+            </div>
+            <div>
+              <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.2em] mb-1">Transactions</p>
+              <h2 className="text-xl font-extrabold text-foreground tracking-tighter">
+                {commissions.length}
+              </h2>
+            </div>
+          </div>
+
         </div>
-
-
-      </div>
+      )}
 
       {/* Monthly Sections */}
       <div className="space-y-8 relative z-10">
@@ -120,7 +160,7 @@ const CommissionStatementPage = ({ data }: { data: any }) => {
                 <div className="flex items-center gap-5">
                   <div className="sm:text-left">
                     <span className="text-xl font-extrabold text-white tracking-tight">
-                      {MONTHS[month - 1]} <span className="text-secondary">{year}</span>
+                      {MONTH_NAMES_SHORT[month - 1]} <span className="text-secondary">{year}</span>
                     </span>
                     <p className="text-[10px] text-white/30 font-bold uppercase tracking-[0.3em] mt-1">
                       {items.length} ARCHIVED RECORDS

@@ -1,10 +1,8 @@
-"use server";
+"use server"
 
 import { prisma } from "@/lib/prisma";
-import { requirePermission } from "@/lib/auth/withPermission";
 
-export async function getEmployeePerformance(memberId: number, year: number,
-  month: number) {
+export async function getEmployeePerformance(memberId: number, year: number, month: number) {
 
   const member = await prisma.member.findUnique({
     where: { id: memberId },
@@ -22,40 +20,37 @@ export async function getEmployeePerformance(memberId: number, year: number,
 
   if (!member) return null;
 
-  const latestPayroll = member.monthlyPayrolls[0] ?? null;
-  const refYear = latestPayroll?.year ?? year;
-  const refMonth = latestPayroll?.month ?? month;
+  //  Use the selected year/month directly — not latestPayroll
+  const currentPayroll = member.monthlyPayrolls.find(
+    (p) => p.year === year && p.month === month
+  ) ?? null;
 
-  // Second query for evaluation using the correct ref month
+  //  History = everything except the selected month
+  const payrollHistory = member.monthlyPayrolls.filter(
+    (p) => !(p.year === year && p.month === month)
+  );
+
+  //  Evaluation also uses selected year/month
   const evaluation = await prisma.monthlyEvaluation.findUnique({
-    where: { memberId_year_month: { memberId, year: refYear, month: refMonth } },
+    where: { memberId_year_month: { memberId, year, month } },
   });
-
-  if (!member) return null;
-
-
 
   // ── PROBATION ──────────────────────────────────────────────────────────────
   if (member.position.isProbation === true && member.dateOfJoin) {
     const start = new Date(member.dateOfJoin);
 
-    // monthsElapsed: how many full months since probation started
     const monthsElapsed =
       (year - start.getFullYear()) * 12 +
       (month - (start.getMonth() + 1));
 
-    // Period 1 = months 0–2 (first 3 months), Period 2 = months 3–5 (next 3 months)
     const periodNumber = monthsElapsed < 3 ? 1 : 2;
-    const monthInPeriod = (monthsElapsed % 3) + 1; // 1, 2, or 3
+    const monthInPeriod = (monthsElapsed % 3) + 1;
 
-    // Find the matching PositionTarget row
     const target = member.position.positionTargets.find(
       (t: any) =>
         Number(t.periodNumber) === periodNumber &&
         Number(t.monthNumber) === monthInPeriod
     ) ?? null;
-
-    const currentPayroll = member.monthlyPayrolls[0] ?? null;
 
     return {
       status: "PROBATION" as const,
@@ -64,7 +59,7 @@ export async function getEmployeePerformance(memberId: number, year: number,
       periodNumber,
       monthInPeriod,
       target,
-      evaluation, // has volumeAchieved, bonusEarned, targetHit
+      evaluation,
       currentPayroll,
     };
   }
@@ -72,20 +67,10 @@ export async function getEmployeePerformance(memberId: number, year: number,
   // ── PERMANENT ─────────────────────────────────────────────────────────────
   const salary = member.position.salary ?? null;
 
-  // Current month payroll (first in the ordered list if it matches)
-  // const currentPayroll =
-  //   member.monthlyPayrolls[0]?.year === currentYear &&
-  //     member.monthlyPayrolls[0]?.month === currentMonth
-  //     ? member.monthlyPayrolls[0]
-  //     : null;
-
-  const currentPayroll = member.monthlyPayrolls[0] ?? null;
-
-
   return {
     status: "PERMANENT" as const,
     salary,
     currentPayroll,
-    payrollHistory: member.monthlyPayrolls.slice(1), // up to last 6 months
+    payrollHistory,
   };
 }

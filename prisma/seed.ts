@@ -34,7 +34,7 @@ async function main() {
     },
   });
 
-  console.log("✅ Admin seeded");
+  console.log(" Admin seeded");
 }
 
 main()

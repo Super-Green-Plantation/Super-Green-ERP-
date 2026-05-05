@@ -8,18 +8,18 @@ The system implements Role-Based Access Control (RBAC) to manage visibility and 
 
 | Module                | ADMIN | HR     | DEV    | BM     | RM     | ZM     | AGM     | EMPLOYEE 
 | :---                  | :---: | :---:  | :---:  | :----: | :----: | :----: | :----:  | :---: |
-| **Dashboard**         | ✅    | ✅    | ✅    | ✅     | ✅     | ✅     | ✅     | ✅    |
-| **Branches**          | ✅    | ✅    | ✅    | ❌     | ✅     | ✅     | ✅     | ❌    |
-| **Employee**          | ✅    | ✅    | ✅    | ✅     | ✅     | ✅     | ✅     | ❌    |
-| **Clients**           | ✅    | ✅    | ✅    | ✅     | ✅     | ✅     | ✅     | ✅    |
-| **Investments**       | ✅    | ✅    | ✅    | ✅     | ✅     | ✅     | ✅     | ❌    |
-| **Financial Plans**   | ✅    | ✅    | ✅    | ✅     | ✅     | ✅     | ✅     | ✅    |
-| **Commissions**       | ✅    | ✅    | ✅    | ✅     | ❌     | ❌     | ❌     | ❌    |
-| **Profit Tracking**   | ✅    | ✅    | ✅    | ❌     | ❌     | ❌     | ❌     | ❌    |
-| **HR & Payroll**      | ✅    | ✅    | ✅    | ❌     | ❌     | ❌     | ❌     | ❌    |
-| **Calculations**      | ✅    | ✅    | ✅    | ✅     | ✅     | ✅     | ✅     | ✅    |
-| **Users**             | ✅    | ✅    | ✅    | ❌     | ❌     | ❌     | ❌     | ❌    |
-| **Profile**           | ✅    | ✅    | ✅    | ✅     | ✅     | ✅     | ✅     | ✅    |
+| **Dashboard**         |     |     |     |      |      |      |      |     |
+| **Branches**          |     |     |     | ❌     |      |      |      | ❌    |
+| **Employee**          |     |     |     |      |      |      |      | ❌    |
+| **Clients**           |     |     |     |      |      |      |      |     |
+| **Investments**       |     |     |     |      |      |      |      | ❌    |
+| **Financial Plans**   |     |     |     |      |      |      |      |     |
+| **Commissions**       |     |     |     |      | ❌     | ❌     | ❌     | ❌    |
+| **Profit Tracking**   |     |     |     | ❌     | ❌     | ❌     | ❌     | ❌    |
+| **HR & Payroll**      |     |     |     | ❌     | ❌     | ❌     | ❌     | ❌    |
+| **Calculations**      |     |     |     |      |      |      |      |     |
+| **Users**             |     |     |     | ❌     | ❌     | ❌     | ❌     | ❌    |
+| **Profile**           |     |     |     |      |      |      |      |     |
 
 ### Data Access Rules
 - **ADMIN / HR / DEV**: Full visibility and management autonomy across all system branches.

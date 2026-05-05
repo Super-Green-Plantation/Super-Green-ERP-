@@ -223,7 +223,7 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
             <EmployeeStatusSection
               memberId={employee.id}
               status={employee.status}
-              orc={orc}  // ✅ pass it in
+              orc={orc}  
             />
           )}
 

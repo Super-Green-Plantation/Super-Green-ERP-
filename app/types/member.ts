@@ -190,7 +190,7 @@ export type FormData = {
   civilStatus: string;
   address: string;
 
-  reportingPersons: string[]; // ✅ important
+  reportingPersons: string[]; //  important
 
   dateOfJoin: string;
   appointmentLetter: string;

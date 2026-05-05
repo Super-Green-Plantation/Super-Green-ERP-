@@ -286,7 +286,7 @@ export async function updateEmployee(memberId: number, data: EmpData) {
       });
 
       if (existingUserByEmail) {
-        // ✅ Reuse existing user
+        //  Reuse existing user
         userId = existingUserByEmail.id;
 
         // Optional: update name/branch
@@ -298,7 +298,7 @@ export async function updateEmployee(memberId: number, data: EmpData) {
           },
         });
       } else {
-        // ✅ Create new Supabase user
+        //  Create new Supabase user
         const tempPassword = generateTempPassword();
 
         const { data: authData, error } =
@@ -315,7 +315,7 @@ export async function updateEmployee(memberId: number, data: EmpData) {
         createdSupabaseUserId = authData.user.id;
         userId = authData.user.id;
 
-        // ✅ Create Prisma user
+        //  Create Prisma user
         await prisma.user.create({
           data: {
             id: userId,
@@ -326,7 +326,7 @@ export async function updateEmployee(memberId: number, data: EmpData) {
           },
         });
 
-        // ✅ Send welcome email (non-blocking)
+        //  Send welcome email (non-blocking)
         try {
           // await sendWelcomeEmail({
           //   to: data.email,
@@ -351,7 +351,7 @@ export async function updateEmployee(memberId: number, data: EmpData) {
       return await tx.member.update({
         where: { id: memberId },
         data: {
-          // ✅ always set userId if available
+          //  always set userId if available
           ...(userId && { userId }),
 
           // Core
@@ -616,6 +616,6 @@ export async function searchEmployees(searchText: string) {
       position: { include: { orc: true } },
       branches: { include: { branch: true } }
     },
-    take: 10, // ✅ limit for dropdown
+    take: 10, //  limit for dropdown
   });
 }
