@@ -213,9 +213,9 @@ export async function processCommissions(data: {
         throw new ApiError("SALARY_CONFIG_MISSING", "No salary config for position");
       }
 
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = now.getMonth() + 1;
+      const investmentDate = new Date(investment.investmentDate); // or investment.startDate
+      const year = investmentDate.getFullYear();
+      const month = investmentDate.getMonth() + 1;
 
       const commThreshold = Number(advisor.position.salary?.commThreshold ?? 500000);
       const isHighRate = investment.amount >= commThreshold;

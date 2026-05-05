@@ -3,11 +3,8 @@
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/auth/withPermission";
 
-export async function getEmployeePerformance(memberId: number) {
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth() + 1;
-
+export async function getEmployeePerformance(memberId: number, year: number,
+  month: number) {
 
   const member = await prisma.member.findUnique({
     where: { id: memberId },
@@ -26,8 +23,8 @@ export async function getEmployeePerformance(memberId: number) {
   if (!member) return null;
 
   const latestPayroll = member.monthlyPayrolls[0] ?? null;
-  const refYear = latestPayroll?.year ?? currentYear;
-  const refMonth = latestPayroll?.month ?? currentMonth;
+  const refYear = latestPayroll?.year ?? year;
+  const refMonth = latestPayroll?.month ?? month;
 
   // Second query for evaluation using the correct ref month
   const evaluation = await prisma.monthlyEvaluation.findUnique({
@@ -44,8 +41,8 @@ export async function getEmployeePerformance(memberId: number) {
 
     // monthsElapsed: how many full months since probation started
     const monthsElapsed =
-      (currentYear - start.getFullYear()) * 12 +
-      (currentMonth - (start.getMonth() + 1));
+      (year - start.getFullYear()) * 12 +
+      (month - (start.getMonth() + 1));
 
     // Period 1 = months 0–2 (first 3 months), Period 2 = months 3–5 (next 3 months)
     const periodNumber = monthsElapsed < 3 ? 1 : 2;
@@ -58,15 +55,7 @@ export async function getEmployeePerformance(memberId: number) {
         Number(t.monthNumber) === monthInPeriod
     ) ?? null;
 
-    // const currentPayroll =
-    //   member.monthlyPayrolls[0]?.year === currentYear &&
-    //     member.monthlyPayrolls[0]?.month === currentMonth
-    //     ? member.monthlyPayrolls[0]
-    //     : null;
-
     const currentPayroll = member.monthlyPayrolls[0] ?? null;
-
-
 
     return {
       status: "PROBATION" as const,

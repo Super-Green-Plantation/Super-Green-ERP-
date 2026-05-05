@@ -80,6 +80,8 @@ const Page = () => {
     return () => clearTimeout(delay);
   }, [searchText]);
 
+  
+
   if (branchesLoading) return <Loading />;
   if (error) return <Error />
 

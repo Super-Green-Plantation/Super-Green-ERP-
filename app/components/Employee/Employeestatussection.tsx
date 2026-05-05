@@ -251,35 +251,65 @@ function PermanentStatus({ data, status, orc }: { data: any; status: string; orc
 // ─── Main Export ──────────────────────────────────────────────────────────────
 
 export default function EmployeeStatusSection({
-    memberId,
-    status,
-    orc,
+    memberId, status, orc,
 }: {
     memberId: number;
     status: "PROBATION" | "PERMANENT" | "MANAGEMENT";
-    orc: number; // ✅ passed in from parent, already computed
+    orc: number;
 }) {
+    const now = new Date();
+    const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+    const [selectedMonth, setSelectedMonth] = useState(now.getMonth() + 1);
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        getEmployeePerformance(memberId).then((res) => {
+        setLoading(true);
+        getEmployeePerformance(memberId, selectedYear, selectedMonth).then((res) => {
             setData(res);
             setLoading(false);
         });
-    }, [memberId]);
+    }, [memberId, selectedYear, selectedMonth]);
+
+    // Generate year options (e.g. 2024 to current)
+    const years = Array.from({ length: now.getFullYear() - 2023 }, (_, i) => 2024 + i);
 
     if (loading) return <Loading />;
     if (!data) return null;
 
     return (
         <section className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-4 sm:px-6 py-3.5 border-b border-gray-50 flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-blue-500 shrink-0" />
-                <h2 className="font-bold text-gray-800 text-xs uppercase tracking-widest">
-                    Employment Status & Performance
-                </h2>
+            <div className="px-4 sm:px-6 py-3.5 border-b border-gray-50 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4 text-blue-500 shrink-0" />
+                    <h2 className="font-bold text-gray-800 text-xs uppercase tracking-widest">
+                        Employment Status & Performance
+                    </h2>
+                </div>
+
+                {/* Month / Year picker */}
+                <div className="flex items-center gap-2">
+                    <select
+                        value={selectedMonth}
+                        onChange={e => setSelectedMonth(Number(e.target.value))}
+                        className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 text-slate-600 bg-slate-50 focus:outline-none focus:ring-1 focus:ring-blue-300"
+                    >
+                        {MONTH_NAMES.slice(1).map((name, i) => (
+                            <option key={i + 1} value={i + 1}>{name}</option>
+                        ))}
+                    </select>
+                    <select
+                        value={selectedYear}
+                        onChange={e => setSelectedYear(Number(e.target.value))}
+                        className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 text-slate-600 bg-slate-50 focus:outline-none focus:ring-1 focus:ring-blue-300"
+                    >
+                        {years.map(y => (
+                            <option key={y} value={y}>{y}</option>
+                        ))}
+                    </select>
+                </div>
             </div>
+
             <div className="p-4 sm:p-6">
                 {data.status === "PROBATION" ? (
                     <ProbationStatus data={data} status={status} orc={orc} />

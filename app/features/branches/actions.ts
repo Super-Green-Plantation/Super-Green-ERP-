@@ -263,8 +263,6 @@ export async function getBranchThisMonthProposalCount() {
   }
 }
 
-// lib/branch.ts
-
 export async function getDescendantBranchIds(
   branchId: number,
   db: PrismaClient = prisma
@@ -282,4 +280,9 @@ export async function getDescendantBranchIds(
   );
 
   return [branchId, ...childIds, ...nestedIds.flat()];
+}
+
+
+export async function getInvestmentsByBranchIds(branchIds: number[]) {
+  
 }

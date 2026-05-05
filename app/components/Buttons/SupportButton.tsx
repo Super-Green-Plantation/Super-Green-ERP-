@@ -9,7 +9,7 @@ export default function SupportButton() {
         const to = "supergreenitdep@gmail.com";
         const subject = encodeURIComponent("SGP ERP — Support Request");
         const body = encodeURIComponent(
-            `Hi IT Team,
+            `Hi ,
 
 I need help with the following issue:
 
@@ -33,7 +33,7 @@ Submitted via SGP ERP`
    return (
   <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2">
     <div className="px-3 py-2 rounded-md bg-slate-100 text-slate-800 text-sm whitespace-nowrap shadow-sm">
-      Contact IT support
+      Contact support
     </div>
     <button
       onClick={handleClick}

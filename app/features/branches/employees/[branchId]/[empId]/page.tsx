@@ -42,7 +42,7 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
   const branchId = Number(params.branchId);
 
   const [employee, setEmployee] = useState<Member | null>(null);
-  const [performance, setPerformance] = useState<any>(null);
+  // const [performance, setPerformance] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [allCommission, setAllCommission] = useState();
   const [payrolls, setPayrolls] = useState<any[]>([]);
@@ -77,10 +77,6 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
     try {
       const data = await getMemberDetails(resolvedEmpId);
       setEmployee(data.res as Member);
-
-      // Fetch performance data
-      const perfData = await getEmployeePerformance(resolvedEmpId);
-      setPerformance(perfData);
     } catch (err) {
       console.error("Failed to fetch employee", err);
     } finally {
@@ -141,28 +137,6 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
 
   if (loading) return <Loading />;
   if (!employee) return null;
-
-  // Calculate target progress
-  let targetValue = 0;
-  let achievedValue = 0;
-  let targetLabel = "Monthly Target";
-
-  if (performance?.status === "PROBATION") {
-    targetValue = performance.target?.targetAmount || 0;
-
-    // ✅ Prefer evaluation if available, fall back to payroll
-    achievedValue =
-      performance.evaluation?.volumeAchieved ||
-      performance.currentPayroll?.volumeAchieved ||
-      0;
-
-    targetLabel = `Probation Target (P${performance.periodNumber} M${performance.monthInPeriod})`;
-  } else if (performance?.status === "PERMANENT") {
-    targetValue = performance.salary?.monthlyTarget || 0;
-    achievedValue = performance.currentPayroll?.volumeAchieved || 0;
-  }
-
-  // const progressPercentage = targetValue > 0 ? Math.min(Math.round((achievedValue / targetValue) * 100), 100) : 0;
 
 
   return (
