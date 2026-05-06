@@ -20,8 +20,14 @@ type ChartData = Awaited<ReturnType<typeof getClientRegistrationByBranch>>;
 // 10+ distinct colors for branches
 const BRANCH_COLORS = [
   "#378ADD", "#1D9E75", "#D85A30", "#7F77DD", "#BA7517",
-  "#D4537E", "#639922", "#E24B4A", "#0F6E56", "#533AB7",
-  "#888780", "#F09595",
+  "#D4537E", "#639922", "#E24B4A", "#0F6E56", "#523AB7",
+  "#3A5A40", "#A3B18A", "#DAD7CD", "#BC6C25", "#606C38",
+  "#264653", "#2A9D8F", "#E9C46A", "#F4A261", "#E76F51",
+
+//   "#FF4D4D", "#2ECC71", "#3498DB", "#F1C40F", "#9B59B6",
+// "#E67E22", "#1ABC9C", "#FF6B6B", "#3742FA", "#FF9F43",
+// "#54A0FF", "#5F27CD", "#00D2D3", "#FF9FF3", "#01A3A4",
+// "#CA82FF", "#2E86DE", "#FF4757", "#2ED573", "#FFA502",
 ];
 
 const MONTH_NAMES = [
@@ -141,7 +147,7 @@ export function ClientRegistrationChart({ initialData }: Props) {
           {formatLKR(grandTotal)}
         </span>
       </div>
-      
+
       {/* Chart */}
       <div className={`relative h-48 transition-opacity ${isPending ? "opacity-40" : "opacity-100"}`}>
         <Bar
