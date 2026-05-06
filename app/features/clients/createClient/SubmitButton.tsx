@@ -2,7 +2,7 @@
 "use client";
 
 import { defaultValues, useFormContext } from "@/app/context/FormContext";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { saveClient } from "../actions";
@@ -17,9 +17,6 @@ type DbUser = {
   branchId?: number;
 };
 
-
-
-// Exposed via a ref so SubmitButton can trigger upload from DocumentUploadSection
 export type PendingFilesRef = React.MutableRefObject<Record<string, File | null>>;
 
 const uploadToSupabase = async (key: string, file: File): Promise<string> => {
@@ -41,7 +38,7 @@ const uploadToSupabase = async (key: string, file: File): Promise<string> => {
 
 export const SubmitButton = ({
   pendingFilesRef,
-  onResetComplete
+  onResetComplete,
 }: {
   pendingFilesRef: PendingFilesRef;
   onResetComplete: () => void;
@@ -49,7 +46,7 @@ export const SubmitButton = ({
   const { form } = useFormContext();
   const [loading, setLoading] = useState(false);
   const [dbUser, setDbUser] = useState<DbUser | null>(null);
-const { reset } = form;
+  const { reset } = form;
 
   useEffect(() => {
     fetch("/api/me")
@@ -58,9 +55,31 @@ const { reset } = form;
   }, []);
 
   const handleSubmit = async () => {
+    // ── 1. Client-side validation via react-hook-form ──────────────────────
+    const isValid = await form.trigger();
+    if (!isValid) {
+      const errs = form.formState.errors;
+      // Collect first meaningful message
+      const firstError =
+        (errs.applicant as any)?.fullName?.message ||
+        (errs.applicant as any)?.address?.message ||
+        (errs.applicant as any)?.branchId?.message ||
+        (errs.applicant as any)?.investmentAmount?.message ||
+        (errs.applicant as any)?.proposalFormNo?.message ||
+        (errs.applicant as any)?.nic?.message ||
+        (errs.applicant as any)?.email?.message ||
+        (errs.applicant as any)?.phoneMobile?.message ||
+        (errs.beneficiary as any)?.bankName?.message ||
+        (errs.beneficiary as any)?.accountNo?.message ||
+        (errs.nominee as any)?.permanentAddress?.message ||
+        "Please fix the errors in the form before submitting.";
+      toast.error(firstError);
+      return;
+    }
+
     setLoading(true);
     try {
-      // 1. Upload any pending files and set URLs into form
+      // ── 2. Upload any pending files ────────────────────────────────────
       const pendingFiles = pendingFilesRef.current;
       const hasFiles = Object.values(pendingFiles).some(Boolean);
 
@@ -83,17 +102,24 @@ const { reset } = form;
         toast.dismiss("doc-upload");
       }
 
-      // 2. Submit the form with all values (including now-set document URLs)
+      // ── 3. Submit ──────────────────────────────────────────────────────
       const data = form.getValues();
       const res = await saveClient(data, dbUser?.email);
 
       if (!res.success) {
-        toast.error(res.error || "Something went wrong, please try again");
+        // Server may return fieldErrors from Zod
+        if (res.fieldErrors) {
+          Object.entries(res.fieldErrors).forEach(([field, msgs]) => {
+            const msg = Array.isArray(msgs) ? msgs[0] : msgs;
+            toast.error(`${field}: ${msg}`);
+          });
+        } else {
+          toast.error(res.error || "Something went wrong, please try again");
+        }
         return;
       }
 
       toast.success("Client saved successfully!");
-
       reset(defaultValues);
       onResetComplete();
       pendingFilesRef.current = {};

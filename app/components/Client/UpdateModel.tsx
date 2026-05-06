@@ -3,30 +3,35 @@
 import React, { useEffect, useState } from "react";
 import { getFinancialPlans } from "@/app/features/financial_plans/actions";
 import { FinancialPlan } from "@/app/types/FinancialPlan";
-import { X, Save, User, Briefcase, Landmark, Users } from "lucide-react";
+import { X, Save, User, Briefcase } from "lucide-react";
 import { updateClient } from "@/app/features/clients/actions";
 import { inputClass, labelClass } from "@/app/const/inputStyles";
 import { useQueryClient } from "@tanstack/react-query";
 import { useParams } from "next/navigation";
+import { toast } from "sonner";
+import { updateApplicantSchema } from "@/lib/validations/client.schema";
+
+const FieldError = ({ message }: { message?: string }) =>
+  message ? (
+    <p className="mt-1 ml-1 text-[10px] font-bold text-red-500 tracking-wide">{message}</p>
+  ) : null;
 
 interface UpdateClientModalProps {
   isOpen: boolean;
-  id: number
+  id: number;
   onClose: () => void;
   initialData: any;
   onUpdate: (updatedData: any) => void;
 }
 
 const UpdateClientModal = ({
-   onClose,
+  onClose,
   initialData,
   onUpdate,
 }: UpdateClientModalProps) => {
-
   const queryClient = useQueryClient();
   const { id } = useParams();
 
-  // Initialize formData with safe defaults
   const [formData, setFormData] = useState<any>({
     applicant: {
       fullName: "",
@@ -48,12 +53,11 @@ const UpdateClientModal = ({
       planId: initialData?.investment?.planId || "",
       ...initialData.investment,
     },
-
   });
 
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [plans, setPlans] = useState<FinancialPlan[]>([]);
 
-  // Fetch all plans
   useEffect(() => {
     const fetchPlans = async () => {
       const res = await getFinancialPlans();
@@ -71,12 +75,29 @@ const UpdateClientModal = ({
     } else {
       setFormData((prev: any) => ({ ...prev, [field]: value }));
     }
+    // Clear field error on change
+    setFieldErrors((prev) => ({ ...prev, [field]: "" }));
   };
+
+  const errClass = (field: string) =>
+    `${inputClass} ${fieldErrors[field] ? "!border-red-400 focus:!ring-red-400" : ""}`;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Convert investmentAmount to number and clean phone numbers before sending
+    // ── Client-side Zod validation ─────────────────────────────────────
+    const parsed = updateApplicantSchema.safeParse(formData.applicant);
+    if (!parsed.success) {
+      const errs: Record<string, string> = {};
+      parsed.error.issues.forEach((issue) => {
+        const key = issue.path[issue.path.length - 1] as string;
+        if (!errs[key]) errs[key] = issue.message;
+      });
+      setFieldErrors(errs);
+      toast.error("Please fix the errors before saving.");
+      return;
+    }
+
     const payload = {
       ...formData,
       applicant: {
@@ -84,8 +105,6 @@ const UpdateClientModal = ({
         investmentAmount: Number(
           formData.applicant.investmentAmount?.toString().trim() || 0,
         ),
-        
-        // Ensure we only store the numeric part of the phone numbers
         phoneMobile: formData.applicant.phoneMobile?.toString().replace(/\D/g, "").slice(-9),
         phoneLand: formData.applicant.phoneLand?.toString().replace(/\D/g, "").slice(-9),
       },
@@ -118,10 +137,7 @@ const UpdateClientModal = ({
         </div>
 
         {/* Form */}
-        <form
-          onSubmit={handleSubmit}
-          className="overflow-y-auto p-8 space-y-10"
-        >
+        <form onSubmit={handleSubmit} className="overflow-y-auto p-8 space-y-10">
           {/* Personal Info */}
           <div className="space-y-8">
             <div className="flex items-center gap-3 pb-3 border-b border-border">
@@ -132,32 +148,28 @@ const UpdateClientModal = ({
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="md:col-span-2">
-                <label className={labelClass}>Full Name</label>
+                <label className={labelClass}>Full Name *</label>
                 <input
                   value={formData.applicant.fullName}
-                  onChange={(e) =>
-                    handleChange("applicant", "fullName", e.target.value)
-                  }
-                  className={inputClass}
+                  onChange={(e) => handleChange("applicant", "fullName", e.target.value)}
+                  className={errClass("fullName")}
                 />
+                <FieldError message={fieldErrors.fullName} />
               </div>
               <div>
                 <label className={labelClass}>NIC Number</label>
                 <input
                   value={formData.applicant.nic}
-                  onChange={(e) =>
-                    handleChange("applicant", "nic", e.target.value)
-                  }
-                  className={inputClass}
+                  onChange={(e) => handleChange("applicant", "nic", e.target.value)}
+                  className={errClass("nic")}
                 />
+                <FieldError message={fieldErrors.nic} />
               </div>
               <div>
                 <label className={labelClass}>Driving License</label>
                 <input
                   value={formData.applicant.drivingLicense}
-                  onChange={(e) =>
-                    handleChange("applicant", "drivingLicense", e.target.value)
-                  }
+                  onChange={(e) => handleChange("applicant", "drivingLicense", e.target.value)}
                   className={inputClass}
                 />
               </div>
@@ -165,9 +177,7 @@ const UpdateClientModal = ({
                 <label className={labelClass}>Passport No</label>
                 <input
                   value={formData.applicant.passportNo}
-                  onChange={(e) =>
-                    handleChange("applicant", "passportNo", e.target.value)
-                  }
+                  onChange={(e) => handleChange("applicant", "passportNo", e.target.value)}
                   className={inputClass}
                 />
               </div>
@@ -176,74 +186,62 @@ const UpdateClientModal = ({
                 <input
                   type="email"
                   value={formData.applicant.email}
-                  onChange={(e) =>
-                    handleChange("applicant", "email", e.target.value)
-                  }
-                  className={inputClass}
+                  onChange={(e) => handleChange("applicant", "email", e.target.value)}
+                  className={errClass("email")}
                 />
+                <FieldError message={fieldErrors.email} />
               </div>
               <div>
                 <label className={labelClass}>Mobile Phone</label>
                 <div className="flex items-center h-full">
-
                   <input
                     value={formData.applicant.phoneMobile}
-                    onChange={(e) =>
-                      handleChange("applicant", "phoneMobile", e.target.value)
-                    }
-                    className={`${inputClass} rounded`}
+                    onChange={(e) => handleChange("applicant", "phoneMobile", e.target.value)}
+                    className={`${errClass("phoneMobile")} rounded`}
                     placeholder="07XXXXXXXX"
                   />
                 </div>
+                <FieldError message={fieldErrors.phoneMobile} />
               </div>
               <div>
                 <label className={labelClass}>Land Phone</label>
                 <div className="flex items-center h-full">
-
                   <input
                     value={formData.applicant.phoneLand}
-                    onChange={(e) =>
-                      handleChange("applicant", "phoneLand", e.target.value)
-                    }
-                    className={`${inputClass} rounded`}
+                    onChange={(e) => handleChange("applicant", "phoneLand", e.target.value)}
+                    className={`${errClass("phoneLand")} rounded`}
                     placeholder="01XXXXXXXX"
                   />
                 </div>
+                <FieldError message={fieldErrors.phoneLand} />
               </div>
               <div>
                 <label className={labelClass}>Occupation</label>
                 <input
                   value={formData.applicant.occupation}
-                  onChange={(e) =>
-                    handleChange("applicant", "occupation", e.target.value)
-                  }
+                  onChange={(e) => handleChange("applicant", "occupation", e.target.value)}
                   className={inputClass}
                 />
               </div>
               <div className="md:col-span-3">
-                <label className={labelClass}>Permanent Address</label>
+                <label className={labelClass}>Permanent Address *</label>
                 <textarea
                   rows={2}
                   value={formData.applicant.address}
-                  onChange={(e) =>
-                    handleChange("applicant", "address", e.target.value)
-                  }
-                  className={inputClass}
+                  onChange={(e) => handleChange("applicant", "address", e.target.value)}
+                  className={errClass("address")}
                 />
+                <FieldError message={fieldErrors.address} />
               </div>
-
               <div className="md:col-span-3">
                 <label className={labelClass}>Proposal Form Number</label>
                 <input
                   type="text"
                   value={formData.applicant.proposalFormNo}
-                  onChange={(e) =>
-                    handleChange("applicant", "proposalFormNo", e.target.value)
-                  }
+                  onChange={(e) => handleChange("applicant", "proposalFormNo", e.target.value)}
                   className={inputClass}
                 />
               </div>
-
             </div>
           </div>
 
@@ -260,16 +258,12 @@ const UpdateClientModal = ({
                 <label className={labelClass}>Select Investment Plan</label>
                 <select
                   value={formData.investment.planId}
-                  onChange={(e) =>
-                    handleChange("investment", "planId", e.target.value)
-                  }
+                  onChange={(e) => handleChange("investment", "planId", e.target.value)}
                   className={inputClass}
                 >
                   <option value="">Choose a plan...</option>
                   {plans.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
+                    <option key={p.id} value={p.id}>{p.name}</option>
                   ))}
                 </select>
               </div>
@@ -278,13 +272,7 @@ const UpdateClientModal = ({
                 <input
                   type="number"
                   value={formData.applicant.investmentAmount}
-                  onChange={(e) =>
-                    handleChange(
-                      "applicant",
-                      "investmentAmount",
-                      e.target.value,
-                    )
-                  }
+                  onChange={(e) => handleChange("applicant", "investmentAmount", e.target.value)}
                   className={`${inputClass} font-bold text-blue-700`}
                 />
               </div>

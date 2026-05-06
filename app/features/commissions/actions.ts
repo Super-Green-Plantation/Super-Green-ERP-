@@ -238,19 +238,6 @@ export async function processCommissions(data: {
         data: { commissionsProcessed: true, advisorId: advisor.id },
       });
 
-      // await tx.monthlyPayroll.upsert({
-      //   where: { memberId_year_month: { memberId: advisor.id, year, month } },
-      //   update: { volumeAchieved: { increment: investment.amount } },
-      //   create: {
-      //     memberId: advisor.id,
-      //     year,
-      //     month,
-      //     basicSalaryPermanent: 0,
-      //     monthlyTarget: 0,
-      //     volumeAchieved: investment.amount,
-      //   },
-      // });
-
       const payrollMemberIds = [
         advisor.id,
         ...uplines.filter(u => !disabledSet.has(u.empNo)).map(u => u.id),

@@ -34,6 +34,7 @@ export default function EditInvestmentPage() {
         initialData={{
           planId: inv.planId ?? undefined,
           amount: inv.amount,
+          proposalFormNo: inv.proposalFormNo ?? undefined,
           investmentDate: new Date(inv.investmentDate).toISOString().slice(0, 10),
           investmentRates: Array.isArray(inv.investmentRates) ? inv.investmentRates : [],
           beneficiary: inv.beneficiary ?? undefined,

@@ -15,6 +15,7 @@ import {
 import { toast } from "sonner";
 import Back from "@/app/components/Buttons/Back";
 import { createPortal } from "react-dom";
+import { investmentFormSchema } from "@/lib/validations/investment.schema";
 
 type BeneficiaryMode = "existing" | "new" | "none";
 type NomineeMode = "existing" | "new" | "none";
@@ -39,19 +40,21 @@ function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }
 }
 
 function Field({
-  label, value, onChange, placeholder, disabled, type = "text", readOnly,
+  label, value, onChange, placeholder, disabled, type = "text", readOnly, error,
 }: {
   label: string; value: string; onChange?: (v: string) => void;
-  placeholder?: string; disabled?: boolean; readOnly?: boolean; type?: string;
+  placeholder?: string; disabled?: boolean; readOnly?: boolean; type?: string; error?: string;
 }) {
   return (
     <div>
       <label className="block text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1">
         {label}
       </label>
-      <div className={`flex items-center border rounded-lg overflow-hidden transition-all bg-card
+      <div className={`flex items-center  rounded-xl overflow-hidden transition-all bg-card
         ${disabled || readOnly
           ? "border-muted bg-muted/50"
+          : error
+          ? "border-red-400 focus-within:border-red-400 focus-within:ring-2 focus-within:ring-red-400/10"
           : "border-border focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10"
         }`}
       >
@@ -65,13 +68,16 @@ function Field({
           className="flex-1 px-3 py-2 text-sm font-semibold text-foreground outline-none bg-transparent disabled:text-muted-foreground"
         />
       </div>
+      {error && (
+        <p className="mt-1 ml-1 text-[10px] font-bold text-red-500 tracking-wide">{error}</p>
+      )}
     </div>
   );
 }
 
 function ModeToggle({ value, onChange }: { value: string; onChange: (v: any) => void }) {
   return (
-    <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-xl w-fit border border-border">
+    <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-lg w-fit border border-border">
       {(["none", "existing", "new"] as const).map(mode => (
         <button
           key={mode}
@@ -181,7 +187,7 @@ function ClientSearch({
       </div>
 
       {open && filtered.length > 0 && createPortal(
-        <div style={dropdownStyle} className="bg-card border border-border rounded-xl shadow-xl overflow-hidden">
+        <div style={dropdownStyle} className="bg-card border border-border rounded-lg shadow-xl overflow-hidden">
           {filtered.map(c => (
             <button key={c.id} type="button" onClick={e => e.preventDefault()}
               onMouseDown={() => { onSelect(c); setQuery(c.fullName); setOpen(false); }}
@@ -238,6 +244,7 @@ type InitialData = {
   investmentRates?: number[];
   beneficiary?: any;   // full record
   nominee?: any;       // full record
+  proposalFormNo?: string;
 };
 
 export default function CreateInvestmentForm({
@@ -257,7 +264,8 @@ export default function CreateInvestmentForm({
   const [plans, setPlans] = useState<FinancialPlan[]>([]);
   const [selectedClient, setSelectedClient] = useState<any | null>(lockedClient ?? null);
   const [loading, setLoading] = useState(false);
-
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+console.log(initialData);
 
 
   // Investment fields — pre-fill from initialData in edit mode
@@ -443,8 +451,20 @@ export default function CreateInvestmentForm({
   const handleSubmit = async () => {
     const client = selectedClient ?? lockedClient;
     if (!client) { toast.error("Please select a client"); return; }
-    if (!amount) { toast.error("Please enter an amount"); return; }
-    if (!proposal) { toast.error("Please enter an proposal form number"); return; }
+
+    // ── Client-side Zod validation ────────────────────────────────────────────
+    const formParsed = investmentFormSchema.safeParse({ amount, proposal, investmentDate });
+    if (!formParsed.success) {
+      const errs: Record<string, string> = {};
+      formParsed.error.issues.forEach((issue) => {
+        const key = issue.path[0] as string;
+        if (!errs[key]) errs[key] = issue.message;
+      });
+      setFieldErrors(errs);
+      toast.error(formParsed.error.issues[0]?.message ?? "Please fix form errors.");
+      return;
+    }
+    setFieldErrors({});
 
     const { beneficiaryId, newBeneficiary } = resolveBeneficiary();
     const { nomineeId, newNominee } = resolveNominee();
@@ -501,7 +521,7 @@ export default function CreateInvestmentForm({
             <div
               key={b.id}
               onClick={() => handleBeneficiarySelect(b)}
-              className={`group flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all
+              className={`group flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all
                 ${selectedBeneficiaryId === b.id
                   ? "border-primary bg-primary/5 ring-1 ring-primary"
                   : "border-border hover:border-primary/40 hover:bg-muted/30"
@@ -516,7 +536,7 @@ export default function CreateInvestmentForm({
                 </p>
               </div>
               {selectedBeneficiaryId === b.id && (
-                <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center shadow-lg shadow-primary/20">
+                <div className="w-6 h-6 bg-primary rounded-lg flex items-center justify-center shadow-lg shadow-primary/20">
                   <Check className="w-3.5 h-3.5 text-primary-foreground" />
                 </div>
               )}
@@ -533,11 +553,11 @@ export default function CreateInvestmentForm({
           {/* Label pill when editing an existing record */}
           {beneficiaryLabel && (
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary border border-primary/20 rounded-full text-[11px] font-bold">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary border border-primary/20 rounded-lg text-[11px] font-bold">
                 <Pencil className="w-3 h-3" /> Editing: {beneficiaryLabel}
               </span>
               {originalBeneficiary && !isEqual(beneficiaryFields, originalBeneficiary) && (
-                <span className="inline-flex items-center px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-[11px] font-bold">
+                <span className="inline-flex items-center px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-[11px] font-bold">
                   Modified — will create new record
                 </span>
               )}
@@ -556,7 +576,7 @@ export default function CreateInvestmentForm({
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-5 bg-muted/20 rounded-2xl border border-border/50">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-5 bg-muted/20 rounded-lg border border-border/50">
             <div className="sm:col-span-2">
               <Field label="Full Name" value={beneficiaryFields.fullName}
                 onChange={v => setBeneficiaryFields(p => ({ ...p, fullName: v }))} />
@@ -587,7 +607,7 @@ export default function CreateInvestmentForm({
             <div
               key={n.id}
               onClick={() => handleNomineeSelect(n)}
-              className={`flex items-center justify-between p-4 rounded-xl border-2 cursor-pointer transition-all
+              className={`flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all
                 ${selectedNomineeId === n.id
                   ? "border-accent bg-accent/5 ring-1 ring-accent"
                   : "border-border hover:border-accent/40 hover:bg-muted/30"
@@ -602,7 +622,7 @@ export default function CreateInvestmentForm({
                 </p>
               </div>
               {selectedNomineeId === n.id && (
-                <div className="w-6 h-6 bg-accent rounded-full flex items-center justify-center shadow-lg shadow-accent/20">
+                <div className="w-6 h-6 bg-accent rounded-lg flex items-center justify-center shadow-lg shadow-accent/20">
                   <Check className="w-3.5 h-3.5 text-accent-foreground" />
                 </div>
               )}
@@ -617,11 +637,11 @@ export default function CreateInvestmentForm({
         <div className="space-y-4">
           {nomineeLabel && (
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-accent/10 text-accent border border-accent/20 rounded-full text-[11px] font-bold">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-accent/10 text-accent border border-accent/20 rounded-lg text-[11px] font-bold">
                 <Pencil className="w-3 h-3" /> Editing: {nomineeLabel}
               </span>
               {originalNominee && !isEqual(nomineeFields, originalNominee) && (
-                <span className="inline-flex items-center px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-[11px] font-bold">
+                <span className="inline-flex items-center px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-[11px] font-bold">
                   Modified — will create new record
                 </span>
               )}
@@ -640,7 +660,7 @@ export default function CreateInvestmentForm({
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-5 bg-muted/20 rounded-2xl border border-border/50">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-5 bg-muted/20 rounded-lg border border-border/50">
             <div className="sm:col-span-2">
               <Field label="Full Name" value={nomineeFields.fullName}
                 onChange={v => setNomineeFields(p => ({ ...p, fullName: v }))} />
@@ -674,7 +694,7 @@ export default function CreateInvestmentForm({
       </div>
 
       {/* Client */}
-      <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden">
         <div className="px-6 py-4 bg-muted/30 border-b border-border/60">
           <SectionHeader icon={<User className="w-4 h-4 text-primary" />} title="Account Owner" />
         </div>
@@ -691,16 +711,16 @@ export default function CreateInvestmentForm({
       {client && (
         <div className="space-y-6 animate-in fade-in duration-500">
           {/* Investment Details */}
-          <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden">
             <div className="px-6 py-4 bg-muted/30 border-b border-border/60">
               <SectionHeader icon={<DollarSign className="w-4 h-4 text-accent" />} title="Investment Parameters" />
             </div>
             <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
                 <label className="block text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1">
-                  Financial Plan (Optional)
+                  Financial Plan 
                 </label>
-                <div className="flex items-center border border-border rounded-lg bg-card focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10 transition-all">
+                <div className="flex items-center rounded-lg bg-card focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10 transition-all">
                   <select
                     value={planId}
                     onChange={e => setPlanId(e.target.value)}
@@ -716,9 +736,9 @@ export default function CreateInvestmentForm({
                 </div>
               </div>
 
-              <Field label="Investment Date *" value={investmentDate} onChange={setInvestmentDate} type="date" />
-              <Field label="Investment Amount (LKR) *" value={amount} onChange={setAmount} placeholder="0.00" type="number" />
-              <Field label="Proposal No. *" value={proposal} onChange={setProposal} type="text" />
+              <Field label="Investment Date *" value={investmentDate} onChange={setInvestmentDate} type="date" error={fieldErrors.investmentDate} />
+              <Field label="Investment Amount (LKR) *" value={amount} onChange={v => { setAmount(v); setFieldErrors(p => ({...p, amount: ""})); }} placeholder="0.00" type="number" error={fieldErrors.amount} />
+              <Field label="Proposal No. *" value={proposal} onChange={v => { setProposal(v); setFieldErrors(p => ({...p, proposal: ""})); }} type="text" error={fieldErrors.proposal} />
               {/* REMOVE the single Rate field, REPLACE with this */}
               <div className="sm:col-span-2 space-y-3">
                 <label className="block text-[10px] font-black uppercase tracking-wider text-muted-foreground">
@@ -735,7 +755,7 @@ export default function CreateInvestmentForm({
                         <label className="block text-[10px] font-bold text-muted-foreground mb-1">
                           Year {i + 1}
                         </label>
-                        <div className="flex items-center border border-border rounded-lg bg-card focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10 transition-all">
+                        <div className="flex items-center  rounded-lg bg-card focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10 transition-all">
                           <input
                             type="number"
                             value={rate}
@@ -760,7 +780,7 @@ export default function CreateInvestmentForm({
           </div>
 
           {/* Beneficiary */}
-          <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden">
             <div className="px-6 py-4 bg-muted/30 border-b border-border/60">
               <SectionHeader icon={<Landmark className="w-4 h-4 text-primary" />} title="Beneficiary" />
             </div>
@@ -771,7 +791,7 @@ export default function CreateInvestmentForm({
           </div>
 
           {/* Nominee */}
-          <div className="bg-card border border-border rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden">
             <div className="px-6 py-4 bg-muted/30 border-b border-border/60">
               <SectionHeader icon={<Users className="w-4 h-4 text-accent" />} title="Nominee Details" />
             </div>
@@ -786,7 +806,7 @@ export default function CreateInvestmentForm({
             type="button"
             onClick={handleSubmit}
             disabled={loading}
-            className={`w-full flex items-center justify-center gap-3 px-8 py-5 disabled:bg-muted-foreground/20 text-primary-foreground text-xs font-black uppercase tracking-[0.25em] rounded-2xl transition-all hover:shadow-2xl active:scale-[0.98]
+            className={`w-full flex items-center justify-center gap-3 px-8 py-5 disabled:bg-muted-foreground/20 text-primary-foreground text-xs font-black uppercase tracking-[0.25em] rounded-lg transition-all hover:shadow-2xl active:scale-[0.98]
               ${isEditMode
                 ? "bg-accent hover:bg-accent/90 hover:shadow-accent/30"
                 : "bg-primary hover:bg-primary/90 hover:shadow-primary/30"

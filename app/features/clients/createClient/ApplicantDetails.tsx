@@ -6,9 +6,21 @@ import { FinancialPlan } from "@/app/types/FinancialPlan";
 import { Branch } from "@/app/types/branch";
 import SignaturePad from "@/app/components/Client/SignaturePad";
 
+const SRI_LANKA_NIC = /^(\d{9}[VXvx]|\d{12})$/;
+const SRI_LANKA_PHONE = /^\d{9,10}$/;
+
+const FieldError = ({ message }: { message?: string }) =>
+  message ? (
+    <p className="mt-1 ml-1 text-[10px] font-bold text-red-500 tracking-wide">
+      {message}
+    </p>
+  ) : null;
+
 const ApplicantDetails = () => {
   const { form } = useFormContext();
-  const { register, watch, setValue } = form;
+  const { register, watch, setValue, formState: { errors } } = form;
+
+  const applicantErrors = errors.applicant as any;
 
   const [branch, setBranch] = useState<Branch[] | null>(null);
   const [plans, setPlans] = useState<FinancialPlan[] | null>([]);
@@ -40,7 +52,10 @@ const ApplicantDetails = () => {
   useEffect(() => { getBranches().then(setBranch); }, []);
   useEffect(() => { getFinancialPlans().then(setPlans); }, []);
 
-  const inputClass = "bg-background/50 border border-border/50 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:bg-background outline-none transition-all w-full placeholder:text-muted-foreground/30 font-medium";
+  const inputClass = (hasError?: boolean) =>
+    `bg-background/50 border rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:bg-background outline-none transition-all w-full placeholder:text-muted-foreground/30 font-medium ${
+      hasError ? "border-red-400 focus:ring-red-400" : "border-border/50"
+    }`;
   const labelClass = "text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-2 ml-1 block";
 
   return (
@@ -53,48 +68,119 @@ const ApplicantDetails = () => {
       <div className="sm:p-8 p-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="md:col-span-2">
-            <label className={labelClass}>Full Name</label>
-            <input type="text" {...register("applicant.fullName")} placeholder="Legal name as per NIC" className={inputClass} />
+            <label className={labelClass}>Full Name *</label>
+            <input
+              type="text"
+              {...register("applicant.fullName", {
+                required: "Full name is required",
+                minLength: { value: 2, message: "Must be at least 2 characters" },
+              })}
+              placeholder="Legal name as per NIC"
+              className={inputClass(!!applicantErrors?.fullName)}
+            />
+            <FieldError message={applicantErrors?.fullName?.message} />
           </div>
+
           <div>
             <label className={labelClass}>NIC Number</label>
-            <input type="text" {...register("applicant.nic")} className={inputClass} />
+            <input
+              type="text"
+              {...register("applicant.nic", {
+                validate: (val) =>
+                  !val || SRI_LANKA_NIC.test(val.trim()) ||
+                  "NIC must be 9 digits + V/X or 12 digits",
+              })}
+              className={inputClass(!!applicantErrors?.nic)}
+            />
+            <FieldError message={applicantErrors?.nic?.message} />
           </div>
+
           <div>
             <label className={labelClass}>Driving License</label>
-            <input type="text" {...register("applicant.drivingLicense")} className={inputClass} />
+            <input type="text" {...register("applicant.drivingLicense")} className={inputClass()} />
           </div>
+
           <div>
             <label className={labelClass}>Passport No</label>
-            <input type="text" {...register("applicant.passportNo")} className={inputClass} />
+            <input type="text" {...register("applicant.passportNo")} className={inputClass()} />
           </div>
+
           <div>
             <label className={labelClass}>Email Address</label>
-            <input type="email" {...register("applicant.email")} className={inputClass} />
+            <input
+              type="email"
+              {...register("applicant.email", {
+                validate: (val) =>
+                  !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val) ||
+                  "Invalid email address",
+              })}
+              className={inputClass(!!applicantErrors?.email)}
+            />
+            <FieldError message={applicantErrors?.email?.message} />
           </div>
+
           <div>
             <label className={labelClass}>Mobile Phone</label>
-            <input type="text" {...register("applicant.phoneMobile")} className={inputClass} />
+            <input
+              type="text"
+              {...register("applicant.phoneMobile", {
+                validate: (val) =>
+                  !val || SRI_LANKA_PHONE.test(val.replace(/[\s\-+]/g, "")) ||
+                  "Phone must be 9–10 digits",
+              })}
+              className={inputClass(!!applicantErrors?.phoneMobile)}
+            />
+            <FieldError message={applicantErrors?.phoneMobile?.message} />
           </div>
+
           <div>
             <label className={labelClass}>Land Phone</label>
-            <input type="text" {...register("applicant.phoneLand")} className={inputClass} />
+            <input
+              type="text"
+              {...register("applicant.phoneLand", {
+                validate: (val) =>
+                  !val || SRI_LANKA_PHONE.test(val.replace(/[\s\-+]/g, "")) ||
+                  "Phone must be 9–10 digits",
+              })}
+              className={inputClass(!!applicantErrors?.phoneLand)}
+            />
+            <FieldError message={applicantErrors?.phoneLand?.message} />
           </div>
+
           <div>
             <label className={labelClass}>Date of Birth</label>
-            <input type="date" {...register("applicant.dateOfBirth")} className={inputClass} />
+            <input type="date" {...register("applicant.dateOfBirth")} className={inputClass()} />
           </div>
+
           <div>
             <label className={labelClass}>Occupation</label>
-            <input type="text" {...register("applicant.occupation")} className={inputClass} />
+            <input type="text" {...register("applicant.occupation")} className={inputClass()} />
           </div>
+
           <div className="md:col-span-2">
-            <label className={labelClass}>Full Residential Address</label>
-            <input type="text" {...register("applicant.address")} className={inputClass} />
+            <label className={labelClass}>Full Residential Address *</label>
+            <input
+              type="text"
+              {...register("applicant.address", {
+                required: "Address is required",
+                minLength: { value: 5, message: "Address must be at least 5 characters" },
+              })}
+              className={inputClass(!!applicantErrors?.address)}
+            />
+            <FieldError message={applicantErrors?.address?.message} />
           </div>
+
           <div className="md:col-span-2">
-            <label className={labelClass}>Proposal Form Number</label>
-            <input required type="text" {...register("applicant.proposalFormNo")} className={inputClass} />
+            <label className={labelClass}>Proposal Form Number *</label>
+            <input
+              type="text"
+              {...register("applicant.proposalFormNo", {
+                required: "Proposal form number is required",
+                minLength: { value: 3, message: "Must be at least 3 characters" },
+              })}
+              className={inputClass(!!applicantErrors?.proposalFormNo)}
+            />
+            <FieldError message={applicantErrors?.proposalFormNo?.message} />
           </div>
 
           {/* Financial Calibration */}
@@ -108,32 +194,40 @@ const ApplicantDetails = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className={labelClass}>Investment Amount</label>
+                <label className={labelClass}>Investment Amount *</label>
                 <input
                   type="text"
-                  {...register("applicant.investmentAmount")}
+                  {...register("applicant.investmentAmount", {
+                    required: "Investment amount is required",
+                    validate: (val) =>
+                      (Number(val) > 0) || "Amount must be a positive number",
+                  })}
                   placeholder="0.00"
-                  className={`${inputClass} font-black text-primary text-lg`}
+                  className={`${inputClass(!!applicantErrors?.investmentAmount)} font-black text-primary text-lg`}
                 />
+                <FieldError message={applicantErrors?.investmentAmount?.message} />
               </div>
 
               <div>
-                <label className={labelClass}>Assigned Branch</label>
+                <label className={labelClass}>Assigned Branch *</label>
                 <select
-                  className={inputClass}
+                  className={inputClass(!!applicantErrors?.branchId)}
                   {...register("applicant.branchId", {
+                    required: "Please select a branch",
+                    validate: (val) => val !== "" || "Please select a branch",
                     setValueAs: v => v === "" ? undefined : Number(v),
                   })}
                 >
                   <option value="">Choose a branch...</option>
                   {branch?.map(b => <option value={b.id} key={b.id}>{b.name}</option>)}
                 </select>
+                <FieldError message={applicantErrors?.branchId?.message} />
               </div>
 
               <div>
                 <label className={labelClass}>Target Plan</label>
                 <select
-                  className={inputClass}
+                  className={inputClass()}
                   {...register("investment.planId", {
                     setValueAs: v => v === "" ? undefined : Number(v),
                   })}
@@ -145,7 +239,7 @@ const ApplicantDetails = () => {
 
               <div>
                 <label className={labelClass}>Investment Date</label>
-                <input type="date" {...register("applicant.investmentDate")} className={inputClass} />
+                <input type="date" {...register("applicant.investmentDate")} className={inputClass()} />
               </div>
             </div>
 
@@ -164,7 +258,7 @@ const ApplicantDetails = () => {
                       <span className="text-[10px] text-muted-foreground/60 font-bold text-center">
                         Yr {i + 1}
                       </span>
-                      <div className={`flex items-center ${inputClass} p-0 overflow-hidden`}>
+                      <div className={`flex items-center ${inputClass()} p-0 overflow-hidden`}>
                         <input
                           type="number"
                           step="0.1"

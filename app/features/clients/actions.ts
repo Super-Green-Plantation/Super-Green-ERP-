@@ -6,6 +6,7 @@ import { generateInvestmentNumber } from "@/lib/investment";
 import { logActivity } from "@/lib/logActivity";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
+import { saveClientSchema, updateClientSchema, updateBeneficiarySchema, updateNomineeSchema } from "@/lib/validations/client.schema";
 import { ActivityAction, ActivityEntity, Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import crypto from "crypto"
@@ -204,9 +205,19 @@ export async function saveClient(data: {
 }, email: any) {
   const { applicant, investment, beneficiary, nominee } = data;
 
-  if (!applicant.fullName || !applicant.address || !applicant.branchId) {
-    return { success: false, error: "Missing required fields: fullName, address, branchId" };
+  // ── Server-side Zod validation ────────────────────────────────────────────
+  const parsed = saveClientSchema.safeParse(data);
+  if (!parsed.success) {
+    const fieldErrors: Record<string, string[]> = {};
+    parsed.error.issues.forEach((issue) => {
+      const key = issue.path.join(".");
+      if (!fieldErrors[key]) fieldErrors[key] = [];
+      fieldErrors[key].push(issue.message);
+    });
+    const firstMessage = parsed.error.issues[0]?.message ?? "Validation failed";
+    return { success: false, error: firstMessage, fieldErrors };
   }
+
   try {
     const currentUser = await getCurrentUserWithRole();
 
@@ -387,6 +398,19 @@ export async function saveClient(data: {
 // Update client
 export async function updateClient(id: number, formData: any) {
   const clientId = id;
+
+  // ── Server-side Zod validation ────────────────────────────────────────────
+  const parsed = updateClientSchema.safeParse(formData);
+  if (!parsed.success) {
+    const fieldErrors: Record<string, string[]> = {};
+    parsed.error.issues.forEach((issue) => {
+      const key = issue.path.join(".");
+      if (!fieldErrors[key]) fieldErrors[key] = [];
+      fieldErrors[key].push(issue.message);
+    });
+    const firstMessage = parsed.error.issues[0]?.message ?? "Validation failed";
+    return { success: false, error: firstMessage, fieldErrors };
+  }
 
   try {
     const [currentUser, oldClient] = await Promise.all([

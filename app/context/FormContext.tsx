@@ -30,7 +30,6 @@ export interface FormData {
   investment: {
     planId?: string;
     investmentRates?: number[];
-
   };
   beneficiary: {
     fullName?: string;
@@ -65,6 +64,7 @@ export const useFormContext = () => {
 export const FormProvider = ({ children }: { children: ReactNode }) => {
   const form = useForm<FormData>({
     defaultValues,
+    mode: "onTouched",
   });
 
   return (

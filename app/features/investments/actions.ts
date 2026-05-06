@@ -4,6 +4,7 @@ import { serializeData } from "@/app/utils/serializers";
 import { getCurrentUserWithRole } from "@/lib/getCurrentUserWithRole";
 import { logActivity } from "@/lib/logActivity";
 import { prisma } from "@/lib/prisma";
+import { createInvestmentForExistingClientSchema, updateInvestmentSchema } from "@/lib/validations/investment.schema";
 import { ActivityAction, ActivityEntity, Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { getDescendantBranchIds } from "../branches/actions";
@@ -318,6 +319,19 @@ export async function createInvestmentForExistingClient(data: {
     postalAddress?: string;
   } | null;
 }) {
+  // ── Server-side Zod validation ────────────────────────────────────────────
+  const parsed = createInvestmentForExistingClientSchema.safeParse(data);
+  if (!parsed.success) {
+    const fieldErrors: Record<string, string[]> = {};
+    parsed.error.issues.forEach((issue) => {
+      const key = issue.path.join(".");
+      if (!fieldErrors[key]) fieldErrors[key] = [];
+      fieldErrors[key].push(issue.message);
+    });
+    const firstMessage = parsed.error.issues[0]?.message ?? "Validation failed";
+    return { success: false, error: firstMessage, fieldErrors };
+  }
+
   try {
     const currentUser = await getCurrentUserWithRole();
 
@@ -436,6 +450,16 @@ export async function updateInvestment({
   newNominee: any | null;
   proposal: string;
 }): Promise<{ success: boolean; error?: string }> {
+  // ── Server-side Zod validation ────────────────────────────────────────────
+  const parsed = updateInvestmentSchema.safeParse({
+    investmentId, planId, amount, investmentDate, investmentRates,
+    beneficiaryId, nomineeId,
+  });
+  if (!parsed.success) {
+    const firstMessage = parsed.error.issues[0]?.message ?? "Validation failed";
+    return { success: false, error: firstMessage };
+  }
+
   try {
     return await prisma.$transaction(async (tx) => {
 
