@@ -35,6 +35,8 @@ export default function PayrollPage() {
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [running, setRunning] = useState(false);
 
+  console.log(preview);
+  
   // Load branches once
   useEffect(() => {
     getBranches().then((data: any[]) => {
@@ -285,7 +287,7 @@ export default function PayrollPage() {
                     {/* // ) : ( */}
                       <>
                         <td className="px-5 py-4 text-right text-xs font-bold text-muted-foreground">
-                          {fmt(row.breakdown?.basicSalary ?? 0)}
+                          {fmt(row.breakdown?.basicSalaryPermanent ?? 0)}
                         </td>
                         <td className="px-5 py-4 text-right text-xs font-bold">
                           <span className={row.breakdown?.incentiveHit ? "text-green-600" : "text-muted-foreground/40"}>
