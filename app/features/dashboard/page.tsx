@@ -158,8 +158,36 @@ const PrivilegedView = ({ data, userName, userRole, achieved, target, percentage
               </div>
             </div>
 
-            <div className="absolute -bottom-10 -right-10 opacity-5 group-hover:scale-110 transition-transform duration-1000 hidden sm:block">
-              <ShieldCheck className="w-80 h-80 dark:text-white dark:opacity-100 opacity-70 " />
+            <div className="p-5 absolute -bottom-10 right-0 opacity-80 hidden sm:block">
+              <div className="flex flex-col items-center mb-10 relative z-10">
+                <div className="relative w-36 h-36 sm:w-48 sm:h-48 flex items-center justify-center">
+                  <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
+                    <circle
+                      cx="50" cy="50" r="45"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="8"
+                      className="text-muted/30"
+                    />
+                    <circle
+                      cx="50" cy="50" r="45"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="8"
+                      strokeDasharray={`${2 * Math.PI * 45}`}
+                      strokeDashoffset={`${2 * Math.PI * 45 * (1 - percentage / 100)}`}
+                      strokeLinecap="round"
+                      className="text-primary transition-all duration-1000 ease-out"
+                    />
+                  </svg>
+                  <div className="absolute flex flex-col items-center">
+                    <span className="text-3xl sm:text-5xl font-bold text-foreground tracking-tighter">{percentage}%</span>
+                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.2em] mt-1">Achieved</span>
+                  </div>
+                </div>
+
+                
+              </div>
             </div>
           </div>
 
@@ -273,55 +301,7 @@ const PrivilegedView = ({ data, userName, userRole, achieved, target, percentage
 
         {/* Dynamic Sidebar */}
         <aside className="w-full xl:w-95 flex flex-col gap-8">
-
-          {/* High-Fidelity Stats Card */}
-          <div className="bg-card/60 backdrop-blur-xl rounded-[2.5rem] sm:p-8 p-5 shadow-sm border border-border/50 relative overflow-hidden group text-card-foreground">
-            <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:rotate-12 transition-transform duration-700">
-              <Target className="w-32 h-32 text-primary" />
-            </div>
-
-            <div className="flex items-center justify-between mb-10 relative z-10">
-              <h2 className="font-bold text-xl tracking-tighter text-foreground">Global Stat Insight</h2>
-
-            </div>
-
-            {/* SVG Circular Progress */}
-            <div className="flex flex-col items-center mb-10 relative z-10">
-              <div className="relative w-36 h-36 sm:w-48 sm:h-48 flex items-center justify-center">
-                <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
-                  <circle
-                    cx="50" cy="50" r="45"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="8"
-                    className="text-muted/30"
-                  />
-                  <circle
-                    cx="50" cy="50" r="45"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="8"
-                    strokeDasharray={`${2 * Math.PI * 45}`}
-                    strokeDashoffset={`${2 * Math.PI * 45 * (1 - percentage / 100)}`}
-                    strokeLinecap="round"
-                    className="text-primary transition-all duration-1000 ease-out"
-                  />
-                </svg>
-                <div className="absolute flex flex-col items-center">
-                  <span className="text-3xl sm:text-5xl font-bold text-foreground tracking-tighter">{percentage}%</span>
-                  <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.2em] mt-1">Achieved</span>
-                </div>
-              </div>
-
-              <div className="text-center mt-10">
-                <h3 className="font-bold text-2xl text-foreground mb-2 leading-none">Welcome, {userName.split(' ')[0]}</h3>
-                <p className="text-xs text-muted-foreground font-bold tracking-tight px-4">Your enterprise systems are operating at peak efficiency today.</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Floating KPI Cards */}
-          <div className="grid grid-cols-1 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-1 sm:grid-cols-3 gap-6">
             <FloatingKpiCard
               icon={<TrendingUp className="w-6 h-6 text-accent" />}
               title="Investment Capital"
@@ -344,7 +324,6 @@ const PrivilegedView = ({ data, userName, userRole, achieved, target, percentage
               trend="neutral"
             />
           </div>
-
         </aside>
       </div>
     </div>

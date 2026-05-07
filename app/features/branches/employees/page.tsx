@@ -122,56 +122,72 @@ const Page = () => {
     <div className="max-w-7xl mx-auto sm:space-y-8 space-y-4 sm:p-4 md:p-8 min-h-screen">
 
       {/* ── Shared header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-        <div>
-          <Heading>Branch Management</Heading>
-          <p className="text-sm text-muted-foreground font-medium mt-2 max-w-2xl">
-            {activeTab === "employees"
-              ? "Select a branch to view and manage team members and their profiles."
-              : "View, add, and manage branches across the network."}
-          </p>
-        </div>
+      <div className="flex flex-col gap-6 w-full">
+        {/* Header Section */}
+        <div className="flex flex-col gap-6 w-full">
+          {/* Header Section */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <Heading>Branch Management</Heading>
+              <p className="text-sm text-muted-foreground font-medium mt-1 max-w-2xl">
+                {activeTab === "employees"
+                  ? "Select a branch to view and manage team members and their profiles."
+                  : "View, add, and manage branches across the network."}
+              </p>
+            </div>
 
-        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center shrink-0">
-          {activeTab === "network" && (
-            <ExportButton
-              data={networkBranches}
-              exportFn={generateBranchNetworkPDF}
-              label="Network Report"
-            />
-          )}
-          {activeTab === "employees" && <ProposalReportExport />}
-         
-        </div> 
-       
+            {/* Export Section - Full width on mobile, auto on desktop */}
+            <div className="w-full sm:w-auto flex shrink-0">
+              {activeTab === "network" && (
+                <ExportButton
+                  className="w-full sm:w-auto"
+                  data={networkBranches}
+                  exportFn={generateBranchNetworkPDF}
+                  label="Network Report"
+                />
+              )}
+              {activeTab === "employees" && (
+                <div className="w-full sm:w-auto">
+                  <ProposalReportExport />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* ── Tab switcher ── */}
-      <div className="flex gap-1 bg-muted/40 border border-border rounded-2xl p-1 w-fit">
-        {(
-          [
-            { id: "employees", label: "Branch Employees" },
-            { id: "network", label: "Branch Network" },
-          ] as { id: TabId; label: string }[]
-        ).map(({ id, label }) => (
-          <button
-            key={id}
-            onClick={() => handleTabSwitch(id)}
-            className={`px-5 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${
-              activeTab === id
-                ? "bg-primary text-primary-foreground shadow"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {label}
-          </button>
-        ))} <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-xl shadow-primary/10 active:scale-95 hover:opacity-90"
-          >
-            <Plus className="w-4 h-4" />
-            Add Branch
-          </button>
+      {/* Wrap both in a responsive container */}
+      <div className="flex flex-col-reverse md:flex-row md:items-center md:justify-between gap-4">
+
+        {/* 1. Add Button (Now placed second in the DOM for mobile reversal, or handled via flex-col-reverse) */}
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-xl shadow-primary/10 active:scale-95 hover:opacity-90 w-full md:w-auto"
+        >
+          <Plus className="w-4 h-4" />
+          Add Branch
+        </button>
+
+        {/* 2. Tab switcher */}
+        <div className="flex gap-1 bg-muted/40 border border-border rounded-2xl p-1 w-full md:w-fit">
+          {(
+            [
+              { id: "employees", label: "Branch Employees" },
+              { id: "network", label: "Branch Network" },
+            ] as { id: TabId; label: string }[]
+          ).map(({ id, label }) => (
+            <button
+              key={id}
+              onClick={() => handleTabSwitch(id)}
+              className={`px-6 py-3 flex-1 md:flex-none rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${activeTab === id
+                  ? "bg-primary text-primary-foreground shadow"
+                  : "text-muted-foreground hover:text-foreground"
+                }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* ══════════════════════════════════════════════════════════════
@@ -234,14 +250,10 @@ const Page = () => {
                         <h3 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors truncate">
                           {b.name}
                         </h3>
-                        <div className="flex items-center gap-2 mt-1">
                           <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest bg-muted px-2 py-0.5 rounded-lg border border-border/50">
                             {b.members.length} Staff
                           </span>
-                          <span className="text-[10px] font-bold text-primary/70 uppercase tracking-widest bg-primary/5 px-2 py-0.5 rounded-lg border border-primary/10">
-                            This month {proposals} Proposals
-                          </span>
-                        </div>
+                          
                         <p className="text-[10px] font-bold text-primary uppercase tracking-[0.15em] mt-3 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
                           Manage Team →
                         </p>
@@ -260,9 +272,9 @@ const Page = () => {
       ══════════════════════════════════════════════════════════════ */}
       {activeTab === "network" && (
         <>
-          <p className="text-sm font-bold text-foreground -mt-4">
+          {/* <p className="text-sm font-bold text-foreground -mt-4">
             Total Branches: {networkLoading ? "—" : networkBranches.length}
-          </p>
+          </p> */}
 
           {/* Network search */}
           <div className="border-2 border-teal-800 rounded-full shadow-sm flex items-center">
