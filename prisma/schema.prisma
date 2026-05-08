@@ -611,3 +611,11 @@ model Quotation {
   @@index([planType])
   @@index([createdAt])
 }
+
+model pushSubscription{
+  id Int @id @default(autoincrement())
+
+  empNo String
+  subscription Json
+  createdAt DateTime @default(now())
+}
