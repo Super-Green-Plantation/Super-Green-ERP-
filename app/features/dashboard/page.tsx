@@ -15,6 +15,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getClientRegistrationByBranch } from "./actions";
 import { ClientRegistrationChart } from "./chart";
+import { PWAInstallButton } from "@/app/components/Buttons/PWAInstallButton";
 
 const DashboardPage = () => {
   const { data, isLoading, isError } = useDashboard();
@@ -102,6 +103,7 @@ const PrivilegedView = ({ data, userName, userRole, achieved, target, percentage
           <div className="flex items-center gap-3">
             <ThemeToggle />
             <div className="h-6 w-px bg-border/50 mx-2 hidden sm:block"></div>
+            <PWAInstallButton />
           </div>
 
           <div className="flex items-center gap-3 bg-card/60 backdrop-blur-md border border-border/50 px-4 py-2 rounded-2xl shadow-sm text-card-foreground sm:hidden">
@@ -186,7 +188,7 @@ const PrivilegedView = ({ data, userName, userRole, achieved, target, percentage
                   </div>
                 </div>
 
-                
+
               </div>
             </div>
           </div>
@@ -335,8 +337,14 @@ const RestrictedView = ({ data, userName, userRole, achieved, target, percentage
     <div className="max-w-7xl mx-auto min-h-screen bg-transparent p-4 sm:p-8 flex flex-col items-center justify-center">
       {/* Top Header with Theme Toggle */}
       <div className="w-full flex justify-end mb-8">
-        <ThemeToggle />
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+          <div className="h-6 w-px bg-border/50 mx-2 hidden sm:block"></div>
+          <PWAInstallButton />
+        </div>
+
       </div>
+
 
       <div className="w-full max-w-4xl space-y-12 animate-in fade-in slide-in-from-bottom-10 duration-1000">
 
