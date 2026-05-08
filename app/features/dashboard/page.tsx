@@ -340,10 +340,9 @@ const RestrictedView = ({ data, userName, userRole, achieved, target, percentage
         <div className="flex items-center gap-3">
           <ThemeToggle />
           <div className="h-6 w-px bg-border/50 mx-2 hidden sm:block"></div>
-          <PWAInstallButton />
         </div>
-
       </div>
+          <PWAInstallButton />
 
 
       <div className="w-full max-w-4xl space-y-12 animate-in fade-in slide-in-from-bottom-10 duration-1000">
