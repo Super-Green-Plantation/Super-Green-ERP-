@@ -7,9 +7,8 @@ import { DetailItem } from "@/app/components/DetailItem";
 import ErrorMessage from "@/app/components/Status/Error";
 import Loading from "@/app/components/Status/Loading";
 import ClientInvestmentTable from "@/app/components/Tables/ClientInvestmentTable";
-import { deleteClient, generateUploadUrl, updateClient, updateClientDocuments } from "@/app/features/clients/actions";
+import { deleteBeneficiaryAction, deleteClient, deleteNomineeAction, generateUploadUrl, updateClient, updateClientDocuments } from "@/app/features/clients/actions";
 import { useClient } from "@/app/hooks/useClient";
-
 import SendDocumentLinkButton from "@/app/components/Buttons/SendDocumentLinkButton";
 import UpdateBeneficiary from "@/app/components/Client/UpdateBeneficiary";
 import UpdateInvestmentDocsModal from "@/app/components/Client/UpdateInvestmentDocsModal";
@@ -46,18 +45,19 @@ export default function ApplicationViewPage() {
   const [showUpdateModel, setShowUpdateModel] = useState(false);
   const [showDocUpdateModel, setDocShowUpdateModel] = useState(false);
   const router = useRouter();
+  const [deleteDialog, setDeleteDialog] = useState(false);
+  const [updateBeneficiary, setUpdateBeneficiary] = useState(false);
+  const [deleteBeneficiary, setDeleteBeneficiary] = useState(false);
+  const [selectBeneficiary, setSelectBeneficiary] = useState<any>(null);
+  const [updateNominee, setUpdateNominee] = useState(false);
+  const [deleteNominee, setDeleteNominee] = useState(false);
+  const [selectNominee, setSelectNominee] = useState<any>(null);
+  const [user, setUser] = useState<any | null>(null);
 
   const proposalRef = useRef<HTMLDivElement>(null);
 
   const { data: formData, isLoading, isError } = useClient(Number(id));
 
-  const [deleteDialog, setDeleteDialog] = useState(false);
-  const [updateBeneficiary, setUpdateBeneficiary] = useState(false);
-  const [selectBeneficiary, setSelectBeneficiary] = useState<any>(null);
-  const [updateNominee, setUpdateNominee] = useState(false);
-  const [selectNominee, setSelectNominee] = useState<any>(null);
-
-  const [user, setUser] = useState<any | null>(null);
 
   useEffect(() => {
     fetch("/api/me")
@@ -112,13 +112,27 @@ export default function ApplicationViewPage() {
   };
 
   const handleDeleteConfirm = async () => {
-    const res = await deleteClient(Number(id));
-    if (!res) {
-      toast.error("Failed to delete client");
-      return;
+    if (deleteBeneficiary && selectBeneficiary) {
+      const res = await deleteBeneficiaryAction(selectBeneficiary.id);
+      if (!res?.success) { toast.error("Failed to delete beneficiary"); return; }
+      toast.success("Beneficiary deleted");
+      queryClient.invalidateQueries({ queryKey: ["client", Number(id)] });
+      setDeleteBeneficiary(false);
+      setSelectBeneficiary(null);
+    } else if (deleteNominee && selectNominee) {
+      const res = await deleteNomineeAction(selectNominee.id);
+      if (!res?.success) { toast.error("Failed to delete nominee"); return; }
+      toast.success("Nominee deleted");
+      queryClient.invalidateQueries({ queryKey: ["client", Number(id)] });
+      setDeleteNominee(false);
+      setSelectNominee(null);
+    } else {
+      const res = await deleteClient(Number(id));
+      if (!res) { toast.error("Failed to delete client"); return; }
+      queryClient.invalidateQueries({ queryKey: ["client", Number(id)] });
+      router.push("/features/clients");
     }
-    queryClient.invalidateQueries({ queryKey: ["client", Number(id)] });
-    router.push("/features/clients");
+    setDeleteDialog(false);
   };
 
   const [docsModal, setDocsModal] = useState<{
@@ -325,9 +339,18 @@ export default function ApplicationViewPage() {
                 <div key={idx} className="p-6 space-y-4">
                   <DetailItem label="Name" value={b.fullName} />
                   <DetailItem label="NIC" value={b.nic} />
-                  <button onClick={() => { setUpdateBeneficiary(true); setSelectBeneficiary(b); }} className="w-full py-2 text-[10px] font-bold uppercase tracking-widest border border-emerald-200 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-colors">
-                    Edit Details
-                  </button>
+
+                  <div className="sm:flex gap-3">
+                    <button onClick={() => { setUpdateBeneficiary(true); setSelectBeneficiary(b); }} className="w-full py-2 text-[10px] font-bold uppercase tracking-widest border border-emerald-200 text-emerald-600 rounded-lg hover:bg-emerald-600 hover:text-white transition-colors">
+                      Edit
+                    </button>
+
+                    <button onClick={() => { setDeleteBeneficiary(true); setSelectBeneficiary(b); setDeleteDialog(true) }} className="w-full py-2 text-[10px] font-bold uppercase tracking-widest border border-red-200 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-colors">
+                      Delete
+                    </button>
+                  </div>
+
+
                 </div>
               ))}
             </section>
@@ -343,9 +366,18 @@ export default function ApplicationViewPage() {
                 <div key={idx} className="p-6 space-y-4">
                   <DetailItem label="Name" value={n.fullName} />
                   <DetailItem label="NIC" value={n.nic} />
-                  <button onClick={() => { setUpdateNominee(true); setSelectNominee(n); }} className="w-full py-2 text-[10px] font-bold uppercase tracking-widest border border-purple-200 text-purple-600 rounded-lg hover:bg-purple-600 hover:text-white transition-colors">
-                    Edit Details
-                  </button>
+
+                  <div className="sm:flex gap-3">
+                    <button onClick={() => { setUpdateNominee(true); setSelectNominee(n); }} className="w-full py-2 text-[10px] font-bold uppercase tracking-widest border border-purple-200 text-purple-600 rounded-lg hover:bg-purple-600 hover:text-white transition-colors">
+                      Edit
+                    </button>
+
+                    <button onClick={() => { setDeleteNominee(true); setSelectNominee(n); setDeleteDialog(true) }} className="w-full py-2 text-[10px] font-bold uppercase tracking-widest border border-red-200 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-colors">
+                      Delete
+                    </button>
+                  </div>
+
+
                 </div>
               ))}
             </section>
@@ -413,10 +445,26 @@ export default function ApplicationViewPage() {
       {/* Modals & Dialogs */}
       <ConfirmDialog
         open={deleteDialog}
-        onClose={() => setDeleteDialog(false)}
+        onClose={() => {
+          setDeleteDialog(false);
+          setDeleteBeneficiary(false);
+          setSelectBeneficiary(null);
+          setDeleteNominee(false);
+          setSelectNominee(null);
+        }}
         onConfirm={handleDeleteConfirm}
-        title="Delete Client"
-        description={`This will permanently delete ${formData?.applicant?.fullName}. This action is irreversible.`}
+        title={
+          deleteBeneficiary ? "Delete Beneficiary" :
+            deleteNominee ? "Delete Nominee" :
+              "Delete Client"
+        }
+        description={
+          deleteBeneficiary
+            ? `This will permanently delete beneficiary ${selectBeneficiary?.fullName}.`
+            : deleteNominee
+              ? `This will permanently delete nominee ${selectNominee?.fullName}.`
+              : `This will permanently delete ${formData?.applicant?.fullName}. This action is irreversible.`
+        }
         variant="danger"
       />
 

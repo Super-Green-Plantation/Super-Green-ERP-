@@ -23,8 +23,8 @@ export function PWAInstallButton() {
         onClick={install}
         className="flex items-center gap-2 rounded-md bg-green-700 px-4 py-2 text-sm text-white hover:bg-green-800"
       >
-        <Download size={16} />
-        Install App
+        {/* <Download size={16} /> */}
+        Install
       </button>
     );
   }
@@ -37,8 +37,8 @@ export function PWAInstallButton() {
           onClick={() => setShowIOSGuide(true)}
           className="flex items-center gap-2 rounded-md bg-green-700 px-4 py-2 text-sm text-white hover:bg-green-800"
         >
-          <Smartphone size={16} />
-          Install App
+          {/* <Smartphone size={16} /> */}
+          Install
         </button>
 
         {showIOSGuide && (
@@ -72,8 +72,8 @@ export function PWAInstallButton() {
         onClick={() => setShowManualGuide(true)}
         className="flex items-center gap-2 rounded-md bg-green-700 px-4 py-2 text-sm text-white hover:bg-green-800"
       >
-        <Download size={16} />
-        Install App
+        {/* <Download size={16} /> */}
+        Install
       </button>
 
       {showManualGuide && (

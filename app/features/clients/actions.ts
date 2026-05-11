@@ -872,7 +872,8 @@ export async function searchClients(searchText: string) {
 
 export async function updateBeneficiary(data: any) {
   try {
-
+      console.log(data);
+      
     const updatedBeneficiary = await prisma.beneficiary.update({
       where: { id: data.id },
       data: {
@@ -911,5 +912,27 @@ export async function updateNominee(data: any) {
   } catch (err) {
     console.error("Error updating nominee:", err);
     return { success: false, error: "Failed to update nominee" };
+  }
+}
+
+export async function deleteBeneficiaryAction(id: number) {
+  try{
+    await prisma.beneficiary.delete({
+      where: { id },
+    })
+  }catch (err) {
+    console.error("Error deleting beneficiary:", err);
+    return { success: false, error: "Failed to delete beneficiary" };
+  }
+}
+
+export async function deleteNomineeAction(id:number){
+   try{
+    await prisma.nominee.delete({
+      where: { id },
+    })
+  }catch (err) {
+    console.error("Error deleting nominee:", err);
+    return { success: false, error: "Failed to delete nominee" };
   }
 }

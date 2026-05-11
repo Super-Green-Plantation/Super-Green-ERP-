@@ -26,7 +26,7 @@ import { getBranchById, getBranches } from "@/app/features/branches/actions";
 import { getClientById, getClientsByBranch } from "@/app/features/clients/actions";
 import {
   getEligibleCommissions,
-  processCommissions,
+  
 } from "@/app/features/commissions/actions";
 import { createProfit } from "@/app/features/profit/actions";
 import { Branch } from "@/app/types/branch";
@@ -35,6 +35,7 @@ import { Member } from "@/app/types/member";
 import { ClientDetailsCard } from "./components/ClientDetailsCard";
 import { useQueryClient } from "@tanstack/react-query";
 import { searchEmployees } from "../../employees/actions";
+import { processCommissions } from "../process";
 
 const Page = () => {
   const queryClient = useQueryClient();

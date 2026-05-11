@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getDashboardStats } from "../features/dashboard/actions";
+import { getDashboardStats } from "../features/dashboard/analytics";
 
 export const useDashboard = () => {
   return useQuery({

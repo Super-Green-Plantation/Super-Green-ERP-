@@ -11,7 +11,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import { getClientRegistrationByBranch } from "./actions";
+import { getClientRegistrationByBranch } from "./analytics";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 

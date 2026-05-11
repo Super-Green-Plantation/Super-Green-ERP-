@@ -8,6 +8,38 @@ import { ActivityAction, ActivityEntity, PrismaClient } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { requirePermission } from "@/lib/auth/withPermission";
 
+// Create new branch
+export async function createBranch(data: { name: string; location: string }) {
+
+
+  
+  try {
+    await requirePermission("CREATE_BRANCHES");
+    const currentUser = await getCurrentUserWithRole();
+    const newBranch = await prisma.branch.create({
+      data: {
+        name: data.name,
+        location: data.location ? data.location : data.name,
+      },
+    });
+
+    revalidatePath("/features/branches");
+
+    void logActivity({
+      action: ActivityAction.CREATE,
+      entity: ActivityEntity.BRANCH,
+      entityId: newBranch.id,
+      performedById: currentUser?.member?.id ?? 0,
+      branchId: newBranch.id,
+      metadata: { after: newBranch },
+    });
+
+    return { success: true, branch: newBranch };
+  } catch (error) {
+    console.error("Error creating branch:", error);
+    return { success: false, error: "Failed to create branch" };
+  }
+}
 
 // Get all branches with full details
 export async function getBranches() {
@@ -103,35 +135,6 @@ export async function getBranchesByMemberId(memberId: number) {
   }
 }
 
-// Create new branch
-export async function createBranch(data: { name: string; location: string }) {
-  try {
-    await requirePermission("CREATE_BRANCHES");
-    const currentUser = await getCurrentUserWithRole();
-    const newBranch = await prisma.branch.create({
-      data: {
-        name: data.name,
-        location: data.location ? data.location : data.name,
-      },
-    });
-
-    revalidatePath("/features/branches");
-
-    void logActivity({
-      action: ActivityAction.CREATE,
-      entity: ActivityEntity.BRANCH,
-      entityId: newBranch.id,
-      performedById: currentUser?.member?.id ?? 0,
-      branchId: newBranch.id,
-      metadata: { after: newBranch },
-    });
-
-    return { success: true, branch: newBranch };
-  } catch (error) {
-    console.error("Error creating branch:", error);
-    return { success: false, error: "Failed to create branch" };
-  }
-}
 
 // Update branch
 export async function updateBranch(id: number, data: { name: string; location: string }) {

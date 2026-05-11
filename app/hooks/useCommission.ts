@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { getCommissionDetails, getCommissionStats } from "../features/commissions/actions";
+import { getCommissionDetails } from "../features/commissions/actions";
+import { getCommissionStats } from "../features/commissions/stats";
 
 export const useCommission = () => {
   return useQuery({

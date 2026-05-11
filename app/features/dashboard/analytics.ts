@@ -110,9 +110,6 @@ export default async function Dashboard() {
 
 }
 
-
-// actions/dashboard.ts
-
 export async function getClientRegistrationByBranch(year?: number, month?: number) {
   const now = new Date();
   const y = year ?? now.getFullYear();
