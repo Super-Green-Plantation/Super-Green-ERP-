@@ -150,7 +150,7 @@ export default function PublicUploadPage() {
   if (tokenState === "loading") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -159,12 +159,12 @@ export default function PublicUploadPage() {
   if (tokenState === "done") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-sm border border-slate-100 p-10 text-center space-y-4">
+        <div className="max-w-md w-full bg-card rounded-2xl shadow-sm border border-border p-10 text-center space-y-4">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
             <CheckCircle2 className="w-8 h-8 text-green-600" />
           </div>
           <h1 className="text-2xl font-black text-slate-900">Documents Received</h1>
-          <p className="text-slate-500 text-sm leading-relaxed">
+          <p className="text-muted-foreground text-sm leading-relaxed">
             Thank you, <strong>{clientName}</strong>. Your documents and signature have been
             securely uploaded. You may close this page.
           </p>
@@ -177,13 +177,13 @@ export default function PublicUploadPage() {
   if (["invalid", "expired", "used"].includes(tokenState)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-        <div className="max-w-md w-full bg-white rounded-2xl shadow-sm border border-red-100 p-10 text-center space-y-4">
+        <div className="max-w-md w-full bg-card rounded-2xl shadow-sm border border-red-100 p-10 text-center space-y-4">
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto">
             <AlertTriangle className="w-8 h-8 text-red-500" />
           </div>
           <h1 className="text-2xl font-black text-slate-900">Link Unavailable</h1>
-          <p className="text-slate-500 text-sm">{errorMessage}</p>
-          <p className="text-slate-400 text-xs">
+          <p className="text-muted-foreground text-sm">{errorMessage}</p>
+          <p className="text-muted-foreground text-xs">
             Please contact your advisor to request a new upload link.
           </p>
         </div>
@@ -194,17 +194,17 @@ export default function PublicUploadPage() {
   // ── Valid — upload form ────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 py-12">
-      <div className="w-full max-w-xl bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+      <div className="w-full max-w-xl bg-card rounded-2xl shadow-sm border border-border overflow-hidden">
 
         {/* Header */}
         <div className="px-8 py-6 bg-slate-900 text-white">
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-white/10 rounded-lg">
+            <div className="p-2 bg-card/10 rounded-lg">
               <ShieldCheck className="w-5 h-5 text-white" />
             </div>
             <h1 className="text-white text-lg font-black uppercase tracking-widest">Document Upload</h1>
           </div>
-          <p className="text-slate-400 text-sm">
+          <p className="text-muted-foreground text-sm">
             Hi <span className="text-white font-semibold">{clientName}</span>, please
             upload the required documents and provide your signature below.
           </p>
@@ -223,7 +223,7 @@ export default function PublicUploadPage() {
 
           {/* ── Documents ── */}
           <div className="space-y-4">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">
               Documents
             </p>
 
@@ -234,7 +234,7 @@ export default function PublicUploadPage() {
 
               return (
                 <div key={key}>
-                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">
+                  <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2">
                     {label}
                   </label>
                   <div className="relative group rounded-xl border-2 border-dashed border-slate-200 h-36 overflow-hidden hover:border-blue-400 transition-colors">
@@ -248,8 +248,8 @@ export default function PublicUploadPage() {
                       <div className="absolute inset-0 z-0">
                         {isPDF ? (
                           <div className="flex flex-col items-center justify-center h-full bg-slate-50 gap-1">
-                            <FileText className="w-8 h-8 text-slate-400" />
-                            <p className="text-[10px] text-slate-500 truncate max-w-50">{file.name}</p>
+                            <FileText className="w-8 h-8 text-muted-foreground" />
+                            <p className="text-[10px] text-muted-foreground truncate max-w-50">{file.name}</p>
                           </div>
                         ) : (
                           <img src={preview!} alt="preview" className="w-full h-full object-cover" />
@@ -268,8 +268,8 @@ export default function PublicUploadPage() {
                     ) : (
                       <div className="flex flex-col items-center justify-center h-full gap-2">
                         <UploadCloud className="w-6 h-6 text-slate-300 group-hover:text-blue-500 transition-colors" />
-                        <p className="text-xs font-bold text-slate-500">Click to upload</p>
-                        <p className="text-[10px] text-slate-400">{description}</p>
+                        <p className="text-xs font-bold text-muted-foreground">Click to upload</p>
+                        <p className="text-[10px] text-muted-foreground">{description}</p>
                       </div>
                     )}
                   </div>
@@ -280,14 +280,14 @@ export default function PublicUploadPage() {
 
           {/* ── Signature pad ── */}
           <div className="space-y-3">
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center gap-2">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2">
               <PenLine className="w-3 h-3" /> Digital Signature
             </p>
 
             <div className={`relative rounded-2xl border-2 border-dashed overflow-hidden transition-all ${
               sigConfirmed
                 ? "border-green-400 bg-green-50/30"
-                : "border-slate-200 hover:border-blue-300 bg-gray-50"
+                : "border-slate-200 hover:border-blue-300 bg-muted/30"
             }`}>
               {sigConfirmed && sigDataUrl ? (
                 /* Show confirmed preview */
@@ -322,7 +322,7 @@ export default function PublicUploadPage() {
               <button
                 type="button"
                 onClick={handleClearSignature}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-100 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                className="flex items-center gap-2 px-4 py-2 bg-card border border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-100 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
               >
                 <Eraser className="w-3 h-3" /> Clear
               </button>

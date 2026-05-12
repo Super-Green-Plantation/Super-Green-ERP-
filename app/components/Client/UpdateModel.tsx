@@ -42,12 +42,12 @@ const UpdateClientModal = ({
       address: "",
       drivingLicense: "",
       passportNo: "",
-      proposalFormNo: "",
+      // proposalFormNo: "",
       phoneLand: "",
       ...initialData.applicant,
-      investmentAmount: initialData?.applicant?.investmentAmount
-        ? initialData.applicant.investmentAmount.toString().trim()
-        : "",
+      // investmentAmount: initialData?.applicant?.investmentAmount
+      //   ? initialData.applicant.investmentAmount.toString().trim()
+      //   : "",
     },
     investment: {
       planId: initialData?.investment?.planId || "",
@@ -117,7 +117,7 @@ const UpdateClientModal = ({
 
   return (
     <div className="fixed inset-0 z-100 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">
-      <div className="bg-card w-full max-w-4xl max-h-[90vh] rounded-[2.5rem] shadow-2xl border border-border overflow-hidden flex flex-col scale-in-center">
+      <div className="bg-card w-full max-w-4xl max-h-[90vh] rounded-[2.5rem] shadow-lg border border-border overflow-hidden flex flex-col scale-in-center">
         {/* Header */}
         <div className="px-10 py-8 border-b border-border flex justify-between items-center bg-card sticky top-0 z-10">
           <div>
@@ -233,7 +233,7 @@ const UpdateClientModal = ({
                 />
                 <FieldError message={fieldErrors.address} />
               </div>
-              <div className="md:col-span-3">
+              {/* <div className="md:col-span-3">
                 <label className={labelClass}>Proposal Form Number</label>
                 <input
                   type="text"
@@ -241,12 +241,12 @@ const UpdateClientModal = ({
                   onChange={(e) => handleChange("applicant", "proposalFormNo", e.target.value)}
                   className={inputClass}
                 />
-              </div>
+              </div> */}
             </div>
           </div>
 
           {/* Financial Configuration */}
-          <div className="space-y-8 bg-primary/5 p-8 rounded-3xl border border-primary/10">
+          {/* <div className="space-y-8 bg-primary/5 p-8 rounded-3xl border border-primary/10">
             <div className="flex items-center gap-3">
               <Briefcase className="w-5 h-5 text-primary" />
               <h3 className="text-[11px] font-bold uppercase tracking-[0.2em] text-foreground">
@@ -277,7 +277,7 @@ const UpdateClientModal = ({
                 />
               </div>
             </div>
-          </div>
+          </div> */}
         </form>
 
         {/* Footer */}

@@ -88,17 +88,17 @@ export function Field({
     const indicator = prefix === "Rs." ? formatIndicator(value) : null;
     return (
         <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-foreground/80 mb-2">
                 {label}
             </label>
-            <div className={`flex items-center border rounded-xl overflow-hidden transition-all bg-muted/30
+            <div className={`flex items-center  rounded-xl overflow-hidden transition-all bg-muted/30
         ${disabled
                     ? "border-border/50 bg-muted/10 opacity-50"
                     : "border-border focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/10 shadow-sm"
                 }`}
             >
                 {prefix && (
-                    <span className="px-3 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest shrink-0">
+                    <span className="px-3 py-2 text-[10px] font-bold text-foreground/80 uppercase tracking-widest shrink-0">
                         {prefix}
                     </span>
                 )}
@@ -116,12 +116,12 @@ export function Field({
                     </span>
                 )}
                 {suffix && (
-                    <span className="px-3 py-2 text-[10px] font-bold text-muted-foreground bg-muted border-l border-border uppercase tracking-widest shrink-0">
+                    <span className="px-3 py-2 text-[10px] font-bold text-foreground/80 bg-muted border-l border-border uppercase tracking-widest shrink-0">
                         {suffix}
                     </span>
                 )}
             </div>
-            {hint && <p className="text-[10px] text-muted-foreground/70 font-medium mt-1.5 ml-1">{hint}</p>}
+            {hint && <p className="text-[10px] text-muted-foreground font-medium mt-1.5 ml-1">{hint}</p>}
         </div>
     );
 }
@@ -240,10 +240,10 @@ export default function SalaryConfigPage() {
 
                   {isConfigured && (
                     <div className="flex items-center gap-4 border-l border-border/50 pl-6 h-6">
-                      <span className="flex items-center gap-2 text-[10px] font-extrabold text-accent uppercase tracking-wider">
+                      <span className="flex items-center gap-2 text-[10px] font-extrabold text-primary uppercase tracking-wider">
                         <CheckCircle2 className="w-4 h-4" /> ACTIVE STRUCTURE
                       </span>
-                      <span className="hidden md:inline text-[10px] text-muted-foreground font-bold uppercase tracking-tighter opacity-40">
+                      <span className="hidden md:inline text-[10px] text-muted-foreground font-bold uppercase tracking-tighter opacity-80">
                         Base: Rs.{fmt(position.salary.basicSalaryPermanent)} · Plan: Rs.{fmt(position.salary.monthlyTarget)}
                       </span>
                     </div>
@@ -307,7 +307,7 @@ export default function SalaryConfigPage() {
                   <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-10">
                     <div className="space-y-4">
                       <div className="flex items-center gap-3">
-                        <div className="p-3 rounded-2xl bg-accent/10 text-accent border border-accent/10">
+                        <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/10">
                           <Target className="w-6 h-6" />
                         </div>
                         <div>
@@ -337,8 +337,8 @@ export default function SalaryConfigPage() {
                   <div className="space-y-10">
                    
 
-                    <div className="vibrant-alert">
-                      Alert: These rates apply to <span className="text-accent underline underline-offset-4">Permanent</span> staff. Probation tiers are locked at 7% / 10%.
+                    <div className="bg-primary/10 border border-primary/20 text-primary text-[11px] font-bold p-4 rounded-xl uppercase tracking-wider">
+                      Alert: These rates apply to <span className="text-foreground underline underline-offset-4">Permanent</span> staff. Probation tiers are locked at 7% / 10%.
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -384,7 +384,7 @@ export default function SalaryConfigPage() {
 
                     <div className="space-y-8">
                       <div className="flex items-center gap-2 mb-2">
-                        <Car className="w-5 h-5 text-muted-foreground/30" />
+                        <Car className="w-5 h-5 text-primary" />
                         <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-foreground">EPF Structure</span>
                       </div>
                       <div className="grid grid-cols-1 gap-4">

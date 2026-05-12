@@ -79,7 +79,7 @@ const UpdateBeneficiary = ({ onClose, initialData }: UpdateBeneficiaryModalProps
         onClick={onClose}
       />
 
-      <div className="relative w-full max-w-2xl bg-card border border-border rounded-2xl shadow-2xl animate-in zoom-in-95 duration-200 overflow-hidden">
+      <div className="relative w-full max-w-2xl bg-card border border-border rounded-2xl shadow-lg animate-in zoom-in-95 duration-200 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div className="flex items-center gap-3">

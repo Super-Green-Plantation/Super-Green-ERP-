@@ -67,7 +67,7 @@ const CommissionReceipt = ({ data }: Props) => {
 
       {/* Designation Label */}
       <div className="flex justify-between items-center mb-2 px-1">
-        <span className="text-[10px] font-black uppercase tracking-tighter text-slate-400">
+        <span className="text-[10px] font-black uppercase tracking-tighter text-muted-foreground">
           System Generated Document • Internal Use Only
         </span>
         <span className="text-[10px] font-black uppercase tracking-tighter text-blue-600">
@@ -85,13 +85,13 @@ const CommissionReceipt = ({ data }: Props) => {
         </div>
 
         {/* 1. Header Section */}
-        <div className="p-8 border-b border-slate-100 flex justify-between items-start bg-slate-50/50">
+        <div className="p-8 border-b border-border flex justify-between items-start bg-muted/30">
           <div className="space-y-3">
            
             <h1 className="text-4xl font-black tracking-tight text-slate-900 leading-none">
               COMMISSION RECEIPT<br />
             </h1>
-            <p className="text-[8px] font-bold text-slate-400 mt-2 uppercase tracking-widest">Trace ID: {investment.refNumber}</p>
+            <p className="text-[8px] font-bold text-muted-foreground mt-2 uppercase tracking-widest">Trace ID: {investment.refNumber}</p>
           </div>
           <div className="text-right">
     
@@ -99,7 +99,7 @@ const CommissionReceipt = ({ data }: Props) => {
         </div>
 
         {/* 2. Transaction Metadata Grid */}
-        <div className="grid grid-cols-3 gap-0 border-b border-slate-100">
+        <div className="grid grid-cols-3 gap-0 border-b border-border">
           <MetaTile 
             label="Issue Date" 
             value={isMounted ? new Date().toLocaleDateString("en-GB", { day: '2-digit', month: 'short', year: 'numeric' }) : "—"} 
@@ -119,8 +119,8 @@ const CommissionReceipt = ({ data }: Props) => {
         <div className="p-8">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-slate-400" />
-              <h3 className="text-[11px] font-bold uppercase tracking-widest text-slate-500">Distribution Analysis</h3>
+              <FileText className="w-4 h-4 text-muted-foreground" />
+              <h3 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">Distribution Analysis</h3>
             </div>
             <span className="h-1 w-24 bg-slate-100 rounded-full" />
           </div>
@@ -129,24 +129,24 @@ const CommissionReceipt = ({ data }: Props) => {
             {commissions.map((comm, idx) => (
               <div
                 key={idx}
-                className="group/row flex items-center justify-between p-4 rounded-xl border border-transparent hover:border-slate-100 hover:bg-slate-50/50 transition-all"
+                className="group/row flex items-center justify-between p-4 rounded-xl border border-transparent hover:border-border hover:bg-muted/30 transition-all"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 font-bold text-xs group-hover/row:bg-blue-600 group-hover/row:text-white transition-colors">
+                  <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-muted-foreground font-bold text-xs group-hover/row:bg-blue-600 group-hover/row:text-white transition-colors">
                     {idx + 1}
                   </div>
                   <div>
                     <p className="text-sm font-bold text-slate-900 leading-none mb-1">
                       {comm.member?.nameWithInitials}
                     </p>
-                    <p className="text-[10px] font-medium text-slate-400 uppercase tracking-tighter">
+                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-tighter">
                       {comm.member?.position.title} • <span className="text-slate-600">{comm.type}</span>
                     </p>
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="flex items-center justify-end gap-1 text-slate-900">
-                    <span className="text-[10px] font-bold text-slate-400">LKR</span>
+                    <span className="text-[10px] font-bold text-muted-foreground">LKR</span>
                     <span className="text-base font-black tracking-tight">
                       {comm.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </span>
@@ -177,7 +177,7 @@ const CommissionReceipt = ({ data }: Props) => {
             <div className="text-right">
               <p className="text-[11px] font-bold uppercase tracking-widest text-blue-400 mb-2">Total Disbursed</p>
               <div className="flex items-baseline justify-end gap-2">
-                <span className="text-xl font-light text-slate-400">LKR</span>
+                <span className="text-xl font-light text-muted-foreground">LKR</span>
                 <span className="text-4xl font-black tracking-tighter text-white">
                   {totalPayout.toLocaleString()}
                 </span>
@@ -199,8 +199,8 @@ const CommissionReceipt = ({ data }: Props) => {
 
 /* --- Helper Component --- */
 const MetaTile = ({ label, value, isMono = false }: { label: string; value: string; isMono?: boolean }) => (
-  <div className="p-6 border-r border-slate-100 last:border-r-0 bg-white">
-    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-2">{label}</p>
+  <div className="p-6 border-r border-border last:border-r-0 bg-white">
+    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-[0.15em] mb-2">{label}</p>
     <p className={`text-sm font-bold text-slate-800 ${isMono ? 'font-mono' : ''}`}>
       {value}
     </p>

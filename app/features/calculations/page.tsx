@@ -61,7 +61,7 @@ const Page = () => {
     <div className="max-w-7xl mx-auto sm:space-y-8 space-y-2 sm:p-4 md:p-8 min-h-screen">
       <header className="mb-8">
         <Heading>Available Financial Plans</Heading>
-        <p className="text-slate-500 mt-1 font-medium">
+        <p className="text-muted-foreground mt-1 font-medium">
           Select a plan to initialize the projection engine.
         </p>
       </header>
@@ -80,7 +80,7 @@ const Page = () => {
       </div>
 
       {/* Calculator */}
-      <div className="bg-white border-t border-slate-200 rounded-2xl p-6 z-20">
+      <div className="bg-card border-t border-border rounded-2xl p-6 z-20">
         <div className="max-w-5xl mx-auto">
           {selectedPlan ? (
             <div className="flex flex-col gap-6 animate-in slide-in-from-bottom-4 duration-500">
@@ -90,21 +90,21 @@ const Page = () => {
                 <div className="flex items-center gap-3 flex-1 max-w-xs">
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-2">
-                      <h2 className="text-sm font-bold uppercase tracking-widest text-slate-700">
+                      <h2 className="text-sm font-bold uppercase tracking-widest text-foreground">
                         {selectedPlan.name}
                       </h2>
                       <button
                         onClick={() => { setSelectedId(null); setSelectedPlan(null); }}
-                        className="p-1 bg-red-50 rounded-lg text-red-400 hover:bg-red-100 transition-colors"
+                        className="p-1 bg-red-500/10 rounded-lg text-red-500 hover:bg-red-500/20 transition-colors"
                       >
                         <X size={16} />
                       </button>
                     </div>
                     <div className="relative">
-                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">Rs.</span>
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-bold text-sm">Rs.</span>
                       <input
                         type="number"
-                        className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition-all outline-none text-md font-semibold text-slate-900"
+                        className="w-full pl-12 pr-4 py-3 bg-muted/30 border border-border rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none text-md font-semibold text-foreground"
                         placeholder="Enter Amount"
                         value={investmentAmount || ""}
                         onChange={e => setInvestmentAmount(Number(e.target.value))}
@@ -116,19 +116,19 @@ const Page = () => {
                 {/* Summary totals */}
                 {investmentAmount > 0 && (
                   <div className="flex gap-3 flex-wrap">
-                    <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
-                      <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest mb-1">
+                    <div className="p-4 bg-primary/10 rounded-2xl border border-primary/20">
+                      <p className="text-[10px] text-primary font-bold uppercase tracking-widest mb-1">
                         Total Harvest
                       </p>
-                      <p className="text-sm font-bold text-emerald-700 tabular-nums">
+                      <p className="text-sm font-bold text-primary tabular-nums">
                         {formatLKR(totalHarvest)}
                       </p>
                     </div>
-                    <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100">
-                      <p className="text-[10px] text-blue-600 font-bold uppercase tracking-widest mb-1">
+                    <div className="p-4 bg-primary/10 rounded-2xl border border-primary/20">
+                      <p className="text-[10px] text-primary font-bold uppercase tracking-widest mb-1">
                         Maturity Return
                       </p>
-                      <p className="text-sm font-bold text-blue-700 tabular-nums">
+                      <p className="text-sm font-bold text-primary tabular-nums">
                         {formatLKR(totalReturn)}
                       </p>
                     </div>
@@ -141,37 +141,37 @@ const Page = () => {
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-slate-100">
-                        <th className="text-left text-[10px] font-black uppercase tracking-widest text-slate-400 pb-2 pr-4">Year</th>
-                        <th className="text-right text-[10px] font-black uppercase tracking-widest text-slate-400 pb-2 px-4">Rate</th>
-                        <th className="text-right text-[10px] font-black uppercase tracking-widest text-slate-400 pb-2 px-4">Monthly Yield</th>
-                        <th className="text-right text-[10px] font-black uppercase tracking-widest text-slate-400 pb-2 pl-4">Yearly Yield</th>
+                      <tr className="border-b border-border">
+                        <th className="text-left text-[10px] font-black uppercase tracking-widest text-muted-foreground pb-2 pr-4">Year</th>
+                        <th className="text-right text-[10px] font-black uppercase tracking-widest text-muted-foreground pb-2 px-4">Rate</th>
+                        <th className="text-right text-[10px] font-black uppercase tracking-widest text-muted-foreground pb-2 px-4">Monthly Yield</th>
+                        <th className="text-right text-[10px] font-black uppercase tracking-widest text-muted-foreground pb-2 pl-4">Yearly Yield</th>
                       </tr>
                     </thead>
                     <tbody>
                       {yearlyBreakdown.map(row => (
-                        <tr key={row.year} className="border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
-                          <td className="py-2.5 pr-4 font-bold text-slate-700">Year {row.year}</td>
+                        <tr key={row.year} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                          <td className="py-2.5 pr-4 font-bold text-foreground">Year {row.year}</td>
                           <td className="py-2.5 px-4 text-right">
-                            <span className="inline-flex items-center px-2 py-0.5 bg-slate-100 text-slate-600 rounded-lg text-xs font-bold">
+                            <span className="inline-flex items-center px-2 py-0.5 bg-muted text-muted-foreground rounded-lg text-xs font-bold">
                               {row.rate}%
                             </span>
                           </td>
-                          <td className="py-2.5 px-4 text-right font-semibold text-slate-700 tabular-nums">
+                          <td className="py-2.5 px-4 text-right font-semibold text-foreground tabular-nums">
                             {formatLKR(row.monthlyYield)}
                           </td>
-                          <td className="py-2.5 pl-4 text-right font-semibold text-slate-700 tabular-nums">
+                          <td className="py-2.5 pl-4 text-right font-semibold text-foreground tabular-nums">
                             {formatLKR(row.yearlyYield)}
                           </td>
                         </tr>
                       ))}
                     </tbody>
                     <tfoot>
-                      <tr className="border-t-2 border-slate-200">
-                        <td colSpan={3} className="pt-3 font-black text-slate-600 text-xs uppercase tracking-widest">
+                      <tr className="border-t-2 border-border">
+                        <td colSpan={3} className="pt-3 font-black text-muted-foreground text-xs uppercase tracking-widest">
                           Total Harvest
                         </td>
-                        <td className="pt-3 text-right font-black text-slate-800 tabular-nums">
+                        <td className="pt-3 text-right font-black text-foreground tabular-nums">
                           {formatLKR(totalHarvest)}
                         </td>
                       </tr>
@@ -183,7 +183,7 @@ const Page = () => {
             </div>
           ) : (
             <div className="py-6 text-center">
-              <p className="text-sm font-bold text-slate-400 uppercase tracking-widest animate-pulse">
+              <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest animate-pulse">
                 Please select a plan above to calculate returns
               </p>
             </div>

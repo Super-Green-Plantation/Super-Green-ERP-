@@ -94,142 +94,144 @@ html {
 
 
 :root {
+  color-scheme: light;
 
-  --radius: 1rem;
+  --radius: 0.5rem;
 
-  --background: #F9FAFB;
+  --background: #FFFFFF;
 
-  --foreground: #002A24;
+  --foreground: #1C1C1C;
 
   --card: #FFFFFF;
 
-  --card-foreground: #004D40;
+  --card-foreground: #1C1C1C;
 
   --popover: #FFFFFF;
 
-  --popover-foreground: #004D40;
+  --popover-foreground: #1C1C1C;
 
-  --primary: #004D40;
+  --primary: #24b47e;
 
-  --primary-foreground: #F9FAFB;
+  --primary-foreground: #FFFFFF;
 
-  --secondary: #A7F3D0;
+  --secondary: #F2F2F2;
 
-  --secondary-foreground: #004D40;
+  --secondary-foreground: #1C1C1C;
 
-  --muted: #F3F4F6;
+  --muted: #F2F2F2;
 
-  --muted-foreground: #6B7280;
+  --muted-foreground: #878787;
 
-  --accent: #008674;
+  --accent: #F2F2F2;
 
-  --accent-foreground: #FFFFFF;
+  --accent-foreground: #1C1C1C;
 
-  --destructive: oklch(0.577 0.245 27.325);
+  --destructive: #E5484D;
 
-  --border: #E5E7EB;
+  --border: #EAEAEA;
 
-  --input: #E5E7EB;
+  --input: #EAEAEA;
 
-  --ring: #005348;
+  --ring: #24b47e;
 
-  --chart-1: #004D40;
+  --chart-1: #24b47e;
 
-  --chart-2: rgb(1, 85, 74);
+  --chart-2: #1C1C1C;
 
-  --chart-3: #A7F3D0;
+  --chart-3: #878787;
 
-  --chart-4: #059669;
+  --chart-4: #EAEAEA;
 
-  --chart-5: #00442d;
+  --chart-5: #F2F2F2;
 
-  --sidebar: #F9FAFB;
+  --sidebar: #F9F9F9;
 
-  --sidebar-foreground: #004D40;
+  --sidebar-foreground: #1C1C1C;
 
-  --sidebar-primary: #004D40;
+  --sidebar-primary: #24b47e;
 
-  --sidebar-primary-foreground: #F9FAFB;
+  --sidebar-primary-foreground: #FFFFFF;
 
-  --sidebar-accent: #F3F4F6;
+  --sidebar-accent: #F2F2F2;
 
-  --sidebar-accent-foreground: #004D40;
+  --sidebar-accent-foreground: #1C1C1C;
 
-  --sidebar-border: #E5E7EB;
+  --sidebar-border: #EAEAEA;
 
-  --sidebar-ring: #007969;
+  --sidebar-ring: #24b47e;
 
-  /* --app-bg: linear-gradient(135deg, #FFFFFF 0%, #E9F5F3 40%, #A7F3D0 100%); */
+  /* --app-bg: none; */
 
 }
 
 
 
 .dark {
+  color-scheme: dark;
 
-  --background: #002A24;
+  --background: #1C1C1C;
 
-  --foreground: #F9FAFB;
+  --foreground: #EDEDED;
 
-  --card: #003D34;
+  --card: #232323;
 
-  --card-foreground: #F9FAFB;
+  --card-foreground: #EDEDED;
 
-  --popover: #003D34;
+  --popover: #232323;
 
-  --popover-foreground: #F9FAFB;
+  --popover-foreground: #EDEDED;
 
-  --primary: #005f54;
+  --primary: #3ECF8E;
 
-  --primary-foreground: #ffffff;
+  --primary-foreground: #1C1C1C;
 
-  --secondary: #475569;
+  --secondary: #2E2E2E;
 
-  --secondary-foreground: #F9FAFB;
+  --secondary-foreground: #EDEDED;
 
-  --muted: #004D40;
+  --muted: #2E2E2E;
 
-  --muted-foreground: #94A3B8;
+  --muted-foreground: #878787;
 
-  --accent: #00b37d;
+  --accent: #2E2E2E;
 
-  --accent-foreground: #002A24;
+  --accent-foreground: #EDEDED;
 
-  --destructive: oklch(0.704 0.191 22.216);
+  --destructive: #E5484D;
 
-  --border: #004D40;
+  --border: #343434;
 
-  --input: #004D40;
+  --input: #343434;
 
-  --ring: #26D0BD;
+  --ring: #3ECF8E;
 
-  --chart-1: #26D0BD;
+  --chart-1: #3ECF8E;
 
-  --chart-2: #20C997;
+  --chart-2: #EDEDED;
 
-  --chart-3: #475569;
+  --chart-3: #878787;
 
-  --chart-4: #00BFA5;
+  --chart-4: #343434;
 
-  --chart-5: #10B981;
+  --chart-5: #2E2E2E;
 
-  --sidebar: #002A24;
+  --sidebar: #181818;
 
-  --sidebar-foreground: #F9FAFB;
+  --sidebar-foreground: #EDEDED;
 
-  --sidebar-primary: #005f54;
+  --sidebar-primary: #3ECF8E;
 
-  --sidebar-primary-foreground: #ffffff;
+  --sidebar-primary-foreground: #1C1C1C;
 
-  --sidebar-accent: #004D40;
+  --sidebar-accent: #2E2E2E;
 
-  --sidebar-accent-foreground: #F9FAFB;
+  --sidebar-accent-foreground: #EDEDED;
 
-  --sidebar-border: #004D40;
+  --sidebar-border: #343434;
 
-  --sidebar-ring: #26D0BD;
+  --sidebar-ring: #3ECF8E;
 
-  --app-bg: linear-gradient(135deg, #002A24 0%, #004D40 50%, #002A24 100%);
+  --app-bg: none;
 
 }
 
@@ -285,6 +287,10 @@ html {
   select,
   textarea {
     @apply bg-card text-card-foreground border border-border/80 rounded-2xl p-4 focus:ring-4 focus:ring-primary/10 focus:border-primary/50 outline-none transition-all placeholder:text-muted-foreground/40 shadow-sm text-[15px];
+  }
+
+  option {
+    @apply bg-card text-card-foreground;
   }
 
   button {

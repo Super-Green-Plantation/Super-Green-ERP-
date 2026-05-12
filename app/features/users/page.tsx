@@ -36,6 +36,8 @@ const UserListPage = () => {
 
 
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
   if (isLoading) return <Loading />
 
@@ -64,7 +66,9 @@ const UserListPage = () => {
     }
   };
 
-  
+  const totalPages = Math.ceil(users.length / ITEMS_PER_PAGE);
+  const paginatedUsers = users.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
   return (
     <div className="max-w-7xl mx-auto sm:space-y-8 space-y-2 sm:p-4 md:p-8 min-h-screen">
       <div className="mb-8">
@@ -74,7 +78,7 @@ const UserListPage = () => {
         <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em]">Manage employee accounts and permissions</p>
       </div>
 
-      <div className="w-full bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+      <div >
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -87,7 +91,7 @@ const UserListPage = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {users?.map((user: any) => (
+              {paginatedUsers?.map((user: any) => (
                 <tr key={user.id} className="hover:bg-muted/20 transition-colors group">
                   {/* Identity Column */}
                   <td className="px-6 py-4">
@@ -132,7 +136,7 @@ const UserListPage = () => {
                       <button
                         onClick={() => handleToggleStatus(user.id, user.status)}
                         disabled={isUpdating === user.id}
-                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 ease-in-out cursor-pointer disabled:opacity-50 ${user.status ? 'bg-green-500' : 'bg-muted'}`}
+                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-200 ease-in-out cursor-pointer disabled:opacity-50 ${user.status ? 'bg-primary' : 'bg-muted'}`}
                       >
                         <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-card shadow-sm transition duration-200 ease-in-out ${user.status ? 'translate-x-4.5' : 'translate-x-1'}`}>
                           {isUpdating === user.id && <Loader2 size={8} className="animate-spin text-muted-foreground" />}
@@ -141,7 +145,7 @@ const UserListPage = () => {
 
                       {/* Label Badge */}
                       <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-tight ${user.status
-                        ? 'bg-green-500/10 text-green-600 border border-green-500/20'
+                        ? 'bg-primary/10 text-primary border border-primary/20'
                         : 'bg-muted text-muted-foreground border border-border'
                         }`}>
                         {user.status ? <CheckCircle2 size={12} /> : <Clock size={12} />}
@@ -168,6 +172,29 @@ const UserListPage = () => {
             </div>
           )}
         </div>
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-muted/10">
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+              Page {currentPage} of {totalPages}
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest bg-card border border-border rounded-lg disabled:opacity-50 hover:bg-muted/80 transition-colors"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest bg-card border border-border rounded-lg disabled:opacity-50 hover:bg-muted/80 transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

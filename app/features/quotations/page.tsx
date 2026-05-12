@@ -132,7 +132,7 @@ const QuotationsPage = () => {
               <FileText className="w-6 h-6 text-green-600" />
               Quotations
             </h1>
-            <p className="text-sm text-gray-500 mt-0.5">
+            <p className="text-sm text-muted-foreground mt-0.5">
               {total} quotation{total !== 1 ? "s" : ""} generated
             </p>
           </div>
@@ -148,7 +148,7 @@ const QuotationsPage = () => {
         {/* ── Table ── */}
         <div className="overflow-hidden">
           {isLoading ? (
-            <div className="flex items-center justify-center py-24 text-gray-400 text-sm">
+            <div className="flex items-center justify-center py-24 text-muted-foreground/70 text-sm">
               Loading quotations...
             </div>
           ) : isError ? (
@@ -156,7 +156,7 @@ const QuotationsPage = () => {
               Failed to load quotations.
             </div>
           ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-24 text-gray-400 gap-2">
+            <div className="flex flex-col items-center justify-center py-24 text-muted-foreground/70 gap-2">
               <FileText className="w-10 h-10 text-gray-200" />
               <p className="text-sm">No quotations found</p>
             </div>
@@ -164,29 +164,29 @@ const QuotationsPage = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-gray-50 border-b border-gray-100">
-                    <th className="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  <tr className="bg-muted/30 border-b border-gray-100">
+                    <th className="text-left px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                       Client
                     </th>
-                    <th className="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    <th className="text-left px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                       Plan
                     </th>
-                    <th className="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    <th className="text-left px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                       Frequency
                     </th>
-                    <th className="text-right px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    <th className="text-right px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                       Premium
                     </th>
-                    <th className="text-right px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    <th className="text-right px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                       Total Invested
                     </th>
-                    <th className="text-right px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    <th className="text-right px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                       Maturity
                     </th>
-                    <th className="text-center px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    <th className="text-center px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                       Rate
                     </th>
-                    <th className="text-left px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                    <th className="text-left px-5 py-3.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide">
                       Date
                     </th>
                     <th className="px-5 py-3.5" />
@@ -196,11 +196,11 @@ const QuotationsPage = () => {
                   {filtered.map((q) => {
                     const meta = PLAN_META[q.planType];
                     return (
-                      <tr key={q.id} className="hover:bg-gray-50 transition-colors group">
+                      <tr key={q.id} className="hover:bg-muted/30 transition-colors group">
                         {/* Client */}
                         <td className="px-5 py-4">
-                          <p className="font-semibold text-gray-800">{q.clientName}</p>
-                          <p className="text-xs text-gray-400">
+                          <p className="font-semibold text-card-foreground">{q.clientName}</p>
+                          <p className="text-xs text-muted-foreground/70">
                             {q.clientNic ?? "—"}
                             {q.clientAge ? ` · ${q.clientAge} yrs` : ""}
                           </p>
@@ -214,7 +214,7 @@ const QuotationsPage = () => {
                             {meta.icon}
                             {meta.label}
                           </span>
-                          <p className="text-xs text-gray-400 mt-1">
+                          <p className="text-xs text-muted-foreground/70 mt-1">
                             {q.duration}Y plan
                             {q.planType === "PENSION" && q.retirementAge
                               ? ` · Retire @ ${q.retirementAge}`
@@ -223,17 +223,17 @@ const QuotationsPage = () => {
                         </td>
 
                         {/* Frequency */}
-                        <td className="px-5 py-4 text-gray-600">
+                        <td className="px-5 py-4 text-muted-foreground">
                           {FREQ_SHORT[q.frequency]}
                         </td>
 
                         {/* Premium */}
-                        <td className="px-5 py-4 text-right font-medium text-gray-800">
+                        <td className="px-5 py-4 text-right font-medium text-card-foreground">
                           {fmt(q.premium)}
                         </td>
 
                         {/* Total Invested */}
-                        <td className="px-5 py-4 text-right text-gray-600">
+                        <td className="px-5 py-4 text-right text-muted-foreground">
                           {fmt(q.totalInvested)}
                         </td>
 
@@ -250,7 +250,7 @@ const QuotationsPage = () => {
                         </td>
 
                         {/* Date */}
-                        <td className="px-5 py-4 text-gray-400 text-xs whitespace-nowrap">
+                        <td className="px-5 py-4 text-muted-foreground/70 text-xs whitespace-nowrap">
                           {new Date(q.createdAt).toLocaleDateString("en-LK", {
                             year: "numeric",
                             month: "short",
@@ -263,14 +263,14 @@ const QuotationsPage = () => {
                           <div className="flex items-center gap-1 justify-end">
                             <button
                               onClick={() => handleDownload(q)}
-                              className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                              className="p-1.5 text-muted-foreground/70 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
                               title="Download PDF"
                             >
                               <Download className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => setDeleteId(q.id)}
-                              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                              className="p-1.5 text-muted-foreground/70 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                               title="Delete"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -287,25 +287,25 @@ const QuotationsPage = () => {
 
           {/* ── Pagination ── */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between px-5 py-4 border-t border-gray-100 bg-gray-50">
-              <p className="text-xs text-gray-500">
+            <div className="flex items-center justify-between px-5 py-4 border-t border-gray-100 bg-muted/30">
+              <p className="text-xs text-muted-foreground">
                 Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, total)} of {total}
               </p>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="p-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="p-1.5 rounded-lg border border-border text-muted-foreground hover:bg-card disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </button>
-                <span className="text-xs text-gray-600 font-medium">
+                <span className="text-xs text-muted-foreground font-medium">
                   {page} / {totalPages}
                 </span>
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
-                  className="p-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-white disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="p-1.5 rounded-lg border border-border text-muted-foreground hover:bg-card disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <ChevronRight className="w-4 h-4" />
                 </button>
@@ -325,17 +325,17 @@ const QuotationsPage = () => {
           onClick={() => setDeleteId(null)}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full animate-in fade-in zoom-in duration-200"
+            className="bg-card rounded-2xl shadow-2xl p-6 max-w-sm w-full animate-in fade-in zoom-in duration-200"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-base font-semibold text-gray-800 mb-1">Delete Quotation</h3>
-            <p className="text-sm text-gray-500 mb-5">
+            <h3 className="text-base font-semibold text-card-foreground mb-1">Delete Quotation</h3>
+            <p className="text-sm text-muted-foreground mb-5">
               This quotation will be permanently removed. This cannot be undone.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteId(null)}
-                className="flex-1 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-600 hover:bg-gray-50"
+                className="flex-1 py-2.5 border border-border rounded-xl text-sm font-semibold text-muted-foreground hover:bg-muted/30"
               >
                 Cancel
               </button>

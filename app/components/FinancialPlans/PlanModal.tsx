@@ -20,7 +20,7 @@ function Field({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-0.5">
+      <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-0.5">
         {label}
       </label>
       {children ?? (
@@ -31,7 +31,7 @@ function Field({
           required={required}
           defaultValue={defaultValue}
           placeholder={placeholder}
-          className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+          className="w-full bg-muted/30 border border-border rounded-xl px-4 py-2.5 text-sm font-semibold text-card-foreground focus:ring-2 focus:ring-primary/50 outline-none transition-all"
         />
       )}
     </div>
@@ -118,20 +118,20 @@ const PlanModal = ({ isOpen, onClose, plan }: PlanModalProps) => {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-lg bg-white rounded-2xl shadow-2xl relative animate-in fade-in zoom-in duration-200 my-auto"
+        className="w-full max-w-lg bg-card rounded-2xl shadow-2xl relative animate-in fade-in zoom-in duration-200 my-auto"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-6 border-b bg-gray-50 flex justify-between items-center rounded-t-2xl">
+        <div className="p-6 border-b bg-muted/30 flex justify-between items-center rounded-t-2xl">
           <div>
-            <h2 className="text-lg font-bold text-gray-800">
+            <h2 className="text-lg font-bold text-card-foreground">
               {isEdit ? "Edit Financial Plan" : "New Financial Plan"}
             </h2>
-            <p className="text-sm text-gray-500 mt-0.5">
+            <p className="text-sm text-muted-foreground mt-0.5">
               {isEdit ? `Editing: ${plan.name}` : "Fill in the plan details below"}
             </p>
           </div>
-          <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-colors">
+          <button onClick={onClose} className="p-2 text-muted-foreground/70 hover:text-card-foreground hover:bg-muted rounded-xl transition-colors">
             <X size={18} />
           </button>
         </div>
@@ -149,7 +149,7 @@ const PlanModal = ({ isOpen, onClose, plan }: PlanModalProps) => {
                 placeholder="e.g. 60"
                 defaultValue={plan?.duration}
                 onChange={e => setDuration(parseInt(e.target.value) || 0)}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                className="w-full bg-muted/30 border border-border rounded-xl px-4 py-2.5 text-sm font-semibold text-card-foreground focus:ring-2 focus:ring-primary/50 outline-none transition-all"
               />
             </Field>
 
@@ -158,23 +158,23 @@ const PlanModal = ({ isOpen, onClose, plan }: PlanModalProps) => {
 
           {/* Per-year rate inputs — rendered once duration is set */}
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 ml-0.5">
+            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-0.5">
               Rate per Year (%)
               {years > 0 && (
-                <span className="ml-2 text-blue-500 normal-case font-semibold tracking-normal">
+                <span className="ml-2 text-primary normal-case font-semibold tracking-normal">
                   {years} year{years > 1 ? "s" : ""}
                 </span>
               )}
             </label>
 
             {years === 0 ? (
-              <p className="text-xs text-gray-400 italic py-1">Enter duration to set rates.</p>
+              <p className="text-xs text-muted-foreground/70 italic py-1">Enter duration to set rates.</p>
             ) : (
               <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                 {Array.from({ length: years }).map((_, i) => (
                   <div key={i} className="flex flex-col gap-1">
-                    <span className="text-[10px] text-gray-400 font-bold text-center">Yr {i + 1}</span>
-                    <div className="flex items-center bg-gray-50 border border-gray-200 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all">
+                    <span className="text-[10px] text-muted-foreground/70 font-bold text-center">Yr {i + 1}</span>
+                    <div className="flex items-center bg-muted/30 border border-border rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent transition-all">
                       <input
                         type="number"
                         step="0.1"
@@ -184,10 +184,10 @@ const PlanModal = ({ isOpen, onClose, plan }: PlanModalProps) => {
                           updated[i] = parseFloat(e.target.value) || 0.0;  // ← parseFloat not parseInt
                           setRates(updated);
                         }}
-                        className="w-full px-2 py-2.5 text-sm font-bold text-gray-800 bg-transparent outline-none text-center"
+                        className="w-full px-2 py-2.5 text-sm font-bold text-card-foreground bg-transparent outline-none text-center"
                         placeholder="0"
                       />
-                      <span className="pr-2 text-[11px] text-gray-400 font-bold">%</span>
+                      <span className="pr-2 text-[11px] text-muted-foreground/70 font-bold">%</span>
                     </div>
                   </div>
                 ))}
@@ -197,18 +197,18 @@ const PlanModal = ({ isOpen, onClose, plan }: PlanModalProps) => {
             {/* Quick-fill helper: set all years to same rate */}
             {years > 1 && (
               <div className="flex items-center gap-2 mt-1">
-                <span className="text-[10px] text-gray-400 font-bold">Fill all:</span>
+                <span className="text-[10px] text-muted-foreground/70 font-bold">Fill all:</span>
                 <input
                   type="number"
                   step="0.1"
                   placeholder="e.g. 36"
-                  className="w-24 px-3 py-1.5 text-xs font-bold bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-400"
+                  className="w-24 px-3 py-1.5 text-xs font-bold bg-muted/30 border border-border rounded-lg outline-none focus:ring-2 focus:ring-primary/50"
                   onChange={e => {
                     const v = parseFloat(e.target.value) || 0;
                     if (v) setRates(Array(years).fill(v));
                   }}
                 />
-                <span className="text-[10px] text-gray-400">% across all years</span>
+                <span className="text-[10px] text-muted-foreground/70">% across all years</span>
               </div>
             )}
           </div>
@@ -220,7 +220,7 @@ const PlanModal = ({ isOpen, onClose, plan }: PlanModalProps) => {
               defaultValue={plan?.description}
               rows={3}
               placeholder="Describe the benefits of this plan..."
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm font-semibold text-gray-800 focus:ring-2 focus:ring-blue-500 outline-none resize-none transition-all"
+              className="w-full bg-muted/30 border border-border rounded-xl px-4 py-2.5 text-sm font-semibold text-card-foreground focus:ring-2 focus:ring-primary/50 outline-none resize-none transition-all"
             />
           </Field>
 
@@ -228,14 +228,14 @@ const PlanModal = ({ isOpen, onClose, plan }: PlanModalProps) => {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-3 border border-gray-200 rounded-xl font-bold text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+              className="flex-1 py-3 border border-border rounded-xl font-bold text-sm text-muted-foreground hover:bg-muted/30 transition-colors"
             >
               Discard
             </button>
             <button
               type="submit"
               disabled={mutation.isPending}
-              className="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm shadow-lg active:scale-95 disabled:opacity-50 transition-all"
+              className="flex-1 py-3 bg-primary hover:opacity-90 text-white rounded-xl font-bold text-sm shadow-lg active:scale-95 disabled:opacity-50 transition-all"
             >
               {mutation.isPending
                 ? (isEdit ? "Saving..." : "Creating...")

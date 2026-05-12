@@ -32,8 +32,8 @@ function ProgressBar({ achieved, target, color = "bg-blue-500" }: {
 
 function StatPill({ label, value, highlight = false }: { label: string; value: string; highlight?: boolean }) {
     return (
-        <div className={`rounded-xl p-3 border ${highlight ? "bg-emerald-50 border-emerald-100" : "bg-slate-50 border-slate-100"}`}>
-            <p className="text-[9px] font-bold uppercase tracking-widest text-slate-400 mb-1">{label}</p>
+        <div className={`rounded-xl p-3 border ${highlight ? "bg-emerald-50 border-emerald-100" : "bg-slate-50 border-border"}`}>
+            <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-1">{label}</p>
             <p className={`text-sm font-bold ${highlight ? "text-emerald-600" : "text-slate-700"}`}>{value}</p>
         </div>
     );
@@ -62,14 +62,14 @@ function ProbationStatus({ data, status, orc }: { data: any; status: string; orc
                 <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-100 text-blue-600 text-[11px] font-bold uppercase tracking-wider rounded-full">
                     Period {periodNumber} — Month {monthInPeriod}
                 </span>
-                <span className="text-xs text-slate-400 font-medium">
+                <span className="text-xs text-muted-foreground font-medium">
                     {monthsElapsed} month{monthsElapsed !== 1 ? "s" : ""} elapsed
                 </span>
             </div>
 
             {/* Start date */}
-            <div className="flex items-center gap-2 text-xs text-slate-500">
-                <Calendar className="w-3.5 h-3.5 text-slate-400" />
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
                 <span>Started {new Date(dateOfJoin).toLocaleDateString("en-LK", { year: "numeric", month: "long", day: "numeric" })}</span>
                 <ChevronRight className="w-3 h-3 text-slate-300" />
                 <span className="font-semibold text-slate-600">
@@ -79,7 +79,7 @@ function ProbationStatus({ data, status, orc }: { data: any; status: string; orc
 
             {/* Target progress */}
             {target ? (
-                <div className="bg-white border border-slate-100 rounded-xl p-4 space-y-3">
+                <div className="bg-card border border-border rounded-xl p-4 space-y-3">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <Target className="w-4 h-4 text-blue-500" />
@@ -93,20 +93,20 @@ function ProbationStatus({ data, status, orc }: { data: any; status: string; orc
                             ) : partialHit ? (
                                 <span className="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-full">Partial</span>
                             ) : (
-                                <span className="text-[10px] font-bold text-slate-400 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-full">In Progress</span>
+                                <span className="text-[10px] font-bold text-muted-foreground bg-slate-50 border border-border px-2 py-0.5 rounded-full">In Progress</span>
                             )
                         ) : (
-                            <span className="text-[10px] font-bold text-slate-300 bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-full">Not Evaluated</span>
+                            <span className="text-[10px] font-bold text-slate-300 bg-slate-50 border border-border px-2 py-0.5 rounded-full">Not Evaluated</span>
                         )}
                     </div>
 
                     <div>
                         <div className="flex justify-between items-end mb-1.5">
-                            <span className="text-xs font-bold text-slate-500">{fmtM(volumeAchieved)} achieved</span>
-                            <span className="text-xs text-slate-400">/ {fmtM(targetAmount)} target</span>
+                            <span className="text-xs font-bold text-muted-foreground">{fmtM(volumeAchieved)} achieved</span>
+                            <span className="text-xs text-muted-foreground">/ {fmtM(targetAmount)} target</span>
                         </div>
                         <ProgressBar achieved={volumeAchieved} target={targetAmount} color={progressColor} />
-                        <p className="text-[10px] text-slate-400 mt-1 text-right">{progressPct.toFixed(1)}%</p>
+                        <p className="text-[10px] text-muted-foreground mt-1 text-right">{progressPct.toFixed(1)}%</p>
                     </div>
 
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1">
@@ -143,7 +143,7 @@ function PermanentStatus({ data, status, orc }: { data: any; status: string; orc
 
     if (!salary) {
         return (
-            <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 text-xs text-slate-400 font-medium">
+            <div className="bg-slate-50 border border-border rounded-xl p-4 text-xs text-muted-foreground font-medium">
                 No salary configuration found for this position.
             </div>
         );
@@ -166,27 +166,27 @@ function PermanentStatus({ data, status, orc }: { data: any; status: string; orc
                     Permanent
                 </span>
                 {currentPayroll ? (
-                    <span className="text-xs text-slate-400 font-medium">
+                    <span className="text-xs text-muted-foreground font-medium">
                         Payroll for {MONTH_NAMES[currentPayroll.month]} {currentPayroll.year}
                     </span>
                 ) : (
-                    <span className="text-xs text-slate-400 font-medium">No payroll run yet this month</span>
+                    <span className="text-xs text-muted-foreground font-medium">No payroll run yet this month</span>
                 )}
             </div>
 
             {/* Current month */}
-            <div className="bg-white border border-slate-100 rounded-xl p-4 space-y-3">
+            <div className="bg-card border border-border rounded-xl p-4 space-y-3">
                 <div className="flex items-center gap-2">
                     <Target className="w-4 h-4 text-emerald-500" />
                     <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">This Month's Target</span>
                 </div>
                 <div>
                     <div className="flex justify-between items-end mb-1.5">
-                        <span className="text-xs font-bold text-slate-500">{fmtM(volumeAchieved)} achieved</span>
-                        <span className="text-xs text-slate-400">/ {fmtM(monthlyTarget)} target</span>
+                        <span className="text-xs font-bold text-muted-foreground">{fmtM(volumeAchieved)} achieved</span>
+                        <span className="text-xs text-muted-foreground">/ {fmtM(monthlyTarget)} target</span>
                     </div>
                     <ProgressBar achieved={volumeAchieved} target={monthlyTarget} color={progressColor} />
-                    <p className="text-[10px] text-slate-400 mt-1 text-right">{progressPct.toFixed(1)}%</p>
+                    <p className="text-[10px] text-muted-foreground mt-1 text-right">{progressPct.toFixed(1)}%</p>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
                     <StatPill label="Incentive Target" value={fmt(salary.incentiveAmount)} />
@@ -195,8 +195,8 @@ function PermanentStatus({ data, status, orc }: { data: any; status: string; orc
                     <StatPill label="Allowance Earned" value={fmt(allowanceEarned)} highlight={allowanceEarned > 0} />
                 </div>
                 {currentPayroll && (
-                    <div className="pt-2 border-t border-slate-100 flex justify-between items-center">
-                        <span className="text-xs text-slate-400 font-medium">Net Pay this month</span>
+                    <div className="pt-2 border-t border-border flex justify-between items-center">
+                        <span className="text-xs text-muted-foreground font-medium">Net Pay this month</span>
                         <span className="text-sm font-bold text-slate-800">{fmt(netPay)}</span>
                     </div>
                 )}
@@ -216,7 +216,7 @@ function PermanentStatus({ data, status, orc }: { data: any; status: string; orc
 
             {/* History */}
             {payrollHistory.length > 0 && (
-                <div className="bg-white border border-slate-100 rounded-xl overflow-hidden">
+                <div className="bg-card border border-border rounded-xl overflow-hidden">
                     <div className="px-4 py-3 border-b border-slate-50 flex items-center gap-2">
                         <Banknote className="w-4 h-4 text-violet-500" />
                         <span className="text-xs font-bold text-slate-600 uppercase tracking-wider">Payroll History</span>
@@ -224,7 +224,7 @@ function PermanentStatus({ data, status, orc }: { data: any; status: string; orc
                     <div className="divide-y divide-slate-50">
                         {payrollHistory.map((p: any) => (
                             <div key={`${p.year}-${p.month}`} className="px-4 py-3 flex items-center justify-between gap-4">
-                                <span className="text-xs font-bold text-slate-500 w-20 shrink-0">
+                                <span className="text-xs font-bold text-muted-foreground w-20 shrink-0">
                                     {MONTH_NAMES[p.month]} {p.year}
                                 </span>
                                 <div className="flex-1 min-w-0">
@@ -278,11 +278,11 @@ export default function EmployeeStatusSection({
     if (!data) return null;
 
     return (
-        <section className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+        <section className="bg-card rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div className="px-4 sm:px-6 py-3.5 border-b border-gray-50 flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 text-blue-500 shrink-0" />
-                    <h2 className="font-bold text-gray-800 text-xs uppercase tracking-widest">
+                    <h2 className="font-bold text-card-foreground text-xs uppercase tracking-widest">
                         Employment Status & Performance
                     </h2>
                 </div>

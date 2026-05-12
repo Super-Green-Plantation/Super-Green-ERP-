@@ -52,7 +52,7 @@ export default function SendDocumentLinkButton({ clientId }: { clientId: number 
       {/* Show the link inline with a copy button after generation */}
       {uploadLink && (
         <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg">
-          <p className="text-[10px] text-slate-500 truncate flex-1">{uploadLink}</p>
+          <p className="text-[10px] text-muted-foreground truncate flex-1">{uploadLink}</p>
           <button
             onClick={handleCopy}
             className="shrink-0 p-1.5 hover:bg-slate-200 rounded-md transition-colors"

@@ -124,23 +124,23 @@ const UpdateInvestmentDocsModal = ({
 
     return (
         <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-slate-900/40" onClick={onClose} />
-            <div className="relative w-full max-w-lg bg-white rounded-[2.5rem] shadow-2xl border border-white/20 overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div className="absolute inset-0 bg-background/80" onClick={onClose} />
+            <div className="relative w-full max-w-lg bg-card rounded-[2.5rem] shadow-lg border border-border overflow-hidden animate-in fade-in zoom-in duration-200">
 
                 {/* Header */}
                 <div className="px-8 pt-8 pb-6 flex items-center justify-between">
                     <div>
                         <div className="flex items-center gap-2 mb-1">
-                            <div className="p-1.5 bg-blue-50 rounded-lg">
-                                <CloudLightning size={16} className="text-blue-600" />
+                            <div className="p-1.5 bg-primary/10 rounded-lg">
+                                <CloudLightning size={16} className="text-primary" />
                             </div>
-                            <h2 className="text-xl font-bold text-slate-900 tracking-tighter">Investment Documents</h2>
+                            <h2 className="text-xl font-bold text-foreground tracking-tighter">Investment Documents</h2>
                         </div>
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
                             #{investmentRef}
                         </p>
                     </div>
-                    <button onClick={onClose} className="p-3 hover:bg-slate-50 rounded-2xl text-slate-400 hover:text-slate-900 transition-colors">
+                    <button onClick={onClose} className="p-3 hover:bg-muted/80 rounded-2xl text-muted-foreground hover:text-foreground transition-colors">
                         <X size={20} />
                     </button>
                 </div>
@@ -163,13 +163,13 @@ const UpdateInvestmentDocsModal = ({
 
                         return (
                             <div key={doc.id} className="group relative">
-                                <label className="block mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">
+                                <label className="block mb-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">
                                     {doc.label}
                                 </label>
 
                                 <div className={`relative flex flex-col items-center justify-center p-5 border-2 border-dashed rounded-2xl transition-all min-h-28 ${showExistingPreview
-                                    ? "border-emerald-200 bg-emerald-50/30"
-                                    : "border-slate-200 bg-slate-50/50 group-hover:bg-white group-hover:border-blue-400 cursor-pointer"
+                                    ? "border-primary/20 bg-emerald-50/30"
+                                    : "border-border bg-muted/30 group-hover:bg-card group-hover:border-primary cursor-pointer"
                                     }`}>
 
                                     {/* file input — only active when not showing existing */}
@@ -186,17 +186,17 @@ const UpdateInvestmentDocsModal = ({
                                         <div className="flex flex-col items-center gap-2 w-full">
                                             {newIsPDF ? (
                                                 <div className="flex flex-col items-center gap-1">
-                                                    <FileText className="w-9 h-9 text-slate-400" />
-                                                    <p className="text-[10px] text-slate-500 font-medium truncate max-w-48">{newFile!.name}</p>
+                                                    <FileText className="w-9 h-9 text-muted-foreground" />
+                                                    <p className="text-[10px] text-muted-foreground font-medium truncate max-w-48">{newFile!.name}</p>
                                                 </div>
                                             ) : (
-                                                <img src={newPreviewUrl!} alt="Preview" className="w-16 h-16 object-cover rounded-lg border border-slate-200" />
+                                                <img src={newPreviewUrl!} alt="Preview" className="w-16 h-16 object-cover rounded-lg border border-border" />
                                             )}
                                             {canEdit && (
                                                 <button
                                                     type="button"
                                                     onClick={e => { e.stopPropagation(); handleFileChange(doc.id, null); }}
-                                                    className="mt-1 px-3 py-1 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white text-[10px] font-bold rounded-full border border-red-200 transition-colors z-20 relative"
+                                                    className="mt-1 px-3 py-1 bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:text-foreground text-[10px] font-bold rounded-full border border-red-500/20 transition-colors z-20 relative"
                                                 >
                                                     Remove
                                                 </button>
@@ -208,7 +208,7 @@ const UpdateInvestmentDocsModal = ({
                                     {showExistingPreview && (
                                         <div className="flex flex-col items-center gap-2 w-full">
                                             {existingIsImage ? (
-                                                <img src={existingUrl!} alt={doc.label} className="w-16 h-16 object-cover rounded-lg border border-slate-200" />
+                                                <img src={existingUrl!} alt={doc.label} className="w-16 h-16 object-cover rounded-lg border border-border" />
                                             ) : (
                                                 <div className="flex flex-col items-center gap-1">
                                                     <FileText className="w-9 h-9 text-emerald-400" />
@@ -221,7 +221,7 @@ const UpdateInvestmentDocsModal = ({
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     onClick={e => e.stopPropagation()}
-                                                    className="flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-600 hover:bg-blue-100 text-[10px] font-bold rounded-full border border-blue-200 transition-colors"
+                                                    className="flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary hover:bg-blue-100 text-[10px] font-bold rounded-full border border-blue-200 transition-colors"
                                                 >
                                                     <Eye size={10} /> View
                                                 </a>
@@ -229,7 +229,7 @@ const UpdateInvestmentDocsModal = ({
 
                                                 {canEdit && (
                                                     <div>
-                                                        <label className="flex items-center gap-1 px-3 py-1 bg-slate-100 text-slate-600 hover:bg-slate-200 text-[10px] font-bold rounded-full border border-slate-200 transition-colors cursor-pointer">
+                                                        <label className="flex items-center gap-1 px-3 py-1 bg-slate-100 text-muted-foreground hover:bg-slate-200 text-[10px] font-bold rounded-full border border-border transition-colors cursor-pointer">
                                                             <UploadCloud size={10} /> Replace
                                                             <input
                                                                 type="file"
@@ -241,7 +241,7 @@ const UpdateInvestmentDocsModal = ({
                                                         <button
                                                             type="button"
                                                             onClick={() => handleClearExisting(doc.id)}
-                                                            className="px-3 py-1 bg-red-50 text-red-500 hover:bg-red-500 hover:text-white text-[10px] font-bold rounded-full border border-red-200 transition-colors"
+                                                            className="px-3 py-1 bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:text-foreground text-[10px] font-bold rounded-full border border-red-500/20 transition-colors"
                                                         >
                                                             Remove
                                                         </button>
@@ -255,11 +255,11 @@ const UpdateInvestmentDocsModal = ({
 
                                     {showEmpty && (
                                         <>
-                                            <div className="w-9 h-9 rounded-xl bg-white shadow-sm border border-slate-100 flex items-center justify-center text-slate-400 group-hover:text-blue-600 transition-colors mb-2">
+                                            <div className="w-9 h-9 rounded-xl bg-card shadow-sm border border-border flex items-center justify-center text-muted-foreground group-hover:text-primary transition-colors mb-2">
                                                 <UploadCloud size={16} />
                                             </div>
-                                            <p className="text-[11px] font-bold text-slate-600">Click to upload</p>
-                                            <p className="text-[9px] text-slate-400 mt-0.5">{doc.description} · Max 10MB</p>
+                                            <p className="text-[11px] font-bold text-muted-foreground">Click to upload</p>
+                                            <p className="text-[9px] text-muted-foreground mt-0.5">{doc.description} · Max 10MB</p>
                                         </>
                                     )}
                                 </div>
@@ -271,23 +271,23 @@ const UpdateInvestmentDocsModal = ({
                 </div>
                 {canEdit && (
                     <div>
-                        <div className="p-4 bg-orange-50 border border-orange-100 rounded-2xl flex gap-3">
-                            <div className="w-5 h-5 rounded-full bg-orange-500 text-white flex items-center justify-center shrink-0 mt-0.5">
+                        <div className="p-4 bg-orange-500/10 border border-orange-500/20 rounded-2xl flex gap-3">
+                            <div className="w-5 h-5 rounded-full bg-orange-500/100 text-white flex items-center justify-center shrink-0 mt-0.5">
                                 <span className="text-[10px] font-bold">!</span>
                             </div>
-                            <p className="text-[11px] font-bold text-orange-700 leading-relaxed">
+                            <p className="text-[11px] font-bold text-orange-500 leading-relaxed">
                                 Uploading replaces existing files for this investment. This action is permanent.
                             </p>
                         </div>
 
-                        < div className="px-8 py-6 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3">
-                            <button onClick={onClose} className="px-6 py-3 text-[11px] font-bold uppercase tracking-widest text-slate-500 hover:text-slate-900 transition-colors">
+                        < div className="px-8 py-6 bg-muted/30 border-t border-border flex items-center justify-end gap-3">
+                            <button onClick={onClose} className="px-6 py-3 text-[11px] font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors">
                                 Cancel
                             </button>
                             <button
                                 disabled={isUploading}
                                 onClick={handleUpdate}
-                                className="flex items-center gap-2 px-8 py-3.5 bg-slate-900 hover:bg-blue-600 disabled:bg-slate-400 text-white rounded-2xl text-[11px] font-bold uppercase tracking-[0.15em] transition-all shadow-xl shadow-slate-200 active:scale-95"
+                                className="flex items-center gap-2 px-8 py-3.5 bg-primary hover:opacity-90 disabled:opacity-50 text-primary-foreground rounded-2xl text-[11px] font-bold uppercase tracking-[0.15em] transition-all shadow-none active:scale-95"
                             >
                                 {isUploading ? (
                                     <><Loader2 size={14} className="animate-spin" /> Uploading...</>

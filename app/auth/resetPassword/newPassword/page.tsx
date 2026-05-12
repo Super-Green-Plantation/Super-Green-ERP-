@@ -55,13 +55,13 @@ export default function ResetPasswordPage() {
       <div className="relative w-full max-w-md">
         {/* Branding */}
         <div className="text-center mb-10">
-          <div className="inline-flex overflow-hidden items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-2xl shadow-white/5 mb-6">
+          <div className="inline-flex overflow-hidden items-center justify-center w-16 h-16 bg-card rounded-2xl shadow-2xl shadow-white/5 mb-6">
             <Image src="/logo.png" alt="Logo" width={64} height={60} className="object-cover" />
           </div>
           <h1 className="text-2xl font-bold text-white tracking-tighter uppercase">
             Define Credentials
           </h1>
-          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-[0.3em] mt-2">
+          <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.3em] mt-2">
             Secure Terminal v1.0
           </p>
         </div>
@@ -72,11 +72,11 @@ export default function ResetPasswordPage() {
             
             {/* New Password Field */}
             <div className="space-y-2">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">
                 New Password
               </label>
               <div className="relative group">
-                <div className="absolute inset-y-0 left-4 flex items-center text-slate-500 group-focus-within:text-blue-400 transition-colors">
+                <div className="absolute inset-y-0 left-4 flex items-center text-muted-foreground group-focus-within:text-blue-400 transition-colors">
                   <Lock size={16} />
                 </div>
                 <input
@@ -90,7 +90,7 @@ export default function ResetPasswordPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-4 flex items-center text-slate-500 hover:text-white transition-colors"
+                  className="absolute inset-y-0 right-4 flex items-center text-muted-foreground hover:text-white transition-colors"
                 >
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -99,11 +99,11 @@ export default function ResetPasswordPage() {
 
             {/* Confirm Password Field */}
             <div className="space-y-2">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">
                 Verify Password
               </label>
               <div className="relative group">
-                <div className="absolute inset-y-0 left-4 flex items-center text-slate-500 group-focus-within:text-blue-400 transition-colors">
+                <div className="absolute inset-y-0 left-4 flex items-center text-muted-foreground group-focus-within:text-blue-400 transition-colors">
                   <ShieldCheck size={16} />
                 </div>
                 <input
@@ -121,7 +121,7 @@ export default function ResetPasswordPage() {
             <button
               type="submit"
               disabled={loading || !password || !confirm}
-              className="group relative w-full bg-white hover:bg-slate-100 disabled:bg-slate-800 disabled:text-slate-500 text-slate-950 rounded-2xl py-4 text-[11px] font-bold uppercase tracking-[0.2em] transition-all shadow-xl shadow-white/5 active:scale-[0.98] flex items-center justify-center gap-2 overflow-hidden mt-4"
+              className="group relative w-full bg-card hover:bg-slate-100 disabled:bg-slate-800 disabled:text-muted-foreground text-slate-950 rounded-2xl py-4 text-[11px] font-bold uppercase tracking-[0.2em] transition-all shadow-xl shadow-white/5 active:scale-[0.98] flex items-center justify-center gap-2 overflow-hidden mt-4"
             >
               {loading ? (
                 <Loader2 size={16} className="animate-spin" />

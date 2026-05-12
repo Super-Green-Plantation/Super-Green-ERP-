@@ -166,7 +166,7 @@ const Sidebar = ({ role, loading, isCollapsed, setIsCollapsed, onNavigate }: Sid
                 }}
                 className={`
                   flex items-center gap-4
-                  px-4 py-3 rounded-sm
+                  px-4 py-3 rounded-xl
                   text-sm font-bold
                   transition-all duration-200
                   group
@@ -183,7 +183,7 @@ const Sidebar = ({ role, loading, isCollapsed, setIsCollapsed, onNavigate }: Sid
                   />
                 </div>
                 {!isCollapsed && (
-                  <span className="whitespace-nowrap animate-in slide-in-from-left-2 duration-300">
+                  <span className="whitespace-nowrap animate-in slide-in-from-left-2 duration-300 group-hover:text-primary">
                     {link.name}
                   </span>
                 )}

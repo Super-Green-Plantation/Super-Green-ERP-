@@ -72,7 +72,7 @@ export const UpdateNominee = ({ onClose, initialData }: UpdateNomineeModalProps)
         onClick={onClose}
       />
 
-      <div className="relative w-full max-w-2xl bg-card border border-border rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+      <div className="relative w-full max-w-2xl bg-card border border-border rounded-2xl shadow-lg overflow-hidden animate-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div className="flex items-center gap-3">

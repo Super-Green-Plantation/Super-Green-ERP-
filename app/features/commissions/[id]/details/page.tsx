@@ -84,22 +84,22 @@ const InvestmentDetails = () => {
   const activeInvestment = client?.investments?.[0];
 
   const cardBase =
-    "bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden";
+    "bg-card rounded-2xl border border-border shadow-sm overflow-hidden";
   const labelStyle =
-    "text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1";
+    "text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1";
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 min-h-screen p-4 md:p-8">
       {/* Header Actions */}
-      <div className="flex flex-col md:flex-row lg:items-center justify-between gap-6 border-b border-slate-100 pb-8 mb-4">
+      <div className="flex flex-col md:flex-row lg:items-center justify-between gap-6 border-b border-border pb-8 mb-4">
         {/* Left Side: Back Button & Title */}
         <div className="flex items-center gap-5">
           <button
             onClick={() => router.back()}
-            className="p-3 bg-white hover:bg-slate-50 rounded-2xl border border-slate-200 transition-all active:scale-95 shadow-sm group"
+            className="p-3 bg-card hover:bg-slate-50 rounded-2xl border border-slate-200 transition-all active:scale-95 shadow-sm group"
             title="Go Back"
           >
-            <ArrowLeft className="w-5 h-5 text-slate-500 group-hover:text-slate-900 transition-colors" />
+            <ArrowLeft className="w-5 h-5 text-muted-foreground group-hover:text-slate-900 transition-colors" />
           </button>
 
           <div className="space-y-1">
@@ -107,18 +107,18 @@ const InvestmentDetails = () => {
               <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tighter">
                 Investment Receipt
               </h1>
-              <span className="px-3 py-1 bg-slate-100 text-slate-500 font-bold text-sm md:text-base rounded-full border border-slate-200/50">
+              <span className="px-3 py-1 bg-slate-100 text-muted-foreground font-bold text-sm md:text-base rounded-full border border-slate-200/50">
                 #{activeInvestment?.id || id}
               </span>
             </div>
 
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-1.5 text-[10px] md:text-xs text-slate-400 font-black uppercase tracking-widest">
+              <div className="flex items-center gap-1.5 text-[10px] md:text-xs text-muted-foreground font-black uppercase tracking-widest">
                 <Calendar size={14} className="text-blue-500" />
                 Issued: {client?.createdAt ? new Date(client.createdAt).toLocaleDateString() : "N/A"}
               </div>
               <div className="h-1 w-1 rounded-full bg-slate-300 hidden md:block" />
-              <div className="hidden md:flex items-center gap-1.5 text-[10px] text-slate-400 font-black uppercase tracking-widest">
+              <div className="hidden md:flex items-center gap-1.5 text-[10px] text-muted-foreground font-black uppercase tracking-widest">
                 <ShieldCheck size={14} className="text-emerald-500" />
                 Verified Record
               </div>
@@ -155,11 +155,11 @@ const InvestmentDetails = () => {
 
             <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
               <div>
-                <p className="text-xs md:text-sm text-slate-400 font-bold uppercase tracking-wide mb-2">
+                <p className="text-xs md:text-sm text-muted-foreground font-bold uppercase tracking-wide mb-2">
                   Total Investment Principal
                 </p>
                 <h2 className="text-4xl md:text-6xl font-black tracking-tighter flex items-baseline gap-2">
-                  <span className="text-xl md:text-2xl text-slate-500 font-bold uppercase">
+                  <span className="text-xl md:text-2xl text-muted-foreground font-bold uppercase">
                     Rs.
                   </span>
                   {client?.investmentAmount?.toLocaleString() || "0"}
@@ -169,7 +169,7 @@ const InvestmentDetails = () => {
               {/* Internal Grid for Mobile Rates */}
               <div className="grid grid-cols-2 gap-4 sm:gap-12 border-t lg:border-t-0 lg:border-l border-white/10 pt-6 lg:pt-0 lg:pl-12">
                 <div>
-                  <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mb-1">
+                  <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mb-1">
                     Annual Rate
                   </p>
                   <p className="text-2xl md:text-3xl font-black text-emerald-400">
@@ -177,12 +177,12 @@ const InvestmentDetails = () => {
                   </p>
                 </div>
                 <div>
-                  <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest mb-1">
+                  <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest mb-1">
                     Duration
                   </p>
                   <p className="text-2xl md:text-3xl font-black">
                     {plan?.duration}
-                    <span className="text-xs font-bold text-slate-400 ml-1 uppercase">
+                    <span className="text-xs font-bold text-muted-foreground ml-1 uppercase">
                       Mo
                     </span>
                   </p>
@@ -193,7 +193,7 @@ const InvestmentDetails = () => {
         </section>
 
         {/* Status & Quick Info */}
-        <section className="bg-white rounded-[2rem] border border-slate-100 p-6 md:p-8 flex flex-col justify-between shadow-sm">
+        <section className="bg-card rounded-[2rem] border border-border p-6 md:p-8 flex flex-col justify-between shadow-sm">
           <div className="space-y-8">
             <div>
               <p className={labelStyle}>Maturity Status</p>
@@ -217,7 +217,7 @@ const InvestmentDetails = () => {
               <div>
                 <p className={labelStyle}>Est. Interest</p>
                 <p className="text-2xl font-black text-slate-900 tracking-tight">
-                  <span className="text-xs font-bold text-slate-400 mr-1 uppercase">
+                  <span className="text-xs font-bold text-muted-foreground mr-1 uppercase">
                     Rs.
                   </span>
                   {(client?.investmentAmount && plan?.rate && plan?.duration)
@@ -234,7 +234,7 @@ const InvestmentDetails = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Investor Profile */}
         <section className={cardBase}>
-          <div className="px-6 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center gap-2">
+          <div className="px-6 py-4 bg-muted/30 border-b border-border flex items-center gap-2">
             <User className="w-4 h-4 text-blue-600" />
             <h2 className="text-[11px] font-black uppercase tracking-widest text-slate-700">
               Investor Identity
@@ -253,7 +253,7 @@ const InvestmentDetails = () => {
 
         {/* Assigned Advisor */}
         <section className={cardBase}>
-          <div className="px-6 py-4 bg-slate-50/50 border-b border-slate-100 flex items-center gap-2">
+          <div className="px-6 py-4 bg-muted/30 border-b border-border flex items-center gap-2">
             <UserCheck className="w-4 h-4 text-purple-600" />
             <h2 className="text-[11px] font-black uppercase tracking-widest text-slate-700">
               Relationship Manager
@@ -274,7 +274,7 @@ const InvestmentDetails = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 border-t border-slate-100 pt-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 border-t border-border pt-6">
               <DetailItem label="Operating Branch" value={member?.branches?.map((b: any) => b.branch?.name).join(", ") || "N/A"} />
               <DetailItem
                 label="Base Location"

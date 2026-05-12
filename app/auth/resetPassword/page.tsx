@@ -49,13 +49,13 @@ export default function ForgotPassword() {
       <div className="relative w-full max-w-md">
         {/* Logo/Branding Area */}
         <div className="text-center mb-10">
-          <div className="inline-flex overflow-hidden items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-2xl shadow-white/5 mb-6">
+          <div className="inline-flex overflow-hidden items-center justify-center w-16 h-16 bg-card rounded-2xl shadow-2xl shadow-white/5 mb-6">
             <Image src="/logo.png" alt="Logo" width={64} height={60} className="object-cover" />
           </div>
           <h1 className="text-2xl font-bold text-white tracking-tighter uppercase">
             Reset Access
           </h1>
-          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-[0.3em] mt-2">
+          <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.3em] mt-2">
             Secure Terminal v1.0
           </p>
         </div>
@@ -64,18 +64,18 @@ export default function ForgotPassword() {
         <div className="bg-slate-900/50 backdrop-blur-xl rounded-[2.5rem] shadow-2xl border border-white/5 p-10">
           <form onSubmit={handleReset} className="space-y-6">
             <div className="space-y-2 text-center pb-2">
-               <p className="text-xs text-slate-400 font-medium leading-relaxed">
+               <p className="text-xs text-muted-foreground font-medium leading-relaxed">
                 Enter your authorized email to receive a secure password reset link.
               </p>
             </div>
 
             {/* Email Field */}
             <div className="space-y-2">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">
+              <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1">
                 Authorized Email
               </label>
               <div className="relative group">
-                <div className="absolute inset-y-0 left-4 flex items-center text-slate-500 group-focus-within:text-blue-400 transition-colors">
+                <div className="absolute inset-y-0 left-4 flex items-center text-muted-foreground group-focus-within:text-blue-400 transition-colors">
                   <Mail size={16} />
                 </div>
                 <input
@@ -93,7 +93,7 @@ export default function ForgotPassword() {
             <button
               type="submit"
               disabled={loading || email === ""}
-              className="group relative w-full bg-white hover:bg-slate-100 disabled:bg-slate-800 disabled:text-slate-500 text-slate-950 rounded-2xl py-4 text-[11px] font-bold uppercase tracking-[0.2em] transition-all shadow-xl shadow-white/5 active:scale-[0.98] flex items-center justify-center gap-2 overflow-hidden"
+              className="group relative w-full bg-card hover:bg-slate-100 disabled:bg-slate-800 disabled:text-muted-foreground text-slate-950 rounded-2xl py-4 text-[11px] font-bold uppercase tracking-[0.2em] transition-all shadow-xl shadow-white/5 active:scale-[0.98] flex items-center justify-center gap-2 overflow-hidden"
             >
               {loading ? (
                 <Loader2 size={16} className="animate-spin" />
@@ -109,7 +109,7 @@ export default function ForgotPassword() {
             <div className="text-center pt-2">
               <Link 
                 href="/auth/signin" 
-                className="inline-flex items-center gap-2 text-[10px] font-bold text-slate-500 hover:text-white uppercase tracking-widest transition-colors"
+                className="inline-flex items-center gap-2 text-[10px] font-bold text-muted-foreground hover:text-white uppercase tracking-widest transition-colors"
               >
                 <ArrowLeft size={12} />
                 Back to Authentication

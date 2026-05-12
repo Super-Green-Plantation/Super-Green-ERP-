@@ -68,8 +68,8 @@ const DocumentUploadSection = ({ pendingFilesRef }: DocumentUploadSectionProps) 
           <div className="absolute inset-0 z-0">
             {isPDF ? (
               <div className="flex flex-col items-center justify-center h-full bg-slate-100 gap-2">
-                <FileText className="w-12 h-12 text-slate-400" />
-                <p className="text-[10px] text-slate-500 font-medium px-4 truncate max-w-full">{files[id]?.name}</p>
+                <FileText className="w-12 h-12 text-muted-foreground" />
+                <p className="text-[10px] text-muted-foreground font-medium px-4 truncate max-w-full">{files[id]?.name}</p>
               </div>
             ) : (
               <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />

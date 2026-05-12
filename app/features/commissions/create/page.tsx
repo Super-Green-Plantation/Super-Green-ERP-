@@ -175,17 +175,17 @@ const Page = () => {
   return (
     <div className="min-h-screen  pb-20">
       {/* Enterprise Top Bar */}
-      <div className="bg-white border-b border-slate-200 sticky top-0 z-30 mb-8">
+      <div className="mb-8">
         <div className="max-w-400 mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Back />
-            <div className="h-6 w-px bg-slate-200 mx-2" />
+            <div />
             <div>
-              <Heading className="text-lg font-bold text-slate-900">
+              <Heading className="text-lg font-bold text-foreground">
                 Process Commission
               </Heading>
-              <p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">
-                v1.0 • {new Date().toLocaleDateString()}
+              <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground">
+               {new Date().toLocaleDateString()}
               </p>
             </div>
           </div>
@@ -207,9 +207,9 @@ const Page = () => {
             />
 
             {/* Hierarchy Trace + Manual Search Panel */}
-            <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-              <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
-                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+            <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden">
+              <div className="px-4 py-3 bg-muted/30 border-b border-border flex items-center justify-between">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
                   <Users className="w-3 h-3" /> Hierarchy Trace
                 </span>
                 {eligibleMembers.length > 0 && (
@@ -233,20 +233,20 @@ const Page = () => {
               </div>
 
               {/* Manual search section */}
-              <div className="border-t border-slate-200 p-4 space-y-3">
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-1.5">
+              <div className="border-t border-border p-4 space-y-3">
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
                   <UserPlus className="w-3 h-3" /> Add Member Manually
                 </p>
 
                 {/* Search input */}
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                   <input
                     type="text"
                     value={searchText}
                     onChange={(e) => setSearchText(e.target.value)}
                     placeholder="Search by name, EMP No, or NIC…"
-                    className="w-full pl-9 pr-8 py-2 text-xs font-medium rounded-lg border border-slate-200 bg-slate-50 focus:bg-white focus:border-blue-400 focus:ring-2 focus:ring-blue-400/10 outline-none transition-all placeholder:text-slate-400"
+                    className="w-full pl-9 pr-8 py-2 text-xs font-medium rounded-lg border border-border bg-muted/30 focus:bg-card focus:border-blue-400 focus:ring-2 focus:ring-blue-400/10 outline-none transition-all placeholder:text-muted-foreground"
                   />
                   {searchText && (
                     <button
@@ -254,7 +254,7 @@ const Page = () => {
                         setSearchText("");
                         setSearchResults([]);
                       }}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
                     >
                       <X className="w-3 h-3" />
                     </button>
@@ -263,9 +263,9 @@ const Page = () => {
 
                 {/* Search results dropdown */}
                 {(searchResults.length > 0 || searchLoading) && (
-                  <div className="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden divide-y divide-slate-100">
+                  <div className="rounded-lg border border-border bg-card shadow-sm overflow-hidden divide-y divide-slate-100">
                     {searchLoading ? (
-                      <div className="px-3 py-2.5 flex items-center gap-2 text-xs text-slate-400">
+                      <div className="px-3 py-2.5 flex items-center gap-2 text-xs text-muted-foreground">
                         <Loader2 className="w-3 h-3 animate-spin" />
                         Searching…
                       </div>
@@ -273,13 +273,13 @@ const Page = () => {
                       searchResults.map((result) => (
                         <div
                           key={result.empNo}
-                          className="flex items-center justify-between px-3 py-2.5 hover:bg-slate-50 transition-colors"
+                          className="flex items-center justify-between px-3 py-2.5 hover:bg-muted/30 transition-colors"
                         >
                           <div className="min-w-0">
-                            <p className="text-xs font-bold text-slate-800 truncate">
+                            <p className="text-xs font-bold text-foreground truncate">
                               {result.nameWithInitials}
                             </p>
-                            <p className="text-[10px] text-slate-400 font-medium">
+                            <p className="text-[10px] text-muted-foreground font-medium">
                               {result.empNo} •{" "}
                               {result.branches?.[0]?.branch?.name ?? "—"}
                             </p>
@@ -297,7 +297,7 @@ const Page = () => {
                 )}
 
                 {searchText && !searchLoading && searchResults.length === 0 && (
-                  <p className="text-[10px] text-slate-400 italic text-center py-1">
+                  <p className="text-[10px] text-muted-foreground italic text-center py-1">
                     No results found
                   </p>
                 )}
@@ -322,11 +322,11 @@ const Page = () => {
                 />
               </div>
             ) : (
-              <div className="h-75 flex flex-col items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
-                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm mb-3">
+              <div className="h-75 flex flex-col items-center justify-center border-2 border-dashed border-border rounded-2xl bg-muted/30">
+                <div className="w-12 h-12 bg-card rounded-full flex items-center justify-center shadow-sm mb-3">
                   <Briefcase className="w-6 h-6 text-slate-300" />
                 </div>
-                <p className="text-slate-400 font-medium text-sm">
+                <p className="text-muted-foreground font-medium text-sm">
                   Select a client to load active portfolios
                 </p>
               </div>
@@ -335,7 +335,7 @@ const Page = () => {
 
           {/* Right: Final Action & Summary */}
           <aside className="lg:col-span-3 sticky top-24">
-            <div className="bg-slate-900 rounded-2xl p-6 text-white shadow-xl shadow-slate-200">
+            <div className="bg-slate-900 rounded-2xl p-6 text-white shadow-xl shadow-none">
               <div className="flex items-center gap-2 text-blue-400 mb-6">
                 <Calculator className="w-5 h-5" />
                 <h3 className="text-xs text-white font-bold uppercase tracking-[0.2em]">
@@ -345,24 +345,24 @@ const Page = () => {
 
               <div className="space-y-4 mb-8">
                 <div className="flex justify-between items-end border-b border-slate-800 pb-2">
-                  <span className="text-xs text-slate-400 font-medium">Branch</span>
+                  <span className="text-xs text-muted-foreground font-medium">Branch</span>
                   <span className="text-sm font-bold">{branchData?.name || "—"}</span>
                 </div>
                 <div className="flex justify-between items-end border-b border-slate-800 pb-2">
-                  <span className="text-xs text-slate-400 font-medium">Advisor</span>
+                  <span className="text-xs text-muted-foreground font-medium">Advisor</span>
                   <span className="text-sm font-bold truncate max-w-37.5">
                     {selectedEmpNo || "—"}
                   </span>
                 </div>
                 <div className="flex justify-between items-end border-b border-slate-800 pb-2">
-                  <span className="text-xs text-slate-400 font-medium">Investment ID</span>
+                  <span className="text-xs text-muted-foreground font-medium">Investment ID</span>
                   <span className="text-sm font-bold text-blue-400">
                     {selectedInvestmentId || "—"}
                   </span>
                 </div>
                 {disabledEmpNos.size > 0 && (
                   <div className="flex justify-between items-end border-b border-slate-800 pb-2">
-                    <span className="text-xs text-slate-400 font-medium">Skipped</span>
+                    <span className="text-xs text-muted-foreground font-medium">Skipped</span>
                     <span className="text-sm font-bold text-amber-400">
                       {disabledEmpNos.size} member{disabledEmpNos.size > 1 ? "s" : ""}
                     </span>
@@ -370,7 +370,7 @@ const Page = () => {
                 )}
                 {manualMembers.length > 0 && (
                   <div className="flex justify-between items-end border-b border-slate-800 pb-2">
-                    <span className="text-xs text-slate-400 font-medium">Manual</span>
+                    <span className="text-xs text-muted-foreground font-medium">Manual</span>
                     <span className="text-sm font-bold text-purple-400">
                       +{manualMembers.filter((m) => !disabledEmpNos.has(m.empNo)).length}
                     </span>
@@ -381,7 +381,7 @@ const Page = () => {
               <button
                 onClick={handleProcess}
                 disabled={!selectedEmpNo || !selectedInvestmentId || processing}
-                className="w-full h-14 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-slate-600 rounded-xl font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+                className="w-full h-14 bg-blue-600 hover:bg-blue-500 disabled:bg-slate-800 disabled:text-muted-foreground rounded-xl font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
               >
                 {processing ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
@@ -397,7 +397,7 @@ const Page = () => {
 
         {/* Receipt Overlay */}
         {commissionDetails && (
-          <div className="mt-12 border-t border-slate-200 pt-12">
+          <div className="mt-12 border-t border-border pt-12">
             <div className="flex flex-col items-center">
               <div className="mb-4 px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-[10px] font-bold uppercase tracking-widest">
                 Transaction Completed

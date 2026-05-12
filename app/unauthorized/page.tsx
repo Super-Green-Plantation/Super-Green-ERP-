@@ -24,7 +24,7 @@ export default function UnauthorizedPage() {
           <h1 className="text-4xl font-bold text-slate-900 tracking-tight">
             Access Denied
           </h1>
-          <p className="text-slate-500 font-medium leading-relaxed">
+          <p className="text-muted-foreground font-medium leading-relaxed">
             Oops! You don't have the required permissions to view this page. 
             Please contact your administrator if you believe this is a mistake.
           </p>

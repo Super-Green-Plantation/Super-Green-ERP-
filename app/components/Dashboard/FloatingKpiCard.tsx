@@ -1,7 +1,7 @@
 export function FloatingKpiCard({ icon, title, value, subValue, trend }: { icon: React.ReactNode, title: string, value: string, subValue: string, trend: 'up' | 'down' | 'neutral' }) {
   return (
     <div className="bg-card/60 backdrop-blur-xl border border-border/30 rounded-[2rem] p-6 flex flex-col shadow-sm group hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 relative overflow-hidden">
-      <div className={`w-14 h-14 rounded-2xl bg-muted/30 flex items-center justify-center shrink-0 mb-6 group-hover:text-white transition-all duration-500 shadow-inner border border-border/20`}>
+      <div className={`w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 mb-6 group-hover:text-white transition-all duration-500 shadow-inner border border-primary/20`}>
         <div className="group-hover:scale-110 transition-all duration-500 text-primary">
           {icon}
         </div>

@@ -237,7 +237,7 @@ export const PrivilegedView = ({ data, userName, userRole, achieved, target, per
                             </Link>
                           </td>
                           <td className="p-8">
-                            <span className="text-xs font-bold text-accent bg-accent/5 px-4 py-2 rounded-xl border border-accent/10 shadow-sm whitespace-nowrap">
+                            <span className="text-xs font-bold text-primary bg-primary/10 px-4 py-2 rounded-xl border border-primary/20 shadow-sm whitespace-nowrap">
                               Rs. {isMounted ? inv.amount.toLocaleString() : inv.amount}
                             </span>
                           </td>
@@ -268,21 +268,21 @@ export const PrivilegedView = ({ data, userName, userRole, achieved, target, per
         <aside className="w-full xl:w-95 flex flex-col gap-8">
           <div className="grid grid-cols-1 lg:grid-cols-1 sm:grid-cols-3 gap-6">
             <FloatingKpiCard
-              icon={<TrendingUp className="w-6 h-6 text-accent" />}
+              icon={<TrendingUp className="w-6 h-6" />}
               title="Investment Capital"
               value={`Rs. ${(Math.floor(achieved / 10000) / 100).toFixed(2)}M`}
               subValue="Real-time aggregation"
               trend="up"
             />
             <FloatingKpiCard
-              icon={<Users className="w-6 h-6 text-accent" />}
+              icon={<Users className="w-6 h-6" />}
               title="Active Participants"
               value={data.totClients.toLocaleString()}
               subValue="Verified investors"
               trend="up"
             />
             <FloatingKpiCard
-              icon={<LayoutGrid className="w-6 h-6 text-accent" />}
+              icon={<LayoutGrid className="w-6 h-6" />}
               title="Branch Network"
               value={data.totMembers.toLocaleString()}
               subValue="Islan wide staff"

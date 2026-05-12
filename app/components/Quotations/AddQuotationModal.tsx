@@ -280,16 +280,16 @@ const AddQuotationModal = ({ isOpen, onClose }: AddQuotationModalProps) => {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl overflow-hidden relative animate-in fade-in zoom-in duration-200 my-auto"
+        className="w-full max-w-2xl bg-card rounded-2xl shadow-2xl overflow-hidden relative animate-in fade-in zoom-in duration-200 my-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-6 border-b bg-gray-50 flex justify-between items-center">
+        <div className="p-6 border-b bg-muted/30 flex justify-between items-center">
           <div>
-            <h2 className="text-lg font-semibold text-gray-800">New Quotation</h2>
-            <p className="text-sm text-gray-500">Generate a plan quotation for a client</p>
+            <h2 className="text-lg font-semibold text-card-foreground">New Quotation</h2>
+            <p className="text-sm text-muted-foreground">Generate a plan quotation for a client</p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl">
+          <button onClick={onClose} className="text-muted-foreground/70 hover:text-muted-foreground text-2xl">
             ×
           </button>
         </div>
@@ -297,7 +297,7 @@ const AddQuotationModal = ({ isOpen, onClose }: AddQuotationModalProps) => {
         <form className="p-6 space-y-6" onSubmit={handleSubmit}>
           {/* ── Plan Type ── */}
           <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+            <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
               Plan Type
             </label>
             <div className="grid grid-cols-3 gap-3">
@@ -308,16 +308,16 @@ const AddQuotationModal = ({ isOpen, onClose }: AddQuotationModalProps) => {
                   onClick={() => setPlanType(pt)}
                   className={`py-2.5 px-3 rounded-xl border text-sm font-semibold transition-all ${
                     planType === pt
-                      ? "bg-green-600 text-white border-green-600 shadow"
-                      : "bg-gray-50 text-gray-600 border-gray-200 hover:border-green-400"
+                      ? "bg-primary text-white border-primary shadow"
+                      : "bg-muted/30 text-muted-foreground border-border hover:border-primary"
                   }`}
                 >
                   {pt === "CHILD" ? "Child Plan" : pt === "MARGE" ? "Marge Plan" : "Pension Plan"}
                 </button>
               ))}
             </div>
-            <p className="text-xs text-gray-400 mt-1.5">
-              Paying term: <span className="font-medium text-gray-600">{plan.payingTerm} years</span>
+            <p className="text-xs text-muted-foreground/70 mt-1.5">
+              Paying term: <span className="font-medium text-muted-foreground">{plan.payingTerm} years</span>
               {planType !== "PENSION" && (
                 <> | Durations: {plan.durations.join(", ")} years</>
               )}
@@ -327,7 +327,7 @@ const AddQuotationModal = ({ isOpen, onClose }: AddQuotationModalProps) => {
           {/* ── Client Details ── */}
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
                 Client Name
               </label>
               <input
@@ -335,24 +335,24 @@ const AddQuotationModal = ({ isOpen, onClose }: AddQuotationModalProps) => {
                 required
                 value={clientName}
                 onChange={(e) => setClientName(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none"
+                className="w-full bg-muted/30 border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
                 placeholder="Full name"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
                 NIC
               </label>
               <input
                 type="text"
                 value={clientNic}
                 onChange={(e) => setClientNic(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none"
+                className="w-full bg-muted/30 border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
                 placeholder="e.g. 991234567V"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
                 Age {planType === "PENSION" && <span className="text-red-400">(18–50)</span>}
               </label>
               <input
@@ -361,7 +361,7 @@ const AddQuotationModal = ({ isOpen, onClose }: AddQuotationModalProps) => {
                 max={planType === "PENSION" ? 50 : 99}
                 value={clientAge}
                 onChange={(e) => setClientAge(Number(e.target.value))}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none"
+                className="w-full bg-muted/30 border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
                 placeholder="Years"
               />
             </div>
@@ -370,13 +370,13 @@ const AddQuotationModal = ({ isOpen, onClose }: AddQuotationModalProps) => {
           {/* ── Plan Duration ── */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
                 Plan Duration (Years)
               </label>
               <select
                 value={duration}
                 onChange={(e) => setDuration(Number(e.target.value))}
-                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none"
+                className="w-full bg-muted/30 border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
               >
                 {plan.durations.map((d) => (
                   <option key={d} value={d}>
@@ -388,13 +388,13 @@ const AddQuotationModal = ({ isOpen, onClose }: AddQuotationModalProps) => {
 
             {planType === "PENSION" && (
               <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
                   Retirement Age
                 </label>
                 <select
                   value={retirementAge}
                   onChange={(e) => setRetirementAge(Number(e.target.value))}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none"
+                  className="w-full bg-muted/30 border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
                 >
                   {RETIREMENT_AGES.map((a) => (
                     <option key={a} value={a}>
@@ -408,7 +408,7 @@ const AddQuotationModal = ({ isOpen, onClose }: AddQuotationModalProps) => {
 
           {/* ── Payment Frequency ── */}
           <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+            <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
               Payment Frequency
             </label>
             <div className="grid grid-cols-2 gap-2.5">
@@ -419,12 +419,12 @@ const AddQuotationModal = ({ isOpen, onClose }: AddQuotationModalProps) => {
                   onClick={() => setFrequency(f)}
                   className={`py-2 px-3 rounded-xl border text-sm font-medium transition-all text-left ${
                     frequency === f
-                      ? "bg-blue-600 text-white border-blue-600"
-                      : "bg-gray-50 text-gray-600 border-gray-200 hover:border-blue-400"
+                      ? "bg-primary text-white border-primary"
+                      : "bg-muted/30 text-muted-foreground border-border hover:border-primary"
                   }`}
                 >
                   <span className="block font-semibold">{FREQ_LABELS[f]}</span>
-                  <span className={`text-xs ${frequency === f ? "text-blue-100" : "text-gray-400"}`}>
+                  <span className={`text-xs ${frequency === f ? "text-primary-foreground" : "text-muted-foreground/70"}`}>
                     Min {fmt(plan.minPremium[f])} | {plan.commissionRate[f]}% commission
                   </span>
                 </button>
@@ -434,7 +434,7 @@ const AddQuotationModal = ({ isOpen, onClose }: AddQuotationModalProps) => {
 
           {/* ── Premium ── */}
           <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+            <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
               Premium Amount (Rs.)
             </label>
             <input
@@ -444,8 +444,8 @@ const AddQuotationModal = ({ isOpen, onClose }: AddQuotationModalProps) => {
               step={1000}
               value={premium}
               onChange={(e) => setPremium(Number(e.target.value))}
-              className={`w-full bg-gray-50 border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none ${
-                premium < minPremium ? "border-red-400" : "border-gray-200"
+              className={`w-full bg-muted/30 border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 outline-none ${
+                premium < minPremium ? "border-red-400" : "border-border"
               }`}
               placeholder={`Min ${minPremium.toLocaleString()}`}
             />
@@ -457,8 +457,8 @@ const AddQuotationModal = ({ isOpen, onClose }: AddQuotationModalProps) => {
           </div>
 
           {/* ── Quotation Summary Card ── */}
-          <div className="bg-linear-to-br from-green-50 to-emerald-50 border border-green-200 rounded-2xl p-5 space-y-3">
-            <h3 className="text-sm font-bold text-green-800 uppercase tracking-wide">
+          <div className="bg-muted/10 border border-border rounded-2xl p-5 space-y-3">
+            <h3 className="text-sm font-bold text-primary uppercase tracking-wide">
               Quotation Summary
             </h3>
             <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
@@ -506,14 +506,14 @@ const AddQuotationModal = ({ isOpen, onClose }: AddQuotationModalProps) => {
 
           {/* ── Notes ── */}
           <div>
-            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+            <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
               Notes (Optional)
             </label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
-              className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-green-500 outline-none resize-none"
+              className="w-full bg-muted/30 border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 outline-none resize-none"
               placeholder="Any additional notes for this quotation..."
             />
           </div>
@@ -523,14 +523,14 @@ const AddQuotationModal = ({ isOpen, onClose }: AddQuotationModalProps) => {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-6 py-3 border border-gray-200 rounded-xl font-semibold text-gray-600 hover:bg-gray-50 text-sm"
+              className="flex-1 px-6 py-3 border border-border rounded-xl font-semibold text-muted-foreground hover:bg-muted/30 text-sm"
             >
               Discard
             </button>
             <button
               type="submit"
               disabled={addQuotationMutation.isPending || premium < minPremium}
-              className="flex-1 px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 shadow-lg active:scale-95 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:opacity-90 shadow-lg active:scale-95 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {addQuotationMutation.isPending ? "Saving..." : "Save Quotation"}
             </button>
@@ -555,14 +555,14 @@ const SummaryRow = ({
   big?: boolean;
 }) => (
   <div className="flex flex-col">
-    <span className="text-xs text-gray-500">{label}</span>
+    <span className="text-xs text-muted-foreground">{label}</span>
     <span
       className={`font-semibold ${
         big
-          ? "text-green-700 text-base"
+          ? "text-primary text-base"
           : highlight
-          ? "text-green-700"
-          : "text-gray-800"
+          ? "text-primary"
+          : "text-card-foreground"
       }`}
     >
       {value}

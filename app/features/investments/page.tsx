@@ -60,22 +60,22 @@ const MaturityBadge = ({ maturityDate, isMatured, isMounted }: {
   const days = getDaysUntilMaturity(maturityDate);
 
   if (isMatured || days < 0) return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-50 text-red-600 border border-red-100 rounded-full text-[10px] font-bold uppercase">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-red-500/10 text-red-500 border border-red-500/20 rounded-full text-[10px] font-bold uppercase">
       Matured
     </span>
   );
   if (days === 0) return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 text-amber-600 border border-amber-100 rounded-full text-[10px] font-bold uppercase">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-full text-[10px] font-bold uppercase">
       Today
     </span>
   );
   if (days <= 30) return (
-    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-[10px] font-bold">
+    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-full text-[10px] font-bold">
       <AlertCircle className="w-2.5 h-2.5" />{days}d left
     </span>
   );
   return (
-    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-full text-[10px] font-bold">
+    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-primary/10 text-primary border border-primary/20 rounded-full text-[10px] font-bold">
       {days}d left
     </span>
   );
@@ -192,7 +192,7 @@ export default function InvestmentsPage() {
     <div className="max-w-7xl mx-auto space-y-6 p-4 md:p-8 min-h-screen">
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border">
         <div className="flex items-center gap-4">
           <div>
             <Heading>Investments</Heading>
@@ -203,15 +203,15 @@ export default function InvestmentsPage() {
           {investments.length > 0 && (
             <button
               onClick={() => generateInvestmentsReportPDF(investments)}
-              className="flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-emerald-600 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all active:scale-95"
+              className="flex items-center justify-center gap-2 px-5 py-2.5 bg-muted hover:bg-muted/80 text-foreground border border-border text-xs font-bold uppercase tracking-widest rounded-xl transition-all active:scale-95"
             >
-              <Download className="w-4 h-4 text-emerald-400" />
+              <Download className="w-4 h-4 text-primary" />
               <span>Export</span>
             </button>
           )}
           <Link
             href="/features/investments/create"
-            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-blue-600 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-lg active:scale-95"
+            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-primary hover:opacity-90 text-primary-foreground text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-lg active:scale-95"
           >
             New Investment
           </Link>
@@ -266,10 +266,10 @@ export default function InvestmentsPage() {
       {/* Search & Filter */}
       <div className="flex flex-col md:flex-row gap-3 items-center">
 
-        <div className="flex lg:col-span-2 border-2 border-teal-800 rounded-full flex-1">
+        <div className="flex lg:col-span-2 border-2 border-border rounded-full flex-1">
           <div className="relative flex-1 w-full">
             {isTableFetching ? (
-              <Loader2 className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-teal-700 animate-spin" />
+              <Loader2 className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary animate-spin" />
             ) : (
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             )}
@@ -295,7 +295,7 @@ export default function InvestmentsPage() {
           <select
             value={branchId}
             onChange={e => setBranchId(e.target.value)}
-            className="w-full appearance-none pl-4 pr-10 py-3 bg-background border-2 border-teal-800 rounded-full text-sm font-semibold text-foreground outline-none cursor-pointer focus:ring-2 focus:ring-teal-600"
+            className="w-full appearance-none pl-4 pr-10 py-3 bg-background border-2 border-border rounded-full text-sm font-semibold text-foreground outline-none cursor-pointer focus:ring-2 focus:ring-primary/50"
           >
             <option value="all">All Branches</option>
             {branchData?.map((branch: any) => (
@@ -309,7 +309,7 @@ export default function InvestmentsPage() {
           <select
             value={selectedMonth}
             onChange={e => { setSelectedMonth(e.target.value); setCurrentPage(1); }}
-            className="w-full appearance-none pl-4 pr-10 py-3 bg-background border-2 border-teal-800 rounded-full text-sm font-semibold text-foreground outline-none cursor-pointer focus:ring-2 focus:ring-teal-600"
+            className="w-full appearance-none pl-4 pr-10 py-3 bg-background border-2 border-border rounded-full text-sm font-semibold text-foreground outline-none cursor-pointer focus:ring-2 focus:ring-primary/50"
           >
             <option value="all">All Time</option>
             {getMonthOptions().map(opt => (
@@ -332,20 +332,20 @@ export default function InvestmentsPage() {
 
       {/* Table */}
       {investments.length === 0 && !isTableFetching ? (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-16 text-center">
-          <div className="p-4 bg-slate-50 rounded-2xl w-fit mx-auto mb-4">
-            <Wallet className="w-10 h-10 text-slate-200" />
+        <div className="bg-card rounded-2xl border border-border shadow-sm p-16 text-center">
+          <div className="p-4 bg-muted/30 rounded-2xl w-fit mx-auto mb-4">
+            <Wallet className="w-10 h-10 text-muted-foreground/50" />
           </div>
-          <h3 className="text-sm font-bold text-slate-600 uppercase tracking-widest mb-2">
+          <h3 className="text-sm font-bold text-foreground uppercase tracking-widest mb-2">
             {isFiltered ? "No results found" : "No investments yet"}
           </h3>
-          <p className="text-xs text-slate-400 font-medium mb-6">
+          <p className="text-xs text-muted-foreground font-medium mb-6">
             {isFiltered ? "Try a different search or clear filters" : "Get started by creating your first investment"}
           </p>
           {!isFiltered && (
             <Link
               href="/features/investments/create"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-blue-600 text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all active:scale-95"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary hover:opacity-90 text-primary-foreground text-xs font-bold uppercase tracking-widest rounded-xl transition-all active:scale-95"
             >
               <BanknoteArrowUp className="w-4 h-4" /> Create Investment
             </Link>
@@ -355,7 +355,7 @@ export default function InvestmentsPage() {
         <div className="relative overflow-hidden">
           {isTableFetching && (
             <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50 rounded-xl backdrop-blur-sm">
-              <Loader2 className="h-7 w-7 animate-spin text-teal-700" />
+              <Loader2 className="h-7 w-7 animate-spin text-primary" />
             </div>
           )}
           <div className="overflow-x-auto">

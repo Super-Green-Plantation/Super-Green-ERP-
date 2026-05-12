@@ -122,7 +122,7 @@ export default function EvaluationsPage() {
                 <option value="" disabled>Select branch...</option>
                 {branches.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
               </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
             </div>
           </div>
           <div>
@@ -237,12 +237,12 @@ export default function EvaluationsPage() {
                           <div>
                             <p className="text-xs font-bold text-slate-700 mb-1">
                               Rs. {fmt(p.volumeAchieved)}
-                              <span className="text-slate-400 font-medium"> / {fmt(p.targetAmount)}</span>
+                              <span className="text-muted-foreground font-medium"> / {fmt(p.targetAmount)}</span>
                             </p>
                             <VolumeBar achieved={p.volumeAchieved} target={p.targetAmount} />
                           </div>
                         ) : (
-                          <span className="text-xs font-semibold text-slate-500">
+                          <span className="text-xs font-semibold text-muted-foreground">
                             {p.volumeAchieved > 0 ? `Rs. ${fmt(p.volumeAchieved)}` : "—"}
                           </span>
                         )}
@@ -277,12 +277,12 @@ export default function EvaluationsPage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-bold text-slate-800">{p.name}</p>
-                      <p className="text-[10px] text-slate-400">#{p.empNo} · {p.positionTitle}</p>
+                      <p className="text-[10px] text-muted-foreground">#{p.empNo} · {p.positionTitle}</p>
                     </div>
                     <StatusBadge status={p.status} />
                   </div>
                   {p.status === "PROBATION" && p.targetAmount > 0 && <VolumeBar achieved={p.volumeAchieved} target={p.targetAmount} />}
-                  {p.status === "PERMANENT" && p.volumeAchieved > 0 && <p className="text-xs text-slate-500 font-semibold">Volume: Rs. {fmt(p.volumeAchieved)}</p>}
+                  {p.status === "PERMANENT" && p.volumeAchieved > 0 && <p className="text-xs text-muted-foreground font-semibold">Volume: Rs. {fmt(p.volumeAchieved)}</p>}
                   {p.totalPayout > 0 && (
                     <div className="flex gap-3 text-xs">
                       {p.bonusEarned > 0 && <span className="text-emerald-600 font-bold">Bonus: +{fmt(p.bonusEarned)}</span>}

@@ -57,7 +57,7 @@ const ExportButton = ({
       {isGenerating ? (
         <Loader2 className="w-4 h-4 animate-spin" />
       ) : (
-        <FileBarChart className={`w-4 h-4 ${variant === "white" ? "text-slate-400" : "text-blue-400"}`} />
+        <FileBarChart className={`w-4 h-4 ${variant === "white" ? "text-muted-foreground" : "text-blue-400"}`} />
       )}
       <span>{isGenerating ? "Generating..." : label}</span>
     </button>

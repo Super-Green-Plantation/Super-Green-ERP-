@@ -31,21 +31,21 @@ export default function MemberCard({
 
   return (
     <div
-      className={`group overflow-hidden rounded-2xl border bg-white shadow-sm transition-all ${
+      className={`group overflow-hidden rounded-2xl border bg-card shadow-sm transition-all ${
         isEnabled
-          ? "border-gray-100 hover:shadow-md"
-          : "border-gray-100 opacity-40 grayscale"
+          ? "border-border hover:shadow-md"
+          : "border-border opacity-40 grayscale"
       }`}
     >
       {/* Header Section */}
-      <div className="bg-linear-to-r from-blue-50/50 to-transparent p-4">
+      <div className="p-4">
         <div className="flex items-center justify-between">
           <div className="flex-1 min-w-0">
-            <p className="font-extrabold text-gray-900 tracking-tight leading-none mb-1 truncate">
+            <p className="font-extrabold text-foreground tracking-tight leading-none mb-1 truncate">
               {member.nameWithInitials}
             </p>
-            <span className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider text-blue-600">
-              <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-blue-500" />
+            <span className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider text-primary">
+              <span className="mr-1.5 h-1.5 w-1.5 rounded-full bg-primary/100" />
               {member.position?.title}
             </span>
           </div>
@@ -53,10 +53,10 @@ export default function MemberCard({
           <div className="flex items-center gap-3 ml-2">
             {/* Earnings Badge */}
             <div className="text-right">
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
+              <p className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-tighter">
                 Total Earned
               </p>
-              <p className="text-sm font-bold text-emerald-600">
+              <p className="text-sm font-bold text-primary">
                 Rs. {member.totalCommission?.toLocaleString()}
               </p>
             </div>
@@ -68,8 +68,8 @@ export default function MemberCard({
                 title={isEnabled ? "Disable member" : "Enable member"}
                 className={`shrink-0 p-1.5 rounded-lg transition-colors ${
                   isEnabled
-                    ? "text-blue-500 hover:bg-blue-50"
-                    : "text-gray-400 hover:bg-gray-100"
+                    ? "text-primary hover:bg-primary/10"
+                    : "text-muted-foreground/70 hover:bg-muted"
                 }`}
               >
                 {isEnabled ? (
@@ -84,33 +84,33 @@ export default function MemberCard({
       </div>
 
       {/* Rates + Status Section */}
-      <div className="grid grid-cols-3 divide-x divide-gray-50 border-t border-gray-100 bg-gray-50/30">
+      <div className="grid grid-cols-3 divide-x divide-gray-50/30 border-t border-border bg-muted/10">
         <div className="p-3 text-center">
-          <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">
+          <p className="text-[9px] font-bold text-muted-foreground/70 uppercase tracking-widest mb-1">
             ORC Rate
           </p>
-          <p className="text-base font-bold text-gray-700">
+          <p className="text-base font-bold text-foreground">
             {orcRate != null ? `${(orcRate * 100).toFixed(2)}%` : "0%"}
           </p>
         </div>
 
         <div className="p-3 text-center">
-          <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">
+          <p className="text-[9px] font-bold text-muted-foreground/70 uppercase tracking-widest mb-1">
             Status
           </p>
-          <p className="text-base font-bold text-gray-700">
+          <p className="text-base font-bold text-foreground">
             {member.status ?? "—"}
           </p>
         </div>
 
         <div className="p-3 text-center">
-          <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest mb-1">
+          <p className="text-[9px] font-bold text-muted-foreground/70 uppercase tracking-widest mb-1">
             Est. ORC
           </p>
           {!isEnabled ? (
-            <p className="text-base font-bold text-gray-400">—</p>
+            <p className="text-base font-bold text-muted-foreground/70">—</p>
           ) : estimatedCommission != null ? (
-            <p className="text-[11px] font-bold text-emerald-600 leading-tight">
+            <p className="text-[11px] font-bold text-primary leading-tight">
               Rs.{" "}
               {estimatedCommission.toLocaleString(undefined, {
                 minimumFractionDigits: 2,
@@ -118,7 +118,7 @@ export default function MemberCard({
               })}
             </p>
           ) : (
-            <p className="text-[9px] font-medium text-gray-400 leading-tight">
+            <p className="text-[9px] font-medium text-muted-foreground/70 leading-tight">
               Select investment
             </p>
           )}

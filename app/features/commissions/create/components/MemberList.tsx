@@ -24,7 +24,7 @@ export default function MemberList({
 }: Props) {
   if (loading) {
     return (
-      <p className="text-sm text-gray-400 italic">Loading eligible members…</p>
+      <p className="text-sm text-muted-foreground/70 italic">Loading eligible members…</p>
     );
   }
 
@@ -55,7 +55,7 @@ export default function MemberList({
         <>
           <div className="flex items-center gap-2 pt-1">
             <div className="flex-1 h-px bg-slate-200" />
-            <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400 whitespace-nowrap">
+            <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground whitespace-nowrap">
               Manually Added
             </span>
             <div className="flex-1 h-px bg-slate-200" />

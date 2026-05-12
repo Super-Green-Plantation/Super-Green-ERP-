@@ -225,7 +225,7 @@ export default function PayrollPage() {
       <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
         {loadingPreview ? (
           <div className="flex items-center justify-center h-48">
-            <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
           </div>
         ) : preview.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-sm text-muted-foreground gap-4">
@@ -236,17 +236,17 @@ export default function PayrollPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-100 bg-slate-50/50">
-                  <th className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Employee</th>
-                  <th className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Position</th>
-                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Volume Achieved</th>
-                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Basic</th>
-                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Incentive</th>
-                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Allowance</th>
-                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Commission</th>
-                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">EPF (emp)</th>
-                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Net Pay</th>
-                  <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-400">Status</th>
+                <tr className="border-b border-border bg-muted/30">
+                  <th className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Employee</th>
+                  <th className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Position</th>
+                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Volume Achieved</th>
+                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Basic</th>
+                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Incentive</th>
+                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Allowance</th>
+                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Commission</th>
+                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">EPF (emp)</th>
+                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Net Pay</th>
+                  <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">

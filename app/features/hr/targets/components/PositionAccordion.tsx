@@ -79,8 +79,8 @@ export default function PositionAccordion({
                 </button>
               )}
               {isExpanded
-                ? <ChevronDown className="w-4 h-4 text-slate-400" />
-                : <ChevronRight className="w-4 h-4 text-slate-400" />
+                ? <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                : <ChevronRight className="w-4 h-4 text-muted-foreground" />
               }
             </div>
           </div>
