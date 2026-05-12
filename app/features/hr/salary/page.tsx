@@ -6,11 +6,11 @@ import {
   Banknote,
   Car,
   CheckCircle2,
-  ChevronDown, ChevronRight,
+  ChevronDown,
   Loader2,
   Percent,
   Save,
-  Target, TrendingUp
+  Target
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";

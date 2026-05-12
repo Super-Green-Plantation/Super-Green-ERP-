@@ -222,7 +222,7 @@ export default function PayrollPage() {
       )}
 
       {/* Table */}
-      <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+      <div >
         {loadingPreview ? (
           <div className="flex items-center justify-center h-48">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
