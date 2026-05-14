@@ -65,5 +65,10 @@ export async function login(
     return { error: "Your account is suspended. Please contact support." }
   }
 
+  await prisma.user.update({
+  where: { id: data.user.id },
+  data: { lastLoginAt: new Date() },
+})
+
   redirect('/features/dashboard')
 }
