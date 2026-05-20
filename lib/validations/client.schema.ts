@@ -124,6 +124,13 @@ export const applicantSchema = z.object({
   proposal: z.string().optional(),
   agreement: z.string().optional(),
   signature: z.string().optional(),
+  faId: z.number().nullable().optional(),
+  fmId: z.number().nullable().optional(),
+  bmId: z.number().nullable().optional(),
+  rmId: z.number().nullable().optional(),
+  zmId: z.number().nullable().optional(),
+  agmId: z.number().nullable().optional(),
+  ccoId: z.number().nullable().optional(),
 });
 
 // ─── Investment section (used in createClient form) ─────────────────────────

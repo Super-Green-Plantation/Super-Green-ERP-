@@ -1,0 +1,29 @@
+-- AlterTable
+ALTER TABLE "Client" ADD COLUMN     "agmId" INTEGER,
+ADD COLUMN     "bmId" INTEGER,
+ADD COLUMN     "ccoId" INTEGER,
+ADD COLUMN     "faId" INTEGER,
+ADD COLUMN     "fmId" INTEGER,
+ADD COLUMN     "rmId" INTEGER,
+ADD COLUMN     "zmId" INTEGER;
+
+-- AddForeignKey
+ALTER TABLE "Client" ADD CONSTRAINT "Client_faId_fkey" FOREIGN KEY ("faId") REFERENCES "Member"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Client" ADD CONSTRAINT "Client_fmId_fkey" FOREIGN KEY ("fmId") REFERENCES "Member"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Client" ADD CONSTRAINT "Client_bmId_fkey" FOREIGN KEY ("bmId") REFERENCES "Member"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Client" ADD CONSTRAINT "Client_rmId_fkey" FOREIGN KEY ("rmId") REFERENCES "Member"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Client" ADD CONSTRAINT "Client_zmId_fkey" FOREIGN KEY ("zmId") REFERENCES "Member"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Client" ADD CONSTRAINT "Client_agmId_fkey" FOREIGN KEY ("agmId") REFERENCES "Member"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Client" ADD CONSTRAINT "Client_ccoId_fkey" FOREIGN KEY ("ccoId") REFERENCES "Member"("id") ON DELETE SET NULL ON UPDATE CASCADE;

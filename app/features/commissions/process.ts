@@ -125,21 +125,21 @@ export async function processCommissions(data: {
         data: { commissionsProcessed: true, advisorId: advisor.id },
       });
 
-      const payrollMemberIds = [
-        advisor.id,
-        ...uplines.filter(u => !disabledSet.has(u.empNo)).map(u => u.id),
-        ...manualMembers.filter(m => !disabledSet.has(m.empNo)).map(m => m.id),
-      ];
+      // const payrollMemberIds = [
+      //   advisor.id,
+      //   ...uplines.filter(u => !disabledSet.has(u.empNo)).map(u => u.id),
+      //   ...manualMembers.filter(m => !disabledSet.has(m.empNo)).map(m => m.id),
+      // ];
 
-      await Promise.all(
-        payrollMemberIds.map(memberId =>
-          tx.monthlyPayroll.upsert({
-            where: { memberId_year_month: { memberId, year, month } },
-            update: { volumeAchieved: { increment: investment.amount } },
-            create: { memberId, year, month, basicSalaryPermanent: 0, monthlyTarget: 0, volumeAchieved: investment.amount },
-          })
-        )
-      );
+      // await Promise.all(
+      //   payrollMemberIds.map(memberId =>
+      //     tx.monthlyPayroll.upsert({
+      //       where: { memberId_year_month: { memberId, year, month } },
+      //       update: { volumeAchieved: { increment: investment.amount } },
+      //       create: { memberId, year, month, basicSalaryPermanent: 0, monthlyTarget: 0, volumeAchieved: investment.amount },
+      //     })
+      //   )
+      // );
 
       // Step 3 — advisor commission
       const updatedAdvisor = await tx.member.update({

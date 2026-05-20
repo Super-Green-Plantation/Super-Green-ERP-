@@ -10,9 +10,9 @@ const Table = (data: any) => {
                 <table className="w-full text-left border-collapse">
                     <thead>
                         <tr className="bg-muted/30 border-b border-border">
-                            <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                            {/* <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                                 Proposal Form No.
-                            </th>
+                            </th> */}
                             <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                                 Name
                             </th>
@@ -48,11 +48,11 @@ const Table = (data: any) => {
                                     className="hover:bg-muted/20 transition-colors group"
                                 >
                                     {/* ID Column */}
-                                    <td className="px-6 py-4">
+                                    {/* <td className="px-6 py-4">
                                         <span className="text-xs font-bold text-muted-foreground">
                                             {client.proposalFormNo || "#" + client?.id}
                                         </span>
-                                    </td>
+                                    </td> */}
 
                                     {/* Name Column */}
                                     <td className="px-6 py-4">

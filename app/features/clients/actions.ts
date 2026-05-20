@@ -11,6 +11,7 @@ import { ActivityAction, ActivityEntity, Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import crypto from "crypto"
 import nodemailer from "nodemailer";
+import { upsertVolumeAchieved } from "./_helpers";
 
 
 export async function getAccessibleClients(page = 1, pageSize = 10, searchText = "") {
@@ -241,20 +242,20 @@ export async function saveClient(data: {
           dateOfBirth: applicant.dateOfBirth ? new Date(applicant.dateOfBirth) : null,
           occupation: applicant.occupation || null,
           address: applicant.address,
-          // investmentAmount: Number(applicant.investmentAmount),
           branchId: applicant.branchId,
-          // proposalFormNo: applicant.proposalFormNo || null,
           signature: applicant.signature,
           idFront: applicant.idFront,
           idBack: applicant.idBack,
-          // paymentSlip: applicant.paymentSlip,
-          // proposal: applicant.proposal,
-          // agreement: applicant.agreement,
-          // memberId: member ? member.id : null,
           createdById: currentUser?.member?.id ?? null,
+          faId: applicant.faId ?? null,
+          fmId: applicant.fmId ?? null,
+          bmId: applicant.bmId ?? null,
+          rmId: applicant.rmId ?? null,
+          zmId: applicant.zmId ?? null,
+          agmId: applicant.agmId ?? null,
+          ccoId: applicant.ccoId ?? null,
         },
       });
-
 
       if (member) {
         await tx.member.update({
@@ -356,6 +357,37 @@ export async function saveClient(data: {
         },
       });
 
+      const hierarchyMemberIds = [
+        applicant.faId ?? null,
+        applicant.fmId ?? null,
+        applicant.bmId ?? null,
+        applicant.rmId ?? null,
+        applicant.zmId ?? null,
+        applicant.agmId ?? null,
+        applicant.ccoId ?? null,
+      ].filter((id): id is number => id !== null);
+
+      const uniqueHierarchyIds = [...new Set(hierarchyMemberIds)];
+
+      const year = investmentDate.getFullYear();
+      const month = investmentDate.getMonth() + 1;
+
+      await Promise.all(
+        uniqueHierarchyIds.map((memberId) =>
+          tx.monthlyPayroll.upsert({
+            where: { memberId_year_month: { memberId, year, month } },
+            update: { volumeAchieved: { increment: amount } },
+            create: {
+              memberId,
+              year,
+              month,
+              basicSalaryPermanent: 0,
+              monthlyTarget: 0,
+              volumeAchieved: amount,
+            },
+          })
+        )
+      );
       return { ...createClient, investments: [createInvestment] };
     });
 
@@ -872,8 +904,8 @@ export async function searchClients(searchText: string) {
 
 export async function updateBeneficiary(data: any) {
   try {
-      console.log(data);
-      
+    console.log(data);
+
     const updatedBeneficiary = await prisma.beneficiary.update({
       where: { id: data.id },
       data: {
@@ -916,23 +948,40 @@ export async function updateNominee(data: any) {
 }
 
 export async function deleteBeneficiaryAction(id: number) {
-  try{
+  try {
     await prisma.beneficiary.delete({
       where: { id },
     })
-  }catch (err) {
+  } catch (err) {
     console.error("Error deleting beneficiary:", err);
     return { success: false, error: "Failed to delete beneficiary" };
   }
 }
 
-export async function deleteNomineeAction(id:number){
-   try{
+export async function deleteNomineeAction(id: number) {
+  try {
     await prisma.nominee.delete({
       where: { id },
     })
-  }catch (err) {
+  } catch (err) {
     console.error("Error deleting nominee:", err);
     return { success: false, error: "Failed to delete nominee" };
   }
+}
+
+
+export async function searchMembersByName(query: string) {
+  return prisma.member.findMany({
+    where: {
+      nameWithInitials: { contains: query, mode: "insensitive" },
+      isActive: true,
+    },
+    select: {
+      id: true,
+      nameWithInitials: true,
+      empNo: true,
+      position: { select: { title: true } },
+    },
+    take: 8,
+  });
 }

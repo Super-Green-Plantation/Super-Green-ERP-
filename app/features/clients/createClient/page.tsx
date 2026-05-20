@@ -9,6 +9,7 @@ import Back from "@/app/components/Buttons/Back";
 import DocumentUploadSection from "./ClientDocuments";
 import Heading from "@/app/components/Heading";
 import { useRef, useState } from "react";
+import AdvisorHierarchy from "./MemberSearchInput";
 
 const Page = () => {
   const [resetKey, setResetKey] = useState(0);
@@ -43,6 +44,7 @@ const Page = () => {
 
           {/* Right Column: Supporting Details */}
           <div className="lg:col-span-1 space-y-6">
+            <AdvisorHierarchy />
             <BeneficiaryDetails />
             <NomineeDetails />
           </div>

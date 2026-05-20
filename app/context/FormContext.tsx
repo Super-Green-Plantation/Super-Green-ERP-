@@ -26,6 +26,13 @@ export interface FormData {
     agreement?: string;
     signature?: string;
     proposalFormNo?: string;
+    faId?: number | null;
+    fmId?: number | null;
+    bmId?: number | null;
+    rmId?: number | null;
+    zmId?: number | null;
+    agmId?: number | null;
+    ccoId?: number | null;
   };
   investment: {
     planId?: string;
@@ -94,6 +101,13 @@ export const defaultValues: FormData = {
     agreement: "",
     signature: "",
     proposalFormNo: "",
+    faId: null,
+    fmId: null,
+    bmId: null,
+    rmId: null,
+    zmId: null,
+    agmId: null,
+    ccoId: null,
   },
   beneficiary: {
     fullName: "",
