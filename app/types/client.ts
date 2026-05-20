@@ -69,3 +69,13 @@ export interface Nominee {
   createdAt: string | Date;
   updatedAt: string | Date;
 }
+
+export type LockedClient = {
+  id: number;
+  fullName: string;
+  nic: string | null;
+  branchId: number;
+  branch?: { name: string };
+  beneficiaries?: any[];
+  nominees?: any[];
+};

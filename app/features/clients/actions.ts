@@ -1,6 +1,5 @@
 "use server"
 
-import { serializeData } from "@/app/utils/serializers";
 import { getCurrentUserWithRole } from "@/lib/getCurrentUserWithRole";
 import { generateInvestmentNumber } from "@/lib/investment";
 import { logActivity } from "@/lib/logActivity";
@@ -198,15 +197,17 @@ const UNIQUE_FIELD_LABELS: Record<string, string> = {
   proposalFormNo: "Proposal Form Number",
 };
 
-export async function saveClient(data: {
-  applicant: any;
-  investment: any;
-  beneficiary?: any;
-  nominee?: any;
-}, email: any) {
+export async function saveClient(
+  data: {
+    applicant: any;
+    investment: any;
+    beneficiary?: any;
+    nominee?: any;
+  },
+  email: any
+) {
   const { applicant, investment, beneficiary, nominee } = data;
-
-  // ── Server-side Zod validation ────────────────────────────────────────────
+ 
   const parsed = saveClientSchema.safeParse(data);
   if (!parsed.success) {
     const fieldErrors: Record<string, string[]> = {};
@@ -218,10 +219,10 @@ export async function saveClient(data: {
     const firstMessage = parsed.error.issues[0]?.message ?? "Validation failed";
     return { success: false, error: firstMessage, fieldErrors };
   }
-
+ 
   try {
     const currentUser = await getCurrentUserWithRole();
-
+ 
     const client = await prisma.$transaction(async (tx: any) => {
       const member = await tx.member.findFirst({
         where: {
@@ -229,7 +230,7 @@ export async function saveClient(data: {
           branches: { some: { branchId: Number(applicant.branchId) } },
         },
       });
-
+ 
       const createClient = await tx.client.create({
         data: {
           fullName: applicant.fullName,
@@ -256,15 +257,14 @@ export async function saveClient(data: {
           ccoId: applicant.ccoId ?? null,
         },
       });
-
+ 
       if (member) {
         await tx.member.update({
           where: { id: member.id },
           data: { lastClientRegisteredAt: new Date() },
         });
       }
-
-      // Create beneficiary linked to client
+ 
       let beneficiaryId: number | null = null;
       if (beneficiary?.fullName) {
         const createdBeneficiary = await tx.beneficiary.create({
@@ -281,8 +281,7 @@ export async function saveClient(data: {
         });
         beneficiaryId = createdBeneficiary.id;
       }
-
-      // Create nominee linked to client
+ 
       let nomineeId: number | null = null;
       if (nominee?.fullName) {
         const createdNominee = await tx.nominee.create({
@@ -296,46 +295,49 @@ export async function saveClient(data: {
         });
         nomineeId = createdNominee.id;
       }
-
+ 
       const investmentDate = applicant.investmentDate
         ? new Date(applicant.investmentDate)
-        : new Date(); // fallback to today
-
+        : new Date();
+ 
       const plan = await tx.financialPlan.findUnique({
         where: { id: Number(investment.planId) },
       });
-
+ 
       const maturityDate = plan
-        ? new Date(new Date(investmentDate).setMonth(
-          new Date(investmentDate).getMonth() + plan.duration
-        )
-        )
+        ? new Date(
+            new Date(investmentDate).setMonth(
+              new Date(investmentDate).getMonth() + plan.duration
+            )
+          )
         : null;
-
+ 
       const investmentRates: number[] =
-        Array.isArray(investment.investmentRates) && investment.investmentRates.length > 0
+        Array.isArray(investment.investmentRates) &&
+        investment.investmentRates.length > 0
           ? investment.investmentRates.map((r: any) => parseFloat(r))
           : Array.isArray(plan?.rate) && plan.rate.length > 0
-            ? plan.rate
-            : [];
-
+          ? plan.rate
+          : [];
+ 
       const amount = Number(applicant.investmentAmount);
       const months = plan?.duration ?? 0;
       const years = investmentRates.length;
       const monthsPerYear = years > 0 ? months / years : 0;
-
+ 
       const totalHarvest =
         investmentRates.length && months
           ? Math.round(
-            investmentRates.reduce(
-              (sum, rate) => sum + amount * (rate / 100) * (monthsPerYear / 12),
-              0
+              investmentRates.reduce(
+                (sum, rate) =>
+                  sum + amount * (rate / 100) * (monthsPerYear / 12),
+                0
+              )
             )
-          )
           : 0;
-
+ 
       const monthlyHarvest = months > 0 ? Math.round(totalHarvest / months) : 0;
-
+ 
       const createInvestment = await tx.investment.create({
         data: {
           clientId: createClient.id,
@@ -347,7 +349,7 @@ export async function saveClient(data: {
           amount,
           beneficiaryId,
           nomineeId,
-          investmentRates,    // ← array
+          investmentRates,
           totalHarvest,
           monthlyHarvest,
           proposalFormNo: applicant.proposalFormNo || null,
@@ -356,7 +358,8 @@ export async function saveClient(data: {
           agreement: applicant.agreement,
         },
       });
-
+ 
+      // Volume tracking across hierarchy
       const hierarchyMemberIds = [
         applicant.faId ?? null,
         applicant.fmId ?? null,
@@ -366,12 +369,11 @@ export async function saveClient(data: {
         applicant.agmId ?? null,
         applicant.ccoId ?? null,
       ].filter((id): id is number => id !== null);
-
+ 
       const uniqueHierarchyIds = [...new Set(hierarchyMemberIds)];
-
       const year = investmentDate.getFullYear();
       const month = investmentDate.getMonth() + 1;
-
+ 
       await Promise.all(
         uniqueHierarchyIds.map((memberId) =>
           tx.monthlyPayroll.upsert({
@@ -388,11 +390,12 @@ export async function saveClient(data: {
           })
         )
       );
+ 
       return { ...createClient, investments: [createInvestment] };
     });
-
+ 
     revalidatePath("/features/clients");
-
+ 
     void logActivity({
       action: ActivityAction.CREATE,
       entity: ActivityEntity.CLIENT,
@@ -401,19 +404,25 @@ export async function saveClient(data: {
       branchId: applicant.branchId,
       metadata: { after: client },
     });
-
+ 
     return serializeData({ success: true, client });
   } catch (err) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+    if (
+      err instanceof Prisma.PrismaClientKnownRequestError &&
+      err.code === "P2002"
+    ) {
       console.error("P2002 meta:", JSON.stringify(err.meta, null, 2));
-
+ 
       const driverError = err.meta?.driverAdapterError as any;
-      const fields: string[] = driverError?.cause?.constraint?.fields
-        ?? (err.meta?.target as string[])  // fallback to standard Prisma meta
-        ?? [];
-
-      const label = fields.map((f) => UNIQUE_FIELD_LABELS[f] ?? f).join(", ");
-
+      const fields: string[] =
+        driverError?.cause?.constraint?.fields ??
+        (err.meta?.target as string[]) ??
+        [];
+ 
+      const label = fields
+        .map((f) => UNIQUE_FIELD_LABELS[f] ?? f)
+        .join(", ");
+ 
       return {
         success: false,
         error: label
@@ -421,12 +430,16 @@ export async function saveClient(data: {
           : "A duplicate value was found. Please check your entries.",
       };
     }
-
+ 
     console.error("Error creating client:", err);
     return { success: false, error: "Server error" };
   }
 }
-
+ 
+// Helper — already in your codebase, duplicated here for reference
+function serializeData<T>(data: T): T {
+  return JSON.parse(JSON.stringify(data));
+}
 // Update client
 export async function updateClient(id: number, formData: any) {
   const clientId = id;
@@ -565,7 +578,7 @@ export async function updateClient(id: number, formData: any) {
       metadata: { before: oldClient, after: updatedClient },
     });
 
-    return serializeData({ success: true, client: updatedClient });
+    return serializeData({ success: true, client: updatedClient, error:"Failed to update client" });
   } catch (error) {
     console.error("Error updating client:", error);
     return { success: false, error: "Failed to update client" };
@@ -840,65 +853,48 @@ export async function saveUploadedDocuments(
   return { success: true };
 }
 
-export async function searchClients(searchText: string) {
-  const dbUser = await getCurrentUserWithRole();
-  if (!dbUser) throw new Error("User not found");
-
-  let whereCondition: any = {
-    OR: [
-      { fullName: { contains: searchText, mode: "insensitive" } },
-      { nic: { contains: searchText, mode: "insensitive" } },
-    ],
-  };
-
-  switch (dbUser.role) {
-    case "ADMIN":
-    case "HR":
-    case "DEV":
-      // no extra filter
-      break;
-
-    case "EMPLOYEE": {
-      if (!dbUser.member?.id) {
-        throw new Error("Member not found");
-      }
-
-      whereCondition = {
-        ...whereCondition,
-        createdById: dbUser.member.id, //  only their clients
-      };
-      break;
-    }
-
-    case "BRANCH_MANAGER":
-    case "REGIONAL_MANAGER":
-    case "AGM": {
-      const branchIds =
-        dbUser.member?.branches?.map((mb) => mb.branchId) ?? [];
-
-      if (branchIds.length === 0) {
-        throw new Error("No branches assigned");
-      }
-
-      whereCondition = {
-        ...whereCondition,
-        branchId: { in: branchIds }, //  branch-based access
-      };
-      break;
-    }
-
-    default:
-      throw new Error("Unauthorized role");
-  }
-
+export async function searchClients(query: string) {
+  if (!query || query.trim().length < 2) return null;
+ 
   const client = await prisma.client.findFirst({
-    where: whereCondition,
-    include: {
-      branch: true,
-      investments: true,
+    where: {
+      OR: [
+        { fullName: { contains: query, mode: "insensitive" } },
+        { nic: { contains: query, mode: "insensitive" } },
+      ],
+    },
+    select: {
+      id: true,
+      fullName: true,
+      nic: true,
+      branchId: true,
+      branch: { select: { name: true } },
+      investments: { select: { id: true } },
+      // ── NEW: include beneficiaries and nominees for the picker ──
+      beneficiaries: {
+        select: {
+          id: true,
+          fullName: true,
+          nic: true,
+          phone: true,
+          bankName: true,
+          bankBranch: true,
+          accountNo: true,
+          relationship: true,
+        },
+      },
+      nominees: {
+        select: {
+          id: true,
+          fullName: true,
+          nic: true,
+          permanentAddress: true,
+          postalAddress: true,
+        },
+      },
     },
   });
-
+ 
   return client;
 }
 

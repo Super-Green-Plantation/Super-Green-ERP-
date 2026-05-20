@@ -298,7 +298,7 @@ export async function createInvestmentForExistingClient(data: {
   branchId: number;
   planId?: number;
   amount: number;
-  proposal: string;
+  proposal?: string;
   investmentDate?: Date;
   investmentRates?: number[];
   beneficiaryId?: number | null;
@@ -318,8 +318,15 @@ export async function createInvestmentForExistingClient(data: {
     permanentAddress: string;
     postalAddress?: string;
   } | null;
+  // ── NEW: optional hierarchy for volume tracking ───────────────────────────
+  faId?: number | null;
+  fmId?: number | null;
+  bmId?: number | null;
+  rmId?: number | null;
+  zmId?: number | null;
+  agmId?: number | null;
+  ccoId?: number | null;
 }) {
-  // ── Server-side Zod validation ────────────────────────────────────────────
   const parsed = createInvestmentForExistingClientSchema.safeParse(data);
   if (!parsed.success) {
     const fieldErrors: Record<string, string[]> = {};
@@ -331,14 +338,14 @@ export async function createInvestmentForExistingClient(data: {
     const firstMessage = parsed.error.issues[0]?.message ?? "Validation failed";
     return { success: false, error: firstMessage, fieldErrors };
   }
-
+ 
   try {
     const currentUser = await getCurrentUserWithRole();
-
+ 
     const result = await prisma.$transaction(async (tx) => {
       let beneficiaryId = data.beneficiaryId ?? null;
       let nomineeId = data.nomineeId ?? null;
-
+ 
       if (data.newBeneficiary?.fullName) {
         const b = await tx.beneficiary.create({
           data: {
@@ -349,7 +356,7 @@ export async function createInvestmentForExistingClient(data: {
         });
         beneficiaryId = b.id;
       }
-
+ 
       if (data.newNominee?.fullName) {
         const n = await tx.nominee.create({
           data: {
@@ -362,42 +369,41 @@ export async function createInvestmentForExistingClient(data: {
         });
         nomineeId = n.id;
       }
-
+ 
       const investmentDate = data.investmentDate ?? new Date();
-
+ 
       const plan = data.planId
         ? await tx.financialPlan.findUnique({ where: { id: data.planId } })
         : null;
-
+ 
       const maturityDate = plan
         ? new Date(
-          new Date(investmentDate).setMonth(
-            new Date(investmentDate).getMonth() + plan.duration
+            new Date(investmentDate).setMonth(
+              new Date(investmentDate).getMonth() + plan.duration
+            )
           )
-        )
         : null;
-
-
-
+ 
       const investmentRates: number[] =
-        data.investmentRates?.length
-          ? data.investmentRates
-          : plan?.rate ?? [];
-
+        data.investmentRates?.length ? data.investmentRates : plan?.rate ?? [];
+ 
       const months = plan?.duration ?? 0;
       const years = investmentRates.length;
       const monthsPerYear = years > 0 ? months / years : 0;
-
+ 
       const totalHarvest =
         investmentRates.length && months
           ? investmentRates.reduce(
-            (sum, rate) => sum + data.amount * (rate / 100) * (monthsPerYear / 12),
-            0
-          )
+              (sum, rate) =>
+                sum + data.amount * (rate / 100) * (monthsPerYear / 12),
+              0
+            )
           : null;
-      const monthlyHarvest = totalHarvest && months ? totalHarvest / months : null;
-
-      return tx.investment.create({
+ 
+      const monthlyHarvest =
+        totalHarvest && months ? totalHarvest / months : null;
+ 
+      const investment = await tx.investment.create({
         data: {
           clientId: data.clientId,
           branchId: data.branchId,
@@ -406,7 +412,7 @@ export async function createInvestmentForExistingClient(data: {
           maturityDate,
           amount: data.amount,
           refNumber: generateInvestmentNumber(),
-          investmentRates: data.investmentRates,
+          investmentRates,
           totalHarvest,
           monthlyHarvest,
           beneficiaryId,
@@ -414,10 +420,47 @@ export async function createInvestmentForExistingClient(data: {
           proposalFormNo: data.proposal,
         },
       });
+ 
+      // ── Volume tracking for hierarchy members (if provided) ───────────────
+      const hierarchyMemberIds = [
+        data.faId ?? null,
+        data.fmId ?? null,
+        data.bmId ?? null,
+        data.rmId ?? null,
+        data.zmId ?? null,
+        data.agmId ?? null,
+        data.ccoId ?? null,
+      ].filter((id): id is number => id !== null);
+ 
+      const uniqueHierarchyIds = [...new Set(hierarchyMemberIds)];
+ 
+      if (uniqueHierarchyIds.length > 0) {
+        const year = investmentDate.getFullYear();
+        const month = investmentDate.getMonth() + 1;
+ 
+        await Promise.all(
+          uniqueHierarchyIds.map((memberId) =>
+            tx.monthlyPayroll.upsert({
+              where: { memberId_year_month: { memberId, year, month } },
+              update: { volumeAchieved: { increment: data.amount } },
+              create: {
+                memberId,
+                year,
+                month,
+                basicSalaryPermanent: 0,
+                monthlyTarget: 0,
+                volumeAchieved: data.amount,
+              },
+            })
+          )
+        );
+      }
+ 
+      return investment;
     });
-
+ 
     revalidatePath("/features/investments");
-
+ 
     void logActivity({
       action: ActivityAction.CREATE,
       entity: ActivityEntity.INVESTMENT,
@@ -426,8 +469,8 @@ export async function createInvestmentForExistingClient(data: {
       branchId: data.branchId,
       metadata: { after: result },
     });
-
-    return serializeData({ success: true, investment: result });
+ 
+    return JSON.parse(JSON.stringify({ success: true, investment: result }));
   } catch (err) {
     console.error("createInvestmentForExistingClient error:", err);
     return { success: false, error: "Failed to create investment" };

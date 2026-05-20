@@ -46,12 +46,15 @@ export interface FormData {
     bankBranch?: string;
     accountNo?: string;
     relationship?: string;
+    _existingId?: number | string; // For tracking if user picked an existing beneficiary
   };
   nominee: {
     fullName?: string;
     permanentAddress?: string;
     postalAddress?: string;
     nic?: string;
+
+    _existingId?: number | string; // For tracking if user picked an existing nominee
   };
 }
 
@@ -117,12 +120,14 @@ export const defaultValues: FormData = {
     bankBranch: "",
     accountNo: "",
     relationship: "",
+    _existingId: "",
   },
   nominee: {
     fullName: "",
     permanentAddress: "",
     postalAddress: "",
     nic: "",
+    _existingId: "",
   },
   investment: {
     planId: "",
