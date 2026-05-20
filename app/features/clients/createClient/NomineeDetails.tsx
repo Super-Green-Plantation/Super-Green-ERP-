@@ -85,7 +85,7 @@ const NomineeDetails = ({ lockedClient }: Props) => {
                   >
                     <div>
                       <p className="text-sm font-black text-foreground">{n.fullName}</p>
-                      <p className="text-[11px] text-muted-foreground font-bold mt-0.5 truncate max-w-[200px]">
+                      <p className="text-[11px] text-muted-foreground font-bold mt-0.5 truncate max-w-50">
                         {n.permanentAddress}
                       </p>
                     </div>

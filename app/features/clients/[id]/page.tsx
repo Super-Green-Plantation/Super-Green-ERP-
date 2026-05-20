@@ -186,14 +186,14 @@ export default function ApplicationViewPage() {
         <div className="flex gap-3 w-full md:w-auto">
           <button
             onClick={() => setShowUpdateModel(true)}
-            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-3 bg-muted border border-border text-foreground hover:bg-muted/80 text-[11px] font-bold uppercase tracking-widest rounded-xl hover:bg-muted/80 transition-all active:scale-95 shadow-none"
+            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-3 bg-muted border border-border text-foreground hover:bg-muted/80 text-[11px] font-bold uppercase tracking-widest rounded-xl transition-all active:scale-95 shadow-none"
           >
             <Pen className="w-4 h-4" />
             Update Profile
           </button>
           <button
             onClick={() => generateClientApplicationPDF(proposalRef.current, `Proposal_${formData?.applicant?.fullName?.replace(/\s+/g, '_')}`)}
-            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-3 bg-primary text-primary-foreground hover:opacity-90 text-[11px] font-bold uppercase tracking-widest rounded-xl hover:opacity-90 transition-all active:scale-95 shadow-none"
+            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-3 bg-primary text-primary-foreground hover:opacity-90 text-[11px] font-bold uppercase tracking-widest rounded-xl transition-all active:scale-95 shadow-none"
           >
             <Download className="w-4 h-4" />
             Download PDF

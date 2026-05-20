@@ -60,10 +60,10 @@ export function ProposalReportExport() {
       <Button
         onClick={handleExport}
         disabled={!from || !to || loading}
-        className="w-full md:w-auto shrink-0"
+        // className="w-full md:w-auto shrink-0"
       >
         {loading ? (
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          <Loader2  />
         ) : (
           <Download className="mr-2 h-4 w-4" />
         )}
