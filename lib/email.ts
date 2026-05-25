@@ -1,18 +1,5 @@
 import nodemailer from "nodemailer";
-
-// Create transporter from environment SMTP config
-const transporter = nodemailer.createTransport({
-  // host: process.env.EMAIL_HOST,
-  // port: Number(process.env.EMAIL_PORT ?? 465),
-  service: "gmail",
-  // secure: process.env.EMAIL_PORT === "465", // true only for port 465
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
-await transporter.verify();
+import { Resend } from "resend";
 
 interface SendWelcomeEmailOptions {
   to: string;
@@ -21,24 +8,38 @@ interface SendWelcomeEmailOptions {
   tempPassword: string;
 }
 
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+
 export async function sendWelcomeEmail({
   to,
   name,
   empNo,
   tempPassword,
 }: SendWelcomeEmailOptions) {
+//   const transporter = nodemailer.createTransport({
+//   host: process.env.EMAIL_HOST,
+//   port: 465,
+//   secure: true,
+//   auth: {
+//     user: process.env.EMAIL_USER,
+//     pass: process.env.EMAIL_PASS,
+//   },
+// });
+
   const appUrl = process.env.APP_URL;
 
-  await transporter.sendMail({
+  const {error} = await resend.emails.send({
     from: `"Super Green" <${process.env.EMAIL_USER}>`,
     to,
     subject: "Welcome to Super Green — Your Account is Ready",
-    // Attach the image so we can reference it via 'cid'
-    attachments: [{
-      filename: 'logo.png',
-      path: './public/logo.png', // Path to your file
-      cid: 'supergreen-logo' // Same identifier used in the <img> tag
-    }],
+    // attachments: [
+    //   {
+    //     filename: "logo.png",
+    //     // path: "./public/logo.png",
+    //     // cid: "supergreen-logo",
+    //   },
+    // ],
     html: `
       <!DOCTYPE html>
       <html lang="en">
@@ -54,7 +55,7 @@ export async function sendWelcomeEmail({
               <div style="max-width: 600px; width: 100%; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); border: 1px solid #e2e8f0;">
                 
                 <div style="background-color: #064e3b; padding: 32px; text-align: center;">
-                  <img src="cid:supergreen-logo" alt="Super Green Logo" style="height: 60px; width: auto; margin-bottom: 12px;">
+                  <img src="https://res.cloudinary.com/dog9jzbgz/image/upload/v1779696006/logo_gskayp.png" alt="Super Green Logo" style="height: 60px; width: auto; margin-bottom: 12px;">
                   <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 700;">Super Green ERP</h1>
                   <p style="color: #6ee7b7; margin: 4px 0 0; font-size: 14px; text-transform: uppercase;">Employee Management Portal</p>
                 </div>
@@ -110,8 +111,9 @@ export async function sendWelcomeEmail({
       </html>
     `,
   });
-}
+    if (error) throw new Error(`Welcome email failed: ${error.message}`);
 
+}
 
 export function generateTempPassword(): string {
   const upper = "ABCDEFGHJKLMNPQRSTUVWXYZ";
@@ -126,6 +128,5 @@ export function generateTempPassword(): string {
     rand(digits), rand(digits), rand(digits),
   ];
 
-  // Shuffle to avoid predictable pattern
   return parts.sort(() => Math.random() - 0.5).join("");
 }
