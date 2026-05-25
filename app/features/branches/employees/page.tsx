@@ -19,6 +19,8 @@ import {
   getBranchThisMonthProposalCount,
 } from "../actions";
 import { searchEmployees } from "../../employees/actions";
+import { usePermission } from "@/app/hooks/usePermission";
+import { PERMISSIONS } from "@/lib/auth/permissions";
 
 type TabId = "employees" | "network";
 
@@ -55,6 +57,7 @@ const Page = () => {
   const [networkLoading, setNetworkLoading] = useState(false);
   const [networkSearchQuery, setNetworkSearchQuery] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   // ── Shared fetches ───────────────────────────────────────────────────────
   useEffect(() => {
@@ -112,6 +115,22 @@ const Page = () => {
       fetchNetworkData();
     }
   };
+  const getLoggedUserRole = async () => {
+    const role = await fetch("/api/me").then((res) => res.json());
+    setUserRole(role.role);
+  }
+  useEffect(() => {
+    getLoggedUserRole();
+
+  }, []);
+
+  // const canEdit = usePermission(
+  //   userRole,
+  //   PERMISSIONS.CREATE_FINANCIAL_PLAN
+  // );
+
+  const canEdit = usePermission(userRole, PERMISSIONS.UPDATE_FINANCIAL_PLAN);
+
 
   // ── Early returns ────────────────────────────────────────────────────────
   if (branchesLoading) return <Loading />;
@@ -128,7 +147,11 @@ const Page = () => {
           {/* Header Section */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <Heading>Branch Management</Heading>
+              {canEdit ? (
+                <Heading>Branch Management</Heading>
+              ) : (
+                <Heading>Employee Management</Heading>
+              )}
               <p className="text-sm text-muted-foreground font-medium mt-1 max-w-2xl">
                 {activeTab === "employees"
                   ? "Select a branch to view and manage team members and their profiles."
@@ -137,193 +160,205 @@ const Page = () => {
             </div>
 
             {/* Export Section - Full width on mobile, auto on desktop */}
-            <div className="w-full sm:w-auto flex shrink-0">
-              {activeTab === "network" && (
-                <ExportButton
-                  className="w-full sm:w-auto"
-                  data={networkBranches}
-                  exportFn={generateBranchNetworkPDF}
-                  label="Network Report"
-                />
-              )}
-              {activeTab === "employees" && (
-                <div className="w-full sm:w-auto">
-                  <ProposalReportExport />
-                </div>
-              )}
-            </div>
+            {canEdit && (
+              <div className="w-full sm:w-auto flex shrink-0">
+                {activeTab === "network" && (
+                  <ExportButton
+                    className="w-full sm:w-auto"
+                    data={networkBranches}
+                    exportFn={generateBranchNetworkPDF}
+                    label="Network Report"
+                  />
+                )}
+                {activeTab === "employees" && (
+                  <div className="w-full sm:w-auto">
+                    <ProposalReportExport />
+                  </div>
+                )}
+              </div>
+            )}
+
           </div>
         </div>
       </div>
 
       {/* Wrap both in a responsive container */}
-      <div className="flex flex-col-reverse md:flex-row md:items-center md:justify-between gap-4">
-
-        {/* 1. Add Button (Now placed second in the DOM for mobile reversal, or handled via flex-col-reverse) */}
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-xl shadow-primary/10 active:scale-95 hover:opacity-90 w-full md:w-auto"
-        >
-          <Plus className="w-4 h-4" />
-          Add Branch
-        </button>
-
-        {/* 2. Tab switcher */}
-        <div className="flex gap-1 bg-muted/40 border border-border rounded-2xl p-1 w-full md:w-fit">
-          {(
-            [
-              { id: "employees", label: "Branch Employees" },
-              { id: "network", label: "Branch Network" },
-            ] as { id: TabId; label: string }[]
-          ).map(({ id, label }) => (
+      {canEdit && (
+        <div className="flex flex-col-reverse md:flex-row md:items-center md:justify-between gap-4">
+          <div>
             <button
-              key={id}
-              onClick={() => handleTabSwitch(id)}
-              className={`px-6 py-3 flex-1 md:flex-none rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${activeTab === id
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-xl shadow-primary/10 active:scale-95 hover:opacity-90 w-full md:w-auto"
+            >
+              <Plus className="w-4 h-4" />
+              Add Branch
+            </button>
+
+          </div>
+
+          <div className="flex gap-1 bg-muted/40 border border-border rounded-2xl p-1 w-full md:w-fit">
+            {(
+              [
+                { id: "employees", label: "Branch Employees" },
+                { id: "network", label: "Branch Network" },
+              ] as { id: TabId; label: string }[]
+            ).map(({ id, label }) => (
+              <button
+                key={id}
+                onClick={() => handleTabSwitch(id)}
+                className={`px-6 py-3 flex-1 md:flex-none rounded-xl text-xs font-bold uppercase tracking-widest transition-all ${activeTab === id
                   ? "bg-primary text-primary-foreground shadow"
                   : "text-muted-foreground hover:text-foreground"
-                }`}
-            >
-              {label}
-            </button>
-          ))}
+                  }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
+
 
       {/* ══════════════════════════════════════════════════════════════
           TAB: BRANCH EMPLOYEES
       ══════════════════════════════════════════════════════════════ */}
-      {activeTab === "employees" && (
-        <>
-          {/* Employee search */}
-          <div className="relative w-full">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <input
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              type="text"
-              placeholder="Search by name, employee ID"
-              className="w-full bg-transparent border-2 border-teal-800 rounded-full pl-11 pr-4 py-3 text-sm font-semibold outline-none"
-            />
+      {
+        activeTab === "employees" && (
+          <>
+            {/* Employee search */}
+            <div className="relative w-full">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <input
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                type="text"
+                placeholder="Search by name, employee ID"
+                className="w-full bg-transparent border-2 border-teal-800 rounded-full pl-11 pr-4 py-3 text-sm font-semibold outline-none"
+              />
 
-            {searchText && (
-              <div className="absolute z-50 mt-2 w-full dark:bg-teal-900 bg-white border border-border rounded-2xl shadow-xl max-h-72 overflow-y-auto">
-                {empSearchLoading ? (
-                  <div className="p-4 text-sm text-muted-foreground">Searching…</div>
-                ) : results.length === 0 ? (
-                  <div className="p-4 text-sm text-muted-foreground">No employees found</div>
-                ) : (
-                  results.map((emp) => (
-                    <div
-                      key={emp.id}
-                      onClick={() =>
-                        window.open(
-                          `/features/branches/employees/${emp?.branches[0]?.branchId}/${emp.id}`,
-                          "_blank"
-                        )
-                      }
-                      className="px-4 py-3 hover:bg-muted cursor-pointer flex flex-col"
-                    >
-                      <span className="text-sm font-bold">{emp.nameWithInitials}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {emp.empNo} • {emp.nic}
-                      </span>
-                    </div>
-                  ))
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Branch cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {branch?.map((b: Branch) => {
-              const proposals = proposalMap.get(b.id) ?? 0;
-              return (
-                <Link key={b.id} href={`/features/branches/employees/${b.id}`} className="group">
-                  <div className="rounded-3xl border border-border bg-card p-6 transition-all duration-300 hover:bg-muted/50 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5 group-active:scale-[0.98]">
-                    <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 flex items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 shrink-0">
-                        <Users size={20} />
+              {searchText && (
+                <div className="absolute z-50 mt-2 w-full dark:bg-teal-900 bg-white border border-border rounded-2xl shadow-xl max-h-72 overflow-y-auto">
+                  {empSearchLoading ? (
+                    <div className="p-4 text-sm text-muted-foreground">Searching…</div>
+                  ) : results.length === 0 ? (
+                    <div className="p-4 text-sm text-muted-foreground">No employees found</div>
+                  ) : (
+                    results.map((emp) => (
+                      <div
+                        key={emp.id}
+                        onClick={() =>
+                          window.open(
+                            `/features/branches/employees/${emp?.branches[0]?.branchId}/${emp.id}`,
+                            "_blank"
+                          )
+                        }
+                        className="px-4 py-3 hover:bg-muted cursor-pointer flex flex-col"
+                      >
+                        <span className="text-sm font-bold">{emp.nameWithInitials}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {emp.empNo} • {emp.nic}
+                        </span>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <h3 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors truncate">
-                          {b.name}
-                        </h3>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Branch cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {branch?.map((b: Branch) => {
+                const proposals = proposalMap.get(b.id) ?? 0;
+                return (
+                  <Link key={b.id} href={`/features/branches/employees/${b.id}`} className="group">
+                    <div className="rounded-3xl border border-border bg-card p-6 transition-all duration-300 hover:bg-muted/50 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5 group-active:scale-[0.98]">
+                      <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 flex items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 shrink-0">
+                          <Users size={20} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors truncate">
+                            {b.name}
+                          </h3>
                           <span className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest bg-muted px-2 py-0.5 rounded-lg border border-border/50">
                             {b.members.length} Staff
                           </span>
-                          
-                        <p className="text-[10px] font-bold text-primary uppercase tracking-[0.15em] mt-3 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
-                          Manage Team →
-                        </p>
+
+                          <p className="text-[10px] font-bold text-primary uppercase tracking-[0.15em] mt-3 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
+                            Manage Team →
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </>
-      )}
+                  </Link>
+                );
+              })}
+            </div>
+          </>
+        )
+      }
 
       {/* ══════════════════════════════════════════════════════════════
           TAB: BRANCH NETWORK
       ══════════════════════════════════════════════════════════════ */}
-      {activeTab === "network" && (
-        <>
-          {/* <p className="text-sm font-bold text-foreground -mt-4">
+      {
+        activeTab === "network" && (
+          <>
+            {/* <p className="text-sm font-bold text-foreground -mt-4">
             Total Branches: {networkLoading ? "—" : networkBranches.length}
           </p> */}
 
-          {/* Network search */}
-          <div className="border-2 border-teal-800 rounded-full shadow-sm flex items-center">
-            <div className="relative w-full">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Search branch"
-                className="w-full bg-muted/30 border-none rounded-xl pl-11 pr-4 py-3 text-sm font-bold text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/10 transition-all outline-none"
-                value={networkSearchQuery}
-                onChange={(e) => setNetworkSearchQuery(e.target.value)}
-              />
+            {/* Network search */}
+            <div className="border-2 border-teal-800 rounded-full shadow-sm flex items-center">
+              <div className="relative w-full">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Search branch"
+                  className="w-full bg-muted/30 border-none rounded-xl pl-11 pr-4 py-3 text-sm font-bold text-foreground placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/10 transition-all outline-none"
+                  value={networkSearchQuery}
+                  onChange={(e) => setNetworkSearchQuery(e.target.value)}
+                />
+              </div>
             </div>
-          </div>
 
-          {/* Branch table */}
-          {networkLoading ? (
-            <div className="flex flex-col items-center justify-center h-64 gap-4">
-              <Loading />
-              <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest animate-pulse">
-                Loading Branch Network…
-              </p>
-            </div>
-          ) : (
-            <BranchTable
-              data={networkBranches.filter(
-                (b) =>
-                  b.name?.toLowerCase().includes(networkSearchQuery.toLowerCase()) ||
-                  b.location?.toLowerCase().includes(networkSearchQuery.toLowerCase())
-              )}
-              isLoading={networkLoading}
-              onRefresh={fetchNetworkData}
-            />
-          )}
-        </>
-      )}
+            {/* Branch table */}
+            {networkLoading ? (
+              <div className="flex flex-col items-center justify-center h-64 gap-4">
+                <Loading />
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest animate-pulse">
+                  Loading Branch Network…
+                </p>
+              </div>
+            ) : (
+              <BranchTable
+                data={networkBranches.filter(
+                  (b) =>
+                    b.name?.toLowerCase().includes(networkSearchQuery.toLowerCase()) ||
+                    b.location?.toLowerCase().includes(networkSearchQuery.toLowerCase())
+                )}
+                isLoading={networkLoading}
+                onRefresh={fetchNetworkData}
+              />
+            )}
+          </>
+        )
+      }
 
       {/* ── Add Branch modal (shared) ── */}
-      {showAddModal && (
-        <BranchModal
-          mode="add"
-          onClose={() => {
-            setShowAddModal(false);
-            // Refresh whichever tab is visible
-            if (activeTab === "network") fetchNetworkData();
-          }}
-        />
-      )}
-    </div>
+      {
+        showAddModal && (
+          <BranchModal
+            mode="add"
+            onClose={() => {
+              setShowAddModal(false);
+              // Refresh whichever tab is visible
+              if (activeTab === "network") fetchNetworkData();
+            }}
+          />
+        )
+      }
+    </div >
   );
 };
 

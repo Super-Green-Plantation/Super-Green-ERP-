@@ -3,8 +3,40 @@ import { PWAInstallButton } from "../Buttons/PWAInstallButton";
 import { ThemeToggle } from "../ThemeToggle";
 import { UserAvatar } from "./UserAvatar";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { getEmployeeMonthlyGoal } from "@/app/features/employees/actions";
 
-export  const RestrictedView = ({ data, userName, userRole, achieved, target, percentage, isMounted }: any) => {
+
+const MONTH_NAMES = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+export const RestrictedView = ({ data, userName, userRole, achieved, target, percentage, isMounted, memberId }: any) => {
+  const now = new Date();
+  const [personalGoal, setPersonalGoal] = useState<{
+    achieved: number;
+    target: number;
+    percentage: number;
+    incentiveHit: boolean;
+    allowanceHit: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!memberId) return;
+    getEmployeeMonthlyGoal(memberId, now.getFullYear(), now.getMonth() + 1)
+      .then(setPersonalGoal);
+  }, [memberId]);
+
   return (
     <div className="max-w-7xl mx-auto min-h-screen bg-transparent p-4 sm:p-8 flex flex-col items-center justify-center">
       {/* Top Header with Theme Toggle */}
@@ -14,7 +46,7 @@ export  const RestrictedView = ({ data, userName, userRole, achieved, target, pe
           <div className="h-6 w-px bg-border/50 mx-2 hidden sm:block"></div>
         </div>
       </div>
-          <PWAInstallButton />
+      <PWAInstallButton />
 
 
       <div className="w-full max-w-4xl space-y-12 animate-in fade-in slide-in-from-bottom-10 duration-1000">
@@ -37,6 +69,26 @@ export  const RestrictedView = ({ data, userName, userRole, achieved, target, pe
             Real-time synchronization of enterprise targets and collective achievements.
           </p>
         </div>
+
+        {/* Personal Goal */}
+        {personalGoal ? (
+          <GoalRingCard
+            label="My Target"
+            sublabel={MONTH_NAMES[now.getMonth()] + " " + now.getFullYear()}
+            achieved={personalGoal.achieved}
+            target={personalGoal.target}
+            percentage={personalGoal.percentage}
+            badges={[
+              personalGoal.incentiveHit ? "Incentive Hit ✓" : null,
+              personalGoal.allowanceHit ? "Allowance Hit ✓" : null,
+              // personalGoal.isFallback ? "Pending Processing" : null,  
+            ].filter(Boolean) as string[]}
+          />
+        ) : (
+          <div className="relative bg-card/40 backdrop-blur-3xl border border-white/10 rounded-[3rem] p-12 flex items-center justify-center text-muted-foreground text-sm">
+            No payroll record for this month yet.
+          </div>
+        )}
 
         {/* Massive Progress Visualization */}
         <div className="relative group">
@@ -149,3 +201,87 @@ export  const RestrictedView = ({ data, userName, userRole, achieved, target, pe
     </div>
   );
 };
+
+
+function GoalRingCard({
+  label, sublabel, achieved, target, percentage, badges = []
+}: {
+  label: string;
+  sublabel: string;
+  achieved: number;
+  target: number;
+  percentage: number;
+  badges?: string[];
+}) {
+  return (
+    <div className="relative group">
+      <div className="absolute -inset-4 bg-linear-to-r from-primary/20 via-accent/20 to-primary/20 rounded-[4rem] blur-3xl opacity-50 group-hover:opacity-100 transition-opacity duration-1000" />
+
+      <div className="relative bg-card/40 backdrop-blur-3xl border border-white/10 rounded-[3rem] p-10 shadow-2xl overflow-hidden flex flex-col items-center gap-8">
+
+        <div className="text-center">
+          <p className="text-[10px] font-black uppercase tracking-widest text-primary">{label}</p>
+          <p className="text-xs text-muted-foreground mt-1">{sublabel}</p>
+        </div>
+
+        {/* Ring */}
+        <div className="relative w-48 h-48 shrink-0">
+          <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" strokeWidth="10" className="text-muted/10" />
+            <circle
+              cx="50" cy="50" r="42"
+              fill="none"
+              stroke="url(#gradient2)"
+              strokeWidth="10"
+              strokeDasharray={`${2 * Math.PI * 42}`}
+              strokeDashoffset={`${2 * Math.PI * 42 * (1 - percentage / 100)}`}
+              strokeLinecap="round"
+              className="transition-all duration-1000 ease-out"
+            />
+            <defs>
+              <linearGradient id="gradient2" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#10b981" />
+                <stop offset="100%" stopColor="#0ea5e9" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className="text-5xl font-black text-foreground tracking-tighter">{percentage}%</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground mt-1">Achieved</span>
+          </div>
+        </div>
+
+        {/* Numbers */}
+        <div className="w-full space-y-3">
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Achieved</span>
+            <span className="font-bold text-foreground">Rs. {(achieved / 1000000).toFixed(2)}M</span>
+          </div>
+          <div className="h-1.5 w-full bg-muted/20 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-linear-to-r from-emerald-500 to-sky-500 transition-all duration-1000 ease-out"
+              style={{ width: `${percentage}%` }}
+            />
+          </div>
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>Target: Rs. {(target / 1000000).toFixed(2)}M</span>
+            <span>Remaining: Rs. {Math.max(0, (target - achieved) / 1000000).toFixed(2)}M</span>
+          </div>
+        </div>
+
+        {/* Badges */}
+        {badges.map((b) => (
+          <span
+            key={b}
+            className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border ${b === "Pending Processing"
+                ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                : "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+              }`}
+          >
+            {b}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}

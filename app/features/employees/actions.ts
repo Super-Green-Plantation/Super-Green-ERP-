@@ -619,3 +619,78 @@ export async function searchEmployees(searchText: string) {
     take: 10, //  limit for dropdown
   });
 }
+
+export async function getEmployeeMonthlyGoal(memberId: number, year: number, month: number) {
+  try {
+    // Try MonthlyPayroll first
+    const payroll = await prisma.monthlyPayroll.findUnique({
+      where: { memberId_year_month: { memberId, year, month } },
+      select: {
+        volumeAchieved: true,
+        monthlyTarget: true,
+        incentiveHit: true,
+        allowanceHit: true,
+      },
+    });
+
+    if (payroll) {
+      return {
+        achieved: payroll.volumeAchieved,
+        target: payroll.monthlyTarget,
+        percentage: payroll.monthlyTarget > 0
+          ? Math.min(100, Math.round((payroll.volumeAchieved / payroll.monthlyTarget) * 100))
+          : 0,
+        incentiveHit: payroll.incentiveHit,
+        allowanceHit: payroll.allowanceHit,
+        isFallback: false,
+      };
+    }
+
+    // Fall back to PositionTarget
+    const member = await prisma.member.findUnique({
+      where: { id: memberId },
+      select: {
+        dateOfJoin: true,
+        position: {
+          select: {
+            id: true,
+          },
+        },
+      },
+    });
+
+    if (!member?.position || !member.dateOfJoin) return null;
+
+    // Calculate how many months since joined to get periodNumber and monthNumber
+    const joined = new Date(member.dateOfJoin);
+    const totalMonths =
+      (year - joined.getFullYear()) * 12 + (month - (joined.getMonth() + 1));
+    const periodNumber = Math.floor(totalMonths / 12) + 1;
+    const monthNumber = (totalMonths % 12) + 1;
+
+    const positionTarget = await prisma.positionTarget.findUnique({
+      where: {
+        positionId_periodNumber_monthNumber: {
+          positionId: member.position.id,
+          periodNumber,
+          monthNumber,
+        },
+      },
+      select: { targetAmount: true },
+    });
+
+    if (!positionTarget) return null;
+
+    return {
+      achieved: 0,
+      target: positionTarget.targetAmount,
+      percentage: 0,
+      incentiveHit: false,
+      allowanceHit: false,
+      isFallback: true,
+    };
+  } catch (error) {
+    console.error("Error fetching employee monthly goal:", error);
+    return null;
+  }
+}
