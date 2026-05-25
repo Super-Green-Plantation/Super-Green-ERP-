@@ -1,0 +1,1 @@
+Invoke-WebRequest -Uri "https://super-green-erp.vercel.app/api/cron/birthday-check" -Headers @{ Authorization = "Bearer fsbgfvgvgbhdthvv5e6yvcer6tcw4e5ct" }
