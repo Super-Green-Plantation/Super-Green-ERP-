@@ -16,7 +16,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Check, Loader2, MoreVertical } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { deleteUser, updateUserRole } from './action';
+import { deleteUser, resendWelcomeEmail, updateUserRole } from './action';
 
 export const ActionMenu = ({ userId, currentRole, email }: { userId: string; currentRole: Role; email: string }) => {
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
@@ -66,6 +66,18 @@ export const ActionMenu = ({ userId, currentRole, email }: { userId: string; cur
     }
   };
 
+  const handleResendCredentials = async () => {
+    setLoadingAction('resend');
+    try {
+      await resendWelcomeEmail(userId);
+      toast.success('Credentials resent successfully');
+    } catch {
+      toast.error('Failed to resend credentials');
+    } finally {
+      setLoadingAction(null);
+    }
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -106,7 +118,17 @@ export const ActionMenu = ({ userId, currentRole, email }: { userId: string; cur
           Reset Password
         </DropdownMenuItem>
 
+
         <DropdownMenuSeparator />
+
+        <DropdownMenuItem
+          onClick={handleResendCredentials}
+          disabled={loadingAction === 'resend'}
+          className="font-semibold text-sm"
+        >
+          {loadingAction === 'resend' && <Loader2 size={12} className="animate-spin mr-2" />}
+          Resend Credentials
+        </DropdownMenuItem>
 
         {/* Delete User */}
         <DropdownMenuItem
