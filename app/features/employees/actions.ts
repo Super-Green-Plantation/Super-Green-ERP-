@@ -323,17 +323,17 @@ export async function updateEmployee(memberId: number, data: EmpData) {
             name: data.nameWithInitials,
             role: "EMPLOYEE",
             branchId: data.branchIds[0],
-          },
+          }, 
         });
 
         //  Send welcome email (non-blocking)
         try {
-          // await sendWelcomeEmail({
-          //   to: data.email,
-          //   name: data.nameWithInitials ?? "",
-          //   empNo: data.empNo,
-          //   tempPassword,
-          // });
+          await sendWelcomeEmail({
+            to: data.email,
+            name: data.nameWithInitials ?? "",
+            empNo: data.empNo,
+            tempPassword,
+          });
         } catch (e) {
           console.warn("Welcome email failed:", e);
         }

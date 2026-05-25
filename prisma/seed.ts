@@ -14,8 +14,8 @@ export const supabaseAdmin = createClient(
 async function main() {
   //  Create auth user
   const { data, error } = await supabaseAdmin.auth.admin.createUser({
-    email: "admin@company.com",
-    password: "Admin@123",
+    email: "admin@sgp.com",
+    password: "Super@SGP123",
     email_confirm: true,
   });
 

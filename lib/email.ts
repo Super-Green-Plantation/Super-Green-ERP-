@@ -11,6 +11,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+
 interface SendWelcomeEmailOptions {
   to: string;
   name: string | undefined;
