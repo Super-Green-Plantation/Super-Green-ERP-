@@ -42,6 +42,8 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head >
         <link rel="icon" href="/logo.png" />
+        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet" />
+        
       </head>
       <body className="antialiased font-sans">
         <NextTopLoader color="#16a34a" showSpinner={false} />
