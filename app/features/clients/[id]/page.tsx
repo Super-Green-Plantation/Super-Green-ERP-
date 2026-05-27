@@ -1,23 +1,22 @@
 "use client";
 
 import Back from "@/app/components/Buttons/Back";
+import SendDocumentLinkButton from "@/app/components/Buttons/SendDocumentLinkButton";
+import UpdateBeneficiary from "@/app/components/Client/UpdateBeneficiary";
 import UpdateDocsModal from "@/app/components/Client/UpdateDocsModal";
+import UpdateInvestmentDocsModal from "@/app/components/Client/UpdateInvestmentDocsModal";
 import UpdateClientModal from "@/app/components/Client/UpdateModel";
+import UpdateNominee from "@/app/components/Client/UpdateNominee";
 import { DetailItem } from "@/app/components/DetailItem";
+import { DocPreview } from "@/app/components/Doc/DocPreview";
+import { ProposalPDF } from "@/app/components/Doc/ProposalTemplate";
 import ErrorMessage from "@/app/components/Status/Error";
 import Loading from "@/app/components/Status/Loading";
 import ClientInvestmentTable from "@/app/components/Tables/ClientInvestmentTable";
-import { deleteBeneficiaryAction, deleteClient, deleteNomineeAction, generateUploadUrl, updateClient, updateClientDocuments } from "@/app/features/clients/actions";
-import { useClient } from "@/app/hooks/useClient";
-import SendDocumentLinkButton from "@/app/components/Buttons/SendDocumentLinkButton";
-import UpdateBeneficiary from "@/app/components/Client/UpdateBeneficiary";
-import UpdateInvestmentDocsModal from "@/app/components/Client/UpdateInvestmentDocsModal";
-import UpdateNominee from "@/app/components/Client/UpdateNominee";
-import { DocPreview } from "@/app/components/Doc/DocPreview";
-import { ProposalTemplate } from "@/app/components/Doc/ProposalTemplate";
 import ConfirmDialog from "@/app/components/ui/ConfirmDialog";
+import { deleteBeneficiaryAction, deleteClient, deleteNomineeAction, updateClient, updateClientDocuments } from "@/app/features/clients/actions";
 import { getFinancialPlanById } from "@/app/features/financial_plans/actions";
-import { generateClientApplicationPDF } from "@/app/pdf/ClientApplication";
+import { useClient } from "@/app/hooks/useClient";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Banknote,
@@ -32,11 +31,11 @@ import {
   Trash2,
   User
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { updateInvestmentDocuments } from "../../investments/actions";
-import { getCurrentUser } from "@/lib/auth";
 
 export default function ApplicationViewPage() {
   const queryClient = useQueryClient();
@@ -54,11 +53,12 @@ export default function ApplicationViewPage() {
   const [selectNominee, setSelectNominee] = useState<any>(null);
   const [user, setUser] = useState<any | null>(null);
 
-  const proposalRef = useRef<HTMLDivElement>(null);
+  // const proposalRef = useRef<HTMLDivElement>(null);
 
   const { data: formData, isLoading, isError } = useClient(Number(id));
 
-
+  console.log(formData);
+  
   useEffect(() => {
     fetch("/api/me")
       .then((res) => res.json())
@@ -153,17 +153,22 @@ export default function ApplicationViewPage() {
     queryClient.invalidateQueries({ queryKey: ["client", Number(id)] }); // refresh client data
   };
 
+  const PDFDownloadLink = dynamic(
+    () => import("@react-pdf/renderer").then((mod) => mod.PDFDownloadLink),
+    { ssr: false, loading: () => null }
+  );
+
   if (isLoading) return <Loading />;
   if (isError) return <ErrorMessage />;
 
   return (
     <div className="max-w-7xl mx-auto space-y-10 min-h-screen p-4 md:p-8 pb-24">
       {/* Hidden Proposal Template for PDF Generation */}
-      <div className="hidden">
+      {/* <div className="hidden">
         <div ref={proposalRef}>
-          <ProposalTemplate data={formData} />
+          <ProposalPDF data={formData} />
         </div>
-      </div>
+      </div> */}
 
       {/* 1. HEADER SECTION */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-border pb-8">
@@ -191,13 +196,20 @@ export default function ApplicationViewPage() {
             <Pen className="w-4 h-4" />
             Update Profile
           </button>
-          <button
-            onClick={() => generateClientApplicationPDF(proposalRef.current, `Proposal_${formData?.applicant?.fullName?.replace(/\s+/g, '_')}`)}
-            className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-3 bg-primary text-primary-foreground hover:opacity-90 text-[11px] font-bold uppercase tracking-widest rounded-xl transition-all active:scale-95 shadow-none"
+          <PDFDownloadLink
+            document={<ProposalPDF data={formData} />}
+            fileName={`Proposal_${formData?.applicant?.fullName?.replace(/\s+/g, '_')}`}
           >
-            <Download className="w-4 h-4" />
-            Download PDF
-          </button>
+            {({ loading }) => (
+              <button
+                disabled={loading}
+                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-3 bg-primary text-primary-foreground hover:opacity-90 text-[11px] font-bold uppercase tracking-widest rounded-xl transition-all active:scale-95 shadow-none"
+              >
+                <Download className="w-4 h-4" />
+                {loading ? "Preparing…" : "Download PDF"}
+              </button>
+            )}
+          </PDFDownloadLink>
         </div>
       </header>
 

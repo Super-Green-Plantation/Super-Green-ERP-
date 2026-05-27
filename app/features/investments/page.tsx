@@ -24,6 +24,7 @@ import { ProposalReportExport } from "@/app/components/Buttons/ProposalReportExp
 import { useQuery } from "@tanstack/react-query";
 import { getBranches } from "../branches/actions";
 import { getInvestmentSummary, searchInvestments } from "./actions";
+import { InvestmentDownloadButton } from "@/app/components/Proposal/InvestmentDownloadButton";
 
 const getMonthOptions = () => {
   const options = [];
@@ -128,6 +129,8 @@ export default function InvestmentsPage() {
   useEffect(() => { setCurrentPage(1); }, [searchText, branchId]);
 
   const { data, isLoading, isError } = useInvestments(currentPage);
+
+  console.log("inv data : ", data);
 
   const isFiltered = searchText.trim() !== "" || branchId !== "all" || selectedMonth !== "all";
 
@@ -425,6 +428,11 @@ export default function InvestmentsPage() {
                         >
                           View Client
                         </Link>
+                        <InvestmentDownloadButton
+                          investment={inv}           // the full investment object from your API
+                          beneficiary={inv.beneficiary}  // if you include it in the query
+                          nominee={inv.nominee}          // same
+                        />
                       </div>
                     </td>
                   </tr>

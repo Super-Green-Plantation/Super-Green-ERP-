@@ -1,4 +1,58 @@
+/**
+ * ProposalTemplate.pdf.tsx
+ * @react-pdf/renderer — SGP Proposal Form
+ *
+ * Exports:
+ *   ProposalPDF          — all investments for a client (multi-page)
+ *   SingleInvestmentPDF  — one investment only (2-page, for per-row download)
+ *
+ * Font files required in /public/fonts/:
+ *   NotoSansSinhala-Regular.ttf
+ *   NotoSansSinhala-Bold.ttf
+ *   PlayfairDisplay-Bold.ttf
+ */
+
 import React from "react";
+import {
+  Document, Page, View, Text, Image, Font, StyleSheet,
+} from "@react-pdf/renderer";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FONTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+Font.register({
+  family: "Noto",
+  fonts: [
+    { src: "/fonts/NotoSansSinhala-Regular.ttf", fontWeight: 400 },
+    { src: "/fonts/NotoSansSinhala-Bold.ttf", fontWeight: 700 },
+  ],
+});
+
+Font.register({
+  family: "Playfair",
+  fonts: [{ src: "/fonts/PlayfairDisplay-Bold.ttf", fontWeight: 700 }],
+});
+
+Font.registerHyphenationCallback((word) => [word]);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TOKENS
+// ─────────────────────────────────────────────────────────────────────────────
+
+const C = {
+  green900: "#0d2b0d",
+  green800: "#1a4a1a",
+  green700: "#1e6b1e",
+  green600: "#2d7d2d",
+  green50: "#f3faf3",
+  gold: "#b8860b",
+  goldLight: "#fdf6dc",
+  ink: "#0a0a0a",
+  inkMuted: "#3a3a3a",
+  rule: "#b8ccb8",
+  white: "#ffffff",
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS
@@ -8,7 +62,7 @@ function fmtDate(iso?: string) {
   if (!iso) return "";
   const d = new Date(iso);
   if (isNaN(d.getTime())) return iso;
-  return d.toLocaleDateString("en-GB"); // DD/MM/YYYY
+  return d.toLocaleDateString("en-GB");
 }
 
 function fmtAmount(v?: number | string) {
@@ -17,491 +71,448 @@ function fmtAmount(v?: number | string) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DESIGN TOKENS
+// A4 page geometry (in pt: 595.28 × 841.89)
+//
+// Fixed footer height: 22pt
+// Header height: ~82pt (header bar ~62pt + title banner ~20pt)
+// Body: fills remaining space between header and footer
+//
+// Key fix: Page uses fixed-position header + footer, and body fills the
+// remaining space. This prevents content from ever bleeding across pages.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const T = {
-  green900: "#0d2b0d",
-  green800: "#1a4a1a",
-  green700: "#1e6b1e",
-  green600: "#2d7d2d",
-  green100: "#e8f5e8",
-  green50:  "#f3faf3",
-  gold:     "#b8860b",
-  goldLight:"#f5e6b0",
-  ink:      "#111111",
-  inkMuted: "#444444",
-  rule:     "#c8d8c8",
-  white:    "#ffffff",
-
-  fontSerif: "'Playfair Display', Georgia, 'Times New Roman', serif",
-  fontSans:  "'Source Sans 3', 'Segoe UI', Tahoma, sans-serif",
-};
+const FOOTER_H = 22;   // pt — height reserved for the fixed footer
+const H_PAD = 14;   // pt — horizontal page padding
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PRIMITIVES (Strict Layout Alignment Fixes)
+// STYLES
 // ─────────────────────────────────────────────────────────────────────────────
 
-const ValueLine = ({ value }: { value?: string }) => (
-  <div
-    style={{
-      borderBottom: `1px solid ${T.green600}`,
-      minHeight: "18px",
-      paddingBottom: "1px",
-      fontSize: "11px",
-      fontFamily: T.fontSans,
-      color: T.ink,
-      fontWeight: 500,
-      lineHeight: "1.4",
-      flex: 1,
-      width: "100%",
-    }}
-  >
-    {value ?? ""}
-  </div>
-);
+const S = StyleSheet.create({
 
-const FieldLabel = ({ en, si }: { en: string; si: string }) => (
-  <div style={{ marginBottom: "3px", width: "100%" }}>
-    <div
-      style={{
-        fontSize: "9px",
-        fontWeight: 700,
-        fontFamily: T.fontSans,
-        color: T.green700,
-        letterSpacing: "0.05em",
-        textTransform: "uppercase",
-        lineHeight: 1,
-      }}
-    >
-      {en}
-    </div>
-    <div
-      style={{
-        fontSize: "12px",
-        fontFamily: T.fontSans,
-        color: T.inkMuted,
-        lineHeight: 1.2,
-        fontWeight: 300,
-      }}
-    >
-      {si}
-    </div>
-  </div>
-);
+  // ── Page shell ──
+  // paddingBottom must equal FOOTER_H so body content never slides under footer
+  page: {
+    size: "A4",
+    backgroundColor: C.white,
+    fontFamily: "Noto",
+    fontSize: 9,
+    color: C.ink,
+    paddingBottom: FOOTER_H,
+  },
+
+  // ── Fixed page footer (always at bottom of every page) ──
+  footer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: FOOTER_H,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: H_PAD,
+    borderTop: `0.5 solid ${C.rule}`,
+    backgroundColor: C.white,
+  },
+  footerLeft: { fontSize: 6.5, color: "rgba(0,0,0,0.30)", fontFamily: "Noto" },
+  footerRight: { fontSize: 7.5, fontWeight: 700, color: C.green700, fontFamily: "Noto" },
+
+  // ── Header bar ──
+  headerBar: {
+    backgroundColor: C.green900,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    paddingTop: 10,
+    paddingBottom: 8,
+    paddingHorizontal: H_PAD,
+  },
+  companyName: {
+    fontFamily: "Playfair",
+    fontWeight: 700,
+    fontSize: 13,
+    color: C.white,
+    letterSpacing: 0.5,
+    marginBottom: 3,
+  },
+  companyMeta: {
+    fontSize: 7.5,
+    color: "rgba(255,255,255,0.62)",
+    lineHeight: 1.7,
+  },
+  headerRight: {
+    alignItems: "flex-end",
+  },
+  logoImg: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: C.white,
+    padding: 2,
+    objectFit: "contain",
+  },
+  // Two-row badge: proposal number (large) + INV ref (small)
+  badgeStack: {
+    alignItems: "flex-end",
+    marginTop: 5,
+  },
+  proposalBadge: {
+    backgroundColor: C.gold,
+    paddingVertical: 2,
+    paddingHorizontal: 10,
+  },
+  proposalBadgeText: {
+    fontFamily: "Playfair",
+    fontWeight: 700,
+    fontSize: 12,
+    color: C.green900,
+    letterSpacing: 0.8,
+  },
+  invRefText: {
+    fontSize: 7,
+    color: "rgba(255,255,255,0.55)",
+    marginTop: 3,
+    letterSpacing: 0.3,
+  },
+
+  // ── Title banner ──
+  titleBanner: {
+    backgroundColor: C.green700,
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 5,
+    paddingHorizontal: 20,
+  },
+  titleRule: { flex: 1, height: 0.5, backgroundColor: C.gold, opacity: 0.6 },
+  titleCenter: { alignItems: "center", paddingHorizontal: 12 },
+  titleEn: {
+    fontFamily: "Playfair",
+    fontWeight: 700,
+    fontSize: 11,
+    color: C.white,
+    letterSpacing: 1.2,
+    textAlign: "center",
+  },
+  titleSi: {
+    fontFamily: "Noto",
+    fontSize: 9,
+    color: "rgba(255,255,255,0.72)",
+    textAlign: "center",
+    marginTop: 1,
+  },
+
+  // ── Body ──
+  body: {
+    paddingHorizontal: H_PAD,
+    paddingTop: 8,
+    paddingBottom: 6,
+  },
+
+  // ── Section box ──
+  sectionBox: { border: `0.5 solid ${C.rule}`, marginTop: 8 },
+  sectionBoxGold: { border: `0.5 solid ${C.gold}`, marginTop: 8 },
+
+  // ── Section header ──
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: C.green50,
+    borderBottom: `1.5 solid ${C.green600}`,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  sectionHeaderGold: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: C.goldLight,
+    borderBottom: `1.5 solid ${C.gold}`,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  sectionAccentBar: { width: 3, height: 18, backgroundColor: C.green600, borderRadius: 1, marginRight: 6 },
+  sectionAccentBarGold: { width: 3, height: 18, backgroundColor: C.gold, borderRadius: 1, marginRight: 6 },
+  sectionTitleEn: { fontFamily: "Playfair", fontWeight: 700, fontSize: 9.5, color: C.green800, letterSpacing: 0.3 },
+  sectionTitleEnGold: { fontFamily: "Playfair", fontWeight: 700, fontSize: 9.5, color: C.gold, letterSpacing: 0.3 },
+  sectionTitleSi: { fontFamily: "Noto", fontSize: 9, color: C.inkMuted },
+
+  // ── Field row / cell ──
+  fieldRow: { flexDirection: "row" },
+  field: {
+    flex: 1,
+    paddingTop: 5,
+    paddingHorizontal: 8,
+    paddingBottom: 5,
+    minHeight: 42,
+    flexDirection: "column",
+    justifyContent: "space-between",
+  },
+  fieldBorderRight: { borderRight: `0.5 solid ${C.rule}` },
+  fieldBorderBottom: { borderBottom: `0.5 solid ${C.rule}` },
+  fieldBgGold: { backgroundColor: C.goldLight },
+
+  // ── Field text ──
+  labelEn: {
+    fontSize: 7,
+    fontWeight: 700,
+    color: C.green700,
+    letterSpacing: 0.7,
+    textTransform: "uppercase",
+    marginBottom: 1,
+    fontFamily: "Noto",
+  },
+  labelSi: { fontSize: 9.5, color: C.inkMuted, fontFamily: "Noto", marginBottom: 3 },
+  valueText: { fontSize: 9.5, fontWeight: 700, color: C.ink, fontFamily: "Noto", marginBottom: 2, minHeight: 11 },
+  valueLine: { height: 0.75, backgroundColor: C.green600, width: "100%" },
+  valueLineGold: { height: 0.75, backgroundColor: C.gold, width: "100%" },
+
+  // ── Return benefits ──
+  returnRow: {
+    flexDirection: "row",
+    border: `0.5 solid ${C.rule}`,
+    borderTop: "none",
+    backgroundColor: C.green50,
+  },
+  returnItem: { flex: 1, alignItems: "center", paddingVertical: 6, paddingHorizontal: 6, borderRight: `0.5 solid ${C.rule}` },
+  returnItemLast: { flex: 1, alignItems: "center", paddingVertical: 6, paddingHorizontal: 6 },
+  returnLabelEn: { fontSize: 7, fontWeight: 700, color: C.green700, letterSpacing: 0.6, textTransform: "uppercase", fontFamily: "Noto", marginBottom: 1 },
+  returnLabelSi: { fontSize: 9, color: C.inkMuted, fontFamily: "Noto", marginBottom: 3 },
+  returnValue: { fontFamily: "Playfair", fontWeight: 700, fontSize: 11, color: C.green800, marginBottom: 2, minHeight: 12 },
+  returnLine: { height: 0.75, backgroundColor: C.green600, width: "80%" },
+
+  // ── Signature strip ──
+  sigStrip: { flexDirection: "row", backgroundColor: C.green50, border: `0.5 solid ${C.rule}`, borderTop: "none" },
+  sigBlock: { flex: 1, padding: "6 10 8 10", borderRight: `0.5 solid ${C.rule}` },
+  sigBlockLast: { flex: 1, padding: "6 10 8 10" },
+  sigLabelEn: { fontSize: 7, fontWeight: 700, color: C.green700, textTransform: "uppercase", letterSpacing: 0.6, fontFamily: "Noto" },
+  sigLabelSi: { fontSize: 9.5, color: C.inkMuted, fontFamily: "Noto", marginBottom: 5 },
+  sigLineArea: { minHeight: 34 },
+  sigLine: { height: 0.75, backgroundColor: C.green600, marginTop: 4 },
+
+  // ── Declaration ──
+  declarationBox: {
+    marginTop: 8,
+    border: `0.5 solid ${C.rule}`,
+    borderLeft: `2.5 solid ${C.green600}`,
+    backgroundColor: C.green50,
+    padding: "8 12 10 12",
+  },
+  declTitleEn: { fontSize: 7, fontWeight: 700, color: C.green700, textTransform: "uppercase", letterSpacing: 0.6, fontFamily: "Noto" },
+  declTitleSi: { fontSize: 9.5, color: C.inkMuted, fontFamily: "Noto", marginBottom: 6 },
+  declRow: { flexDirection: "row", alignItems: "flex-end", marginBottom: 4 },
+  declText: { fontSize: 9.5, color: C.inkMuted, fontFamily: "Noto", lineHeight: 1.8 },
+  declUWrap: { flex: 1, minWidth: 80, marginHorizontal: 4 },
+  declUValue: { fontSize: 9.5, fontWeight: 700, color: C.ink, fontFamily: "Noto", minHeight: 11, marginBottom: 1 },
+  declULine: { height: 0.75, backgroundColor: C.green600 },
+
+  // ── Remarks ──
+  remarksBox: { marginTop: 8, border: `0.5 solid ${C.rule}`, padding: "6 10 10 10", minHeight: 48 },
+  remarksLabelEn: { fontSize: 7, fontWeight: 700, color: C.green700, textTransform: "uppercase", letterSpacing: 0.6, fontFamily: "Noto" },
+  remarksLabelSi: { fontSize: 9.5, color: C.inkMuted, fontFamily: "Noto", marginBottom: 8 },
+  remarksLine: { height: 0.75, backgroundColor: C.rule, marginBottom: 10 },
+
+  // ── Legal text ──
+  legalText: {
+    fontSize: 6.5, color: "rgba(0,0,0,0.28)", fontFamily: "Noto",
+    textAlign: "center", marginTop: 8,
+    paddingTop: 4, borderTop: `0.5 solid ${C.rule}`, lineHeight: 1.5,
+  },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PRIMITIVE COMPONENTS
+// ─────────────────────────────────────────────────────────────────────────────
 
 const Field = ({
-  en,
-  si,
-  value,
-  borderRight = true,
-  borderBottom = true,
-  flex,
-  minHeight,
+  en, si, value,
+  borderRight = true, borderBottom = true,
+  flex = 1, gold = false, minHeight,
 }: {
-  en: string;
-  si: string;
-  value?: string;
-  borderRight?: boolean;
-  borderBottom?: boolean;
-  flex?: number;
-  minHeight?: string;
+  en: string; si: string; value?: string;
+  borderRight?: boolean; borderBottom?: boolean;
+  flex?: number; gold?: boolean; minHeight?: number;
 }) => (
-  <div
-    style={{
-      flex: flex ?? 1,
-      padding: "6px 10px 5px",
-      borderRight: borderRight ? `0.5px solid ${T.rule}` : "none",
-      borderBottom: borderBottom ? `0.5px solid ${T.rule}` : "none",
-      boxSizing: "border-box",
-      minHeight: minHeight ?? "52px",
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "space-between",
-    }}
-  >
-    <FieldLabel en={en} si={si} />
-    <ValueLine value={value} />
-  </div>
+  <View style={[
+    S.field,
+    borderRight ? S.fieldBorderRight : {},
+    borderBottom ? S.fieldBorderBottom : {},
+    gold ? S.fieldBgGold : {},
+    { flex, ...(minHeight ? { minHeight } : {}) },
+  ]}>
+    <View>
+      <Text style={S.labelEn}>{en}</Text>
+      <Text style={S.labelSi}>{si}</Text>
+    </View>
+    <View>
+      <Text style={S.valueText}>{value ?? " "}</Text>
+      <View style={gold ? S.valueLineGold : S.valueLine} />
+    </View>
+  </View>
 );
 
 const FieldRow = ({ children }: { children: React.ReactNode }) => (
-  <div style={{ display: "flex", width: "100%", boxSizing: "border-box" }}>{children}</div>
+  <View style={S.fieldRow}>{children}</View>
 );
 
-// ─────────────────────────────────────────────────────────────────────────────
-// STRUCTURAL HEADERS & LAYOUT HOOKS
-// ─────────────────────────────────────────────────────────────────────────────
-
-const SectionHeader = ({
-  en,
-  si,
-  gold = false,
-}: {
-  en: string;
-  si: string;
-  gold?: boolean;
-}) => (
-  <div
-    style={{
-      display: "flex",
-      alignItems: "center",
-      gap: "8px",
-      padding: "6px 10px 5px",
-      borderBottom: `2px solid ${gold ? T.gold : T.green600}`,
-      backgroundColor: gold ? "#fffdf5" : T.green50,
-      width: "100%",
-      boxSizing: "border-box",
-    }}
-  >
-    <div
-      style={{
-        width: "4px",
-        height: "22px",
-        backgroundColor: gold ? T.gold : T.green600,
-        borderRadius: "2px",
-        flexShrink: 0,
-      }}
-    />
-    <div>
-      <div
-        style={{
-          fontFamily: T.fontSerif,
-          fontSize: "11px",
-          fontWeight: 700,
-          color: gold ? T.gold : T.green800,
-          letterSpacing: "0.03em",
-          lineHeight: 1.2,
-        }}
-      >
-        {en}
-      </div>
-      <div
-        style={{
-          fontFamily: T.fontSans,
-          fontSize: "11px",
-          color: T.inkMuted,
-          fontWeight: 300,
-          lineHeight: 1.2,
-        }}
-      >
-        {si}
-      </div>
-    </div>
-  </div>
-);
-
-const CompanyHeader = ({
-  proposalFormNo,
-  refNumber,
-  pageTitle,
-  pageTitleSi,
-}: {
-  proposalFormNo?: string;
-  refNumber?: string;
-  pageTitle: string;
-  pageTitleSi: string;
-}) => (
-  <div style={{ width: "100%", flexShrink: 0, boxSizing: "border-box" }}>
-    {/* ── Dark green header bar ── */}
-    <div
-      style={{
-        backgroundColor: T.green900,
-        padding: "14px 20px 12px",
-        display: "flex",
-        alignItems: "flex-start",
-        justifyContent: "space-between",
-        gap: "12px",
-        width: "100%",
-        boxSizing: "border-box",
-      }}
-    >
-      <div style={{ flex: 1 }}>
-        <div
-          style={{
-            fontFamily: T.fontSerif,
-            fontSize: "14px",
-            fontWeight: 700,
-            color: T.white,
-            letterSpacing: "0.04em",
-            marginBottom: "6px",
-          }}
-        >
-          Super Green Plantation (Pvt) Ltd.
-        </div>
-        <div
-          style={{
-            fontSize: "9.5px",
-            fontFamily: T.fontSans,
-            color: "rgba(255,255,255,0.60)",
-            lineHeight: 1.75,
-            fontWeight: 300,
-          }}
-        >
-          598/M, Hirimbura Road, Karapitiya, Galle
-          {"\u00A0·\u00A0"}
-          Hotline: 076 80 59 312
-          <br />
-          supergreenplantationsgp@gmail.com
-          {"\u00A0·\u00A0"}
-          Reg. No: PV 00326975
-        </div>
-      </div>
-
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "4px", flexShrink: 0 }}>
-        <img
-          src="/logo.png"
-          alt="SGP Logo"
-          style={{
-            width: "56px",
-            height: "56px",
-            objectFit: "contain",
-            border: `2px solid ${T.gold}`,
-            borderRadius: "50%",
-            backgroundColor: T.white,
-            padding: "2px",
-          }}
-        />
-        <div
-          style={{
-            backgroundColor: T.gold,
-            padding: "3px 10px",
-            fontFamily: T.fontSerif,
-            fontSize: "13px",
-            fontWeight: 700,
-            color: T.green900,
-            letterSpacing: "0.06em",
-            marginTop: "4px",
-          }}
-        >
-          {proposalFormNo || "PROPOSAL"}
-        </div>
-        {refNumber && (
-          <div style={{ fontSize: "8.5px", fontFamily: T.fontSans, color: "rgba(255,255,255,0.50)", letterSpacing: "0.04em" }}>
-            Ref: {refNumber}
-          </div>
-        )}
-      </div>
-    </div>
-
-    {/* ── Title banner ── */}
-    <div
-      style={{
-        backgroundColor: T.green700,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "7px 24px",
-        gap: "10px",
-        width: "100%",
-        boxSizing: "border-box",
-      }}
-    >
-      <div style={{ flex: 1, height: "1px", backgroundColor: T.gold, opacity: 0.5 }} />
-      <div style={{ textAlign: "center" }}>
-        <div style={{ fontFamily: T.fontSerif, fontSize: "12px", fontWeight: 600, color: T.white, letterSpacing: "0.10em", textTransform: "uppercase" }}>
-          {pageTitle}
-        </div>
-        <div style={{ fontFamily: T.fontSans, fontSize: "11px", color: "rgba(255,255,255,0.70)", fontWeight: 300, marginTop: "1px" }}>
-          {pageTitleSi}
-        </div>
-      </div>
-      <div style={{ flex: 1, height: "1px", backgroundColor: T.gold, opacity: 0.5 }} />
-    </div>
-  </div>
-);
-
-/* FIXED ROOT MATRIX CONTEXT:
-   Forces an immutable base block layer of absolute dimensions on both files.
-*/
-const Page = ({ children }: { children: React.ReactNode }) => (
-  <div
-    data-pdf-page="true"
-    style={{
-      width: "210mm",
-      height: "297mm",
-      minWidth: "210mm",
-      maxWidth: "210mm",
-      minHeight: "297mm",
-      maxHeight: "297mm",
-      padding: "0",
-      backgroundColor: T.white,
-      color: T.ink,
-      fontFamily: T.fontSans,
-      boxSizing: "border-box",
-      fontSize: "11px",
-      pageBreakAfter: "always",
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "space-between",
-      overflow: "hidden",
-    }}
-  >
-    {children}
-  </div>
-);
-
-const PageBody = ({ children }: { children: React.ReactNode }) => (
-  <div style={{ padding: "10px 16px 14px", flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between", boxSizing: "border-box", width: "100%" }}>
-    {children}
-  </div>
+const SectionHeader = ({ en, si, gold = false }: { en: string; si: string; gold?: boolean }) => (
+  <View style={gold ? S.sectionHeaderGold : S.sectionHeader}>
+    <View style={gold ? S.sectionAccentBarGold : S.sectionAccentBar} />
+    <View>
+      <Text style={gold ? S.sectionTitleEnGold : S.sectionTitleEn}>{en}</Text>
+      <Text style={S.sectionTitleSi}>{si}</Text>
+    </View>
+  </View>
 );
 
 const SectionBox = ({
-  en,
-  si,
-  gold = false,
-  children,
-  mt = "12px",
+  en, si, gold = false, children, mt = 8,
 }: {
-  en: string;
-  si: string;
-  gold?: boolean;
-  children: React.ReactNode;
-  mt?: string;
+  en: string; si: string; gold?: boolean; children: React.ReactNode; mt?: number;
 }) => (
-  <div
-    style={{
-      border: `0.5px solid ${gold ? T.goldLight : T.rule}`,
-      marginTop: mt,
-      overflow: "hidden",
-      width: "100%",
-      boxSizing: "border-box",
-    }}
-  >
+  <View style={[gold ? S.sectionBoxGold : S.sectionBox, { marginTop: mt }]}>
     <SectionHeader en={en} si={si} gold={gold} />
     {children}
-  </div>
+  </View>
 );
 
-// ─────────────────────────────────────────────────────────────────────────────
-// RETURN BENEFITS ROW
-// ─────────────────────────────────────────────────────────────────────────────
-
-const ReturnBenefits = ({
-  monthly,
-  halfYearly,
-  yearly,
-}: {
-  monthly: string;
-  halfYearly: string;
-  yearly: string;
+const ReturnBenefits = ({ monthly, halfYearly, yearly }: {
+  monthly: string; halfYearly: string; yearly: string;
 }) => {
-  const item = (labelEn: string, labelSi: string, value: string, last = false) => (
-    <div
-      style={{
-        flex: 1,
-        textAlign: "center",
-        padding: "8px 10px",
-        borderRight: last ? "none" : `0.5px solid ${T.rule}`,
-        boxSizing: "border-box",
-      }}
-    >
-      <div style={{ fontSize: "9px", fontWeight: 700, fontFamily: T.fontSans, color: T.green700, textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "1px" }}>
-        {labelEn}
-      </div>
-      <div style={{ fontSize: "11px", fontFamily: T.fontSans, color: T.inkMuted, fontWeight: 300, marginBottom: "4px" }}>
-        {labelSi}
-      </div>
-      <div style={{ fontFamily: T.fontSerif, fontSize: "13px", fontWeight: 600, color: T.green800, borderBottom: `1px solid ${T.green600}`, minHeight: "18px", paddingBottom: "1px" }}>
-        {value || "—"}
-      </div>
-    </div>
+  const Item = ({ labelEn, labelSi, value, last = false }: {
+    labelEn: string; labelSi: string; value: string; last?: boolean;
+  }) => (
+    <View style={last ? S.returnItemLast : S.returnItem}>
+      <Text style={S.returnLabelEn}>{labelEn}</Text>
+      <Text style={S.returnLabelSi}>{labelSi}</Text>
+      <Text style={S.returnValue}>{value || " "}</Text>
+      <View style={S.returnLine} />
+    </View>
   );
-
   return (
-    <div
-      style={{
-        display: "flex",
-        border: `0.5px solid ${T.rule}`,
-        backgroundColor: T.green50,
-        borderTop: "none",
-        width: "100%",
-        boxSizing: "border-box",
-        paddingTop: "8px",
-      }}
-    >
-      {item("Monthly Return", "මාසිකව", monthly)}
-      {item("Half Yearly", "අර්ධ වාර්ෂික", halfYearly)}
-      {item("Yearly Return", "වාර්ෂිකව", yearly, true)}
-    </div>
+    <View style={S.returnRow}>
+      <Item labelEn="Monthly Return" labelSi="මාසිකව" value={monthly} />
+      <Item labelEn="Half Yearly" labelSi="අර්ධ වාර්ෂික" value={halfYearly} />
+      <Item labelEn="Yearly Return" labelSi="වාර්ෂිකව" value={yearly} last />
+    </View>
   );
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SIGNATURE STRIP
-// ─────────────────────────────────────────────────────────────────────────────
-
 const SignatureStrip = ({ signature }: { signature?: string }) => (
-  <div
-    style={{
-      display: "flex",
-      backgroundColor: T.green50,
-      border: `0.5px solid ${T.rule}`,
-      borderTop: "none",
-      gap: "0",
-      width: "100%",
-      boxSizing: "border-box",
-    }}
-  >
-    <div style={{ flex: 1, padding: "8px 12px 10px", borderRight: `0.5px solid ${T.rule}`, boxSizing: "border-box" }}>
-      <div style={{ fontSize: "9px", fontWeight: 700, fontFamily: T.fontSans, color: T.green700, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-        Customer Signature
-      </div>
-      <div style={{ fontSize: "12px", fontFamily: T.fontSans, color: T.inkMuted, fontWeight: 300, marginBottom: "6px" }}>
-        අයදුම්කරුගේ අත්සන
-      </div>
-      <div style={{ borderBottom: `1px solid ${T.green600}`, minHeight: "40px", display: "flex", alignItems: "center" }}>
-        {signature && (
-          <img src={signature} alt="Customer Signature" crossOrigin="anonymous" style={{ maxHeight: "36px", maxWidth: "100%", objectFit: "contain" }} />
-        )}
-      </div>
-    </div>
-
-    <div style={{ flex: 1, padding: "8px 12px 10px", boxSizing: "border-box" }}>
-      <div style={{ fontSize: "9px", fontWeight: 700, fontFamily: T.fontSans, color: T.green700, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-        Sales Advisor Signature
-      </div>
-      <div style={{ fontSize: "12px", fontFamily: T.fontSans, color: T.inkMuted, fontWeight: 300, marginBottom: "6px" }}>
-        විකුණුම් උපදේශකගේ අත්සන
-      </div>
-      <div style={{ borderBottom: `1px solid ${T.green600}`, minHeight: "40px" }} />
-    </div>
-  </div>
+  <View style={S.sigStrip}>
+    <View style={S.sigBlock}>
+      <Text style={S.sigLabelEn}>Customer Signature</Text>
+      <Text style={S.sigLabelSi}>අයදුම්කරුගේ අත්සන</Text>
+      <View style={S.sigLineArea}>
+        {signature
+          ? <Image src={signature} style={{ maxHeight: 30, objectFit: "contain" }} />
+          : null}
+      </View>
+      <View style={S.sigLine} />
+    </View>
+    <View style={S.sigBlockLast}>
+      <Text style={S.sigLabelEn}>Sales Advisor Signature</Text>
+      <Text style={S.sigLabelSi}>විකුණුම් උපදේශකගේ අත්සන</Text>
+      <View style={S.sigLineArea} />
+      <View style={S.sigLine} />
+    </View>
+  </View>
 );
+
+const DeclUnderline = ({ value, width = 80 }: { value?: string; width?: number }) => (
+  <View style={[S.declUWrap, { minWidth: width }]}>
+    <Text style={S.declUValue}>{value ?? " "}</Text>
+    <View style={S.declULine} />
+  </View>
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COMPANY HEADER
+// proposalFormNo — the human-readable proposal number (e.g. "P-00042")
+//                  taken from inv.proposalFormNo, falling back to applicant
+// refNumber      — the investment ref (INV-XXXXX)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const CompanyHeader = ({
+  proposalFormNo, refNumber, pageTitle, pageTitleSi,
+}: {
+  proposalFormNo?: string; refNumber?: string;
+  pageTitle: string; pageTitleSi: string;
+}) => (
+  <>
+    <View style={S.headerBar}>
+      {/* Left */}
+      <View style={{ flex: 1 }}>
+        <Text style={S.companyName}>Super Green Plantation (Pvt) Ltd.</Text>
+        <Text style={S.companyMeta}>
+          {"598/M, Hirimbura Road, Karapitiya, Galle  ·  Hotline: 076 805 9312 / 0912240814"}
+        </Text>
+        <Text style={S.companyMeta}>
+          {"supergreenplantationsgp@gmail.com  ·  Reg. No: PV 00326975"}
+        </Text>
+      </View>
+
+      {/* Right: logo + proposal no. + INV ref */}
+      <View style={S.headerRight}>
+        <Image src="/logo.png" style={S.logoImg} />
+        <View style={S.badgeStack}>
+          {/* Proposal Form Number — prominent gold badge */}
+          {proposalFormNo ? (
+            <View style={S.proposalBadge}>
+              <Text style={S.proposalBadgeText}>{proposalFormNo}</Text>
+            </View>
+          ) : null}
+          {/* INV reference — smaller, below badge */}
+          {refNumber ? (
+            <Text style={S.invRefText}>Ref: {refNumber}</Text>
+          ) : null}
+        </View>
+      </View>
+    </View>
+
+    {/* Title banner */}
+    <View style={S.titleBanner}>
+      <View style={S.titleRule} />
+      <View style={S.titleCenter}>
+        <Text style={S.titleEn}>{pageTitle}</Text>
+        <Text style={S.titleSi}>{pageTitleSi}</Text>
+      </View>
+      <View style={S.titleRule} />
+    </View>
+  </>
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FIXED PAGE FOOTER
+// `fixed` prop makes it repeat on every page in @react-pdf
+// ─────────────────────────────────────────────────────────────────────────────
 
 const PageFooter = ({ label, page }: { label: string; page: string }) => (
-  <div
-    style={{
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      padding: "6px 16px 0",
-      borderTop: `0.5px solid ${T.rule}`,
-      marginTop: "10px",
-      width: "100%",
-      boxSizing: "border-box",
-      flexShrink: 0,
-    }}
-  >
-    <div style={{ fontSize: "8px", fontFamily: T.fontSans, color: "rgba(0,0,0,0.30)" }}>
-      Super Green Plantation (Pvt) Ltd.&nbsp;|&nbsp;Investment Proposal Document&nbsp;|&nbsp;{label}
-    </div>
-    <div style={{ fontSize: "9.5px", fontFamily: T.fontSans, fontWeight: 600, color: T.green700 }}>
-      {page}
-    </div>
-  </div>
+  <View style={S.footer} fixed>
+    <Text style={S.footerLeft}>
+      {`Super Green Plantation (Pvt) Ltd.  |  Investment Proposal  |  ${label}`}
+    </Text>
+    <Text style={S.footerRight}>{page}</Text>
+  </View>
 );
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PAGE 1 — COMPONENT EXPORT
+// PAGE 1 — Applicant + Investment + Beneficiary
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const InvestmentPage1 = ({ applicant, investment, beneficiary, pageLabel }: any) => {
+const InvestmentPage1 = ({
+  applicant, investment, beneficiary, pageLabel,
+}: {
+  applicant: any; investment: any; beneficiary: any; pageLabel: string;
+}) => {
   const a = applicant ?? {};
   const inv = investment ?? {};
   const b = beneficiary ?? {};
   const plan = inv.plan ?? {};
+
+  // proposalFormNo lives on the investment record (preferred) or falls back
+  // to applicant-level field if your schema stores it there
+  const proposalFormNo = inv.proposalFormNo ?? a.proposalFormNo ?? "";
+  const refNumber = inv.refNumber ?? "";
 
   const investmentDate = fmtDate(inv.investmentDate);
   const investmentRate = inv.investmentRate ?? plan.rate ?? "";
@@ -510,13 +521,20 @@ export const InvestmentPage1 = ({ applicant, investment, beneficiary, pageLabel 
   const yearlyReturn = inv.totalHarvest ? fmtAmount(inv.totalHarvest) : "";
 
   return (
-    <Page>
-      <CompanyHeader proposalFormNo={a.proposalFormNo} refNumber={inv.refNumber} pageTitle="Proposal Form" pageTitleSi="යෝජනා පත්‍රය" />
+    <Page size="A4" style={S.page}>
+      <CompanyHeader
+        proposalFormNo={proposalFormNo}
+        refNumber={refNumber}
+        pageTitle="Proposal Form"
+        pageTitleSi="යෝජනා පත්‍රය"
+      />
 
-      <PageBody>
-        <SectionBox en="Applicant Details" si="අයදුම්කරුගේ විස්තර" mt="0">
+      <View style={S.body}>
+        {/* ── APPLICANT ── */}
+        <SectionBox en="Applicant Details" si="අයදුම්කරුගේ විස්තර" mt={0}>
           <FieldRow>
-            <Field en="Full Name" si="සම්පූර්ණ නම" value={a.fullName?.toUpperCase()} borderRight={false} />
+            <Field en="Full Name" si="සම්පූර්ණ නම"
+              value={a.fullName?.toUpperCase()} borderRight={false} />
           </FieldRow>
           <FieldRow>
             <Field en="Name with Initials" si="මුලකුරු සමග නම" value={a.nameWithInitials} flex={1.3} />
@@ -527,7 +545,8 @@ export const InvestmentPage1 = ({ applicant, investment, beneficiary, pageLabel 
             <Field en="Passport No." si="පාස්පෝර්ට් අංකය" value={a.passportNo || ""} borderRight={false} />
           </FieldRow>
           <FieldRow>
-            <Field en="Postal Address" si="ලිපිනය" value={a.address} borderRight={false} minHeight="56px" />
+            <Field en="Postal Address" si="ලිපිනය" value={a.address}
+              borderRight={false} minHeight={46} />
           </FieldRow>
           <FieldRow>
             <Field en="Land Phone" si="ස්ථාවර දුරකථනය" value={a.phoneLand || ""} />
@@ -535,24 +554,30 @@ export const InvestmentPage1 = ({ applicant, investment, beneficiary, pageLabel 
             <Field en="E-mail Address" si="ඊ-මේල් ලිපිනය" value={a.email || ""} borderRight={false} />
           </FieldRow>
           <FieldRow>
-            <Field en="Date of Birth" si="උපන් දිනය" value={fmtDate(a.dateOfBirth)} flex={1.2} />
+            <Field en="Date of Birth" si="උපන් දිනය" value={fmtDate(a.dateOfBirth)} flex={1.1} />
             <Field en="Race" si="ජාතිය" value={a.race || ""} />
             <Field en="Country" si="රට" value={a.country || ""} />
-            <Field en="Occupation" si="රැකියාව" value={a.occupation || ""} borderRight={false} borderBottom={false} />
+            <Field en="Occupation" si="රැකියාව" value={a.occupation || ""}
+              borderRight={false} borderBottom={false} />
           </FieldRow>
         </SectionBox>
 
+        {/* ── INVESTMENT ── */}
         <SectionBox en="Investment Details" si="ආයෝජන විස්තර">
           <FieldRow>
             <Field en="Date of Investment" si="ආයෝජනය කළ දිනය" value={investmentDate} />
-            <Field en="Investment Amount (Rs.)" si="ආයෝජන මුදල" value={fmtAmount(inv.amount ?? a.investmentAmount)} />
+            <Field en="Investment Amount (Rs.)" si="ආයෝජන මුදල"
+              value={fmtAmount(inv.amount ?? a.investmentAmount)} />
             <Field en="Investment Plan" si="ආයෝජන සැලැස්ම" value={plan.name || ""} />
-            <Field en="Investment Rate" si="ආයෝජන අනුපාතය" value={investmentRate ? `${investmentRate}%` : ""} borderRight={false} borderBottom={false} />
+            <Field en="Investment Rate" si="ආයෝජන අනුපාතය"
+              value={investmentRate ? `${investmentRate}%` : ""}
+              borderRight={false} borderBottom={false} />
           </FieldRow>
         </SectionBox>
 
         <ReturnBenefits monthly={monthlyReturn} halfYearly={halfYearReturn} yearly={yearlyReturn} />
 
+        {/* ── BENEFICIARY ── */}
         <SectionBox en="Beneficiary Details" si="ප්‍රතිලාභියාගේ විස්තර">
           <FieldRow>
             <Field en="Full Name" si="සම්පූර්ණ නම" value={b.fullName} flex={1.3} />
@@ -565,32 +590,47 @@ export const InvestmentPage1 = ({ applicant, investment, beneficiary, pageLabel 
           </FieldRow>
           <FieldRow>
             <Field en="Bank A/C Number" si="බැංකු ගිණුම් අංකය" value={b.accountNo} />
-            <Field en="Bank Name" si="බැංකුවේ නම" value={b.bankName} borderRight={false} borderBottom={false} />
+            <Field en="Bank Name" si="බැංකුවේ නම" value={b.bankName}
+              borderRight={false} borderBottom={false} />
           </FieldRow>
         </SectionBox>
 
         <SignatureStrip signature={a.signature} />
-        <PageFooter label={pageLabel} page="Page 1 of 2" />
-      </PageBody>
+      </View>
+
+      <PageFooter label={pageLabel} page="Page 1 of 2" />
     </Page>
   );
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PAGE 2 — COMPONENT EXPORT
+// PAGE 2 — Nominee + Declaration + Office Use Only
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const InvestmentPage2 = ({ applicant, investment, nominee, pageLabel }: any) => {
+const InvestmentPage2 = ({
+  applicant, investment, nominee, pageLabel,
+}: {
+  applicant: any; investment: any; nominee: any; pageLabel: string;
+}) => {
   const a = applicant ?? {};
   const inv = investment ?? {};
   const n = nominee ?? {};
 
-  return (
-    <Page>
-      <CompanyHeader proposalFormNo={a.proposalFormNo} refNumber={inv.refNumber} pageTitle="Proposal Form — Continued" pageTitleSi="යෝජනා පත්‍රය — 2 වන පිටුව" />
+  const proposalFormNo = inv.proposalFormNo ?? a.proposalFormNo ?? "";
+  const refNumber = inv.refNumber ?? "";
 
-      <PageBody>
-        <SectionBox en="Nominee Details" si="නාමිකයාගේ විස්තර" mt="0">
+  return (
+    <Page size="A4" style={S.page}>
+      <CompanyHeader
+        proposalFormNo={proposalFormNo}
+        refNumber={refNumber}
+        pageTitle="Proposal Form — Continued"
+        pageTitleSi="යෝජනා පත්‍රය — 2 වන පිටුව"
+      />
+
+      <View style={S.body}>
+        {/* ── NOMINEE ── */}
+        <SectionBox en="Nominee Details" si="නාමිකයාගේ විස්තර" mt={0}>
           <FieldRow>
             <Field en="Full Name" si="සම්පූර්ණ නම" value={n.fullName} borderRight={false} />
           </FieldRow>
@@ -599,117 +639,101 @@ export const InvestmentPage2 = ({ applicant, investment, nominee, pageLabel }: a
             <Field en="NIC Number" si="ජා.හැ.අංකය" value={n.nic} borderRight={false} />
           </FieldRow>
           <FieldRow>
-            <Field en="Postal Address" si="ලිපිනය" value={n.postalAddress ?? n.permanentAddress} borderRight={false} minHeight="52px" />
+            <Field en="Postal Address" si="ලිපිනය"
+              value={n.postalAddress ?? n.permanentAddress}
+              borderRight={false} minHeight={46} />
           </FieldRow>
           <FieldRow>
             <Field en="Relationship" si="සම්බන්ධය" value={n.relationship} />
-            <Field en="Phone Number" si="දුරකථන අංකය" value={n.phone} borderRight={false} borderBottom={false} />
+            <Field en="Phone Number" si="දුරකථන අංකය" value={n.phone}
+              borderRight={false} borderBottom={false} />
           </FieldRow>
         </SectionBox>
 
-        <div style={{ marginTop: "12px", borderLeft: `3px solid ${T.green600}`, backgroundColor: T.green50, border: `0.5px solid ${T.rule}`, borderLeftWidth: "3px", borderLeftColor: T.green600, padding: "10px 14px 12px", width: "100%", boxSizing: "border-box" }}>
-          <div style={{ marginBottom: "8px" }}>
-            <div style={{ fontSize: "9px", fontWeight: 700, fontFamily: T.fontSans, color: T.green700, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-              Declaration
-            </div>
-            <div style={{ fontSize: "11.5px", fontFamily: T.fontSans, color: T.inkMuted, fontWeight: 300 }}>
-              ප්‍රකාශය
-            </div>
-          </div>
+        {/* ── DECLARATION ── */}
+        <View style={S.declarationBox}>
+          <Text style={S.declTitleEn}>Declaration</Text>
+          <Text style={S.declTitleSi}>ප්‍රකාශය</Text>
 
-          <div style={{ display: "flex", alignItems: "flex-end", gap: "6px", marginBottom: "6px", width: "100%" }}>
-            <span style={{ fontSize: "12px", fontFamily: T.fontSans, color: T.inkMuted, whiteSpace: "nowrap" }}>
-              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(ජා.හැ.අ.)
-            </span>
-            <ValueLine value={a.nic} />
-          </div>
+          <View style={S.declRow}>
+            <Text style={S.declText}>{"      (ජා.හැ.අ.) "}</Text>
+            <DeclUnderline value={a.nic} width={120} />
+          </View>
 
-          <div style={{ fontSize: "12px", fontFamily: T.fontSans, lineHeight: 1.9, color: T.inkMuted, marginBottom: "4px" }}>
+          <Text style={[S.declText, { marginBottom: 3 }]}>
             වන මා විසින් මෙම යෝජනා පත්‍රය සදා ඔබ ලබා දුන් සියලුම තොරතුරු සත්‍ය වන අතර මා හට මෙහි සැලසුම
-          </div>
+          </Text>
 
-          <div style={{ display: "flex", alignItems: "flex-end", gap: "6px", marginBottom: "4px", width: "100%" }}>
-            <span style={{ fontSize: "12px", fontFamily: T.fontSans, color: T.inkMuted, whiteSpace: "nowrap" }}>
-              හදන්නාදෙනු විකුණුම් උපදේශක වන
-            </span>
-            <ValueLine value={inv.advisorName || ""} />
-            <span style={{ fontSize: "12px", fontFamily: T.fontSans, color: T.inkMuted, whiteSpace: "nowrap" }}>
-              යන ආය
-            </span>
-          </div>
+          <View style={[S.declRow, { marginBottom: 3 }]}>
+            <Text style={S.declText}>හදන්නාදෙනු විකුණුම් උපදේශක වන </Text>
+            <DeclUnderline width={110} />
+            <Text style={S.declText}> යන ආය</Text>
+          </View>
 
-          <div style={{ fontSize: "12px", fontFamily: T.fontSans, lineHeight: 1.9, color: T.inkMuted, marginBottom: "14px" }}>
+          <Text style={[S.declText, { marginBottom: 12 }]}>
             මෙම යෝජනා පත්‍රය සම්පූර්ණ කිරීමට අවසර ලබා දුන් බව සහතික කරමි.
-          </div>
+          </Text>
 
-          <div style={{ display: "flex", gap: "20px", width: "100%", boxSizing: "border-box" }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: "9px", fontWeight: 700, fontFamily: T.fontSans, color: T.green700, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                Customer Signature
-              </div>
-              <div style={{ fontSize: "12px", fontFamily: T.fontSans, color: T.inkMuted, fontWeight: 300, marginBottom: "6px" }}>
-                අයදුම්කරුගේ අත්සන
-              </div>
-              <div style={{ borderBottom: `1px solid ${T.green600}`, minHeight: "44px", display: "flex", alignItems: "center" }}>
-                {a.signature && (
-                  <img src={a.signature} alt="Signature" crossOrigin="anonymous" style={{ maxHeight: "40px", maxWidth: "100%", objectFit: "contain" }} />
-                )}
-              </div>
-            </div>
+          {/* Sig + NIC */}
+          <View style={{ flexDirection: "row" }}>
+            <View style={{ flex: 1, marginRight: 12 }}>
+              <Text style={S.sigLabelEn}>Customer Signature</Text>
+              <Text style={S.sigLabelSi}>අයදුම්කරුගේ අත්සන</Text>
+              <View style={{ minHeight: 34 }}>
+                {a.signature
+                  ? <Image src={a.signature} style={{ maxHeight: 30, objectFit: "contain" }} />
+                  : null}
+              </View>
+              <View style={S.sigLine} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={S.sigLabelEn}>NIC Number</Text>
+              <Text style={S.sigLabelSi}>ජා.හැ.අංකය</Text>
+              <View style={{ minHeight: 34, justifyContent: "flex-end" }}>
+                <Text style={S.valueText}>{a.nic ?? " "}</Text>
+              </View>
+              <View style={S.sigLine} />
+            </View>
+          </View>
+        </View>
 
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: "9px", fontWeight: 700, fontFamily: T.fontSans, color: T.green700, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                NIC Number
-              </div>
-              <div style={{ fontSize: "12px", fontFamily: T.fontSans, color: T.inkMuted, fontWeight: 300, marginBottom: "6px" }}>
-                ජා.හැ.අංකය
-              </div>
-              <ValueLine value={a.nic} />
-            </div>
-          </div>
-        </div>
-
-        <SectionBox en="For Office Use Only" si="කාර්යාල පරිහරණය සඳහා පමණි" gold mt="12px">
+        {/* ── OFFICE USE ONLY ── */}
+        <SectionBox en="For Office Use Only" si="කාර්යාල පරිහරණය සඳහා පමණි" gold>
           <FieldRow>
-            <Field en="Received By" si="ලැබූ නිලධාරියා" value="" />
-            <Field en="Date Received" si="ලැබූ දිනය" value="" borderRight={false} />
+            <Field en="Received By" si="ලැබූ නිලධාරියා" value="" gold />
+            <Field en="Date Received" si="ලැබූ දිනය" value="" borderRight={false} gold />
           </FieldRow>
           <FieldRow>
-            <Field en="Verified By" si="තහවුරු කළ නිලධාරි" value="" />
-            <Field en="Approved By" si="අනුමත කළ නිලධාරි" value="" />
-            <Field en="Branch" si="ශාඛාව" value="" borderRight={false} borderBottom={false} />
+            <Field en="Verified By" si="තහවුරු කළ නිලධාරි" value="" gold />
+            <Field en="Approved By" si="අනුමත කළ නිලධාරි" value="" gold />
+            <Field en="Branch" si="ශාඛාව" value="" borderRight={false} borderBottom={false} gold />
           </FieldRow>
         </SectionBox>
 
-        <div style={{ marginTop: "12px", border: `0.5px solid ${T.rule}`, padding: "8px 12px 10px", minHeight: "58px", width: "100%", boxSizing: "border-box" }}>
-          <div style={{ fontSize: "9px", fontWeight: 700, fontFamily: T.fontSans, color: T.green700, textTransform: "uppercase", letterSpacing: "0.04em", marginBottom: "1px" }}>
-            Remarks / Other
-          </div>
-          <div style={{ fontSize: "11.5px", fontFamily: T.fontSans, color: T.inkMuted, fontWeight: 300, marginBottom: "8px" }}>
-            වෙනත් සටහන්
-          </div>
-          <div style={{ borderBottom: `1px dotted ${T.rule}`, marginBottom: "10px", minHeight: "16px" }} />
-          <div style={{ borderBottom: `1px dotted ${T.rule}`, minHeight: "16px" }} />
-        </div>
+        {/* ── REMARKS ── */}
+        <View style={S.remarksBox}>
+          <Text style={S.remarksLabelEn}>Remarks / Other</Text>
+          <Text style={S.remarksLabelSi}>වෙනත් සටහන්</Text>
+          <View style={S.remarksLine} />
+          <View style={S.remarksLine} />
+        </View>
 
-        <div style={{ marginTop: "10px", paddingTop: "6px", borderTop: `0.5px solid ${T.rule}`, textAlign: "center", fontSize: "7.5px", fontFamily: T.fontSans, color: "rgba(0,0,0,0.28)", lineHeight: 1.6, width: "100%", boxSizing: "border-box" }}>
-          This is a computer-generated proposal form issued by Super Green Plantation (Pvt) Ltd.
-          {" · "}
-          All investments are subject to official terms &amp; conditions.
-        </div>
+        <Text style={S.legalText}>
+          {"This is a computer-generated proposal form issued by Super Green Plantation (Pvt) Ltd.  ·  All investments are subject to official terms & conditions."}
+        </Text>
+      </View>
 
-        <PageFooter label={pageLabel} page="Page 2 of 2" />
-      </PageBody>
+      <PageFooter label={pageLabel} page="Page 2 of 2" />
     </Page>
   );
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// MAIN TEMPLATE COMBINATOR
+// SHARED DATA RESOLVER
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const ProposalTemplate = React.forwardRef(({ data }: { data: any }, ref: any) => {
-  const a = data?.applicant ?? {};
+function resolveInvestmentData(data: any) {
+  const applicant: any = data?.applicant ?? {};
   const investments: any[] = data?.investments ?? [];
   const beneficiaries: any[] = data?.beneficiaries ?? [];
   const nominees: any[] = data?.nominees ?? [];
@@ -717,24 +741,83 @@ export const ProposalTemplate = React.forwardRef(({ data }: { data: any }, ref: 
   const beneficiaryById = Object.fromEntries(beneficiaries.map((b: any) => [b.id, b]));
   const nomineeById = Object.fromEntries(nominees.map((n: any) => [n.id, n]));
 
+  return { applicant, investments, beneficiaryById, nomineeById };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// EXPORT 1 — ProposalPDF (all investments, multi-page)
+// Use for "Download All" button
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const ProposalPDF = ({ data }: { data: any }) => {
+  const { applicant, investments, beneficiaryById, nomineeById } =
+    resolveInvestmentData(data);
+
   return (
-    <div ref={ref} style={{ backgroundColor: "#525659", padding: "20px 0", display: "flex", flexDirection: "column", gap: "30px", alignItems: "center", width: "100%" }}>
+    <Document
+      title={`Proposal - ${applicant.fullName ?? ""}`}
+      author="Super Green Plantation (Pvt) Ltd."
+      subject="Investment Proposal Form"
+      creator="SGP ERP"
+    >
       {investments.map((inv: any, idx: number) => {
         const beneficiary = beneficiaryById[inv.beneficiaryId] ?? {};
         const nominee = nomineeById[inv.nomineeId] ?? {};
         const label = investments.length > 1
-          ? `Investment ${idx + 1} of ${investments.length} (${inv.refNumber || "N/A"})`
+          ? `${inv.refNumber ?? `Investment ${idx + 1}`}`
           : inv.refNumber ?? "";
 
         return (
           <React.Fragment key={inv.id ?? idx}>
-            <InvestmentPage1 applicant={a} investment={inv} beneficiary={beneficiary} pageLabel={label} />
-            <InvestmentPage2 applicant={a} investment={inv} nominee={nominee} pageLabel={label} />
+            <InvestmentPage1 applicant={applicant} investment={inv} beneficiary={beneficiary} pageLabel={label} />
+            <InvestmentPage2 applicant={applicant} investment={inv} nominee={nominee} pageLabel={label} />
           </React.Fragment>
         );
       })}
-    </div>
+    </Document>
   );
-});
+};
 
-ProposalTemplate.displayName = "ProposalTemplate";
+// ─────────────────────────────────────────────────────────────────────────────
+// EXPORT 2 — SingleInvestmentPDF (one investment, exactly 2 pages)
+// Use for the per-row "Download" button in the investments table
+//
+// Usage:
+//   <PDFDownloadLink
+//     document={<SingleInvestmentPDF data={clientData} investmentId={inv.id} />}
+//     fileName={`Proposal_${inv.refNumber}.pdf`}
+//   >
+//     {({ loading }) => loading ? "…" : <Download />}
+//   </PDFDownloadLink>
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const SingleInvestmentPDF = ({
+  data,
+  investmentId,
+}: {
+  data: any;
+  investmentId: string;
+}) => {
+  const { applicant, investments, beneficiaryById, nomineeById } =
+    resolveInvestmentData(data);
+
+  // Find by string OR number id
+  const inv = investments.find(
+    (i: any) => String(i.id) === String(investmentId)
+  ) ?? investments[0] ?? {};
+  const beneficiary = beneficiaryById[inv.beneficiaryId] ?? {};
+  const nominee = nomineeById[inv.nomineeId] ?? {};
+  const label = inv.refNumber ?? "";
+
+  return (
+    <Document
+      title={`Proposal - ${applicant.fullName ?? ""} - ${label}`}
+      author="Super Green Plantation (Pvt) Ltd."
+      subject="Investment Proposal Form"
+      creator="SGP ERP"
+    >
+      <InvestmentPage1 applicant={applicant} investment={inv} beneficiary={beneficiary} pageLabel={label} />
+      <InvestmentPage2 applicant={applicant} investment={inv} nominee={nominee} pageLabel={label} />
+    </Document>
+  );
+};
