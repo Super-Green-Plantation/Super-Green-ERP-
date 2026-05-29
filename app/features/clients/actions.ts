@@ -133,7 +133,13 @@ export async function getClientById(id: number) {
         : { branchId: Number(dbUser!.branchId) }),
     },
     include: {
-      investments: { include: { plan: true, } },
+      investments: { 
+        include: { 
+          client:true,
+          plan: true,
+          beneficiary:true, 
+          nominee:true 
+        } },
       branch: true,
       nominees: true,
       beneficiaries: true,

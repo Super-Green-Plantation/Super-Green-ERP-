@@ -36,6 +36,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { updateInvestmentDocuments } from "../../investments/actions";
+import { InvestmentDownloadButton } from "@/app/components/Proposal/InvestmentDownloadButton";
 
 export default function ApplicationViewPage() {
   const queryClient = useQueryClient();
@@ -58,7 +59,7 @@ export default function ApplicationViewPage() {
   const { data: formData, isLoading, isError } = useClient(Number(id));
 
   console.log(formData);
-  
+
   useEffect(() => {
     fetch("/api/me")
       .then((res) => res.json())
@@ -163,12 +164,6 @@ export default function ApplicationViewPage() {
 
   return (
     <div className="max-w-7xl mx-auto space-y-10 min-h-screen p-4 md:p-8 pb-24">
-      {/* Hidden Proposal Template for PDF Generation */}
-      {/* <div className="hidden">
-        <div ref={proposalRef}>
-          <ProposalPDF data={formData} />
-        </div>
-      </div> */}
 
       {/* 1. HEADER SECTION */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 border-b border-border pb-8">
@@ -234,8 +229,13 @@ export default function ApplicationViewPage() {
                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-primary/10 transition-colors" />
 
                 <div className="flex justify-between items-center mb-8 relative">
-                  <div className="p-3 bg-primary/10 rounded-2xl border border-border">
-                    <Banknote className="w-6 h-6 text-primary" />
+                  <div className="">
+                    {/* <Banknote className="w-6 h-6 text-primary" /> */}
+                    <InvestmentDownloadButton
+                      investment={inv}           // the full investment object from your API
+                      beneficiary={inv.beneficiary}  // if you include it in the query
+                      nominee={inv.nominee}
+                    />
                   </div>
                   <div className="text-right">
                     <span className="block text-[10px] text-muted-foreground font-bold tracking-widest uppercase mb-1">Ref: {inv.refNumber}</span>
@@ -299,10 +299,19 @@ export default function ApplicationViewPage() {
                     Docs
                   </button>
                 </div>
+                {/* <div className="my-6 ">
+                  <InvestmentDownloadButton
+                    investment={inv}           // the full investment object from your API
+                    beneficiary={inv.beneficiary}  // if you include it in the query
+                    nominee={inv.nominee}
+                  />
+                </div> */}
+
               </div>
 
             );
           })}
+
 
         </div>
       </section>

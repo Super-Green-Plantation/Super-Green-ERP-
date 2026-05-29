@@ -117,7 +117,7 @@ export const applicantSchema = z.object({
   investmentDate: z.string().optional(),
   proposalFormNo: z
     .string()
-    .min(3, "Proposal form number must be at least 3 characters"),
+    .min(1, "Proposal form number must be at least 1 characters"),
   idFront: z.string().optional(),
   idBack: z.string().optional(),
   paymentSlip: z.string().optional(),

@@ -72,17 +72,10 @@ function fmtAmount(v?: number | string) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // A4 page geometry (in pt: 595.28 × 841.89)
-//
-// Fixed footer height: 22pt
-// Header height: ~82pt (header bar ~62pt + title banner ~20pt)
-// Body: fills remaining space between header and footer
-//
-// Key fix: Page uses fixed-position header + footer, and body fills the
-// remaining space. This prevents content from ever bleeding across pages.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const FOOTER_H = 22;   // pt — height reserved for the fixed footer
-const H_PAD = 14;   // pt — horizontal page padding
+const FOOTER_H = 20;   // pt — height reserved for the fixed footer
+const H_PAD = 14;      // pt — horizontal page padding
 
 // ─────────────────────────────────────────────────────────────────────────────
 // STYLES
@@ -91,17 +84,16 @@ const H_PAD = 14;   // pt — horizontal page padding
 const S = StyleSheet.create({
 
   // ── Page shell ──
-  // paddingBottom must equal FOOTER_H so body content never slides under footer
   page: {
     size: "A4",
     backgroundColor: C.white,
     fontFamily: "Noto",
     fontSize: 9,
     color: C.ink,
-    paddingBottom: FOOTER_H,
+    paddingBottom: FOOTER_H + 8, // Guard against running down under the absolute absolute line
   },
 
-  // ── Fixed page footer (always at bottom of every page) ──
+  // ── Fixed page footer ──
   footer: {
     position: "absolute",
     bottom: 0,
@@ -124,55 +116,54 @@ const S = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
-    paddingTop: 10,
-    paddingBottom: 8,
+    paddingTop: 8,
+    paddingBottom: 6,
     paddingHorizontal: H_PAD,
   },
   companyName: {
     fontFamily: "Playfair",
     fontWeight: 700,
-    fontSize: 13,
+    fontSize: 12,
     color: C.white,
     letterSpacing: 0.5,
-    marginBottom: 3,
+    marginBottom: 2,
   },
   companyMeta: {
-    fontSize: 7.5,
+    fontSize: 7,
     color: "rgba(255,255,255,0.62)",
-    lineHeight: 1.7,
+    lineHeight: 1.5,
   },
   headerRight: {
     alignItems: "flex-end",
   },
   logoImg: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: C.white,
     padding: 2,
     objectFit: "contain",
   },
-  // Two-row badge: proposal number (large) + INV ref (small)
   badgeStack: {
     alignItems: "flex-end",
-    marginTop: 5,
+    marginTop: 3,
   },
   proposalBadge: {
     backgroundColor: C.gold,
-    paddingVertical: 2,
-    paddingHorizontal: 10,
+    paddingVertical: 1,
+    paddingHorizontal: 8,
   },
   proposalBadgeText: {
     fontFamily: "Playfair",
     fontWeight: 700,
-    fontSize: 12,
+    fontSize: 11,
     color: C.green900,
     letterSpacing: 0.8,
   },
   invRefText: {
-    fontSize: 7,
+    fontSize: 6.5,
     color: "rgba(255,255,255,0.55)",
-    marginTop: 3,
+    marginTop: 2,
     letterSpacing: 0.3,
   },
 
@@ -181,7 +172,7 @@ const S = StyleSheet.create({
     backgroundColor: C.green700,
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 5,
+    paddingVertical: 4,
     paddingHorizontal: 20,
   },
   titleRule: { flex: 1, height: 0.5, backgroundColor: C.gold, opacity: 0.6 },
@@ -189,14 +180,14 @@ const S = StyleSheet.create({
   titleEn: {
     fontFamily: "Playfair",
     fontWeight: 700,
-    fontSize: 11,
+    fontSize: 10,
     color: C.white,
     letterSpacing: 1.2,
     textAlign: "center",
   },
   titleSi: {
     fontFamily: "Noto",
-    fontSize: 9,
+    fontSize: 8.5,
     color: "rgba(255,255,255,0.72)",
     textAlign: "center",
     marginTop: 1,
@@ -205,13 +196,13 @@ const S = StyleSheet.create({
   // ── Body ──
   body: {
     paddingHorizontal: H_PAD,
-    paddingTop: 8,
-    paddingBottom: 6,
+    paddingTop: 6,
+    paddingBottom: 4,
   },
 
   // ── Section box ──
-  sectionBox: { border: `0.5 solid ${C.rule}`, marginTop: 8 },
-  sectionBoxGold: { border: `0.5 solid ${C.gold}`, marginTop: 8 },
+  sectionBox: { border: `0.5 solid ${C.rule}`, marginTop: 6 },
+  sectionBoxGold: { border: `0.5 solid ${C.gold}`, marginTop: 6 },
 
   // ── Section header ──
   sectionHeader: {
@@ -219,7 +210,7 @@ const S = StyleSheet.create({
     alignItems: "center",
     backgroundColor: C.green50,
     borderBottom: `1.5 solid ${C.green600}`,
-    paddingVertical: 4,
+    paddingVertical: 3,
     paddingHorizontal: 8,
   },
   sectionHeaderGold: {
@@ -227,23 +218,23 @@ const S = StyleSheet.create({
     alignItems: "center",
     backgroundColor: C.goldLight,
     borderBottom: `1.5 solid ${C.gold}`,
-    paddingVertical: 4,
+    paddingVertical: 3,
     paddingHorizontal: 8,
   },
-  sectionAccentBar: { width: 3, height: 18, backgroundColor: C.green600, borderRadius: 1, marginRight: 6 },
-  sectionAccentBarGold: { width: 3, height: 18, backgroundColor: C.gold, borderRadius: 1, marginRight: 6 },
-  sectionTitleEn: { fontFamily: "Playfair", fontWeight: 700, fontSize: 9.5, color: C.green800, letterSpacing: 0.3 },
-  sectionTitleEnGold: { fontFamily: "Playfair", fontWeight: 700, fontSize: 9.5, color: C.gold, letterSpacing: 0.3 },
-  sectionTitleSi: { fontFamily: "Noto", fontSize: 9, color: C.inkMuted },
+  sectionAccentBar: { width: 3, height: 14, backgroundColor: C.green600, borderRadius: 1, marginRight: 6 },
+  sectionAccentBarGold: { width: 3, height: 14, backgroundColor: C.gold, borderRadius: 1, marginRight: 6 },
+  sectionTitleEn: { fontFamily: "Playfair", fontWeight: 700, fontSize: 9, color: C.green800, letterSpacing: 0.3 },
+  sectionTitleEnGold: { fontFamily: "Playfair", fontWeight: 700, fontSize: 9, color: C.gold, letterSpacing: 0.3 },
+  sectionTitleSi: { fontFamily: "Noto", fontSize: 8.5, color: C.inkMuted },
 
   // ── Field row / cell ──
   fieldRow: { flexDirection: "row" },
   field: {
     flex: 1,
-    paddingTop: 5,
-    paddingHorizontal: 8,
-    paddingBottom: 5,
-    minHeight: 42,
+    paddingTop: 3,
+    paddingHorizontal: 6,
+    paddingBottom: 3,
+    minHeight: 36, // Compact spacing down from 42 to prevent page overflow drops
     flexDirection: "column",
     justifyContent: "space-between",
   },
@@ -253,18 +244,18 @@ const S = StyleSheet.create({
 
   // ── Field text ──
   labelEn: {
-    fontSize: 7,
+    fontSize: 6.5,
     fontWeight: 700,
     color: C.green700,
-    letterSpacing: 0.7,
+    letterSpacing: 0.5,
     textTransform: "uppercase",
-    marginBottom: 1,
+    marginBottom: 0,
     fontFamily: "Noto",
   },
-  labelSi: { fontSize: 9.5, color: C.inkMuted, fontFamily: "Noto", marginBottom: 3 },
-  valueText: { fontSize: 9.5, fontWeight: 700, color: C.ink, fontFamily: "Noto", marginBottom: 2, minHeight: 11 },
-  valueLine: { height: 0.75, backgroundColor: C.green600, width: "100%" },
-  valueLineGold: { height: 0.75, backgroundColor: C.gold, width: "100%" },
+  labelSi: { fontSize: 8.5, color: C.inkMuted, fontFamily: "Noto", marginBottom: 1 },
+  valueText: { fontSize: 9, fontWeight: 700, color: C.ink, fontFamily: "Noto", marginBottom: 1, minHeight: 11 },
+  valueLine: { height: 0.5, backgroundColor: C.green600, width: "100%" },
+  valueLineGold: { height: 0.5, backgroundColor: C.gold, width: "100%" },
 
   // ── Return benefits ──
   returnRow: {
@@ -273,49 +264,49 @@ const S = StyleSheet.create({
     borderTop: "none",
     backgroundColor: C.green50,
   },
-  returnItem: { flex: 1, alignItems: "center", paddingVertical: 6, paddingHorizontal: 6, borderRight: `0.5 solid ${C.rule}` },
-  returnItemLast: { flex: 1, alignItems: "center", paddingVertical: 6, paddingHorizontal: 6 },
-  returnLabelEn: { fontSize: 7, fontWeight: 700, color: C.green700, letterSpacing: 0.6, textTransform: "uppercase", fontFamily: "Noto", marginBottom: 1 },
-  returnLabelSi: { fontSize: 9, color: C.inkMuted, fontFamily: "Noto", marginBottom: 3 },
-  returnValue: { fontFamily: "Playfair", fontWeight: 700, fontSize: 11, color: C.green800, marginBottom: 2, minHeight: 12 },
-  returnLine: { height: 0.75, backgroundColor: C.green600, width: "80%" },
+  returnItem: { flex: 1, alignItems: "center", paddingVertical: 4, paddingHorizontal: 6, borderRight: `0.5 solid ${C.rule}` },
+  returnItemLast: { flex: 1, alignItems: "center", paddingVertical: 4, paddingHorizontal: 6 },
+  returnLabelEn: { fontSize: 6.5, fontWeight: 700, color: C.green700, letterSpacing: 0.5, textTransform: "uppercase", fontFamily: "Noto", marginBottom: 0 },
+  returnLabelSi: { fontSize: 8.5, color: C.inkMuted, fontFamily: "Noto", marginBottom: 1 },
+  returnValue: { fontFamily: "Playfair", fontWeight: 700, fontSize: 10, color: C.green800, marginBottom: 1, minHeight: 12 },
+  returnLine: { height: 0.5, backgroundColor: C.green600, width: "80%" },
 
   // ── Signature strip ──
   sigStrip: { flexDirection: "row", backgroundColor: C.green50, border: `0.5 solid ${C.rule}`, borderTop: "none" },
-  sigBlock: { flex: 1, padding: "6 10 8 10", borderRight: `0.5 solid ${C.rule}` },
-  sigBlockLast: { flex: 1, padding: "6 10 8 10" },
-  sigLabelEn: { fontSize: 7, fontWeight: 700, color: C.green700, textTransform: "uppercase", letterSpacing: 0.6, fontFamily: "Noto" },
-  sigLabelSi: { fontSize: 9.5, color: C.inkMuted, fontFamily: "Noto", marginBottom: 5 },
-  sigLineArea: { minHeight: 34 },
-  sigLine: { height: 0.75, backgroundColor: C.green600, marginTop: 4 },
+  sigBlock: { flex: 1, padding: "4 8 6 8", borderRight: `0.5 solid ${C.rule}` },
+  sigBlockLast: { flex: 1, padding: "4 8 6 8" },
+  sigLabelEn: { fontSize: 6.5, fontWeight: 700, color: C.green700, textTransform: "uppercase", letterSpacing: 0.5, fontFamily: "Noto" },
+  sigLabelSi: { fontSize: 8.5, color: C.inkMuted, fontFamily: "Noto", marginBottom: 3 },
+  sigLineArea: { minHeight: 26 },
+  sigLine: { height: 0.5, backgroundColor: C.green600, marginTop: 2 },
 
   // ── Declaration ──
   declarationBox: {
-    marginTop: 8,
+    marginTop: 6,
     border: `0.5 solid ${C.rule}`,
     borderLeft: `2.5 solid ${C.green600}`,
     backgroundColor: C.green50,
-    padding: "8 12 10 12",
+    padding: "6 10 8 10",
   },
-  declTitleEn: { fontSize: 7, fontWeight: 700, color: C.green700, textTransform: "uppercase", letterSpacing: 0.6, fontFamily: "Noto" },
-  declTitleSi: { fontSize: 9.5, color: C.inkMuted, fontFamily: "Noto", marginBottom: 6 },
-  declRow: { flexDirection: "row", alignItems: "flex-end", marginBottom: 4 },
-  declText: { fontSize: 9.5, color: C.inkMuted, fontFamily: "Noto", lineHeight: 1.8 },
+  declTitleEn: { fontSize: 6.5, fontWeight: 700, color: C.green700, textTransform: "uppercase", letterSpacing: 0.5, fontFamily: "Noto" },
+  declTitleSi: { fontSize: 8.5, color: C.inkMuted, fontFamily: "Noto", marginBottom: 4 },
+  declRow: { flexDirection: "row", alignItems: "flex-end", marginBottom: 3 },
+  declText: { fontSize: 8.5, color: C.inkMuted, fontFamily: "Noto", lineHeight: 1.6 },
   declUWrap: { flex: 1, minWidth: 80, marginHorizontal: 4 },
-  declUValue: { fontSize: 9.5, fontWeight: 700, color: C.ink, fontFamily: "Noto", minHeight: 11, marginBottom: 1 },
-  declULine: { height: 0.75, backgroundColor: C.green600 },
+  declUValue: { fontSize: 8.5, fontWeight: 700, color: C.ink, fontFamily: "Noto", minHeight: 11, marginBottom: 1 },
+  declULine: { height: 0.5, backgroundColor: C.green600 },
 
   // ── Remarks ──
-  remarksBox: { marginTop: 8, border: `0.5 solid ${C.rule}`, padding: "6 10 10 10", minHeight: 48 },
-  remarksLabelEn: { fontSize: 7, fontWeight: 700, color: C.green700, textTransform: "uppercase", letterSpacing: 0.6, fontFamily: "Noto" },
-  remarksLabelSi: { fontSize: 9.5, color: C.inkMuted, fontFamily: "Noto", marginBottom: 8 },
-  remarksLine: { height: 0.75, backgroundColor: C.rule, marginBottom: 10 },
+  remarksBox: { marginTop: 6, border: `0.5 solid ${C.rule}`, padding: "4 8 6 8", minHeight: 40 },
+  remarksLabelEn: { fontSize: 6.5, fontWeight: 700, color: C.green700, textTransform: "uppercase", letterSpacing: 0.5, fontFamily: "Noto" },
+  remarksLabelSi: { fontSize: 8.5, color: C.inkMuted, fontFamily: "Noto", marginBottom: 4 },
+  remarksLine: { height: 0.5, backgroundColor: C.rule, marginBottom: 8 },
 
   // ── Legal text ──
   legalText: {
-    fontSize: 6.5, color: "rgba(0,0,0,0.28)", fontFamily: "Noto",
-    textAlign: "center", marginTop: 8,
-    paddingTop: 4, borderTop: `0.5 solid ${C.rule}`, lineHeight: 1.5,
+    fontSize: 6, color: "rgba(0,0,0,0.28)", fontFamily: "Noto",
+    textAlign: "center", marginTop: 6,
+    paddingTop: 3, borderTop: `0.5 solid ${C.rule}`, lineHeight: 1.4,
   },
 });
 
@@ -365,7 +356,7 @@ const SectionHeader = ({ en, si, gold = false }: { en: string; si: string; gold?
 );
 
 const SectionBox = ({
-  en, si, gold = false, children, mt = 8,
+  en, si, gold = false, children, mt = 6,
 }: {
   en: string; si: string; gold?: boolean; children: React.ReactNode; mt?: number;
 }) => (
@@ -404,7 +395,7 @@ const SignatureStrip = ({ signature }: { signature?: string }) => (
       <Text style={S.sigLabelSi}>අයදුම්කරුගේ අත්සන</Text>
       <View style={S.sigLineArea}>
         {signature
-          ? <Image src={signature} style={{ maxHeight: 30, objectFit: "contain" }} />
+          ? <Image src={signature} style={{ maxHeight: 24, objectFit: "contain" }} />
           : null}
       </View>
       <View style={S.sigLine} />
@@ -427,9 +418,6 @@ const DeclUnderline = ({ value, width = 80 }: { value?: string; width?: number }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // COMPANY HEADER
-// proposalFormNo — the human-readable proposal number (e.g. "P-00042")
-//                  taken from inv.proposalFormNo, falling back to applicant
-// refNumber      — the investment ref (INV-XXXXX)
 // ─────────────────────────────────────────────────────────────────────────────
 
 const CompanyHeader = ({
@@ -440,7 +428,6 @@ const CompanyHeader = ({
 }) => (
   <>
     <View style={S.headerBar}>
-      {/* Left */}
       <View style={{ flex: 1 }}>
         <Text style={S.companyName}>Super Green Plantation (Pvt) Ltd.</Text>
         <Text style={S.companyMeta}>
@@ -451,17 +438,14 @@ const CompanyHeader = ({
         </Text>
       </View>
 
-      {/* Right: logo + proposal no. + INV ref */}
       <View style={S.headerRight}>
         <Image src="/logo.png" style={S.logoImg} />
         <View style={S.badgeStack}>
-          {/* Proposal Form Number — prominent gold badge */}
           {proposalFormNo ? (
             <View style={S.proposalBadge}>
               <Text style={S.proposalBadgeText}>{proposalFormNo}</Text>
             </View>
           ) : null}
-          {/* INV reference — smaller, below badge */}
           {refNumber ? (
             <Text style={S.invRefText}>Ref: {refNumber}</Text>
           ) : null}
@@ -469,7 +453,6 @@ const CompanyHeader = ({
       </View>
     </View>
 
-    {/* Title banner */}
     <View style={S.titleBanner}>
       <View style={S.titleRule} />
       <View style={S.titleCenter}>
@@ -483,7 +466,6 @@ const CompanyHeader = ({
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FIXED PAGE FOOTER
-// `fixed` prop makes it repeat on every page in @react-pdf
 // ─────────────────────────────────────────────────────────────────────────────
 
 const PageFooter = ({ label, page }: { label: string; page: string }) => (
@@ -509,8 +491,6 @@ const InvestmentPage1 = ({
   const b = beneficiary ?? {};
   const plan = inv.plan ?? {};
 
-  // proposalFormNo lives on the investment record (preferred) or falls back
-  // to applicant-level field if your schema stores it there
   const proposalFormNo = inv.proposalFormNo ?? a.proposalFormNo ?? "";
   const refNumber = inv.refNumber ?? "";
 
@@ -546,7 +526,7 @@ const InvestmentPage1 = ({
           </FieldRow>
           <FieldRow>
             <Field en="Postal Address" si="ලිපිනය" value={a.address}
-              borderRight={false} minHeight={46} />
+              borderRight={false} minHeight={40} />
           </FieldRow>
           <FieldRow>
             <Field en="Land Phone" si="ස්ථාවර දුරකථනය" value={a.phoneLand || ""} />
@@ -641,7 +621,7 @@ const InvestmentPage2 = ({
           <FieldRow>
             <Field en="Postal Address" si="ලිපිනය"
               value={n.postalAddress ?? n.permanentAddress}
-              borderRight={false} minHeight={46} />
+              borderRight={false} minHeight={40} />
           </FieldRow>
           <FieldRow>
             <Field en="Relationship" si="සම්බන්ධය" value={n.relationship} />
@@ -660,17 +640,17 @@ const InvestmentPage2 = ({
             <DeclUnderline value={a.nic} width={120} />
           </View>
 
-          <Text style={[S.declText, { marginBottom: 3 }]}>
+          <Text style={[S.declText, { marginBottom: 2 }]}>
             වන මා විසින් මෙම යෝජනා පත්‍රය සදා ඔබ ලබා දුන් සියලුම තොරතුරු සත්‍ය වන අතර මා හට මෙහි සැලසුම
           </Text>
 
-          <View style={[S.declRow, { marginBottom: 3 }]}>
+          <View style={[S.declRow, { marginBottom: 2 }]}>
             <Text style={S.declText}>හදන්නාදෙනු විකුණුම් උපදේශක වන </Text>
             <DeclUnderline width={110} />
             <Text style={S.declText}> යන ආය</Text>
           </View>
 
-          <Text style={[S.declText, { marginBottom: 12 }]}>
+          <Text style={[S.declText, { marginBottom: 8 }]}>
             මෙම යෝජනා පත්‍රය සම්පූර්ණ කිරීමට අවසර ලබා දුන් බව සහතික කරමි.
           </Text>
 
@@ -679,9 +659,9 @@ const InvestmentPage2 = ({
             <View style={{ flex: 1, marginRight: 12 }}>
               <Text style={S.sigLabelEn}>Customer Signature</Text>
               <Text style={S.sigLabelSi}>අයදුම්කරුගේ අත්සන</Text>
-              <View style={{ minHeight: 34 }}>
+              <View style={{ minHeight: 26 }}>
                 {a.signature
-                  ? <Image src={a.signature} style={{ maxHeight: 30, objectFit: "contain" }} />
+                  ? <Image src={a.signature} style={{ maxHeight: 24, objectFit: "contain" }} />
                   : null}
               </View>
               <View style={S.sigLine} />
@@ -689,7 +669,7 @@ const InvestmentPage2 = ({
             <View style={{ flex: 1 }}>
               <Text style={S.sigLabelEn}>NIC Number</Text>
               <Text style={S.sigLabelSi}>ජා.හැ.අංකය</Text>
-              <View style={{ minHeight: 34, justifyContent: "flex-end" }}>
+              <View style={{ minHeight: 26, justifyContent: "flex-end" }}>
                 <Text style={S.valueText}>{a.nic ?? " "}</Text>
               </View>
               <View style={S.sigLine} />
@@ -745,8 +725,7 @@ function resolveInvestmentData(data: any) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// EXPORT 1 — ProposalPDF (all investments, multi-page)
-// Use for "Download All" button
+// EXPORT 1 — ProposalPDF
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const ProposalPDF = ({ data }: { data: any }) => {
@@ -779,16 +758,7 @@ export const ProposalPDF = ({ data }: { data: any }) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// EXPORT 2 — SingleInvestmentPDF (one investment, exactly 2 pages)
-// Use for the per-row "Download" button in the investments table
-//
-// Usage:
-//   <PDFDownloadLink
-//     document={<SingleInvestmentPDF data={clientData} investmentId={inv.id} />}
-//     fileName={`Proposal_${inv.refNumber}.pdf`}
-//   >
-//     {({ loading }) => loading ? "…" : <Download />}
-//   </PDFDownloadLink>
+// EXPORT 2 — SingleInvestmentPDF
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const SingleInvestmentPDF = ({
@@ -801,7 +771,6 @@ export const SingleInvestmentPDF = ({
   const { applicant, investments, beneficiaryById, nomineeById } =
     resolveInvestmentData(data);
 
-  // Find by string OR number id
   const inv = investments.find(
     (i: any) => String(i.id) === String(investmentId)
   ) ?? investments[0] ?? {};

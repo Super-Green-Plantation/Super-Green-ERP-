@@ -56,6 +56,8 @@ export async function getInvestments(page = 1, pageSize = 10) {
         plan: true,
         advisor: true,
         branch: true,
+        beneficiary:true,
+        nominee:true,
       },
       orderBy: { createdAt: "desc" },
     }),
