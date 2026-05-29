@@ -10,7 +10,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 // Components
@@ -65,6 +65,23 @@ const Page = () => {
   /* --- Per-member toggle: set of disabled empNos --- */
   const [disabledEmpNos, setDisabledEmpNos] = useState<Set<string>>(new Set());
 
+  /* --- Saved hierarchy derived from selected client --- */
+  const clientSavedHierarchy = useMemo<Member[]>(() => {
+    if (!clientData) return [];
+    // fa is the advisor — exclude from upline list; include fm..cco
+    const slots = [
+      clientData.fm,
+      clientData.bm,
+      clientData.rm,
+      clientData.zm,
+      clientData.agm,
+      clientData.cco,
+    ].filter(Boolean) as Member[];
+    return slots;
+  }, [clientData]);
+
+  const hasSavedHierarchy = clientSavedHierarchy.length > 0;
+
   /* --- Derive investment amount from selected investment --- */
   const investmentAmount: number | null =
     selectedInvestmentId && clientData?.investments
@@ -86,12 +103,32 @@ const Page = () => {
   useEffect(() => {
     if (!selectedClientId) {
       setClientData(null);
+      setSelectedEmpNo("");
+      setEligibleMembers([]);
+      setDisabledEmpNos(new Set());
+      setManualMembers([]);
       return;
     }
-    getClientById(selectedClientId).then(setClientData);
+    getClientById(selectedClientId).then((data) => {
+      setClientData(data);
+      // Auto-set advisor from saved FA
+      if (data?.fa?.empNo) {
+        setSelectedEmpNo(data.fa.empNo);
+      } else {
+        setSelectedEmpNo("");
+      }
+      // Reset per-client state
+      setDisabledEmpNos(new Set());
+      setManualMembers([]);
+    });
   }, [selectedClientId]);
 
   useEffect(() => {
+    // If the client has a saved hierarchy, use that — skip dynamic lookup
+    if (hasSavedHierarchy) {
+      setEligibleMembers(clientSavedHierarchy);
+      return;
+    }
     if (!selectedEmpNo || !selectedBranchId) {
       setEligibleMembers([]);
       return;
@@ -99,7 +136,7 @@ const Page = () => {
     getEligibleCommissions(selectedEmpNo, selectedBranchId)
       .then((data) => setEligibleMembers(data.upperMember))
       .catch(() => setEligibleMembers([]));
-  }, [selectedEmpNo, selectedBranchId]);
+  }, [selectedEmpNo, selectedBranchId, hasSavedHierarchy, clientSavedHierarchy]);
 
   /* --- Manual search debounce --- */
   useEffect(() => {
@@ -152,12 +189,21 @@ const Page = () => {
         .filter((m) => !disabledEmpNos.has(m.empNo))
         .map((m) => m.empNo);
 
+      // When client has a saved hierarchy, pass those empNos so the server
+      // bypasses the dynamic rank-based upline lookup
+      const hierarchyEmpNos = hasSavedHierarchy
+        ? eligibleMembers
+            .filter((m) => !disabledEmpNos.has(m.empNo))
+            .map((m) => m.empNo)
+        : undefined;
+
       const result = await processCommissions({
         investmentId: selectedInvestmentId,
         empNo: selectedEmpNo,
         branchId: selectedBranchId!,
         disabledEmpNos: Array.from(disabledEmpNos),
         manualEmpNos: enabledManualEmpNos,
+        hierarchyEmpNos,
       });
 
       if (result.success) {
@@ -212,11 +258,18 @@ const Page = () => {
                 <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
                   <Users className="w-3 h-3" /> Hierarchy Trace
                 </span>
-                {eligibleMembers.length > 0 && (
-                  <span className="text-[10px] font-bold text-blue-600">
-                    {eligibleMembers.length} Found
-                  </span>
-                )}
+                <div className="flex items-center gap-2">
+                  {hasSavedHierarchy && (
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-widest bg-emerald-100 text-emerald-700">
+                      Saved
+                    </span>
+                  )}
+                  {eligibleMembers.length > 0 && (
+                    <span className={`text-[10px] font-bold ${hasSavedHierarchy ? "text-emerald-600" : "text-blue-600"}`}>
+                      {eligibleMembers.length} Found
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Member list */}
@@ -350,9 +403,16 @@ const Page = () => {
                 </div>
                 <div className="flex justify-between items-end border-b border-slate-800 pb-2">
                   <span className="text-xs text-muted-foreground font-medium">Advisor</span>
-                  <span className="text-sm font-bold truncate max-w-37.5">
-                    {selectedEmpNo || "—"}
-                  </span>
+                  <div className="text-right">
+                    <span className="text-sm font-bold truncate max-w-37.5 block">
+                      {clientData?.fa?.nameWithInitials || selectedEmpNo || "—"}
+                    </span>
+                    {clientData?.fa && (
+                      <span className="text-[9px] text-emerald-400 font-bold uppercase tracking-widest">
+                        {selectedEmpNo}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="flex justify-between items-end border-b border-slate-800 pb-2">
                   <span className="text-xs text-muted-foreground font-medium">Investment ID</span>
@@ -360,6 +420,14 @@ const Page = () => {
                     {selectedInvestmentId || "—"}
                   </span>
                 </div>
+                {hasSavedHierarchy && (
+                  <div className="flex justify-between items-end border-b border-slate-800 pb-2">
+                    <span className="text-xs text-muted-foreground font-medium">Hierarchy</span>
+                    <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
+                      Saved ({eligibleMembers.length})
+                    </span>
+                  </div>
+                )}
                 {disabledEmpNos.size > 0 && (
                   <div className="flex justify-between items-end border-b border-slate-800 pb-2">
                     <span className="text-xs text-muted-foreground font-medium">Skipped</span>

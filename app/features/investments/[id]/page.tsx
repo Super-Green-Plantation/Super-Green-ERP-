@@ -39,6 +39,20 @@ export default function EditInvestmentPage() {
           investmentRates: Array.isArray(inv.investmentRates) ? inv.investmentRates : [],
           beneficiary: inv.beneficiary ?? undefined,
           nominee: inv.nominee ?? undefined,
+          faId: inv.faId ?? undefined,
+          fmId: inv.fmId ?? undefined,
+          bmId: inv.bmId ?? undefined,
+          rmId: inv.rmId ?? undefined,
+          zmId: inv.zmId ?? undefined,
+          agmId: inv.agmId ?? undefined,
+          ccoId: inv.ccoId ?? undefined,
+          fa: inv.fa ?? undefined,
+          fm: inv.fm ?? undefined,
+          bm: inv.bm ?? undefined,
+          rm: inv.rm ?? undefined,
+          zm: inv.zm ?? undefined,
+          agm: inv.agm ?? undefined,
+          cco: inv.cco ?? undefined,
         }}
       />
     </div>

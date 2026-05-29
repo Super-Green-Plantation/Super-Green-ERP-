@@ -154,6 +154,14 @@ model Member {
   clientsAsZM  Client[] @relation("ClientZM")
   clientsAsAGM Client[] @relation("ClientAGM")
   clientsAsCCO Client[] @relation("ClientCCO")
+
+  investmentsAsFA  Investment[] @relation("InvestmentFA")
+  investmentsAsFM  Investment[] @relation("InvestmentFM")
+  investmentsAsBM  Investment[] @relation("InvestmentBM")
+  investmentsAsRM  Investment[] @relation("InvestmentRM")
+  investmentsAsZM  Investment[] @relation("InvestmentZM")
+  investmentsAsAGM Investment[] @relation("InvestmentAGM")
+  investmentsAsCCO Investment[] @relation("InvestmentCCO")
 }
 
 model PositionTarget {
@@ -244,6 +252,22 @@ model Investment {
   nominee              Nominee?       @relation(fields: [nomineeId], references: [id])
   plan                 FinancialPlan? @relation(fields: [planId], references: [id])
   profit               Profit?
+
+  faId  Int?
+  fmId  Int?
+  bmId  Int?
+  rmId  Int?
+  zmId  Int?
+  agmId Int?
+  ccoId Int?
+
+  fa  Member? @relation("InvestmentFA", fields: [faId], references: [id])
+  fm  Member? @relation("InvestmentFM", fields: [fmId], references: [id])
+  bm  Member? @relation("InvestmentBM", fields: [bmId], references: [id])
+  rm  Member? @relation("InvestmentRM", fields: [rmId], references: [id])
+  zm  Member? @relation("InvestmentZM", fields: [zmId], references: [id])
+  agm Member? @relation("InvestmentAGM", fields: [agmId], references: [id])
+  cco Member? @relation("InvestmentCCO", fields: [ccoId], references: [id])
 }
 
 model Client {

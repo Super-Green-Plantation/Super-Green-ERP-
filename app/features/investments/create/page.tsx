@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import Back from "@/app/components/Buttons/Back";
 import { createPortal } from "react-dom";
 import { investmentFormSchema } from "@/lib/validations/investment.schema";
+import AdvisorHierarchy from "./AdvisorHierarchy";
 
 type BeneficiaryMode = "existing" | "new" | "none";
 type NomineeMode = "existing" | "new" | "none";
@@ -245,6 +246,14 @@ type InitialData = {
   beneficiary?: any;   // full record
   nominee?: any;       // full record
   proposalFormNo?: string;
+  faId?: number | null;
+  fmId?: number | null;
+  bmId?: number | null;
+  rmId?: number | null;
+  zmId?: number | null;
+  agmId?: number | null;
+  ccoId?: number | null;
+  fa?: any; fm?: any; bm?: any; rm?: any; zm?: any; agm?: any; cco?: any;
 };
 
 export default function CreateInvestmentForm({
@@ -318,6 +327,42 @@ console.log(initialData);
   const [nomineeLabel, setNomineeLabel] = useState<string | null>(
     initialData?.nominee?.fullName ?? null
   );
+
+  // ---- Hierarchy ----
+  const [hierarchy, setHierarchy] = useState({
+    faId: initialData?.faId ?? null,
+    fmId: initialData?.fmId ?? null,
+    bmId: initialData?.bmId ?? null,
+    rmId: initialData?.rmId ?? null,
+    zmId: initialData?.zmId ?? null,
+    agmId: initialData?.agmId ?? null,
+    ccoId: initialData?.ccoId ?? null,
+  });
+
+  // When client changes, auto-fill from client if we aren't in edit mode or if client changed
+  useEffect(() => {
+    if (selectedClient && !lockedClient) {
+      setHierarchy({
+        faId: selectedClient.faId ?? null,
+        fmId: selectedClient.fmId ?? null,
+        bmId: selectedClient.bmId ?? null,
+        rmId: selectedClient.rmId ?? null,
+        zmId: selectedClient.zmId ?? null,
+        agmId: selectedClient.agmId ?? null,
+        ccoId: selectedClient.ccoId ?? null,
+      });
+    }
+  }, [selectedClient, lockedClient]);
+
+  const hierarchyDisplays = {
+    faId: initialData?.fa?.nameWithInitials ?? undefined,
+    fmId: initialData?.fm?.nameWithInitials ?? undefined,
+    bmId: initialData?.bm?.nameWithInitials ?? undefined,
+    rmId: initialData?.rm?.nameWithInitials ?? undefined,
+    zmId: initialData?.zm?.nameWithInitials ?? undefined,
+    agmId: initialData?.agm?.nameWithInitials ?? undefined,
+    ccoId: initialData?.cco?.nameWithInitials ?? undefined,
+  };
 
   useEffect(() => {
     if (!isEditMode) getClients().then(res => setClients(res.clients));
@@ -482,7 +527,8 @@ console.log(initialData);
           nomineeId,
           newBeneficiary,
           newNominee,
-          proposal
+          proposal,
+          ...hierarchy,
         });
         if (!res.success) { toast.error(res.error ?? "Update failed"); return; }
         toast.success("Investment updated successfully");
@@ -498,7 +544,8 @@ console.log(initialData);
           nomineeId,
           newBeneficiary,
           newNominee,
-          proposal
+          proposal,
+          ...hierarchy,
         });
         if (!res.success) { toast.error(res.error ?? "Failed"); return; }
         toast.success("Investment created successfully");
@@ -801,6 +848,13 @@ console.log(initialData);
             </div>
           </div>
 
+          {/* Advisor Hierarchy */}
+          <AdvisorHierarchy 
+            values={hierarchy} 
+            onChange={(key, id) => setHierarchy(p => ({ ...p, [key]: id }))} 
+            displays={hierarchyDisplays}
+          />
+
           {/* Submit */}
           <button
             type="button"
@@ -814,9 +868,7 @@ console.log(initialData);
           >
             {loading
               ? <><Loader2 className="w-5 h-5 animate-spin" /> {isEditMode ? "Saving..." : "Finalizing..."}</>
-              : isEditMode
-                ? <><Pencil className="w-5 h-5" /> Save Changes</>
-                : <><Plus className="w-5 h-5" /> Confirm Investment</>
+              : <><Plus className="w-5 h-5" /> {isEditMode ? "Update Investment" : "Create Investment"}</>
             }
           </button>
         </div>

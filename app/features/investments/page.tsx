@@ -17,13 +17,14 @@ import {
   X,
   ChevronDown,
 } from "lucide-react";
+import { toast } from "sonner";
 import { useIsMounted } from "@/app/hooks/useIsMounted";
 import { generateInvestmentsReportPDF } from "@/app/pdf/InvestmentsReport";
 import Heading from "@/app/components/Heading";
 import { ProposalReportExport } from "@/app/components/Buttons/ProposalReportExport";
 import { useQuery } from "@tanstack/react-query";
 import { getBranches } from "../branches/actions";
-import { getInvestmentSummary, searchInvestments } from "./actions";
+import { getInvestmentSummary, searchInvestments, getInvestments } from "./actions";
 import { InvestmentDownloadButton } from "@/app/components/Proposal/InvestmentDownloadButton";
 
 const getMonthOptions = () => {
@@ -205,7 +206,29 @@ export default function InvestmentsPage() {
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
           {investments.length > 0 && (
             <button
-              onClick={() => generateInvestmentsReportPDF(investments)}
+              onClick={async () => {
+                const toastId = toast.loading("Preparing PDF...");
+                try {
+                  let allInvestments = [];
+                  if (isFiltered) {
+                    const res = await searchInvestments(
+                      searchText,
+                      branchId !== "all" ? Number(branchId) : undefined,
+                      selectedMonth,
+                      1,
+                      -1
+                    );
+                    allInvestments = res.investments;
+                  } else {
+                    const res = await getInvestments(1, -1);
+                    allInvestments = res.investments;
+                  }
+                  generateInvestmentsReportPDF(allInvestments);
+                  toast.success("PDF generated", { id: toastId });
+                } catch (error) {
+                  toast.error("Failed to generate PDF", { id: toastId });
+                }
+              }}
               className="flex items-center justify-center gap-2 px-5 py-2.5 bg-muted hover:bg-muted/80 text-foreground border border-border text-xs font-bold uppercase tracking-widest rounded-xl transition-all active:scale-95"
             >
               <Download className="w-4 h-4 text-primary" />

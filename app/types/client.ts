@@ -31,6 +31,23 @@ export interface Client {
   beneficiaries?: Beneficiary[]; // Changed to array if that's what API returns
   nominees?: Nominee[];       // Changed to array if that's what API returns
 
+  // Saved hierarchy members from client registration
+  faId?: number | null;
+  fmId?: number | null;
+  bmId?: number | null;
+  rmId?: number | null;
+  zmId?: number | null;
+  agmId?: number | null;
+  ccoId?: number | null;
+
+  fa?: any | null;
+  fm?: any | null;
+  bm?: any | null;
+  rm?: any | null;
+  zm?: any | null;
+  agm?: any | null;
+  cco?: any | null;
+
   createdAt: string | Date;
   updatedAt: string | Date;
 }

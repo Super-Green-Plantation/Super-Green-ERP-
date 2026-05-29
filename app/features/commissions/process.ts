@@ -18,8 +18,9 @@ export async function processCommissions(data: {
   investmentId: number;
   empNo: string;
   branchId: number;
-  disabledEmpNos?: string[];   // members toggled off in UI — fully skipped
-  manualEmpNos?: string[];     // manually added members to receive ORC
+  disabledEmpNos?: string[];      // members toggled off in UI — fully skipped
+  manualEmpNos?: string[];        // manually added members to receive ORC
+  hierarchyEmpNos?: string[];     // pre-saved client hierarchy (fa/fm/bm/rm/zm/agm/cco) — bypasses dynamic upline lookup
 }) {
   const {
     investmentId,
@@ -27,6 +28,7 @@ export async function processCommissions(data: {
     branchId,
     disabledEmpNos = [],
     manualEmpNos = [],
+    hierarchyEmpNos,
   } = data;
 
   const disabledSet = new Set(disabledEmpNos);
@@ -48,8 +50,17 @@ export async function processCommissions(data: {
 
     if (!advisor) throw new ApiError("ADVISOR_NOT_FOUND", "Advisor not found", 404);
 
-    // Fetch upline chain for the advisor
-    const uplines = await getUplineChain(advisor.position.rank, branchId);
+    // Fetch upline chain — use pre-saved client hierarchy when available, otherwise derive dynamically
+    const uplines =
+      hierarchyEmpNos && hierarchyEmpNos.length > 0
+        ? await prisma.member.findMany({
+            where: { empNo: { in: hierarchyEmpNos } },
+            include: {
+              position: { include: { orc: true, salary: true } },
+              branches: { include: { branch: true } },
+            },
+          })
+        : await getUplineChain(advisor.position.rank, branchId);
 
     // Fetch manually added members with their ORC config
     const manualMembers =
@@ -226,6 +237,7 @@ export async function processCommissions(data: {
         processedAt: new Date().toISOString(),
         disabledEmpNos,
         manualEmpNos,
+        usedSavedHierarchy: !!(hierarchyEmpNos && hierarchyEmpNos.length > 0),
       },
     });
 

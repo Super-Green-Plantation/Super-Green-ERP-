@@ -49,8 +49,7 @@ export async function getInvestments(page = 1, pageSize = 10) {
   const [investments, total] = await Promise.all([
     prisma.investment.findMany({
       where: whereCondition,
-      skip: (page - 1) * pageSize,
-      take: pageSize,
+      ...(pageSize !== -1 ? { skip: (page - 1) * pageSize, take: pageSize } : {}),
       include: {
         client: true,
         plan: true,
@@ -145,6 +144,7 @@ export async function getInvestmentById(id: number) {
             }
           },
         },
+        fa: true, fm: true, bm: true, rm: true, zm: true, agm: true, cco: true,
       },
     });
     return investment;
@@ -420,6 +420,13 @@ export async function createInvestmentForExistingClient(data: {
           beneficiaryId,
           nomineeId,
           proposalFormNo: data.proposal,
+          faId: data.faId,
+          fmId: data.fmId,
+          bmId: data.bmId,
+          rmId: data.rmId,
+          zmId: data.zmId,
+          agmId: data.agmId,
+          ccoId: data.ccoId,
         },
       });
  
@@ -482,7 +489,8 @@ export async function createInvestmentForExistingClient(data: {
 
 export async function updateInvestment({
   investmentId, planId, amount, investmentDate, investmentRates,
-  beneficiaryId, nomineeId, newBeneficiary, newNominee,
+  beneficiaryId, nomineeId, newBeneficiary, newNominee, proposal,
+  faId, fmId, bmId, rmId, zmId, agmId, ccoId,
 }: {
   investmentId: number;
   planId?: number;
@@ -494,6 +502,13 @@ export async function updateInvestment({
   newBeneficiary: any | null;
   newNominee: any | null;
   proposal: string;
+  faId?: number | null;
+  fmId?: number | null;
+  bmId?: number | null;
+  rmId?: number | null;
+  zmId?: number | null;
+  agmId?: number | null;
+  ccoId?: number | null;
 }): Promise<{ success: boolean; error?: string }> {
   // ── Server-side Zod validation ────────────────────────────────────────────
   const parsed = updateInvestmentSchema.safeParse({
@@ -551,6 +566,14 @@ export async function updateInvestment({
           monthlyHarvest: totalHarvest && months ? totalHarvest / months : null,
           beneficiaryId: resolvedBeneficiaryId,
           nomineeId: resolvedNomineeId,
+          proposalFormNo: proposal,
+          faId,
+          fmId,
+          bmId,
+          rmId,
+          zmId,
+          agmId,
+          ccoId,
         },
       });
 
@@ -748,8 +771,7 @@ export async function searchInvestments(
       where: whereCondition,
       include: { client: true, plan: true, advisor: true },
       orderBy: { investmentDate: "desc" },
-      skip: (page - 1) * pageSize,
-      take: pageSize,
+      ...(pageSize !== -1 ? { skip: (page - 1) * pageSize, take: pageSize } : {}),
     }),
     prisma.investment.count({ where: whereCondition }),
   ]);
