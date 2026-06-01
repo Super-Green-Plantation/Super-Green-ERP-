@@ -123,13 +123,13 @@ const S = StyleSheet.create({
   companyName: {
     fontFamily: "Playfair",
     fontWeight: 700,
-    fontSize: 12,
+    fontSize: 14,
     color: C.white,
     letterSpacing: 0.5,
     marginBottom: 2,
   },
   companyMeta: {
-    fontSize: 7,
+    fontSize: 10,
     color: "rgba(255,255,255,0.62)",
     lineHeight: 1.5,
   },
@@ -180,7 +180,7 @@ const S = StyleSheet.create({
   titleEn: {
     fontFamily: "Playfair",
     fontWeight: 700,
-    fontSize: 10,
+    fontSize: 14,
     color: C.white,
     letterSpacing: 1.2,
     textAlign: "center",
@@ -565,7 +565,7 @@ const InvestmentPage1 = ({
           </FieldRow>
           <FieldRow>
             <Field en="Phone Number" si="දුරකථන අංකය" value={b.phone} />
-            <Field en="Relationship" si="දෙගොත්‍රය" value={b.relationship} />
+            <Field en="Relationship" si="ඥාතීත්වය" value={b.relationship} />
             <Field en="Bank Branch" si="ශාඛාව" value={b.bankBranch ?? b.branch} borderRight={false} />
           </FieldRow>
           <FieldRow>
@@ -624,7 +624,7 @@ const InvestmentPage2 = ({
               borderRight={false} minHeight={40} />
           </FieldRow>
           <FieldRow>
-            <Field en="Relationship" si="සම්බන්ධය" value={n.relationship} />
+            <Field en="Relationship" si="ඥාතීත්වය" value={n.relationship} />
             <Field en="Phone Number" si="දුරකථන අංකය" value={n.phone}
               borderRight={false} borderBottom={false} />
           </FieldRow>
