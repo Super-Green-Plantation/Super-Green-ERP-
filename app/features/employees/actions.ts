@@ -397,6 +397,7 @@ export async function updateEmployee(memberId: number, data: EmpData) {
           bank: data.bank || null,
           bankBranch: data.bankBranch || null,
           etfNo: data.etfNo || null,
+          recruitedById: data.recruitedById || null,
         },
       });
     });
