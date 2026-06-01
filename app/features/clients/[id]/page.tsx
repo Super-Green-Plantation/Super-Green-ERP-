@@ -284,7 +284,6 @@ export default function ApplicationViewPage() {
                     <span className="text-4xl font-black tracking-tighter">
                       {totalReturn.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </span>
-                    <span>{inv.plan.name}</span>
                   </div>
                 </div>
 
