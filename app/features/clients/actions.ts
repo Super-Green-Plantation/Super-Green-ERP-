@@ -980,10 +980,14 @@ export async function deleteNomineeAction(id: number) {
 
 
 export async function searchMembersByName(query: string) {
+  const terms = query.trim().split(/\s+/).filter(Boolean);
+
   return prisma.member.findMany({
     where: {
-      nameWithInitials: { contains: query, mode: "insensitive" },
       isActive: true,
+      AND: terms.map((term) => ({
+        nameWithInitials: { contains: term, mode: "insensitive" },
+      })),
     },
     select: {
       id: true,

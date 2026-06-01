@@ -134,6 +134,9 @@ model Member {
   lastClientRegisteredAt DateTime?
   reportingPersons       String[]
   etfNo                  String?
+  recruitedById          Int?
+  recruitedBy            Member?             @relation("RecruitedBy", fields: [recruitedById], references: [id])
+  recruits               Member[]            @relation("RecruitedBy")
   isActive               Boolean             @default(true)
   channel                Channel             @default(Chanel_01)
   activityLog            ActivityLog[]
@@ -509,6 +512,7 @@ enum EmployeeStatus {
 enum Channel {
   Chanel_01
   Chanel_02
+  Chanel_03
   Micro
 }
 

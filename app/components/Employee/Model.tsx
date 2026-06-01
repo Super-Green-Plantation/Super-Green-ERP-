@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Spinner } from "@/components/ui/spinner";
 import {
   X,
@@ -31,6 +31,7 @@ import {
   uploadProfilePic,
   searchEmployees,
   getMembersByEmpNos,
+  searchMembersByName,
 } from "@/app/features/employees/actions";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -72,11 +73,18 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
   const [searchResults, setSearchResults] = useState<MemberSummary[]>([]);
   const [selectedReportingMembers, setSelectedReportingMembers] = useState<MemberSummary[]>([]);
 
+  const [memberSearch, setMemberSearch] = useState("");
+const [memberResults, setMemberResults] = useState<{ id: number; nameWithInitials: string | null; empNo: string }[]>([]);
+const [showDropdown, setShowDropdown] = useState(false);
+const dropdownRef = useRef<HTMLDivElement>(null);
+
   // ── Form Data ─────────────────────────────────────────────────────────────
   const [formData, setFormData] = useState<FormData>({
     empNo: "",
     epfNo: "",
     etfNo: "",
+    recruitedById: null,
+    recruitedByName: "",
     positionId: "",
     branchIds: [Number(branchId)],
     email: "",
@@ -101,8 +109,33 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
     probationStartDate: "",
     profilePic: "",
     isActive: true,
-    channel: "Chanel_01" as "Chanel_01" | "Chanel_02" | "Micro",
+    channel: "Chanel_01" as "Chanel_01" | "Chanel_02" | "Chanel_03" | "Micro",
   });
+
+  useEffect(() => {
+  const timeout = setTimeout(async () => {
+    if (memberSearch.trim().length < 2) {
+      setMemberResults([]);
+      return;
+    }
+    const results = await searchMembersByName(memberSearch);
+    setMemberResults(results);
+    setShowDropdown(true);
+  }, 300);
+  return () => clearTimeout(timeout);
+}, [memberSearch]);
+
+// close dropdown on outside click
+useEffect(() => {
+  const handler = (e: MouseEvent) => {
+    if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      setShowDropdown(false);
+    }
+  };
+  document.addEventListener("mousedown", handler);
+  return () => document.removeEventListener("mousedown", handler);
+}, []);
+
 
   // ─── Derived ──────────────────────────────────────────────────────────────
 
@@ -176,6 +209,8 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
           : "",
         isActive: initialData.isActive ?? true,
         channel: initialData.channel ?? "Chanel_01",
+        recruitedById: initialData.recruitedBy ?? null,
+        recruitedByName: initialData.recruitedByName ?? "",
       });
     }
   }, [mode, initialData, branchId]);
@@ -397,7 +432,7 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                       value={formData.empNo}
                       onChange={(e) => setFormData({ ...formData, empNo: e.target.value })}
                       className={inputStyles}
-                      
+
                     />
                   </div>
                 </div>
@@ -438,8 +473,8 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                       const isActive = formData.status === s;
                       const activeStyle =
                         s === "PERMANENT" ? "bg-emerald-600 text-white border-emerald-600"
-                        : s === "MANAGEMENT" ? "bg-blue-600 text-white border-blue-600"
-                        : "bg-amber-500 text-white border-amber-500";
+                          : s === "MANAGEMENT" ? "bg-blue-600 text-white border-blue-600"
+                            : "bg-amber-500 text-white border-amber-500";
                       return (
                         <button
                           key={s}
@@ -517,11 +552,10 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                               key={b.id}
                               type="button"
                               onClick={() => toggleBranch(b.id)}
-                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer ${
-                                isSelected
+                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer ${isSelected
                                   ? "bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-200"
                                   : "bg-white text-gray-600 border-gray-200 hover:border-blue-400 hover:text-blue-600"
-                              }`}
+                                }`}
                             >
                               {isSelected && <Check className="w-3 h-3" />}
                               <MapPin className="w-3 h-3" />
@@ -819,20 +853,80 @@ const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
                   </div>
                 </div>
 
+                <div>
+                  <label className={labelStyles}>Recruited By</label>
+                  <div className="relative" ref={dropdownRef}>
+                    <Hash className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+                    <input
+                      placeholder="Search by name..."
+                      value={
+                        formData.recruitedById
+                          ? formData.recruitedByName   // show selected name
+                          : memberSearch
+                      }
+                      onChange={(e) => {
+                        if (formData.recruitedById) {
+                          // clear selection if user starts typing again
+                          setFormData({ ...formData, recruitedById: null, recruitedByName: "" });
+                        }
+                        setMemberSearch(e.target.value);
+                      }}
+                      className={inputStyles}
+                    />
+
+                    {/* clear button when a member is selected */}
+                    {formData.recruitedById && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData({ ...formData, recruitedById: null, recruitedByName: "" });
+                          setMemberSearch("");
+                        }}
+                        className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                      >
+                        ✕
+                      </button>
+                    )}
+
+                    {/* dropdown */}
+                    {showDropdown && memberResults.length > 0 && !formData.recruitedById && (
+                      <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-48 overflow-y-auto">
+                        {memberResults.map((m) => (
+                          <li
+                            key={m.id}
+                            onMouseDown={() => {   // mousedown fires before blur
+                              setFormData({
+                                ...formData,
+                                recruitedById: m.id,
+                                recruitedByName: `${m.nameWithInitials} (${m.empNo})`,
+                              });
+                              setMemberSearch("");
+                              setShowDropdown(false);
+                            }}
+                            className="px-4 py-2 text-sm hover:bg-gray-50 cursor-pointer flex justify-between"
+                          >
+                            <span>{m.nameWithInitials}</span>
+                            <span className="text-gray-400 text-xs">{m.empNo}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                </div>
+
                 {/* Channel */}
                 <div className="md:col-span-2">
                   <label className={labelStyles}>Employee Channel</label>
                   <div className="flex gap-2 p-1 bg-gray-100 rounded-xl">
-                    {(["Chanel_01", "Chanel_02", "Micro"] as const).map((ch) => (
+                    {(["Chanel_01", "Chanel_02", "Chanel_03", "Micro"] as const).map((ch) => (
                       <button
                         key={ch}
                         type="button"
                         onClick={() => setFormData({ ...formData, channel: ch })}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all ${
-                          formData.channel === ch
+                        className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-bold transition-all ${formData.channel === ch
                             ? "bg-white text-blue-600 shadow-sm ring-1 ring-black/5"
                             : "text-gray-500 hover:text-gray-700"
-                        }`}
+                          }`}
                       >
                         {formData.channel === ch && <Check className="w-3.5 h-3.5" />}
                         {ch.replace("_", " ")}

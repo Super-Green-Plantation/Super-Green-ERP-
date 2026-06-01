@@ -112,6 +112,7 @@ export async function createEmployee(data: EmpData) {
           bank: data.bank || null,
           bankBranch: data.bankBranch || null,
           status: data.status,
+          recruitedById: data.recruitedById || null,
           branches: {
             create: data.branchIds.map((branchId) => ({ branchId })),
           },
@@ -693,4 +694,25 @@ export async function getEmployeeMonthlyGoal(memberId: number, year: number, mon
     console.error("Error fetching employee monthly goal:", error);
     return null;
   }
+}
+
+// actions/member.ts
+export async function searchMembersByName(query: string) {
+  const terms = query.trim().split(/\s+/).filter(Boolean);
+
+  return prisma.member.findMany({
+    where: {
+      isActive: true,
+      AND: terms.map((term) => ({
+        nameWithInitials: { contains: term, mode: "insensitive" },
+      })),
+    },
+    select: {
+      id: true,
+      nameWithInitials: true,
+      empNo: true,
+      position: { select: { title: true } },
+    },
+    take: 8,
+  });
 }

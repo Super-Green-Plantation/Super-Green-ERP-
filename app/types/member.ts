@@ -17,7 +17,8 @@ export interface Member {
   epfNo:string;
   etfNo: string;
   position: Position;
-
+ recruitedBy: number;
+ recruitedByName: string;
   // --- Branch(es) ---
   branches: MemberBranch[];
 
@@ -131,7 +132,7 @@ export interface EmpData {
   epfNo: string;
   etfNo: string;
   positionId: number;
-
+recruitedById: number | null;
   // Replaces branchId — always at least one entry (the current branch)
   branchIds: number[];
 
@@ -159,7 +160,7 @@ export interface EmpData {
   remark?: string;
 
   status: "PROBATION" | "PERMANENT" | "MANAGEMENT";
-  channel: "Chanel_01" |"Chanel_02" | "Micro" ;
+  channel: "Chanel_01" |"Chanel_02" |  "Chanel_03" | "Micro" ;
   probationStartDate: string | null;
 
   // Banking
@@ -176,6 +177,8 @@ export type FormData = {
   etfNo: string;
   positionId: string;
   branchIds: number[];
+  recruitedById: number | null;
+  recruitedByName: string;
 
   email: string;
   phone: string;
@@ -202,7 +205,7 @@ export type FormData = {
   bankBranch: string;
 
   status: "PROBATION" | "PERMANENT" | "MANAGEMENT";
-  channel: "Chanel_01" |"Chanel_02" | "Micro" ;
+  channel: "Chanel_01" |"Chanel_02" | "Micro" |  "Chanel_03";
   probationStartDate: string;
 
   profilePic: string;
