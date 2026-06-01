@@ -256,6 +256,10 @@ model Investment {
   plan                 FinancialPlan? @relation(fields: [planId], references: [id])
   profit               Profit?
 
+  renewedFromId Int? // links new → old investment
+  renewedFrom   Investment?  @relation("RenewalChain", fields: [renewedFromId], references: [id])
+  renewals      Investment[] @relation("RenewalChain")
+
   faId  Int?
   fmId  Int?
   bmId  Int?
@@ -274,26 +278,27 @@ model Investment {
 }
 
 model Client {
-  id                    Int                     @id @default(autoincrement())
-  email                 String?                 @unique
-  address               String
-  branchId              Int
-  createdAt             DateTime                @default(now())
-  updatedAt             DateTime                @updatedAt
-  dateOfBirth           DateTime?
-  drivingLicense        String?                 @unique
-  fullName              String
-  nic                   String?                 @unique
-  occupation            String?
-  passportNo            String?                 @unique
-  phoneLand             String?
-  phoneMobile           String?
-  status                Status                  @default(Active)
-  idBack                String?
-  idFront               String?
-  signature             String?
-  memberId              Int?
-  createdById           Int?
+  id             Int       @id @default(autoincrement())
+  email          String?   @unique
+  address        String
+  branchId       Int
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  dateOfBirth    DateTime?
+  drivingLicense String?   @unique
+  fullName       String
+  nic            String?   @unique
+  occupation     String?
+  passportNo     String?   @unique
+  phoneLand      String?
+  phoneMobile    String?
+  status         Status    @default(Active)
+  idBack         String?
+  idFront        String?
+  signature      String?
+  memberId       Int?
+  createdById    Int?
+
   beneficiaries         Beneficiary[]
   branch                Branch                  @relation(fields: [branchId], references: [id])
   createdBy             Member?                 @relation("CreatedByMember", fields: [createdById], references: [id])
@@ -519,7 +524,8 @@ enum Channel {
 enum InvStatus {
   Active
   Inactive
-  Renew
+  Matured
+  Renewed
 }
 
 enum CommissionType {

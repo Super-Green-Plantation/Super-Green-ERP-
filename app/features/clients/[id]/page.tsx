@@ -37,6 +37,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { updateInvestmentDocuments } from "../../investments/actions";
 import { InvestmentDownloadButton } from "@/app/components/Proposal/InvestmentDownloadButton";
+import { MaturityBanner } from "../../investments/Maturitybanner";
 
 export default function ApplicationViewPage() {
   const queryClient = useQueryClient();
@@ -209,11 +210,15 @@ export default function ApplicationViewPage() {
       </header>
 
       {/* 2. FINANCIAL HERO SECTION */}
+
       <section className="space-y-4">
         <div className="flex items-center gap-2 ml-1">
           <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-          <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Active Investment Summary</h3>
+          <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">
+            Active Investment Summary
+          </h3>
         </div>
+
         <div className="flex flex-wrap gap-6">
           {formData?.investments.map((inv: any, index: number) => {
             const totalHarvest = parseFloat(inv.totalHarvest) || 0;
@@ -228,31 +233,40 @@ export default function ApplicationViewPage() {
               >
                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-primary/10 transition-colors" />
 
+                {/* ── Header ── */}
                 <div className="flex justify-between items-center mb-8 relative">
-                  <div className="">
-                    {/* <Banknote className="w-6 h-6 text-primary" /> */}
+                  <div>
                     <InvestmentDownloadButton
-                      investment={inv}           // the full investment object from your API
-                      beneficiary={inv.beneficiary}  // if you include it in the query
+                      investment={inv}
+                      beneficiary={inv.beneficiary}
                       nominee={inv.nominee}
                     />
                   </div>
                   <div className="text-right">
-                    <span className="block text-[10px] text-muted-foreground font-bold tracking-widest uppercase mb-1">Ref: {inv.refNumber}</span>
-                    <span className="bg-primary text-primary-foreground text-[13px] py-1 px-3 rounded-full uppercase tracking-tighter">Rs. {(inv.amount).toLocaleString()}</span>
+                    <span className="block text-[10px] text-muted-foreground font-bold tracking-widest uppercase mb-1">
+                      Ref: {inv.refNumber}
+                    </span>
+                    <span className="bg-primary text-primary-foreground text-[13px] py-1 px-3 rounded-full uppercase tracking-tighter">
+                      Rs. {(inv.amount).toLocaleString()}
+                    </span>
                   </div>
                 </div>
 
+                {/* ── Harvest stats ── */}
                 <div className="grid grid-cols-2 gap-4 mb-8 relative">
                   <div>
-                    <p className="text-muted-foreground text-[10px] uppercase font-bold tracking-wider mb-1">Monthly</p>
+                    <p className="text-muted-foreground text-[10px] uppercase font-bold tracking-wider mb-1">
+                      Monthly
+                    </p>
                     <p className="font-bold text-xl leading-none">
                       <span className="text-muted-foreground text-xs mr-1">LKR</span>
                       {monthlyHarvest.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                     </p>
                   </div>
                   <div className="text-right border-l border-border pl-4">
-                    <p className="text-muted-foreground text-[10px] uppercase font-bold tracking-wider mb-1">Total Harvest</p>
+                    <p className="text-muted-foreground text-[10px] uppercase font-bold tracking-wider mb-1">
+                      Total Harvest
+                    </p>
                     <p className="font-bold text-xl leading-none">
                       <span className="text-muted-foreground text-xs mr-1">LKR</span>
                       {totalHarvest.toLocaleString()}
@@ -260,26 +274,32 @@ export default function ApplicationViewPage() {
                   </div>
                 </div>
 
+                {/* ── Maturity return ── */}
                 <div className="pt-6 border-t border-border relative">
-                  <p className="text-primary text-[10px] font-black uppercase tracking-widest mb-2">Projected Maturity Return</p>
+                  <p className="text-primary text-[10px] font-black uppercase tracking-widest mb-2">
+                    Projected Maturity Return
+                  </p>
                   <div className="flex items-baseline gap-2">
                     <span className="text-muted-foreground text-lg font-bold">LKR</span>
                     <span className="text-4xl font-black tracking-tighter">
                       {totalReturn.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                     </span>
+                    <span>{inv.plan.name}</span>
                   </div>
                 </div>
+
+                {/* ── Docs row ── */}
                 <div className="pt-5 mt-5 border-t border-border flex items-center justify-between gap-3 relative">
                   <div className="flex gap-2 flex-wrap">
-                    {(["proposal", "agreement", "paymentSlip"] as const).map(key => {
+                    {(["proposal", "agreement", "paymentSlip"] as const).map((key) => {
                       const labels = { proposal: "Proposal", agreement: "Agreement", paymentSlip: "Slip" };
                       const present = !!inv[key];
                       return (
                         <span
                           key={key}
                           className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border ${present
-                            ? "bg-primary/10 text-primary border border-primary/20"
-                            : "bg-muted/30 text-muted-foreground border border-border"
+                              ? "bg-primary/10 text-primary border border-primary/20"
+                              : "bg-muted/30 text-muted-foreground border border-border"
                             }`}
                         >
                           {present ? (
@@ -293,26 +313,38 @@ export default function ApplicationViewPage() {
                     })}
                   </div>
                   <button
-                    onClick={() => setDocsModal({ open: true, investmentId: inv.id, investmentRef: inv.refNumber, currentDocs: { proposal: inv.proposal, agreement: inv.agreement, paymentSlip: inv.paymentSlip } })}
+                    onClick={() =>
+                      setDocsModal({
+                        open: true,
+                        investmentId: inv.id,
+                        investmentRef: inv.refNumber,
+                        currentDocs: {
+                          proposal: inv.proposal,
+                          agreement: inv.agreement,
+                          paymentSlip: inv.paymentSlip,
+                        },
+                      })
+                    }
                     className="shrink-0 px-3 py-1.5 bg-primary/10 border border-border text-primary rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-primary/20 transition-colors"
                   >
                     Docs
                   </button>
                 </div>
-                {/* <div className="my-6 ">
-                  <InvestmentDownloadButton
-                    investment={inv}           // the full investment object from your API
-                    beneficiary={inv.beneficiary}  // if you include it in the query
-                    nominee={inv.nominee}
-                  />
-                </div> */}
 
+                {/* ── Maturity notification banner ── */}
+                {/* Renders only when within 30 days. Dismissed state is persisted via
+              maturityNotified, but the banner reappears once maturity date is past. */}
+                <MaturityBanner
+                  investment={inv}
+                  onActionComplete={() => {
+                    // Trigger a refetch of formData here.
+                    // If using TanStack Query: queryClient.invalidateQueries(...)
+                    // If using router.refresh(): router.refresh()
+                  }}
+                />
               </div>
-
             );
           })}
-
-
         </div>
       </section>
 
