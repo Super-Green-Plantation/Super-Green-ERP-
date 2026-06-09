@@ -1026,7 +1026,7 @@ export async function approveInvestment(data: {
   try {
     const currentUser = await getCurrentUserWithRole();
     if (!currentUser) throw new Error("Not authorized");
-    if (!data.faId) throw new Error("FA is required for approval");
+    if (!data.faId || !data.fmId || !data.bmId || !data.rmId || !data.zmId || !data.agmId || !data.ccoId) throw new Error("All approvers are required for approval");
 
     const investment = await prisma.investment.findUnique({
       where: { id: data.investmentId },
