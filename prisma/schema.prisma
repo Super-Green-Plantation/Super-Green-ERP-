@@ -22,6 +22,8 @@ model Branch {
   commission  Commission[]
   investments Investment[]
   members     MemberBranch[]
+  zoneId      Int?
+  zone        Zone?          @relation(fields: [zoneId], references: [id])
 }
 
 model Position {
@@ -60,26 +62,27 @@ model MemberBranch {
 }
 
 model MonthlyPayroll {
-  id                   Int      @id @default(autoincrement())
-  memberId             Int
-  year                 Int
-  month                Int
-  volumeAchieved       Float    @default(0)
-  monthlyTarget        Float
-  incentiveEarned      Float    @default(0)
-  allowanceEarned      Float    @default(0)
-  orcEarned            Float    @default(0)
-  commissionEarned     Float    @default(0)
-  epfDeduction         Float    @default(0)
-  epfEmployer          Float    @default(0)
-  etfEmployer          Float    @default(0)
-  incentiveHit         Boolean  @default(false)
-  allowanceHit         Boolean  @default(false)
-  grossPay             Float    @default(0)
-  netPay               Float    @default(0)
-  createdAt            DateTime @default(now())
-  basicSalaryPermanent Float    @default(0)
-  member               Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  id                        Int      @id @default(autoincrement())
+  memberId                  Int
+  year                      Int
+  month                     Int
+  volumeAchieved            Float    @default(0)
+  monthlyTarget             Float
+  incentiveEarned           Float    @default(0)
+  allowanceEarned           Float    @default(0)
+  orcEarned                 Float    @default(0)
+  commissionEarned          Float    @default(0)
+  epfDeduction              Float    @default(0)
+  epfEmployer               Float    @default(0)
+  etfEmployer               Float    @default(0)
+  incentiveHit              Boolean  @default(false)
+  allowanceHit              Boolean  @default(false)
+  grossPay                  Float    @default(0)
+  netPay                    Float    @default(0)
+  createdAt                 DateTime @default(now())
+  basicSalaryPermanent      Float    @default(0)
+  member                    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  activationAllowanceEarned Float    @default(0)
 
   @@unique([memberId, year, month])
 }
@@ -101,6 +104,31 @@ model PositionSalary {
   basicSalaryPermanent        Float    @default(0)
   basicSalaryProbation        Float    @default(0)
   position                    Position @relation(fields: [positionId], references: [id])
+}
+
+model Zone {
+  id        Int          @id @default(autoincrement())
+  name      String       @unique
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  branches  Branch[]
+  members   MemberZone[]
+}
+
+model MemberZone {
+  id       Int    @id @default(autoincrement())
+  memberId Int
+  zoneId   Int
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  zone     Zone   @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+
+  @@unique([memberId, zoneId])
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 model Member {
@@ -150,6 +178,12 @@ model Member {
   monthlyEvaluations     MonthlyEvaluation[]
   monthlyPayrolls        MonthlyPayroll[]
 
+  approvalStatus ApprovalStatus @default(PENDING)
+  submittedAt    DateTime       @default(now())
+  reviewedAt     DateTime?
+  reviewedBy     String? // FK to Employee
+  reviewNote     String? // reason for rejection or any comment
+
   clientsAsFA  Client[] @relation("ClientFA")
   clientsAsFM  Client[] @relation("ClientFM")
   clientsAsBM  Client[] @relation("ClientBM")
@@ -165,6 +199,9 @@ model Member {
   investmentsAsZM  Investment[] @relation("InvestmentZM")
   investmentsAsAGM Investment[] @relation("InvestmentAGM")
   investmentsAsCCO Investment[] @relation("InvestmentCCO")
+
+  monthlyActivations MonthlyActivation[]
+  zones              MemberZone[]
 }
 
 model PositionTarget {
@@ -256,6 +293,12 @@ model Investment {
   plan                 FinancialPlan? @relation(fields: [planId], references: [id])
   profit               Profit?
 
+  approvalStatus ApprovalStatus @default(PENDING)
+  submittedAt    DateTime       @default(now())
+  reviewedAt     DateTime?
+  reviewedBy     String? // FK to Employee
+  reviewNote     String? // reason for rejection or any comment
+
   renewedFromId Int? // links new → old investment
   renewedFrom   Investment?  @relation("RenewalChain", fields: [renewedFromId], references: [id])
   renewals      Investment[] @relation("RenewalChain")
@@ -278,26 +321,31 @@ model Investment {
 }
 
 model Client {
-  id             Int       @id @default(autoincrement())
-  email          String?   @unique
+  id             Int            @id @default(autoincrement())
+  email          String?        @unique
   address        String
   branchId       Int
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
   dateOfBirth    DateTime?
-  drivingLicense String?   @unique
+  drivingLicense String?        @unique
   fullName       String
-  nic            String?   @unique
+  nic            String?        @unique
   occupation     String?
-  passportNo     String?   @unique
+  passportNo     String?        @unique
   phoneLand      String?
   phoneMobile    String?
-  status         Status    @default(Active)
+  status         Status         @default(Active)
   idBack         String?
   idFront        String?
   signature      String?
   memberId       Int?
   createdById    Int?
+  approvalStatus ApprovalStatus @default(PENDING)
+  submittedAt    DateTime       @default(now())
+  reviewedAt     DateTime?
+  reviewedBy     String? // FK to Employee
+  reviewNote     String? // reason for rejection or any comment
 
   beneficiaries         Beneficiary[]
   branch                Branch                  @relation(fields: [branchId], references: [id])
@@ -574,4 +622,18 @@ enum QuotationFrequency {
   QUARTERLY
   SEMI_ANNUAL
   ANNUAL
+}
+
+model MonthlyActivation {
+  id              Int      @id @default(autoincrement())
+  memberId        Int
+  year            Int
+  month           Int
+  activationCount Int      @default(0)
+  isActivated     Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  member          Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([memberId, year, month])
 }

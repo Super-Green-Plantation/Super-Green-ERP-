@@ -11,6 +11,7 @@ import { revalidatePath } from "next/cache";
 import crypto from "crypto"
 import nodemailer from "nodemailer";
 import { upsertVolumeAchieved } from "./_helpers";
+import { upsertActivationsForInvestment } from "../hr/salary/action";
 
 
 export async function getAccessibleClients(page = 1, pageSize = 10, searchText = "") {
@@ -133,13 +134,14 @@ export async function getClientById(id: number) {
         : { branchId: Number(dbUser!.branchId) }),
     },
     include: {
-      investments: { 
-        include: { 
-          client:true,
+      investments: {
+        include: {
+          client: true,
           plan: true,
-          beneficiary:true, 
-          nominee:true 
-        } },
+          beneficiary: true,
+          nominee: true
+        }
+      },
       branch: true,
       nominees: true,
       beneficiaries: true,
@@ -220,7 +222,7 @@ export async function saveClient(
   email: any
 ) {
   const { applicant, investment, beneficiary, nominee } = data;
- 
+
   const parsed = saveClientSchema.safeParse(data);
   if (!parsed.success) {
     const fieldErrors: Record<string, string[]> = {};
@@ -232,10 +234,10 @@ export async function saveClient(
     const firstMessage = parsed.error.issues[0]?.message ?? "Validation failed";
     return { success: false, error: firstMessage, fieldErrors };
   }
- 
+
   try {
     const currentUser = await getCurrentUserWithRole();
- 
+
     const client = await prisma.$transaction(async (tx: any) => {
       const member = await tx.member.findFirst({
         where: {
@@ -243,7 +245,7 @@ export async function saveClient(
           branches: { some: { branchId: Number(applicant.branchId) } },
         },
       });
- 
+
       const createClient = await tx.client.create({
         data: {
           fullName: applicant.fullName,
@@ -270,14 +272,14 @@ export async function saveClient(
           ccoId: applicant.ccoId ?? null,
         },
       });
- 
+
       if (member) {
         await tx.member.update({
           where: { id: member.id },
           data: { lastClientRegisteredAt: new Date() },
         });
       }
- 
+
       let beneficiaryId: number | null = null;
       if (beneficiary?.fullName) {
         const createdBeneficiary = await tx.beneficiary.create({
@@ -294,7 +296,7 @@ export async function saveClient(
         });
         beneficiaryId = createdBeneficiary.id;
       }
- 
+
       let nomineeId: number | null = null;
       if (nominee?.fullName) {
         const createdNominee = await tx.nominee.create({
@@ -308,49 +310,49 @@ export async function saveClient(
         });
         nomineeId = createdNominee.id;
       }
- 
+
       const investmentDate = applicant.investmentDate
         ? new Date(applicant.investmentDate)
         : new Date();
- 
+
       const plan = await tx.financialPlan.findUnique({
         where: { id: Number(investment.planId) },
       });
- 
+
       const maturityDate = plan
         ? new Date(
-            new Date(investmentDate).setMonth(
-              new Date(investmentDate).getMonth() + plan.duration
-            )
+          new Date(investmentDate).setMonth(
+            new Date(investmentDate).getMonth() + plan.duration
           )
+        )
         : null;
- 
+
       const investmentRates: number[] =
         Array.isArray(investment.investmentRates) &&
-        investment.investmentRates.length > 0
+          investment.investmentRates.length > 0
           ? investment.investmentRates.map((r: any) => parseFloat(r))
           : Array.isArray(plan?.rate) && plan.rate.length > 0
-          ? plan.rate
-          : [];
- 
+            ? plan.rate
+            : [];
+
       const amount = Number(applicant.investmentAmount);
       const months = plan?.duration ?? 0;
       const years = investmentRates.length;
       const monthsPerYear = years > 0 ? months / years : 0;
- 
+
       const totalHarvest =
         investmentRates.length && months
           ? Math.round(
-              investmentRates.reduce(
-                (sum, rate) =>
-                  sum + amount * (rate / 100) * (monthsPerYear / 12),
-                0
-              )
+            investmentRates.reduce(
+              (sum, rate) =>
+                sum + amount * (rate / 100) * (monthsPerYear / 12),
+              0
             )
+          )
           : 0;
- 
+
       const monthlyHarvest = months > 0 ? Math.round(totalHarvest / months) : 0;
- 
+
       const createInvestment = await tx.investment.create({
         data: {
           clientId: createClient.id,
@@ -371,7 +373,7 @@ export async function saveClient(
           agreement: applicant.agreement,
         },
       });
- 
+
       // Volume tracking across hierarchy
       const hierarchyMemberIds = [
         applicant.faId ?? null,
@@ -382,11 +384,11 @@ export async function saveClient(
         applicant.agmId ?? null,
         applicant.ccoId ?? null,
       ].filter((id): id is number => id !== null);
- 
+
       const uniqueHierarchyIds = [...new Set(hierarchyMemberIds)];
       const year = investmentDate.getFullYear();
       const month = investmentDate.getMonth() + 1;
- 
+
       await Promise.all(
         uniqueHierarchyIds.map((memberId) =>
           tx.monthlyPayroll.upsert({
@@ -403,12 +405,26 @@ export async function saveClient(
           })
         )
       );
- 
+
+      await upsertActivationsForInvestment(
+        tx,
+        {
+          fmId: applicant.fmId ?? null,
+          bmId: applicant.bmId ?? null,
+          rmId: applicant.rmId ?? null,
+          zmId: applicant.zmId ?? null,
+          agmId: applicant.agmId ?? null,
+          ccoId: applicant.ccoId ?? null,
+        },
+        year,
+        month,
+      );
+
       return { ...createClient, investments: [createInvestment] };
     });
- 
+
     revalidatePath("/features/clients");
- 
+
     void logActivity({
       action: ActivityAction.CREATE,
       entity: ActivityEntity.CLIENT,
@@ -417,7 +433,7 @@ export async function saveClient(
       branchId: applicant.branchId,
       metadata: { after: client },
     });
- 
+
     return serializeData({ success: true, client });
   } catch (err) {
     if (
@@ -425,17 +441,17 @@ export async function saveClient(
       err.code === "P2002"
     ) {
       console.error("P2002 meta:", JSON.stringify(err.meta, null, 2));
- 
+
       const driverError = err.meta?.driverAdapterError as any;
       const fields: string[] =
         driverError?.cause?.constraint?.fields ??
         (err.meta?.target as string[]) ??
         [];
- 
+
       const label = fields
         .map((f) => UNIQUE_FIELD_LABELS[f] ?? f)
         .join(", ");
- 
+
       return {
         success: false,
         error: label
@@ -443,12 +459,12 @@ export async function saveClient(
           : "A duplicate value was found. Please check your entries.",
       };
     }
- 
+
     console.error("Error creating client:", err);
     return { success: false, error: "Server error" };
   }
 }
- 
+
 // Helper — already in your codebase, duplicated here for reference
 function serializeData<T>(data: T): T {
   return JSON.parse(JSON.stringify(data));
@@ -591,7 +607,7 @@ export async function updateClient(id: number, formData: any) {
       metadata: { before: oldClient, after: updatedClient },
     });
 
-    return serializeData({ success: true, client: updatedClient, error:"Failed to update client" });
+    return serializeData({ success: true, client: updatedClient, error: "Failed to update client" });
   } catch (error) {
     console.error("Error updating client:", error);
     return { success: false, error: "Failed to update client" };
@@ -868,7 +884,7 @@ export async function saveUploadedDocuments(
 
 export async function searchClients(query: string) {
   if (!query || query.trim().length < 2) return null;
- 
+
   const client = await prisma.client.findFirst({
     where: {
       OR: [
@@ -907,7 +923,7 @@ export async function searchClients(query: string) {
       },
     },
   });
- 
+
   return client;
 }
 

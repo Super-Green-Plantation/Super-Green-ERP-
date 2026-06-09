@@ -53,6 +53,9 @@ export default function EditInvestmentPage() {
           zm: inv.zm ?? undefined,
           agm: inv.agm ?? undefined,
           cco: inv.cco ?? undefined,
+          approvalStatus: inv.approvalStatus ?? undefined,
+          reviewNote: inv.reviewNote ?? undefined,
+          reviewedBy: inv.reviewedBy ?? undefined,
         }}
       />
     </div>

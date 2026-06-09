@@ -114,7 +114,7 @@ export const SubmitButton = ({
         branchId: lockedClient!.branchId,
         planId: data.investment?.planId ? Number(data.investment.planId) : undefined,
         amount: Number(data.applicant.investmentAmount),
-        proposal: data.applicant.proposal ,
+        proposal: data.applicant.proposalFormNo ?? "",
         investmentDate: data.applicant.investmentDate
           ? new Date(data.applicant.investmentDate)
           : new Date(),

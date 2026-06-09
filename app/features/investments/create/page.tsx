@@ -6,7 +6,10 @@ import { getClients } from "@/app/features/clients/actions";
 import {
   createInvestmentForExistingClient,
   updateInvestment,
+  approveInvestment,
+  rejectInvestment,
 } from "@/app/features/investments/actions";
+import { useSessionUser } from "@/app/hooks/useSessionUser";
 import { FinancialPlan } from "@/app/types/FinancialPlan";
 import {
   User, DollarSign, Landmark, Users, Plus, Pencil,
@@ -55,8 +58,8 @@ function Field({
         ${disabled || readOnly
           ? "border-muted bg-muted/50"
           : error
-          ? "border-red-400 focus-within:border-red-400 focus-within:ring-2 focus-within:ring-red-400/10"
-          : "border-border focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10"
+            ? "border-red-400 focus-within:border-red-400 focus-within:ring-2 focus-within:ring-red-400/10"
+            : "border-border focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10"
         }`}
       >
         <input
@@ -254,6 +257,9 @@ type InitialData = {
   agmId?: number | null;
   ccoId?: number | null;
   fa?: any; fm?: any; bm?: any; rm?: any; zm?: any; agm?: any; cco?: any;
+  approvalStatus?: string;
+  reviewNote?: string;
+  reviewedBy?: string;
 };
 
 export default function CreateInvestmentForm({
@@ -261,26 +267,50 @@ export default function CreateInvestmentForm({
   investmentId,
   initialData,
   lockedClient,       // pass the full client object when in edit mode
+  hideHeader,         // set true when embedding inside another page
 }: {
   onSuccess?: () => void;
   investmentId?: number;
   initialData?: InitialData;
   lockedClient?: any;
+  hideHeader?: boolean;
 }) {
   const isEditMode = !!investmentId;
+
+  const hierarchyInitialMembers = {
+    faId: initialData?.fa ? { id: initialData.fa.id, nameWithInitials: initialData.fa.nameWithInitials, position: initialData.fa.position } : null,
+    fmId: initialData?.fm ? { id: initialData.fm.id, nameWithInitials: initialData.fm.nameWithInitials, position: initialData.fm.position } : null,
+    bmId: initialData?.bm ? { id: initialData.bm.id, nameWithInitials: initialData.bm.nameWithInitials, position: initialData.bm.position } : null,
+    rmId: initialData?.rm ? { id: initialData.rm.id, nameWithInitials: initialData.rm.nameWithInitials, position: initialData.rm.position } : null,
+    zmId: initialData?.zm ? { id: initialData.zm.id, nameWithInitials: initialData.zm.nameWithInitials, position: initialData.zm.position } : null,
+    agmId: initialData?.agm ? { id: initialData.agm.id, nameWithInitials: initialData.agm.nameWithInitials, position: initialData.agm.position } : null,
+    ccoId: initialData?.cco ? { id: initialData.cco.id, nameWithInitials: initialData.cco.nameWithInitials, position: initialData.cco.position } : null,
+  };
+
+
 
   const [clients, setClients] = useState<any[]>([]);
   const [plans, setPlans] = useState<FinancialPlan[]>([]);
   const [selectedClient, setSelectedClient] = useState<any | null>(lockedClient ?? null);
   const [loading, setLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-console.log(initialData);
 
+
+  const { data: userData } = useSessionUser();
+  const isManager = userData && ["ADMIN", "AGM", "REGIONAL_MANAGER", "BRANCH_MANAGER", "HR", "DEV", "ZONAL_MANAGER"].includes(userData.role);
+
+  const approvalStatus = initialData?.approvalStatus || "PENDING";
+  const isApprovedOrRejected = approvalStatus === "APPROVED" || approvalStatus === "REJECTED";
+  const isLockedForSubmitter = false; // Restored update functionality
+  const showApprovalSection = isEditMode && approvalStatus === "PENDING" && isManager;
+
+  const [reviewNote, setReviewNote] = useState(initialData?.reviewNote || "");
 
   // Investment fields — pre-fill from initialData in edit mode
   const [planId, setPlanId] = useState(String(initialData?.planId ?? ""));
   const [amount, setAmount] = useState(String(initialData?.amount ?? ""));
   const [proposal, setProposal] = useState("");
+  const [proposalFormNo, setProposalFormNo] = useState(initialData?.proposalFormNo ?? "");
   const [investmentDate, setInvestmentDate] = useState(
     initialData?.investmentDate ?? new Date().toISOString().slice(0, 10)
   );
@@ -327,6 +357,7 @@ console.log(initialData);
   const [nomineeLabel, setNomineeLabel] = useState<string | null>(
     initialData?.nominee?.fullName ?? null
   );
+
 
   // ---- Hierarchy ----
   const [hierarchy, setHierarchy] = useState({
@@ -468,6 +499,7 @@ console.log(initialData);
   };
 
 
+
   // ---- submit logic ----
   const resolveBeneficiary = () => {
     if (beneficiaryMode === "none") return { beneficiaryId: null, newBeneficiary: null };
@@ -498,7 +530,7 @@ console.log(initialData);
     if (!client) { toast.error("Please select a client"); return; }
 
     // ── Client-side Zod validation ────────────────────────────────────────────
-    const formParsed = investmentFormSchema.safeParse({ amount, proposal, investmentDate });
+    const formParsed = investmentFormSchema.safeParse({ amount, proposalFormNo, investmentDate });
     if (!formParsed.success) {
       const errs: Record<string, string> = {};
       formParsed.error.issues.forEach((issue) => {
@@ -527,7 +559,7 @@ console.log(initialData);
           nomineeId,
           newBeneficiary,
           newNominee,
-          proposal,
+          proposalFormNo,
           ...hierarchy,
         });
         if (!res.success) { toast.error(res.error ?? "Update failed"); return; }
@@ -726,19 +758,21 @@ console.log(initialData);
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto pb-12">
-      {/* Header */}
-      <div className="flex items-center gap-5 pb-8 border-b border-border">
-        <Back />
+      {/* Header — hidden when embedded inside another page */}
+      {!hideHeader && (
+        <div className="flex items-center gap-5 pb-8 border-b border-border">
+          <Back />
 
-        <div>
-          <h1 className="text-2xl font-black text-foreground tracking-tight">
-            {isEditMode ? "Update Investment" : "Create Investment"}
-          </h1>
-          <p className="text-sm text-muted-foreground font-semibold mt-1">
-            {isEditMode ? "Edit investment details. Beneficiary/nominee changes create new records." : "Add a new investment for an existing client."}
-          </p>
+          <div>
+            <h1 className="text-2xl font-black text-foreground tracking-tight">
+              {isEditMode ? "Update Investment" : "Create Investment"}
+            </h1>
+            <p className="text-sm text-muted-foreground font-semibold mt-1">
+              {isEditMode ? "Edit investment details. Beneficiary/nominee changes create new records." : "Add a new investment for an existing client."}
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Client */}
       <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden">
@@ -765,13 +799,14 @@ console.log(initialData);
             <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
                 <label className="block text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1">
-                  Financial Plan 
+                  Financial Plan
                 </label>
-                <div className="flex items-center rounded-lg bg-card focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10 transition-all">
+                <div className={`flex items-center rounded-lg bg-card transition-all ${isLockedForSubmitter ? "border-muted bg-muted/50" : "focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10"}`}>
                   <select
                     value={planId}
+                    disabled={isLockedForSubmitter}
                     onChange={e => setPlanId(e.target.value)}
-                    className="flex-1 px-3 py-2 text-sm font-semibold text-foreground outline-none bg-transparent appearance-none"
+                    className="flex-1 px-3 py-2 text-sm font-semibold text-foreground outline-none bg-transparent appearance-none disabled:text-muted-foreground"
                   >
                     <option value="">Select Plan</option>
                     {plans.map(p => (
@@ -783,9 +818,9 @@ console.log(initialData);
                 </div>
               </div>
 
-              <Field label="Investment Date *" value={investmentDate} onChange={setInvestmentDate} type="date" error={fieldErrors.investmentDate} />
-              <Field label="Investment Amount (LKR) *" value={amount} onChange={v => { setAmount(v); setFieldErrors(p => ({...p, amount: ""})); }} placeholder="0.00" type="number" error={fieldErrors.amount} />
-              <Field label="Proposal No. *" value={proposal} onChange={v => { setProposal(v); setFieldErrors(p => ({...p, proposal: ""})); }} type="text" error={fieldErrors.proposal} />
+              <Field label="Investment Date *" value={investmentDate} disabled={isLockedForSubmitter} onChange={setInvestmentDate} type="date" error={fieldErrors.investmentDate} />
+              <Field label="Investment Amount (LKR) *" value={amount} disabled={isLockedForSubmitter} onChange={v => { setAmount(v); setFieldErrors(p => ({ ...p, amount: "" })); }} placeholder="0.00" type="number" error={fieldErrors.amount} />
+              <Field label="Proposal No. *" value={proposalFormNo} disabled={isLockedForSubmitter} onChange={v => { setProposalFormNo(v); setFieldErrors(p => ({ ...p, proposal: "" })); }} type="text" error={fieldErrors.proposal} />
               {/* REMOVE the single Rate field, REPLACE with this */}
               <div className="sm:col-span-2 space-y-3">
                 <label className="block text-[10px] font-black uppercase tracking-wider text-muted-foreground">
@@ -802,10 +837,11 @@ console.log(initialData);
                         <label className="block text-[10px] font-bold text-muted-foreground mb-1">
                           Year {i + 1}
                         </label>
-                        <div className="flex items-center  rounded-lg bg-card focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10 transition-all">
+                        <div className={`flex items-center rounded-lg bg-card transition-all ${isLockedForSubmitter ? "border-muted bg-muted/50" : "focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10"}`}>
                           <input
                             type="number"
                             value={rate}
+                            disabled={isLockedForSubmitter}
                             onChange={e => {
                               const updated = [...investmentRates];
                               updated[i] = Number(e.target.value);
@@ -832,7 +868,7 @@ console.log(initialData);
               <SectionHeader icon={<Landmark className="w-4 h-4 text-primary" />} title="Beneficiary" />
             </div>
             <div className="p-6 space-y-5">
-              <ModeToggle value={beneficiaryMode} onChange={handleBeneficiaryModeChange} />
+              {!isLockedForSubmitter && <ModeToggle value={beneficiaryMode} onChange={handleBeneficiaryModeChange} />}
               {beneficiaryMode !== "none" && BeneficiaryEditPanel}
             </div>
           </div>
@@ -843,34 +879,132 @@ console.log(initialData);
               <SectionHeader icon={<Users className="w-4 h-4 text-accent" />} title="Nominee Details" />
             </div>
             <div className="p-6 space-y-5">
-              <ModeToggle value={nomineeMode} onChange={handleNomineeModeChange} />
+              {!isLockedForSubmitter && <ModeToggle value={nomineeMode} onChange={handleNomineeModeChange} />}
               {nomineeMode !== "none" && NomineeEditPanel}
             </div>
           </div>
 
-          {/* Advisor Hierarchy */}
-          <AdvisorHierarchy 
-            values={hierarchy} 
-            onChange={(key, id) => setHierarchy(p => ({ ...p, [key]: id }))} 
-            displays={hierarchyDisplays}
-          />
+          {(!isEditMode || isApprovedOrRejected) && (
+            <AdvisorHierarchy
+              values={hierarchy}
+              onChange={(key, id) => setHierarchy(p => ({ ...p, [key]: id }))}
+              initialMembers={hierarchyInitialMembers} />
+          )}
+
+          {isApprovedOrRejected && (
+            <div className={`p-5 rounded-lg border ${approvalStatus === "APPROVED" ? "bg-green-500/10 border-green-500/20 text-green-700" : "bg-red-500/10 border-red-500/20 text-red-700"}`}>
+              <p className="font-bold uppercase tracking-wider text-xs mb-1">
+                {approvalStatus} by Management
+              </p>
+              {initialData?.reviewNote && (
+                <p className="text-sm mt-2">{initialData.reviewNote}</p>
+              )}
+            </div>
+          )}
+
+          {showApprovalSection && (
+            <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden mt-8">
+              <div className="px-6 py-4 bg-muted/30 border-b border-border/60">
+                <SectionHeader icon={<Check className="w-4 h-4 text-primary" />} title="Management Approval" />
+              </div>
+              <div className="p-6 space-y-6">
+                <AdvisorHierarchy
+                  values={hierarchy}
+                  onChange={(key, id) => setHierarchy(p => ({ ...p, [key]: id }))}
+                // displays={hierarchyDisplays}
+                />
+
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-2">
+                    Review Note
+                  </label>
+                  <textarea
+                    value={reviewNote}
+                    onChange={e => setReviewNote(e.target.value)}
+                    placeholder="Add comments or rejection reason..."
+                    className="w-full p-3 text-sm bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary/10 outline-none"
+                    rows={3}
+                  />
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold uppercase text-muted-foreground">Reviewing as:</span>
+                  <span className="text-xs font-black text-foreground">{userData?.name}</span>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setLoading(true);
+                      const res = await approveInvestment({
+                        investmentId: investmentId!,
+                        ...hierarchy,
+                        reviewNote
+                      });
+                      setLoading(false);
+                      if (res.success) {
+                        toast.success("Investment approved");
+                        onSuccess?.();
+                      } else {
+                        toast.error(res.error || "Approval failed");
+                      }
+                    }}
+                    disabled={loading}
+                    className="flex-1 w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold text-sm transition-colors flex justify-center items-center gap-2"
+                  >
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                    Approve
+                  </button>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!reviewNote.trim()) {
+                        toast.error("Review note is required for rejection");
+                        return;
+                      }
+                      setLoading(true);
+                      const res = await rejectInvestment({
+                        investmentId: investmentId!,
+                        reviewNote
+                      });
+                      setLoading(false);
+                      if (res.success) {
+                        toast.success("Investment rejected");
+                        onSuccess?.();
+                      } else {
+                        toast.error(res.error || "Rejection failed");
+                      }
+                    }}
+                    disabled={loading}
+                    className="flex-1 w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-bold text-sm transition-colors flex justify-center items-center gap-2"
+                  >
+                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
+                    Reject
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Submit */}
-          <button
-            type="button"
-            onClick={handleSubmit}
-            disabled={loading}
-            className={`w-full flex items-center justify-center gap-3 px-8 py-5 disabled:bg-muted-foreground/20 text-primary-foreground text-xs font-black uppercase tracking-[0.25em] rounded-lg transition-all hover:shadow-2xl active:scale-[0.98]
-              ${isEditMode
-                ? "bg-accent hover:bg-accent/90 hover:shadow-accent/30"
-                : "bg-primary hover:bg-primary/90 hover:shadow-primary/30"
-              }`}
-          >
-            {loading
-              ? <><Loader2 className="w-5 h-5 animate-spin" /> {isEditMode ? "Saving..." : "Finalizing..."}</>
-              : <><Plus className="w-5 h-5" /> {isEditMode ? "Update Investment" : "Create Investment"}</>
-            }
-          </button>
+          {!isLockedForSubmitter && (
+            <button
+              type="button"
+              onClick={handleSubmit}
+              // disabled={loading}
+              className={`w-full flex items-center justify-center gap-3 px-8 py-5  text-primary-foreground text-xs font-black uppercase tracking-[0.25em] rounded-lg transition-all hover:shadow-2xl active:scale-[0.98]
+                ${isEditMode
+                  ? "bg-green-700 hover:bg-green-800 hover:shadow-accent/30"
+                  : "bg-green-700 hover:bg-green-800 hover:shadow-primary/30"
+                }`}
+            >
+              {loading
+                ? <><Loader2 className="w-5 h-5 animate-spin" /> {isEditMode ? "Saving..." : "Finalizing..."}</>
+                : <><Plus className="w-5 h-5" /> {isEditMode ? "Update Investment" : "Create Investment"}</>
+              }
+            </button>
+          )}
         </div>
       )}
     </div>

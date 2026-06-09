@@ -12,6 +12,8 @@ import { searchClients, getClientsByBranch, getClients } from "./actions";
 import { Search, X, ChevronDown, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { PERMISSIONS } from "@/lib/auth/permissions";
+import { usePermission } from "@/app/hooks/usePermission";
 
 
 type ClientPage = {
@@ -25,6 +27,17 @@ const Page = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchText, setSearchText] = useState("");
   const [branchId, setBranchId] = useState<string>("all");
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+
+  const getLoggedUserRole = async () => {
+    const role = await fetch("/api/me").then((res) => res.json());
+    setUserRole(role.role);
+  }
+  useEffect(() => {
+    getLoggedUserRole();
+
+  }, []);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -100,6 +113,7 @@ const Page = () => {
     setCurrentPage(1);
   };
 
+  const canEdit = usePermission(userRole, PERMISSIONS.UPDATE_FINANCIAL_PLAN);
   return (
     <div className="max-w-7xl mx-auto sm:space-y-8 space-y-2 sm:p-4 md:p-8 min-h-screen">
       {/* Header */}
@@ -145,21 +159,24 @@ const Page = () => {
           </div>
         </div>
 
-        <div className="relative w-full md:w-52">
-          <select
-            value={branchId}
-            onChange={(e) => setBranchId(e.target.value)}
-            className="w-full appearance-none pl-4 pr-10 py-3 bg-background border-2 border-teal-800 rounded-full text-sm font-semibold text-foreground outline-none cursor-pointer focus:ring-2 focus:ring-teal-600"
-          >
-            <option value="all">All Branches</option>
-            {branchData?.map((branch: any) => (
-              <option key={branch.id} value={branch.id}>
-                {branch.name}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-        </div>
+        {canEdit && (
+          <div className="relative w-full md:w-52">
+            <select
+              value={branchId}
+              onChange={(e) => setBranchId(e.target.value)}
+              className="w-full appearance-none pl-4 pr-10 py-3 bg-background border-2 border-teal-800 rounded-full text-sm font-semibold text-foreground outline-none cursor-pointer focus:ring-2 focus:ring-teal-600"
+            >
+              <option value="all">All Branches</option>
+              {branchData?.map((branch: any) => (
+                <option key={branch.id} value={branch.id}>
+                  {branch.name}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          </div>
+        )}
+
 
         {isFiltered && (
           <button

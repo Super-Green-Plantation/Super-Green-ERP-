@@ -90,6 +90,7 @@ export default function InvestmentsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchText, setSearchText] = useState("");
   const [branchId, setBranchId] = useState<string>("all");
+  const [activeTab, setActiveTab] = useState<string>("ALL");
 
   const [selectedMonth, setSelectedMonth] = useState<string>("all"); // "2026-04" format or "all"
 
@@ -127,21 +128,23 @@ export default function InvestmentsPage() {
     },
   });
 
-  useEffect(() => { setCurrentPage(1); }, [searchText, branchId]);
+  useEffect(() => { setCurrentPage(1); }, [searchText, branchId, activeTab]);
 
-  const { data, isLoading, isError } = useInvestments(currentPage);
+  const { data, isLoading, isError } = useInvestments(currentPage, 10, activeTab);
 
   console.log("inv data : ", data);
 
-  const isFiltered = searchText.trim() !== "" || branchId !== "all" || selectedMonth !== "all";
+  const isFiltered = searchText.trim() !== "" || branchId !== "all" || selectedMonth !== "all" || activeTab !== "ALL";
 
   const { data: filteredData, isFetching: isFilterFetching } = useQuery({
-    queryKey: ["investments-filtered", searchText, branchId, selectedMonth, currentPage],
+    queryKey: ["investments-filtered", searchText, branchId, selectedMonth, currentPage, activeTab],
     queryFn: () => searchInvestments(
       searchText,
       branchId !== "all" ? Number(branchId) : undefined,
       selectedMonth,  // pass the string directly
-      currentPage
+      currentPage,
+      10,
+      activeTab
     ),
     enabled: isFiltered,
   });
@@ -172,6 +175,7 @@ export default function InvestmentsPage() {
     setSearchText("");
     setBranchId("all");
     setSelectedMonth("all");
+    setActiveTab("ALL");
     setCurrentPage(1);
   };
 
@@ -216,11 +220,12 @@ export default function InvestmentsPage() {
                       branchId !== "all" ? Number(branchId) : undefined,
                       selectedMonth,
                       1,
-                      -1
+                      -1,
+                      activeTab
                     );
                     allInvestments = res.investments;
                   } else {
-                    const res = await getInvestments(1, -1);
+                    const res = await getInvestments(1, -1, activeTab);
                     allInvestments = res.investments;
                   }
                   generateInvestmentsReportPDF(allInvestments);
@@ -287,6 +292,19 @@ export default function InvestmentsPage() {
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex items-center gap-4 border-b border-border">
+        {["ALL", "PENDING", "APPROVED", "REJECTED"].map((tab) => (
+          <button
+            key={tab}
+            onClick={() => { setActiveTab(tab); setCurrentPage(1); }}
+            className={`pb-3 px-1 text-sm font-bold border-b-2 transition-colors ${activeTab === tab ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+          >
+            {tab.charAt(0) + tab.slice(1).toLowerCase()}
+          </button>
+        ))}
       </div>
 
       {/* Search & Filter */}
@@ -388,7 +406,7 @@ export default function InvestmentsPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="bg-muted/50 border-b border-border">
-                  {["Proposal No.", "Client", "Plan", "Amount", "Inv. Date", "Maturity", "Advisor", "Actions"].map(h => (
+                  {["Proposal No.", "Client", "Plan", "Amount", "Inv. Date", "Maturity", "Advisor", "Status", "Actions"].map(h => (
                     <th key={h} className={`px-5 py-4 text-[11px] font-extrabold uppercase tracking-widest text-muted-foreground ${h === "Actions" ? "text-center" : ""}`}>
                       {h}
                     </th>
@@ -436,6 +454,16 @@ export default function InvestmentsPage() {
                         {inv.advisor?.nameWithInitials ?? <span className="text-muted-foreground/40 italic">Unassigned</span>}
                       </p>
                       {inv.advisor && <p className="text-[10px] text-primary font-bold">{inv.advisor.empNo}</p>}
+                    </td>
+                    <td className="px-5 py-4">
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider
+                        ${inv.approvalStatus === "APPROVED" ? "bg-green-500/10 text-green-600" :
+                          inv.approvalStatus === "REJECTED" ? "bg-red-500/10 text-red-600" :
+                          "bg-amber-500/10 text-amber-600"
+                        }`}
+                      >
+                        {inv.approvalStatus || "PENDING"}
+                      </span>
                     </td>
                     <td className="px-5 py-4">
                       <div className="flex items-center justify-center gap-2">

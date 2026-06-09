@@ -15,7 +15,7 @@ export async function getPayrollPreview(
 
     const branchMembers = await prisma.memberBranch.findMany({
         where: { branchId },
-        
+
         include: {
             member: {
 
@@ -34,7 +34,7 @@ export async function getPayrollPreview(
             },
         },
     });
- 
+
     const rows = branchMembers.map(({ member }: any) => {
         const salary = member.position?.salary;
         const existing = member.monthlyPayrolls?.[0] ?? null;
@@ -72,8 +72,8 @@ export async function getPayrollPreview(
             actualCommissionEarned,
             member.status,
             volumeAchieved,
-            0,        
-            orcRate,  
+            0,
+            orcRate,
         ) : null;
         return {
             actualCommissionEarned,
@@ -108,7 +108,7 @@ export async function runMonthlyPayroll(
         include: {
             member: {
                 include: {
-                    position: { include: { salary: true } },
+                    position: { include: { salary: true, positionTargets: true } },
                     monthlyPayrolls: { where: { year, month } },
                     commissions: {
                         where: {
@@ -138,7 +138,7 @@ export async function runMonthlyPayroll(
         }
 
         const volumeAchieved = volumes[member.id] ?? 0;
-        
+
         const actualCommissionEarned = member.commissions.reduce(
             (sum: number, c: any) => sum + Number(c.amount),
             0
@@ -164,10 +164,32 @@ export async function runMonthlyPayroll(
         const breakdown = calculatePayroll(
             normalizedSalary,
             actualCommissionEarned,
-            member.status, 
+            member.status,
             volumeAchieved,
-            0, 
+            0,
         );
+
+        // // Inside the loop, after getting breakdown:
+        // const positionTarget = member.position?.positionTargets?.find(
+        //     (t: any) => t.periodNumber === currentPeriod && t.monthNumber === currentMonthInPeriod
+        // ) ?? null;
+ 
+        // const activation = await prisma.monthlyActivation.findUnique({
+        //     where: { memberId_year_month: { memberId: member.id, year, month } },
+        // });
+
+        // const activationAllowanceEarned =
+        //     activation?.isActivated && positionTarget
+        //         ? Number(positionTarget.teamActiveAmount)
+        //         : 0;
+
+        // // Then in the upsert:
+        // await prisma.monthlyPayroll.upsert({
+        //     where: { memberId_year_month: { memberId: member.id, year, month } },
+        //     create: { memberId: member.id, year, month, ...breakdown, activationAllowanceEarned },
+        //     update: { ...breakdown, activationAllowanceEarned },
+        // });
+
         try {
             await prisma.monthlyPayroll.upsert({
                 where: { memberId_year_month: { memberId: member.id, year, month } },

@@ -20,13 +20,13 @@ type HierarchySlot = {
 };
 
 const SLOTS: HierarchySlot[] = [
-  { key: "faId",  label: "FA",  placeholder: "Search Financial Advisor..."   },
-  { key: "fmId",  label: "FM",  placeholder: "Search Field Manager..."       },
-  { key: "bmId",  label: "BM",  placeholder: "Search Branch Manager..."      },
-  { key: "rmId",  label: "RM",  placeholder: "Search Regional Manager..."    },
-  { key: "zmId",  label: "ZM",  placeholder: "Search Zone Manager..."        },
-  { key: "agmId", label: "AGM", placeholder: "Search Asst. General Manager..."},
-  { key: "ccoId", label: "CCO", placeholder: "Search Chief Commercial Officer..."},
+  { key: "faId", label: "FA", placeholder: "Search Financial Advisor..." },
+  { key: "fmId", label: "FM", placeholder: "Search Field Manager..." },
+  { key: "bmId", label: "BM", placeholder: "Search Branch Manager..." },
+  { key: "rmId", label: "RM", placeholder: "Search Regional Manager..." },
+  { key: "zmId", label: "ZM", placeholder: "Search Zone Manager..." },
+  { key: "agmId", label: "AGM", placeholder: "Search Asst. General Manager..." },
+  { key: "ccoId", label: "CCO", placeholder: "Search Chief Commercial Officer..." },
 ];
 
 // ── Field-level search input ───────────────────────────────────────────────────
@@ -35,21 +35,21 @@ type MemberSearchInputProps = {
   slot: HierarchySlot;
   value: number | null;
   onChange: (id: number | null, member: MemberSearchResult | null) => void;
-  initialDisplay?: string;
+  initialMember?: { id: number; nameWithInitials: string; position: { title: string } } | null;
 };
 
-const MemberSearchInput = ({
-  slot,
-  value,
-  onChange,
-  initialDisplay,
-}: MemberSearchInputProps) => {
-  const [query, setQuery]         = useState(initialDisplay ?? "");
-  const [results, setResults]     = useState<MemberSearchResult[]>([]);
-  const [loading, setLoading]     = useState(false);
-  const [open, setOpen]           = useState(false);
-  const [selected, setSelected]   = useState<MemberSearchResult | null>(null);
-const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);  const containerRef              = useRef<HTMLDivElement>(null);
+const MemberSearchInput = ({ slot, value, onChange, initialMember }: MemberSearchInputProps) => {
+  const [query, setQuery] = useState(initialMember?.nameWithInitials ?? "");
+  const [results, setResults] = useState<MemberSearchResult[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [selected, setSelected] = useState<MemberSearchResult | null>(
+    initialMember ? (initialMember as MemberSearchResult) : null
+  );
+  const lockedRef = useRef(!!initialMember);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  // True while the field still holds its pre-populated value untouched
 
   const labelClass = "text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-2 ml-1 block";
   const badgeClass = "text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md bg-primary/10 text-primary/70";
@@ -59,8 +59,8 @@ const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);  const c
     setLoading(true);
     try {
       const res = await searchMembersByName(q);
-setResults(res.filter((m) => m.nameWithInitials !== null) as MemberSearchResult[]);
-setOpen(true);
+      setResults(res.filter((m) => m.nameWithInitials !== null) as MemberSearchResult[]);
+      setOpen(true);
     } finally {
       setLoading(false);
     }
@@ -69,7 +69,7 @@ setOpen(true);
   useEffect(() => {
     if (selected) return;
     clearTimeout(debounceRef.current ?? undefined);
-debounceRef.current = setTimeout(() => search(query), 300);
+    debounceRef.current = setTimeout(() => search(query), 300);
     return () => clearTimeout(debounceRef.current ?? undefined);
   }, [query, selected, search]);
 
@@ -99,6 +99,15 @@ debounceRef.current = setTimeout(() => search(query), 300);
   const inputClass =
     "bg-background/50 border border-border/50 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:bg-background outline-none transition-all w-full placeholder:text-muted-foreground/30 font-medium pr-10";
 
+  useEffect(() => {
+    if (lockedRef.current) return;   // ← pre-populated, user hasn't typed yet
+    if (selected) return;
+    clearTimeout(debounceRef.current ?? undefined);
+    debounceRef.current = setTimeout(() => search(query), 300);
+    return () => clearTimeout(debounceRef.current ?? undefined);
+  }, [query, selected, search]);
+
+
   return (
     <div ref={containerRef} className="relative">
       <label className={labelClass}>
@@ -123,6 +132,7 @@ debounceRef.current = setTimeout(() => search(query), 300);
           type="text"
           value={query}
           onChange={(e) => {
+            lockedRef.current = false;       // ← user is now typing, unlock search
             setQuery(e.target.value);
             if (selected) { setSelected(null); onChange(null, null); }
           }}
@@ -145,7 +155,7 @@ debounceRef.current = setTimeout(() => search(query), 300);
 
       {/* Dropdown */}
       {open && results.length > 0 && (
-        <div className="absolute z-50 mt-1.5 w-full bg-card border border-border/50 rounded-xl shadow-lg overflow-hidden">
+        <div className="absolute z-50 mt-1.5 w-full bg-card border border-border/50 rounded-xl shadow-lg ">
           {results.map((member) => (
             <button
               key={member.id}
@@ -193,12 +203,12 @@ type HierarchyState = {
 type AdvisorHierarchyProps = {
   values: HierarchyState;
   onChange: (key: keyof HierarchyState, id: number | null) => void;
-  displays?: Partial<Record<keyof HierarchyState, string>>;
+  initialMembers?: Partial<Record<keyof HierarchyState, { id: number; nameWithInitials: string; position: { title: string } } | null>>;
 };
 
-const AdvisorHierarchy = ({ values, onChange, displays = {} }: AdvisorHierarchyProps) => {
+const AdvisorHierarchy = ({ values, onChange, initialMembers = {} }: AdvisorHierarchyProps) => {
   return (
-    <div className="bg-card/60 backdrop-blur-xl rounded-[2.5rem] border border-border/50 shadow-sm overflow-hidden text-card-foreground mt-6">
+    <div className="bg-card/60 backdrop-blur-xl rounded-[2.5rem] border border-border/50 shadow-sm  text-card-foreground mt-6">
       {/* Header */}
       <div className="px-8 py-5 border-b border-border/30 flex items-center gap-3">
         <Network className="w-4 h-4 text-muted-foreground/60" />
@@ -210,14 +220,14 @@ const AdvisorHierarchy = ({ values, onChange, displays = {} }: AdvisorHierarchyP
       {/* Fields */}
       <div className="sm:p-6 p-4 space-y-6">
         {SLOTS.map((slot) => (
-          <MemberSearchInput
-            key={slot.key}
-            slot={slot}
-            value={values[slot.key]}
-            initialDisplay={displays[slot.key]}
-            onChange={(id) => onChange(slot.key, id)}
-          />
-        ))}
+      <MemberSearchInput
+        key={slot.key}
+        slot={slot}
+        value={values[slot.key]}
+        initialMember={initialMembers[slot.key]}
+        onChange={(id) => onChange(slot.key, id)}
+      />
+    ))}
       </div>
     </div>
   );

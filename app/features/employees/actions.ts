@@ -187,11 +187,13 @@ export async function getEmployeesByBranch(
 ) {
   const employees = await prisma.member.findMany({
     where: {
+      channel: { not: "Micro" },
       branches: {
         some: { branchId },
       },
-
     },
+
+
 
     orderBy: { id: "asc" },
     take: limit + 1, // fetch one extra to determine if there's a next page
@@ -211,6 +213,7 @@ export async function getEmployeesByBranch(
       branches: true,
     },
   });
+
 
   const hasNextPage = employees.length > limit;
   const data = hasNextPage ? employees.slice(0, -1) : employees; // drop the extra record
@@ -324,7 +327,7 @@ export async function updateEmployee(memberId: number, data: EmpData) {
             name: data.nameWithInitials,
             role: "EMPLOYEE",
             branchId: data.branchIds[0],
-          }, 
+          },
         });
 
         //  Send welcome email (non-blocking)
@@ -697,7 +700,7 @@ export async function getEmployeeMonthlyGoal(memberId: number, year: number, mon
   }
 }
 
-// actions/member.ts
+
 export async function searchMembersByName(query: string) {
   const terms = query.trim().split(/\s+/).filter(Boolean);
 

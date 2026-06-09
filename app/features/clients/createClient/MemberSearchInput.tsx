@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useFormContext } from "@/app/context/FormContext";
 import { Network, Search, X, Loader2 } from "lucide-react";
 import { searchMembersByName } from "../actions";
+import { createPortal } from "react-dom";
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -21,11 +22,11 @@ type HierarchySlot = {
 };
 
 const SLOTS: HierarchySlot[] = [
-  { key: "faId",  label: "FA",  placeholder: "Search Financial Advisor..."   },
-  { key: "fmId",  label: "FM",  placeholder: "Search Field Manager..."       },
-  { key: "bmId",  label: "BM",  placeholder: "Search Branch Manager..."      },
-  { key: "rmId",  label: "RM",  placeholder: "Search Regional Manager..."    },
-  { key: "zmId",  label: "ZM",  placeholder: "Search Zone Manager..."        },
+  { key: "faId",  label: "FA",  placeholder: "Search Financial Advisor..."    },
+  { key: "fmId",  label: "FM",  placeholder: "Search Field Manager..."        },
+  { key: "bmId",  label: "BM",  placeholder: "Search Branch Manager..."       },
+  { key: "rmId",  label: "RM",  placeholder: "Search Regional Manager..."     },
+  { key: "zmId",  label: "ZM",  placeholder: "Search Zone Manager..."         },
   { key: "agmId", label: "AGM", placeholder: "Search Asst. General Manager..."},
   { key: "ccoId", label: "CCO", placeholder: "Search Chief Commercial Officer..."},
 ];
@@ -45,32 +46,50 @@ const MemberSearchInput = ({
   onChange,
   initialDisplay,
 }: MemberSearchInputProps) => {
-  const [query, setQuery]         = useState(initialDisplay ?? "");
-  const [results, setResults]     = useState<MemberSearchResult[]>([]);
-  const [loading, setLoading]     = useState(false);
-  const [open, setOpen]           = useState(false);
-  const [selected, setSelected]   = useState<MemberSearchResult | null>(null);
-const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);  const containerRef              = useRef<HTMLDivElement>(null);
+  const [query, setQuery]       = useState(initialDisplay ?? "");
+  const [results, setResults]   = useState<MemberSearchResult[]>([]);
+  const [loading, setLoading]   = useState(false);
+  const [open, setOpen]         = useState(false);
+  const [selected, setSelected] = useState<MemberSearchResult | null>(null);
+  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
+
+  const debounceRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef     = useRef<HTMLInputElement>(null);
 
   const labelClass = "text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-2 ml-1 block";
   const badgeClass = "text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md bg-primary/10 text-primary/70";
+
+  // Recalculate dropdown position so it escapes overflow:hidden parents
+  const updateDropdownPosition = useCallback(() => {
+    if (!inputRef.current) return;
+    const rect = inputRef.current.getBoundingClientRect();
+    setDropdownStyle({
+      position: "fixed",
+      top: rect.bottom + 4,
+      left: rect.left,
+      width: rect.width,
+      zIndex: 9999,
+    });
+  }, []);
 
   const search = useCallback(async (q: string) => {
     if (!q.trim()) { setResults([]); setOpen(false); return; }
     setLoading(true);
     try {
       const res = await searchMembersByName(q);
-setResults(res.filter((m) => m.nameWithInitials !== null) as MemberSearchResult[]);
-setOpen(true);
+      setResults(res.filter((m) => m.nameWithInitials !== null) as MemberSearchResult[]);
+      updateDropdownPosition();
+      setOpen(true);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [updateDropdownPosition]);
 
   useEffect(() => {
     if (selected) return;
     clearTimeout(debounceRef.current ?? undefined);
-debounceRef.current = setTimeout(() => search(query), 300);
+    debounceRef.current = setTimeout(() => search(query), 300);
     return () => clearTimeout(debounceRef.current ?? undefined);
   }, [query, selected, search]);
 
@@ -82,6 +101,18 @@ debounceRef.current = setTimeout(() => search(query), 300);
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  // Reposition on scroll / resize so the portal dropdown stays aligned
+  useEffect(() => {
+    if (!open) return;
+    const reposition = () => updateDropdownPosition();
+    window.addEventListener("scroll", reposition, true);
+    window.addEventListener("resize", reposition);
+    return () => {
+      window.removeEventListener("scroll", reposition, true);
+      window.removeEventListener("resize", reposition);
+    };
+  }, [open, updateDropdownPosition]);
 
   const handleSelect = (member: MemberSearchResult) => {
     setSelected(member);
@@ -99,6 +130,50 @@ debounceRef.current = setTimeout(() => search(query), 300);
 
   const inputClass =
     "bg-background/50 border border-border/50 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:bg-background outline-none transition-all w-full placeholder:text-muted-foreground/30 font-medium pr-10";
+
+  // Dropdown rendered via portal so it escapes overflow:hidden containers
+  const dropdown = open && results.length > 0
+    ? createPortal(
+        <div
+          style={dropdownStyle}
+          className="bg-card border border-border/50 rounded-xl shadow-2xl overflow-auto max-h-64"
+        >
+          {results.map((member) => (
+            <button
+              key={member.id}
+              type="button"
+              onMouseDown={(e) => { e.preventDefault(); handleSelect(member); }}
+              className="w-full px-4 py-2.5 text-left hover:bg-muted/50 transition-colors flex items-center justify-between gap-3 group"
+            >
+              <div className="flex flex-col">
+                <span className="text-sm font-medium text-foreground">
+                  {member.nameWithInitials}
+                </span>
+                <span className="text-[10px] text-muted-foreground/60 font-medium">
+                  {member.empNo}
+                </span>
+              </div>
+              <span className={`${badgeClass} shrink-0`}>
+                {member.position.title}
+              </span>
+            </button>
+          ))}
+        </div>,
+        document.body
+      )
+    : null;
+
+  const emptyDropdown = open && !loading && results.length === 0 && query.trim()
+    ? createPortal(
+        <div
+          style={dropdownStyle}
+          className="bg-card border border-border/50 rounded-xl shadow-2xl px-4 py-3"
+        >
+          <p className="text-[11px] text-muted-foreground/50 font-medium">No members found</p>
+        </div>,
+        document.body
+      )
+    : null;
 
   return (
     <div ref={containerRef} className="relative">
@@ -121,13 +196,16 @@ debounceRef.current = setTimeout(() => search(query), 300);
         </div>
 
         <input
+          ref={inputRef}
           type="text"
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
             if (selected) { setSelected(null); onChange(null, null); }
           }}
-          onFocus={() => { if (results.length) setOpen(true); }}
+          onFocus={() => {
+            if (results.length) { updateDropdownPosition(); setOpen(true); }
+          }}
           placeholder={slot.placeholder}
           className={`${inputClass} pl-9`}
         />
@@ -144,37 +222,8 @@ debounceRef.current = setTimeout(() => search(query), 300);
         )}
       </div>
 
-      {/* Dropdown */}
-      {open && results.length > 0 && (
-        <div className="absolute z-50 mt-1.5 w-full bg-card border border-border/50 rounded-xl shadow-lg overflow-hidden">
-          {results.map((member) => (
-            <button
-              key={member.id}
-              type="button"
-              onMouseDown={(e) => { e.preventDefault(); handleSelect(member); }}
-              className="w-full px-4 py-2.5 text-left hover:bg-muted/50 transition-colors flex items-center justify-between gap-3 group"
-            >
-              <div className="flex flex-col">
-                <span className="text-sm font-medium text-foreground">
-                  {member.nameWithInitials}
-                </span>
-                <span className="text-[10px] text-muted-foreground/60 font-medium">
-                  {member.empNo}
-                </span>
-              </div>
-              <span className={`${badgeClass} shrink-0`}>
-                {member.position.title}
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
-
-      {open && !loading && results.length === 0 && query.trim() && (
-        <div className="absolute z-50 mt-1.5 w-full bg-card border border-border/50 rounded-xl shadow-lg px-4 py-3">
-          <p className="text-[11px] text-muted-foreground/50 font-medium">No members found</p>
-        </div>
-      )}
+      {dropdown}
+      {emptyDropdown}
     </div>
   );
 };

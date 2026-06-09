@@ -54,7 +54,7 @@ export const createInvestmentForExistingClientSchema = z.object({
     .refine((val) => !isNaN(val) && val > 0, {
       message: "Investment amount must be a positive number",
     }),
-  proposal: z
+  proposalFormNo: z
     .string()
     .min(3, "Proposal form number must be at least 3 characters"),
   investmentDate: z.date().optional(),
@@ -80,7 +80,10 @@ export const updateInvestmentSchema = z.object({
     .refine((val) => !isNaN(val) && val > 0, {
       message: "Investment amount must be a positive number",
     }),
-  investmentDate: z.date().refine((d) => !!d, { message: "Investment date is required" }),
+    // proposalFormNo: z
+    // .string()
+    // .min(3, "Proposal form number must be at least 3 characters"),
+  investmentDate: z.coerce.date().refine((d) => !!d, { message: "Investment date is required" }),
   investmentRates: z.array(z.number().min(0).max(100)).optional(),
   beneficiaryId: z.number().nullable(),
   nomineeId: z.number().nullable(),
@@ -99,7 +102,7 @@ export const investmentFormSchema = z.object({
     .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
       message: "Amount must be a positive number",
     }),
-  proposal: z
+  proposalFormNo: z
     .string()
     .min(3, "Proposal form number must be at least 3 characters"),
   investmentDate: z

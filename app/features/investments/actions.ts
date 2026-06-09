@@ -8,6 +8,7 @@ import { createInvestmentForExistingClientSchema, updateInvestmentSchema } from 
 import { ActivityAction, ActivityEntity, Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { getDescendantBranchIds } from "../branches/actions";
+import { upsertActivationsForInvestment } from "../hr/salary/action";
 
 // Generate investment reference number
 function generateInvestmentNumber() {
@@ -19,7 +20,7 @@ function generateInvestmentNumber() {
   return `${prefix}-${timestamp}-${random}`;
 }
 
-export async function getInvestments(page = 1, pageSize = 10) {
+export async function getInvestments(page = 1, pageSize = 10, approvalStatus = "ALL") {
   const dbUser = await getCurrentUserWithRole();
   if (!dbUser) throw new Error("User not found");
 
@@ -46,6 +47,10 @@ export async function getInvestments(page = 1, pageSize = 10) {
       throw new Error("Unauthorized role");
   }
 
+  if (approvalStatus !== "ALL") {
+    whereCondition.approvalStatus = approvalStatus;
+  }
+
   const [investments, total] = await Promise.all([
     prisma.investment.findMany({
       where: whereCondition,
@@ -55,8 +60,8 @@ export async function getInvestments(page = 1, pageSize = 10) {
         plan: true,
         advisor: true,
         branch: true,
-        beneficiary:true,
-        nominee:true,
+        beneficiary: true,
+        nominee: true,
       },
       orderBy: { createdAt: "desc" },
     }),
@@ -340,14 +345,14 @@ export async function createInvestmentForExistingClient(data: {
     const firstMessage = parsed.error.issues[0]?.message ?? "Validation failed";
     return { success: false, error: firstMessage, fieldErrors };
   }
- 
+
   try {
     const currentUser = await getCurrentUserWithRole();
- 
-    const result = await prisma.$transaction(async (tx) => {
+
+    const result = await prisma.$transaction(async (tx: any) => {
       let beneficiaryId = data.beneficiaryId ?? null;
       let nomineeId = data.nomineeId ?? null;
- 
+
       if (data.newBeneficiary?.fullName) {
         const b = await tx.beneficiary.create({
           data: {
@@ -358,7 +363,7 @@ export async function createInvestmentForExistingClient(data: {
         });
         beneficiaryId = b.id;
       }
- 
+
       if (data.newNominee?.fullName) {
         const n = await tx.nominee.create({
           data: {
@@ -371,40 +376,40 @@ export async function createInvestmentForExistingClient(data: {
         });
         nomineeId = n.id;
       }
- 
+
       const investmentDate = data.investmentDate ?? new Date();
- 
+
       const plan = data.planId
         ? await tx.financialPlan.findUnique({ where: { id: data.planId } })
         : null;
- 
+
       const maturityDate = plan
         ? new Date(
-            new Date(investmentDate).setMonth(
-              new Date(investmentDate).getMonth() + plan.duration
-            )
+          new Date(investmentDate).setMonth(
+            new Date(investmentDate).getMonth() + plan.duration
           )
+        )
         : null;
- 
+
       const investmentRates: number[] =
         data.investmentRates?.length ? data.investmentRates : plan?.rate ?? [];
- 
+
       const months = plan?.duration ?? 0;
       const years = investmentRates.length;
       const monthsPerYear = years > 0 ? months / years : 0;
- 
+
       const totalHarvest =
         investmentRates.length && months
           ? investmentRates.reduce(
-              (sum, rate) =>
-                sum + data.amount * (rate / 100) * (monthsPerYear / 12),
-              0
-            )
+            (sum, rate) =>
+              sum + data.amount * (rate / 100) * (monthsPerYear / 12),
+            0
+          )
           : null;
- 
+
       const monthlyHarvest =
         totalHarvest && months ? totalHarvest / months : null;
- 
+
       const investment = await tx.investment.create({
         data: {
           clientId: data.clientId,
@@ -429,7 +434,7 @@ export async function createInvestmentForExistingClient(data: {
           ccoId: data.ccoId,
         },
       });
- 
+
       // ── Volume tracking for hierarchy members (if provided) ───────────────
       const hierarchyMemberIds = [
         data.faId ?? null,
@@ -440,13 +445,13 @@ export async function createInvestmentForExistingClient(data: {
         data.agmId ?? null,
         data.ccoId ?? null,
       ].filter((id): id is number => id !== null);
- 
+
       const uniqueHierarchyIds = [...new Set(hierarchyMemberIds)];
- 
+
       if (uniqueHierarchyIds.length > 0) {
         const year = investmentDate.getFullYear();
         const month = investmentDate.getMonth() + 1;
- 
+
         await Promise.all(
           uniqueHierarchyIds.map((memberId) =>
             tx.monthlyPayroll.upsert({
@@ -463,13 +468,28 @@ export async function createInvestmentForExistingClient(data: {
             })
           )
         );
+        await upsertActivationsForInvestment(
+          tx,
+          {
+            fmId: data.fmId ?? null,
+            bmId: data.bmId ?? null,
+            rmId: data.rmId ?? null,
+            zmId: data.zmId ?? null,
+            agmId: data.agmId ?? null,
+            ccoId: data.ccoId ?? null,
+          },
+          year,
+          month,
+        );
       }
- 
+
+
+
       return investment;
     });
- 
+
     revalidatePath("/features/investments");
- 
+
     void logActivity({
       action: ActivityAction.CREATE,
       entity: ActivityEntity.INVESTMENT,
@@ -478,7 +498,7 @@ export async function createInvestmentForExistingClient(data: {
       branchId: data.branchId,
       metadata: { after: result },
     });
- 
+
     return JSON.parse(JSON.stringify({ success: true, investment: result }));
   } catch (err) {
     console.error("createInvestmentForExistingClient error:", err);
@@ -489,7 +509,7 @@ export async function createInvestmentForExistingClient(data: {
 
 export async function updateInvestment({
   investmentId, planId, amount, investmentDate, investmentRates,
-  beneficiaryId, nomineeId, newBeneficiary, newNominee, proposal,
+  beneficiaryId, nomineeId, newBeneficiary, newNominee, proposalFormNo,
   faId, fmId, bmId, rmId, zmId, agmId, ccoId,
 }: {
   investmentId: number;
@@ -501,7 +521,7 @@ export async function updateInvestment({
   nomineeId: number | null;
   newBeneficiary: any | null;
   newNominee: any | null;
-  proposal: string;
+  proposalFormNo: string;
   faId?: number | null;
   fmId?: number | null;
   bmId?: number | null;
@@ -510,23 +530,28 @@ export async function updateInvestment({
   agmId?: number | null;
   ccoId?: number | null;
 }): Promise<{ success: boolean; error?: string }> {
+
+  console.log("hierarchy received:", { faId, fmId, bmId, rmId, zmId, agmId, ccoId });
+  
   // ── Server-side Zod validation ────────────────────────────────────────────
-  const parsed = updateInvestmentSchema.safeParse({
-    investmentId, planId, amount, investmentDate, investmentRates,
-    beneficiaryId, nomineeId,
-  });
-  if (!parsed.success) {
-    const firstMessage = parsed.error.issues[0]?.message ?? "Validation failed";
-    return { success: false, error: firstMessage };
-  }
+  // const parsed = updateInvestmentSchema.safeParse({
+  //   investmentId, planId, amount, investmentDate, investmentRates,
+  //   beneficiaryId, nomineeId, proposalFormNo,
+  // });
+  // if (!parsed.success) {
+  //   const firstMessage = parsed.error.issues[0]?.message ?? "Validation failed";
+  //   return { success: false, error: firstMessage };
+  // }
 
   try {
     return await prisma.$transaction(async (tx) => {
 
-      const clientId = await tx.investment.findUnique({
+      const oldInv = await tx.investment.findUnique({
         where: { id: investmentId },
-        select: { clientId: true }
-      }).then(inv => inv?.clientId);
+      });
+      if (!oldInv) throw new Error("Investment not found");
+
+      const clientId = oldInv.clientId;
 
       // Create new beneficiary/nominee records if payload provided
       let resolvedBeneficiaryId = beneficiaryId;
@@ -557,7 +582,7 @@ export async function updateInvestment({
           )
           : null;
 
-      await tx.investment.update({
+      const updated = await tx.investment.update({
         where: { id: investmentId },
         data: {
           planId, amount, investmentDate,
@@ -566,7 +591,7 @@ export async function updateInvestment({
           monthlyHarvest: totalHarvest && months ? totalHarvest / months : null,
           beneficiaryId: resolvedBeneficiaryId,
           nomineeId: resolvedNomineeId,
-          proposalFormNo: proposal,
+          proposalFormNo: proposalFormNo,
           faId,
           fmId,
           bmId,
@@ -577,6 +602,73 @@ export async function updateInvestment({
         },
       });
 
+      if (oldInv.approvalStatus === "APPROVED") {
+        const oldYear = new Date(oldInv.investmentDate).getFullYear();
+        const oldMonth = new Date(oldInv.investmentDate).getMonth() + 1;
+        const newYear = new Date(investmentDate).getFullYear();
+        const newMonth = new Date(investmentDate).getMonth() + 1;
+
+        const oldMembers = [...new Set(
+          [oldInv.faId, oldInv.fmId, oldInv.bmId, oldInv.rmId, oldInv.zmId, oldInv.agmId, oldInv.ccoId]
+            .filter((id): id is number => id !== null)
+        )];
+        const newMembers = [...new Set(
+          [faId, fmId, bmId, rmId, zmId, agmId, ccoId]
+            .filter((id): id is number => id !== null)
+        )];
+
+        const dateChanged = oldYear !== newYear || oldMonth !== newMonth;
+
+        if (dateChanged) {
+          // Date changed — decrement everything from old month, increment everything in new month
+          await Promise.all(oldMembers.map(memberId =>
+            tx.monthlyPayroll.updateMany({
+              where: { memberId, year: oldYear, month: oldMonth },
+              data: { volumeAchieved: { decrement: oldInv.amount } },
+            })
+          ));
+          await Promise.all(newMembers.map(memberId =>
+            tx.monthlyPayroll.upsert({
+              where: { memberId_year_month: { memberId, year: newYear, month: newMonth } },
+              update: { volumeAchieved: { increment: amount } },
+              create: { memberId, year: newYear, month: newMonth, basicSalaryPermanent: 0, monthlyTarget: 0, volumeAchieved: amount },
+            })
+          ));
+        } else {
+          // Same month — only touch members that actually changed
+          const removed = oldMembers.filter(id => !newMembers.includes(id));
+          const added = newMembers.filter(id => !oldMembers.includes(id));
+
+          // Amount changed but same members — need to adjust the delta
+          const amountChanged = oldInv.amount !== amount;
+          const staying = oldMembers.filter(id => newMembers.includes(id));
+
+          await Promise.all(removed.map(memberId =>
+            tx.monthlyPayroll.updateMany({
+              where: { memberId, year: oldYear, month: oldMonth },
+              data: { volumeAchieved: { decrement: oldInv.amount } },
+            })
+          ));
+          await Promise.all(added.map(memberId =>
+            tx.monthlyPayroll.upsert({
+              where: { memberId_year_month: { memberId, year: newYear, month: newMonth } },
+              update: { volumeAchieved: { increment: amount } },
+              create: { memberId, year: newYear, month: newMonth, basicSalaryPermanent: 0, monthlyTarget: 0, volumeAchieved: amount },
+            })
+          ));
+
+          // If amount changed, adjust delta for members that stayed
+          if (amountChanged && staying.length > 0) {
+            const delta = amount - oldInv.amount;
+            await Promise.all(staying.map(memberId =>
+              tx.monthlyPayroll.updateMany({
+                where: { memberId, year: oldYear, month: oldMonth },
+                data: { volumeAchieved: { increment: delta } },
+              })
+            ));
+          }
+        }
+      }
       return { success: true };
     });
   } catch (e: any) {
@@ -626,7 +718,16 @@ export async function getProposalReportByBranch(
   from: Date,
   to: Date
 ): Promise<BranchReportRow[]> {
-  // Get all branches with their members and investment counts
+  // Convert date range to year/month pairs
+  const months: { year: number; month: number }[] = [];
+  const cursor = new Date(from.getFullYear(), from.getMonth(), 1);
+  const end = new Date(to.getFullYear(), to.getMonth(), 1);
+
+  while (cursor <= end) {
+    months.push({ year: cursor.getFullYear(), month: cursor.getMonth() + 1 });
+    cursor.setMonth(cursor.getMonth() + 1);
+  }
+
   const branches = await prisma.branch.findMany({
     orderBy: { id: "asc" },
     include: {
@@ -637,14 +738,15 @@ export async function getProposalReportByBranch(
               position: true,
               advisorInvestments: {
                 where: {
-                  createdAt: {
-                    gte: from,
-                    lte: to,
-                  },
+                  createdAt: { gte: from, lte: to },
                 },
-                select: {
-                  amount: true,
-                }
+                select: { amount: true },
+              },
+              monthlyPayrolls: {
+                where: {
+                  OR: months.map(({ year, month }) => ({ year, month })),
+                },
+                select: { volumeAchieved: true },
               },
             },
           },
@@ -661,8 +763,8 @@ export async function getProposalReportByBranch(
       name: member.nameWithInitials || "",
       position: member.position?.title ?? "—",
       proposalCount: member.advisorInvestments.length,
-      totalAmount: member.advisorInvestments.reduce(   // ← add this
-        (sum, inv) => sum + (inv.amount ?? 0),
+      totalAmount: member.monthlyPayrolls.reduce(   // ← swapped
+        (sum, p) => sum + (p.volumeAchieved ?? 0),
         0
       ),
     })),
@@ -720,7 +822,8 @@ export async function searchInvestments(
   branchId?: number,
   month?: string, // "2026-04" format
   page = 1,
-  pageSize = 10
+  pageSize = 10,
+  approvalStatus = "ALL"
 ) {
   const dbUser = await getCurrentUserWithRole();
   if (!dbUser) throw new Error("User not found");
@@ -764,6 +867,10 @@ export async function searchInvestments(
       gte: new Date(year, mon - 1, 1),
       lte: new Date(year, mon, 0, 23, 59, 59, 999),
     };
+  }
+
+  if (approvalStatus !== "ALL") {
+    whereCondition.approvalStatus = approvalStatus;
   }
 
   const [investments, total] = await Promise.all([
@@ -903,4 +1010,145 @@ export async function getInvestmentSummary(filters: {
     proposalCount,
     investmentCount,
   };
+}
+
+export async function approveInvestment(data: {
+  investmentId: number;
+  faId?: number | null;
+  fmId?: number | null;
+  bmId?: number | null;
+  rmId?: number | null;
+  zmId?: number | null;
+  agmId?: number | null;
+  ccoId?: number | null;
+  reviewNote?: string;
+}) {
+  try {
+    const currentUser = await getCurrentUserWithRole();
+    if (!currentUser) throw new Error("Not authorized");
+    if (!data.faId) throw new Error("FA is required for approval");
+
+    const investment = await prisma.investment.findUnique({
+      where: { id: data.investmentId },
+      include: { client: true }
+    });
+    if (!investment) throw new Error("Investment not found");
+    if (investment.approvalStatus !== "PENDING") throw new Error("Investment is not pending");
+
+    const result = await prisma.$transaction(async (tx) => {
+      const updated = await tx.investment.update({
+        where: { id: data.investmentId },
+        data: {
+          approvalStatus: "APPROVED",
+          reviewedAt: new Date(),
+          reviewedBy: currentUser.id,
+          reviewNote: data.reviewNote,
+          faId: data.faId,
+          fmId: data.fmId,
+          bmId: data.bmId,
+          rmId: data.rmId,
+          zmId: data.zmId,
+          agmId: data.agmId,
+          ccoId: data.ccoId,
+        },
+      });
+
+      const hierarchyMemberIds = [
+        data.faId ?? null,
+        data.fmId ?? null,
+        data.bmId ?? null,
+        data.rmId ?? null,
+        data.zmId ?? null,
+        data.agmId ?? null,
+        data.ccoId ?? null,
+      ].filter((id): id is number => id !== null);
+
+      const uniqueHierarchyIds = [...new Set(hierarchyMemberIds)];
+
+      if (uniqueHierarchyIds.length > 0) {
+        const year = new Date(investment.investmentDate).getFullYear();
+        const month = new Date(investment.investmentDate).getMonth() + 1;
+
+        await Promise.all(
+          uniqueHierarchyIds.map((memberId) =>
+            tx.monthlyPayroll.upsert({
+              where: { memberId_year_month: { memberId, year, month } },
+              update: { volumeAchieved: { increment: investment.amount } },
+              create: {
+                memberId,
+                year,
+                month,
+                basicSalaryPermanent: 0,
+                monthlyTarget: 0,
+                volumeAchieved: investment.amount,
+              },
+            })
+          )
+        );
+
+        await upsertActivationsForInvestment(
+          tx,
+          {
+            fmId: data.fmId ?? null,
+            bmId: data.bmId ?? null,
+            rmId: data.rmId ?? null,
+            zmId: data.zmId ?? null,
+            agmId: data.agmId ?? null,
+            ccoId: data.ccoId ?? null,
+          },
+          year,
+          month,
+        );
+      }
+
+      if (investment.client && investment.client.approvalStatus !== "APPROVED") {
+        await tx.client.update({
+          where: { id: investment.clientId },
+          data: {
+            approvalStatus: "APPROVED",
+            reviewedAt: new Date(),
+            reviewedBy: currentUser.id,
+            reviewNote: "Automatically approved upon investment approval.",
+          }
+        });
+      }
+
+      return updated;
+    });
+
+    revalidatePath("/features/investments");
+    return { success: true, investment: result };
+  } catch (error: any) {
+    console.error("approveInvestment error:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function rejectInvestment(data: {
+  investmentId: number;
+  reviewNote: string;
+}) {
+  try {
+    const currentUser = await getCurrentUserWithRole();
+    if (!currentUser) throw new Error("Not authorized");
+    if (!data.reviewNote || data.reviewNote.trim() === "") {
+      throw new Error("Review note is required for rejection");
+    }
+
+    const updated = await prisma.investment.update({
+      where: { id: data.investmentId },
+      data: {
+        approvalStatus: "REJECTED",
+        reviewedAt: new Date(),
+        reviewedBy: currentUser.id,
+        reviewNote: data.reviewNote,
+      },
+    });
+
+    revalidatePath("/features/investments");
+    return { success: true, investment: updated };
+  } catch (error: any) {
+    console.error("rejectInvestment error:", error);
+    return { success: false, error: error.message };
+  }
 }

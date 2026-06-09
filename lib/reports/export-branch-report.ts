@@ -36,7 +36,7 @@ export function exportBranchReport(
       [`Branch: ${branch.branchName}`, "", "", ""],
       [`Period: ${from}  →  ${to}`, "", "", ""],
       [""],
-      ["Employee Name", "Position", "Proposal Count", "Total Amount (LKR)"],
+      ["Employee Name", "Position", "Proposal Count", "Volume Achieved (LKR)"],
     ];
 
     branch.employees.forEach((emp) => {
@@ -72,7 +72,7 @@ export function exportBranchReport(
       [`Position Group: ${label}`, "", "", "", "", ""],
       [`Period: ${from}  →  ${to}`, "", "", "", "", ""],
       [""],
-      ["Rank", "Employee Name", "Branch", "Position", "Proposal Count", "Total Amount (LKR)"],
+      ["Rank", "Employee Name", "Branch", "Position", "Proposal Count", "Volume Achieved (LKR)"],
     ];
 
     filtered.forEach((emp, i) => {
