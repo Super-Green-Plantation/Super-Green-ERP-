@@ -532,7 +532,7 @@ export async function updateInvestment({
 }): Promise<{ success: boolean; error?: string }> {
 
   console.log("hierarchy received:", { faId, fmId, bmId, rmId, zmId, agmId, ccoId });
-  
+
   // ── Server-side Zod validation ────────────────────────────────────────────
   // const parsed = updateInvestmentSchema.safeParse({
   //   investmentId, planId, amount, investmentDate, investmentRates,
@@ -1026,8 +1026,13 @@ export async function approveInvestment(data: {
   try {
     const currentUser = await getCurrentUserWithRole();
     if (!currentUser) throw new Error("Not authorized");
-    if (!data.faId || !data.fmId || !data.bmId || !data.rmId || !data.zmId || !data.agmId || !data.ccoId) throw new Error("All approvers are required for approval");
+    
+    const approverIds = [data.faId, data.fmId, data.bmId, data.rmId, data.zmId, data.agmId, data.ccoId];
 
+    // If NOT even one is present, throw the error
+    if (!approverIds.some(id => id)) {
+      throw new Error("At least one approver is required for approval");
+    }
     const investment = await prisma.investment.findUnique({
       where: { id: data.investmentId },
       include: { client: true }
