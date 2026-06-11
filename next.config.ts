@@ -18,6 +18,17 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+
+  async redirects() {
+    return [
+      {
+        source: "/.well-known/autoconfig/mail/config-v1.1.xml",
+        destination:
+          "https://erp.supergreenplantation.lk/.well-known/autoconfig/mail/config-v1.1.xml",
+        permanent: false,
+      },
+    ];
+  },
 };
 
 const pwaConfig = withPWA({
@@ -26,7 +37,7 @@ const pwaConfig = withPWA({
   aggressiveFrontEndNavCaching: true,
   reloadOnOnline: true,
   disable: process.env.NODE_ENV === "development",
-})(nextConfig); // <-- nextConfig passed here as the wrapped config
+})(nextConfig);
 
 export default withSentryConfig(pwaConfig, {
   org: "super-green-plantation",
