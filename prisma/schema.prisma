@@ -202,6 +202,8 @@ model Member {
 
   monthlyActivations MonthlyActivation[]
   zones              MemberZone[]
+
+  investments Investment[] @relation("InvestmentCreatedBy")
 }
 
 model PositionTarget {
@@ -292,6 +294,8 @@ model Investment {
   nominee              Nominee?       @relation(fields: [nomineeId], references: [id])
   plan                 FinancialPlan? @relation(fields: [planId], references: [id])
   profit               Profit?
+  createdById          Int?
+  createdBy            Member?        @relation("InvestmentCreatedBy", fields: [createdById], references: [id])
 
   approvalStatus ApprovalStatus @default(PENDING)
   submittedAt    DateTime       @default(now())

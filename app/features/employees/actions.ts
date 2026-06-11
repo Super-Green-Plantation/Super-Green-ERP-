@@ -626,6 +626,8 @@ export async function searchEmployees(searchText: string) {
 }
 
 export async function getEmployeeMonthlyGoal(memberId: number, year: number, month: number) {
+    console.log("getEmployeeMonthlyGoal called:", { memberId, year, month });
+
   try {
     // Try MonthlyPayroll first
     const payroll = await prisma.monthlyPayroll.findUnique({
@@ -637,6 +639,9 @@ export async function getEmployeeMonthlyGoal(memberId: number, year: number, mon
         allowanceHit: true,
       },
     });
+
+        console.log("payroll result:", payroll);
+
 
     if (payroll) {
       return {
@@ -682,6 +687,14 @@ export async function getEmployeeMonthlyGoal(memberId: number, year: number, mon
         },
       },
       select: { targetAmount: true },
+    });
+
+    console.log("fallback debug:", {
+      positionId: member?.position?.id,
+      dateOfJoin: member?.dateOfJoin,
+      totalMonths,
+      periodNumber,
+      monthNumber,
     });
 
     if (!positionTarget) return null;

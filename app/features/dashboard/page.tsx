@@ -27,12 +27,12 @@ const DashboardPage = () => {
     return <PrivilegedView data={data} userName={userName} userRole={userRole} achieved={achieved} target={target} percentage={percentage} isMounted={isMounted} />;
   }
 
-  return <RestrictedView data={data} 
+  return <RestrictedView
   userName={userName} 
   userRole={userRole} 
-  achieved={achieved} 
-  target={target} 
-  percentage={percentage} 
+  // achieved={achieved} 
+  // target={target} 
+  // percentage={percentage} 
   isMounted={isMounted} 
   memberId={data.user?.member?.id}
   />;

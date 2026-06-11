@@ -370,6 +370,27 @@ export default function CreateInvestmentForm({
     ccoId: initialData?.ccoId ?? null,
   });
 
+  const HIERARCHY_PRIORITY = [
+    { key: "faId", label: "FA" },
+    { key: "fmId", label: "FM" },
+    { key: "bmId", label: "BM" },
+    { key: "rmId", label: "RM" },
+    { key: "zmId", label: "ZM" },
+    { key: "agmId", label: "AGM" },
+    { key: "ccoId", label: "CCO" },
+  ] as const;
+
+  const [advisorId, setAdvisorId] = useState<number | null>(null);
+  const [advisorOverridden, setAdvisorOverridden] = useState(false);
+
+
+  useEffect(() => {
+    if (advisorOverridden) return;
+    const auto = HIERARCHY_PRIORITY.find(({ key }) => hierarchy[key] != null);
+    setAdvisorId(auto ? (hierarchy[auto.key] ?? null) : null);
+  }, [hierarchy, advisorOverridden]);
+
+
   // When client changes, auto-fill from client if we aren't in edit mode or if client changed
   useEffect(() => {
     if (selectedClient && !lockedClient) {
@@ -927,6 +948,54 @@ export default function CreateInvestmentForm({
                   />
                 </div>
 
+                {/* Advisor selector */}
+                <div className="space-y-2">
+                  <label className="block text-[10px] font-black uppercase tracking-wider text-muted-foreground">
+                    Advisor (Proposal Credit)
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {HIERARCHY_PRIORITY
+                      .filter(({ key }) => hierarchy[key] != null)
+                      .map(({ key, label }) => {
+                        const memberId = hierarchy[key]!;
+                        // resolve display name from hierarchyInitialMembers
+                        const memberObj = hierarchyInitialMembers[key];
+                        const name = memberObj?.nameWithInitials ?? `ID ${memberId}`;
+                        const isSelected = advisorId === memberId;
+                        return (
+                          <button
+                            key={key}
+                            type="button"
+                            onClick={() => {
+                              setAdvisorId(memberId);
+                              setAdvisorOverridden(true);
+                            }}
+                            className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-bold transition-all
+              ${isSelected
+                                ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                                : "bg-card text-foreground border-border hover:border-primary/50"
+                              }`}
+                          >
+                            <span className="text-[10px] font-black uppercase opacity-70">{label}</span>
+                            {name}
+                            {isSelected && <Check className="w-3 h-3 shrink-0" />}
+                          </button>
+                        );
+                      })
+                    }
+                  </div>
+                  {advisorOverridden && (
+                    <button
+                      type="button"
+                      onClick={() => setAdvisorOverridden(false)}
+                      className="text-[10px] text-muted-foreground hover:text-foreground font-bold"
+                    >
+                      Reset to auto
+                    </button>
+                  )}
+                </div>
+
+
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] font-bold uppercase text-muted-foreground">Reviewing as:</span>
                   <span className="text-xs font-black text-foreground">{userData?.name}</span>
@@ -939,6 +1008,7 @@ export default function CreateInvestmentForm({
                       setLoading(true);
                       const res = await approveInvestment({
                         investmentId: investmentId!,
+                        advisorId,
                         ...hierarchy,
                         reviewNote
                       });

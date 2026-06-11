@@ -1,11 +1,20 @@
-import { Target, TrendingUp } from "lucide-react";
+"use client";
+
+import { getEmployeePerformance } from "@/app/features/branches/employees/[branchId]/[empId]/getEmployeePerfomance";
+import { getEmployeeMonthlyGoal } from "@/app/features/employees/actions";
+import {
+  CheckCircle,
+  Clock,
+  XCircle
+} from "lucide-react";
+import { useEffect, useState } from "react";
 import { PWAInstallButton } from "../Buttons/PWAInstallButton";
 import { ThemeToggle } from "../ThemeToggle";
-import { UserAvatar } from "./UserAvatar";
-import Link from "next/link";
-import { useEffect, useState } from "react";
-import { getEmployeeMonthlyGoal } from "@/app/features/employees/actions";
-
+import { AchievementBadges } from "./AchievementBadges";
+import { FooterCTA } from "./FooterCTA";
+import { NetPay } from "./NetPay";
+import { ProgressBar } from "./ProgressBar";
+import { StatCard } from "./StatCard";
 
 const MONTH_NAMES = [
   "January",
@@ -21,267 +30,291 @@ const MONTH_NAMES = [
   "November",
   "December",
 ];
-export const RestrictedView = ({ data, userName, userRole, achieved, target, percentage, isMounted, memberId }: any) => {
-  const now = new Date();
-  const [personalGoal, setPersonalGoal] = useState<{
-    achieved: number;
-    target: number;
-    percentage: number;
+
+const formatCurrency = (amount: number): string => {
+  return new Intl.NumberFormat("en-LK", {
+    maximumFractionDigits: 0,
+  }).format(amount);
+};
+
+interface EmployeeGoal {
+  achieved: number;
+  target: number;
+  percentage: number;
+  incentiveHit: boolean;
+  allowanceHit: boolean;
+}
+
+interface EmployeePerformance {
+  status: "PROBATION" | "PERMANENT";
+  probationStartDate?: string | null;
+  monthsElapsed?: number;
+  periodNumber?: number;
+  monthInPeriod?: number;
+  target?: {
+    id: number;
+    positionId: number;
+    periodNumber: number;
+    monthNumber: number;
+    targetAmount: number;
+    bonusAmount: number;
+    excessRate: number;
+    partialBonus: number;
+    partialThreshold: number;
+    bonusThresholdPct: number;
+    minActiveAdvisors: number;
+    minActiveBMs: number;
+    minActiveFMs: number;
+    teamActiveAmount: number;
+    teamActiveThresholdPct: number;
+    vehicleAmount: number;
+    vehicleThresholdPct: number;
+    after6MonthTarget: number;
+  } | null;
+  evaluation?: any;
+  salary?: any | null;
+  currentPayroll?: {
+    volumeAchieved: number;
+    monthlyTarget: number;
     incentiveHit: boolean;
     allowanceHit: boolean;
-  } | null>(null);
+    netPay: number;
+    year: number;
+    month: number;
+  } | null;
+  payrollHistory?: Array<{
+    volumeAchieved: number;
+    monthlyTarget: number;
+    incentiveHit: boolean;
+    allowanceHit: boolean;
+    netPay: number;
+    year: number;
+    month: number;
+  }>;
+  proposals?: {
+    pendingCount: number;
+    approvedCount: number;
+    rejectedCount: number;
+    approvedAmount: number;
+    pendingAmount: number;
+  };
+}
+
+interface RestrictedViewProps {
+  userName: string | null | undefined;
+  userRole: string | null | undefined;
+  isMounted: boolean;
+  memberId: number | null | undefined;
+}
+
+export const RestrictedView = ({
+  userName,
+  userRole,
+  isMounted,
+  memberId,
+}: RestrictedViewProps) => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+
+  const [goal, setGoal] = useState<EmployeeGoal | null>(null);
+  const [performance, setPerformance] = useState<EmployeePerformance | null>(null);
 
   useEffect(() => {
     if (!memberId) return;
-    getEmployeeMonthlyGoal(memberId, now.getFullYear(), now.getMonth() + 1)
-      .then(setPersonalGoal);
-  }, [memberId]);
+    Promise.all([
+      getEmployeeMonthlyGoal(memberId, year, month),
+      getEmployeePerformance(memberId, year, month),
+    ]).then(([g, p]) => {
+      setGoal(g);
+      setPerformance(p);
+    });
+  }, [memberId, year, month]);
+
+  const achieved = goal?.achieved ?? 0;
+  const target = goal?.target ?? 0;
+  const percentage =
+    target > 0 ? Math.round((achieved / target) * 100) : 0;
+
+  const firstName = userName?.split(" ")[0] ?? "there";
+
+  // Loading states
+  const isLoading = !isMounted || goal === null || performance === null;
 
   return (
-    <div className="max-w-7xl mx-auto min-h-screen bg-transparent p-4 sm:p-8 flex flex-col items-center justify-center">
-      {/* Top Header with Theme Toggle */}
-      <div className="w-full flex justify-end mb-8">
+    <div className="max-w-2xl mx-auto min-h-screen p-4 sm:p-8 flex flex-col gap-8">
+      {/* Top bar */}
+      <div className="flex items-center justify-between">
+        <PWAInstallButton />
         <div className="flex items-center gap-3">
           <ThemeToggle />
-          <div className="h-6 w-px bg-border/50 mx-2 hidden sm:block"></div>
         </div>
       </div>
-      <PWAInstallButton />
 
-
-      <div className="w-full max-w-4xl space-y-12 animate-in fade-in slide-in-from-bottom-10 duration-1000">
-
-        {/* Header */}
-        <div className="text-center space-y-4">
-          <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 px-4 py-2 rounded-full mb-4">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
-            </span>
-            <span className="text-[10px] font-black uppercase tracking-widest text-primary">Core Business Performance</span>
-          </div>
-          <h1 className="text-5xl sm:text-7xl font-black text-foreground tracking-tighter leading-[0.9]">
-            Hello, <span className="text-primary">{userName.split(' ')[0]}</span>.
-            <br />
-            Our Goal is <span className="text-accent">Rs. {(target / 1000000).toFixed(0)}M</span>
+      <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-6">
+        {/* Greeting */}
+        <div>
+          <h1 className="text-3xl sm:text-4xl font-black text-foreground tracking-tight">
+            Hello, <span className="text-primary">{firstName}</span>.
           </h1>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto leading-relaxed">
-            Real-time synchronization of enterprise targets and collective achievements.
+          <p className="text-sm text-muted-foreground mt-1 font-medium">
+            {MONTH_NAMES[now.getMonth()]} {year} · {userRole}
           </p>
+
+          {/* Employee Status Badge */}
+          {performance && (
+            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+              performance.status === "PERMANENT"
+                ? "bg-emerald-100 text-emerald-800"
+                : "bg-blue-100 text-blue-800"
+            }`}
+            >
+              {performance.status === "PERMANENT" ? "Permanent" : "Probation"}
+            </span>
+          )}
         </div>
 
-        {/* Personal Goal */}
-        {personalGoal ? (
-          <GoalRingCard
-            label="My Target"
-            sublabel={MONTH_NAMES[now.getMonth()] + " " + now.getFullYear()}
-            achieved={personalGoal.achieved}
-            target={personalGoal.target}
-            percentage={personalGoal.percentage}
-            badges={[
-              personalGoal.incentiveHit ? "Incentive Hit ✓" : null,
-              personalGoal.allowanceHit ? "Allowance Hit ✓" : null,
-              // personalGoal.isFallback ? "Pending Processing" : null,  
-            ].filter(Boolean) as string[]}
-          />
-        ) : (
-          <div className="relative bg-card/40 backdrop-blur-3xl border border-white/10 rounded-[3rem] p-12 flex items-center justify-center text-muted-foreground text-sm">
-            No payroll record for this month yet.
+        {/* Employee Performance Section */}
+        {!isLoading && performance && (
+          <div className="space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              {/* Salary Info (for permanent employees) */}
+              {performance.status === "PERMANENT" && performance.salary && (
+                <div className="bg-card/60 backdrop-blur-xl border border-border/30 rounded-[2rem] p-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-6 h-6 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                      <span className="text-emerald-500">💰</span>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-muted-foreground uppercase">Salary</p>
+                      <p className="text-lg font-black text-foreground">
+                        {formatCurrency(
+                          (performance.salary.basic ?? 0) +
+                          (performance.salary.allowances ?? 0)
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Probation Progress (for probation employees) */}
+              {performance.status === "PROBATION" && (
+                <div className="bg-card/60 backdrop-blur-xl border border-border/30 rounded-[2rem] p-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-6 h-6 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                      <span className="text-blue-500">🎯</span>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-muted-foreground uppercase">Probation Progress</p>
+                      <div className="flex items-baseline space-x-1">
+                        <p className="text-black font-bold">
+                          {performance.monthInPeriod}/3
+                        </p>
+                        <span className="text-xs text-muted-foreground">months in period</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Progress bar for probation period */}
+                  {performance.monthInPeriod !== undefined && (
+                    <div className="mt-2 w-full bg-muted/30 rounded-full h-1.5">
+                      <div
+                        className="h-full bg-blue-500 rounded-full"
+                        style={{ width: `${Math.min((performance.monthInPeriod / 3) * 100, 100)}%` }}
+                      />
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Current Payroll Summary */}
+              {performance.currentPayroll && (
+                <div className="bg-card/60 backdrop-blur-xl border border-border/30 rounded-[2rem] p-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-6 h-6 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                      <span className="text-amber-500">📊</span>
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-muted-foreground uppercase">Current Month</p>
+                      <p className="text-lg font-black text-foreground">
+                        {formatCurrency(performance.currentPayroll.netPay ?? 0)}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Net Pay • {performance.currentPayroll.month} / {performance.currentPayroll.year}
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
-        {/* Massive Progress Visualization */}
-        <div className="relative group">
-          <div className="absolute -inset-4 bg-linear-to-r from-primary/20 via-accent/20 to-primary/20 rounded-[4rem] blur-3xl opacity-50 group-hover:opacity-100 transition-opacity duration-1000"></div>
+        {/* Proposals */}
+        <div className="space-y-3">
+          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+            My proposals this month
+          </p>
+          <div className="grid sm:grid-cols-3 gap-3">
+            {/* Pending */}
+            <StatCard
+              icon={<Clock className="w-4 h-4 text-amber-500" />}
+              label="Pending"
+              value={isLoading ? "—" : performance?.proposals?.pendingCount}
+              amountFormatted={isLoading ? "—" : formatCurrency(performance?.proposals?.pendingAmount ?? 0)}
+              amountLabel="Amount"
+              color="amber"
+            />
 
-          <div className="relative bg-card/40 backdrop-blur-3xl border border-white/10 rounded-[3rem] p-12 sm:p-20 shadow-2xl overflow-hidden">
+            {/* Approved */}
+            <StatCard
+              icon={<CheckCircle className="w-4 h-4 text-emerald-500" />}
+              label="Approved"
+              value={isLoading ? "—" : performance?.proposals?.approvedCount}
+              amountFormatted={isLoading ? "—" : formatCurrency(performance?.proposals?.approvedAmount ?? 0)}
+              amountLabel="Amount"
+              color="emerald"
+            />
 
-            {/* Background Decorations */}
-            <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
-              <Target className="w-64 h-64 text-primary" />
-            </div>
-
-            <div className="flex flex-col md:flex-row items-center gap-16 md:gap-24">
-
-              {/* Circular Indicator */}
-              <div className="relative w-64 h-64 sm:w-80 sm:h-80 shrink-0">
-                <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
-                  <circle
-                    cx="50" cy="50" r="42"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="10"
-                    className="text-muted/10"
-                  />
-                  <circle
-                    cx="50" cy="50" r="42"
-                    fill="none"
-                    stroke="url(#gradient)"
-                    strokeWidth="10"
-                    strokeDasharray={`${2 * Math.PI * 42}`}
-                    strokeDashoffset={`${2 * Math.PI * 42 * (1 - percentage / 100)}`}
-                    strokeLinecap="round"
-                    className="transition-all duration-1000 ease-out"
-                  />
-                  <defs>
-                    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#10b981" />
-                      <stop offset="100%" stopColor="#0ea5e9" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-
-                <div className="absolute inset-0 flex flex-col items-center justify-center pt-4">
-                  <span className="text-6xl sm:text-8xl font-black text-foreground tracking-tighter">{percentage}%</span>
-                  <span className="text-xs font-black uppercase tracking-[0.3em] text-muted-foreground mt-2">Achieved</span>
-                </div>
-              </div>
-
-              {/* Data Breakdown */}
-              <div className="flex-1 space-y-12 w-full">
-                <div className="space-y-2">
-                  <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Current Volume</p>
-                  <p className="text-4xl sm:text-5xl font-black text-foreground tracking-tighter">
-                    Rs. {(achieved / 1000000).toFixed(2)}M
-                  </p>
-                  <div className="h-1.5 w-full bg-muted/20 rounded-full overflow-hidden mt-4">
-                    <div
-                      className="h-full bg-linear-to-r from-emerald-500 to-sky-500 transition-all duration-1000 ease-out"
-                      style={{ width: `${percentage}%` }}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-8">
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Target</p>
-                    <p className="text-xl font-bold text-foreground tracking-tight">{(target / 1000000).toFixed(0)}M</p>
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Remaining</p>
-                    <p className="text-xl font-bold text-accent tracking-tight">{Math.max(0, (target - achieved) / 1000000).toFixed(2)}M</p>
-                  </div>
-                </div>
-
-                <div className="pt-8 border-t border-border/50">
-                  <div className="flex items-center gap-4 text-sm font-bold text-foreground">
-                    <div className="w-10 h-10 rounded-xl bg-card border border-border/50 flex items-center justify-center">
-                      <UserAvatar seed={userName} className="w-full h-full" />
-                    </div>
-                    <div>
-                      <p>{userName}</p>
-                      <p className="text-[10px] text-muted-foreground uppercase">{userRole}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-            </div>
+            {/* Rejected */}
+            <StatCard
+              icon={<XCircle className="w-4 h-4 text-red-500" />}
+              label="Rejected"
+              value={isLoading ? "—" : performance?.proposals?.rejectedCount}
+              color="red"
+            />
           </div>
         </div>
 
-        {/* Encouraging Footer */}
-        <div className="bg-card/30 backdrop-blur-xl border border-border/50 rounded-[2rem] p-8 flex flex-col sm:flex-row items-center justify-between gap-6 sm:gap-12">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center text-accent">
-              <TrendingUp className="w-6 h-6" />
-            </div>
-            <div>
-              <p className="font-bold text-foreground">Steady Growth Detected</p>
-              <p className="text-xs text-muted-foreground">Keep pushing towards the enterprise vision.</p>
-            </div>
-          </div>
+        {/* Volume progress */}
+        <ProgressBar
+          achieved={achieved}
+          target={target}
+          percentage={percentage}
+          isMounted={isMounted}
+          formatCurrency={formatCurrency}
+        />
 
-          <Link href="/features/clients" className="bg-foreground text-background px-8 py-4 rounded-2xl font-black text-sm uppercase tracking-widest hover:bg-primary hover:text-white transition-all shadow-xl shadow-black/10">
-            View My Contributions
-          </Link>
-        </div>
+        {/* Incentive / allowance badges */}
+        <AchievementBadges
+          incentiveHit={isLoading ? false : goal?.incentiveHit ?? false}
+          allowanceHit={isLoading ? false : goal?.allowanceHit ?? false}
+        />
 
+        {/* No payroll record yet */}
+        {!goal && isMounted && (
+          <p className="text-xs text-muted-foreground font-medium italic">
+            No payroll record for this month yet.
+          </p>
+        )}
+
+        {/* Net pay — only show if processed */}
+        <NetPay netPay={isLoading ? 0 : performance?.currentPayroll?.netPay ?? 0} isMounted={isMounted} formatCurrency={formatCurrency} />
+
+        {/* Footer CTA */}
+        <FooterCTA userName={userName} />
       </div>
     </div>
   );
 };
-
-
-function GoalRingCard({
-  label, sublabel, achieved, target, percentage, badges = []
-}: {
-  label: string;
-  sublabel: string;
-  achieved: number;
-  target: number;
-  percentage: number;
-  badges?: string[];
-}) {
-  return (
-    <div className="relative group">
-      <div className="absolute -inset-4 bg-linear-to-r from-primary/20 via-accent/20 to-primary/20 rounded-[4rem] blur-3xl opacity-50 group-hover:opacity-100 transition-opacity duration-1000" />
-
-      <div className="relative bg-card/40 backdrop-blur-3xl border border-white/10 rounded-[3rem] p-10 shadow-2xl overflow-hidden flex flex-col items-center gap-8">
-
-        <div className="text-center">
-          <p className="text-[10px] font-black uppercase tracking-widest text-primary">{label}</p>
-          <p className="text-xs text-muted-foreground mt-1">{sublabel}</p>
-        </div>
-
-        {/* Ring */}
-        <div className="relative w-48 h-48 shrink-0">
-          <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="42" fill="none" stroke="currentColor" strokeWidth="10" className="text-muted/10" />
-            <circle
-              cx="50" cy="50" r="42"
-              fill="none"
-              stroke="url(#gradient2)"
-              strokeWidth="10"
-              strokeDasharray={`${2 * Math.PI * 42}`}
-              strokeDashoffset={`${2 * Math.PI * 42 * (1 - percentage / 100)}`}
-              strokeLinecap="round"
-              className="transition-all duration-1000 ease-out"
-            />
-            <defs>
-              <linearGradient id="gradient2" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#10b981" />
-                <stop offset="100%" stopColor="#0ea5e9" />
-              </linearGradient>
-            </defs>
-          </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-5xl font-black text-foreground tracking-tighter">{percentage}%</span>
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground mt-1">Achieved</span>
-          </div>
-        </div>
-
-        {/* Numbers */}
-        <div className="w-full space-y-3">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Achieved</span>
-            <span className="font-bold text-foreground">Rs. {(achieved / 1000000).toFixed(2)}M</span>
-          </div>
-          <div className="h-1.5 w-full bg-muted/20 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-linear-to-r from-emerald-500 to-sky-500 transition-all duration-1000 ease-out"
-              style={{ width: `${percentage}%` }}
-            />
-          </div>
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>Target: Rs. {(target / 1000000).toFixed(2)}M</span>
-            <span>Remaining: Rs. {Math.max(0, (target - achieved) / 1000000).toFixed(2)}M</span>
-          </div>
-        </div>
-
-        {/* Badges */}
-        {badges.map((b) => (
-          <span
-            key={b}
-            className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full border ${b === "Pending Processing"
-                ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
-                : "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
-              }`}
-          >
-            {b}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}

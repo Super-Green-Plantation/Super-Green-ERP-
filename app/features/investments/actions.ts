@@ -5,7 +5,7 @@ import { getCurrentUserWithRole } from "@/lib/getCurrentUserWithRole";
 import { logActivity } from "@/lib/logActivity";
 import { prisma } from "@/lib/prisma";
 import { createInvestmentForExistingClientSchema, updateInvestmentSchema } from "@/lib/validations/investment.schema";
-import { ActivityAction, ActivityEntity, Prisma } from "@prisma/client";
+import { ActivityAction, ActivityEntity, Channel, Prisma, Title } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { getDescendantBranchIds } from "../branches/actions";
 import { upsertActivationsForInvestment } from "../hr/salary/action";
@@ -432,6 +432,7 @@ export async function createInvestmentForExistingClient(data: {
           zmId: data.zmId,
           agmId: data.agmId,
           ccoId: data.ccoId,
+          createdById: currentUser?.member?.id ?? null,
         },
       });
 
@@ -718,7 +719,6 @@ export async function getProposalReportByBranch(
   from: Date,
   to: Date
 ): Promise<BranchReportRow[]> {
-  // Convert date range to year/month pairs
   const months: { year: number; month: number }[] = [];
   const cursor = new Date(from.getFullYear(), from.getMonth(), 1);
   const end = new Date(to.getFullYear(), to.getMonth(), 1);
@@ -728,18 +728,32 @@ export async function getProposalReportByBranch(
     cursor.setMonth(cursor.getMonth() + 1);
   }
 
+  // Excluded positions (management roles that span all branches)
+  const EXCLUDED_TITLES: Title[] = ["COO", "GM", "DGM", "PER_AGM", "PRO_AGM", "SZM"];
+
   const branches = await prisma.branch.findMany({
+
     orderBy: { id: "asc" },
     include: {
       members: {
+        where: {
+          member: {
+            OR: [
+              { remark: null },
+              { remark: { not: "RESIGN" } },
+            ],
+            channel: { not: Channel.Micro },
+            position: {
+              title: { notIn: EXCLUDED_TITLES },
+            },
+          },
+        },
         include: {
           member: {
             include: {
               position: true,
               advisorInvestments: {
-                where: {
-                  createdAt: { gte: from, lte: to },
-                },
+                where: { createdAt: { gte: from, lte: to } },
                 select: { amount: true },
               },
               monthlyPayrolls: {
@@ -755,20 +769,31 @@ export async function getProposalReportByBranch(
     },
   });
 
-  return branches.map((branch) => ({
-    branchId: branch.id,
-    branchName: branch.name,
-    employees: branch.members.map(({ member }) => ({
-      memberId: member.id,
-      name: member.nameWithInitials || "",
-      position: member.position?.title ?? "—",
-      proposalCount: member.advisorInvestments.length,
-      totalAmount: member.monthlyPayrolls.reduce(   // ← swapped
-        (sum, p) => sum + (p.volumeAchieved ?? 0),
-        0
-      ),
-    })),
-  }));
+  return branches.map((branch) => {
+    // Deduplicate members — a member linked to multiple branches
+    // will appear in each branch's members list; keep only unique memberIds per branch
+    const seen = new Set<number>();
+    const uniqueMembers = branch.members.filter(({ member }) => {
+      if (seen.has(member.id)) return false;
+      seen.add(member.id);
+      return true;
+    });
+
+    return {
+      branchId: branch.id,
+      branchName: branch.name,
+      employees: uniqueMembers.map(({ member }) => ({
+        memberId: member.id,
+        name: member.nameWithInitials || "",
+        position: member.position?.title ?? "—",
+        proposalCount: member.advisorInvestments.length,
+        totalAmount: member.monthlyPayrolls.reduce(
+          (sum, p) => sum + (p.volumeAchieved ?? 0),
+          0
+        ),
+      })),
+    };
+  });
 }
 
 export async function updateInvestmentDocuments(
@@ -1022,11 +1047,12 @@ export async function approveInvestment(data: {
   agmId?: number | null;
   ccoId?: number | null;
   reviewNote?: string;
+  advisorId?: number | null;
 }) {
   try {
     const currentUser = await getCurrentUserWithRole();
     if (!currentUser) throw new Error("Not authorized");
-    
+
     const approverIds = [data.faId, data.fmId, data.bmId, data.rmId, data.zmId, data.agmId, data.ccoId];
 
     // If NOT even one is present, throw the error
@@ -1055,6 +1081,7 @@ export async function approveInvestment(data: {
           zmId: data.zmId,
           agmId: data.agmId,
           ccoId: data.ccoId,
+          advisorId: data.advisorId ?? investment.advisorId,
         },
       });
 

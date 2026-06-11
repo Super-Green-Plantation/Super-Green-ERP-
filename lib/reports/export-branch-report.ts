@@ -7,8 +7,7 @@ const TITLE_ORDER: Record<string, number> = {
   SZM: 5, JZM: 6, SRM: 7, JRM: 8, SBM: 9, JBM: 10,
   P_TL: 11, P_FA: 12, TRAINEE_FA: 13,
   ZM: 14, RM: 15, BM: 16, TL: 17, FA: 18,
-  OPM: 19, ABM: 20, HR: 21, ACC: 22, IT: 23, PRO: 24,
-  CLEANING: 25, ADMIN: 26, CHAIRMEN: 27, SE: 28,
+  OPM: 19, ABM: 20, 
 };
 
 // Each entry becomes one sheet tab.
@@ -19,8 +18,8 @@ const POSITION_TABS: { label: string; positions: string[] }[] = [
   { label: "BM",         positions: ["BM", "JBM", "SBM", "ABM"] },
   { label: "RM",         positions: ["RM", "JRM", "SRM"] },
   { label: "ZM",         positions: ["ZM", "JZM", "SZM"] },
-  { label: "GM",         positions: ["PRO_AGM", "PER_AGM", "GM", "DGM", ] },
-  { label: "Management", positions: ["COO"] },
+  // { label: "GM",         positions: ["PRO_AGM", "PER_AGM", "GM", "DGM", ] },
+  // { label: "Management", positions: ["COO"] },
 ];
 
 export function exportBranchReport(

@@ -114,7 +114,7 @@ const MemberSearchInput = ({ slot, value, onChange, initialMember }: MemberSearc
         <span className="inline-flex items-center gap-2">
           {slot.label}
           {selected && (
-            <span className={badgeClass}>{selected.position.title}</span>
+            <span className={badgeClass}>{selected?.position?.title ? selected.position.title : null}</span>
           )}
         </span>
       </label>

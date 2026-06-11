@@ -20,6 +20,26 @@ export async function getEmployeePerformance(memberId: number, year: number, mon
 
   if (!member) return null;
 
+  // ── Proposal stats ───────────────────────────────────────────────────────
+  const proposals = await prisma.investment.groupBy({
+    by: ["approvalStatus"],
+    where: { createdById: memberId },
+    _count: { id: true },
+    _sum: { amount: true },
+  });
+
+  const pending = proposals.find(p => p.approvalStatus === "PENDING");
+  const approved = proposals.find(p => p.approvalStatus === "APPROVED");
+  const rejected = proposals.find(p => p.approvalStatus === "REJECTED");
+
+  const proposalStats = {
+    pendingCount: pending?._count.id ?? 0,
+    approvedCount: approved?._count.id ?? 0,
+    rejectedCount: rejected?._count.id ?? 0,
+    approvedAmount: approved?._sum.amount ?? 0,
+    pendingAmount: pending?._sum.amount ?? 0,
+  };
+
   //  Use the selected year/month directly — not latestPayroll
   const currentPayroll = member.monthlyPayrolls.find(
     (p) => p.year === year && p.month === month
@@ -54,13 +74,14 @@ export async function getEmployeePerformance(memberId: number, year: number, mon
 
     return {
       status: "PROBATION" as const,
-      probationStartDate: member.dateOfJoin,
+      probationStartDate: member.dateOfJoin ? member.dateOfJoin.toISOString() : null,
       monthsElapsed,
       periodNumber,
       monthInPeriod,
       target,
       evaluation,
       currentPayroll,
+      ...proposalStats,
     };
   }
 
@@ -72,5 +93,6 @@ export async function getEmployeePerformance(memberId: number, year: number, mon
     salary,
     currentPayroll,
     payrollHistory,
+    ...proposalStats,
   };
 }
