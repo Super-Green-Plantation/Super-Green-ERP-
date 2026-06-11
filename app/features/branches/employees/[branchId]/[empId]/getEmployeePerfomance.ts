@@ -64,13 +64,32 @@ export async function getEmployeePerformance(memberId: number, year: number, mon
       (month - (start.getMonth() + 1));
 
     const periodNumber = monthsElapsed < 3 ? 1 : 2;
-    const monthInPeriod = (monthsElapsed % 3) + 1;
+    const monthInPeriod = (monthsElapsed % 3) + 1; // 1,2,3 within each 3-month block
 
-    const target = member.position.positionTargets.find(
+    // Try standard month numbering first (1-3 for each period). If not found,
+    // fallback to the user's numbering where 2nd period months are 4,5,6.
+    let target = member.position.positionTargets.find(
       (t: any) =>
         Number(t.periodNumber) === periodNumber &&
         Number(t.monthNumber) === monthInPeriod
     ) ?? null;
+
+    if (!target && monthsElapsed >= 3) {
+      const altMonth = monthsElapsed + 1; // e.g. 4, 5, 6 for 2nd period
+      target = member.position.positionTargets.find(
+        (t: any) =>
+          Number(t.periodNumber) === periodNumber &&
+          Number(t.monthNumber) === altMonth
+      ) ?? null;
+    }
+
+    // Build goal data for the dashboard progress bar
+    const goal = {
+      achieved: currentPayroll?.volumeAchieved ?? 0,
+      target: target?.targetAmount ?? 0,
+      incentiveHit: currentPayroll?.incentiveHit ?? false,
+      allowanceHit: currentPayroll?.allowanceHit ?? false,
+    };
 
     return {
       status: "PROBATION" as const,
@@ -79,6 +98,7 @@ export async function getEmployeePerformance(memberId: number, year: number, mon
       periodNumber,
       monthInPeriod,
       target,
+      goal,
       evaluation,
       currentPayroll,
       ...proposalStats,
@@ -88,9 +108,17 @@ export async function getEmployeePerformance(memberId: number, year: number, mon
   // ── PERMANENT ─────────────────────────────────────────────────────────────
   const salary = member.position.salary ?? null;
 
+  const goal = {
+    achieved: currentPayroll?.volumeAchieved ?? 0,
+    target: currentPayroll?.monthlyTarget ?? 0,
+    incentiveHit: currentPayroll?.incentiveHit ?? false,
+    allowanceHit: currentPayroll?.allowanceHit ?? false,
+  };
+
   return {
     status: "PERMANENT" as const,
     salary,
+    goal,
     currentPayroll,
     payrollHistory,
     ...proposalStats,

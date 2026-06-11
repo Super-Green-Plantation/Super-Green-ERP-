@@ -1,7 +1,6 @@
 "use client";
 
 import { getEmployeePerformance } from "@/app/features/branches/employees/[branchId]/[empId]/getEmployeePerfomance";
-import { getEmployeeMonthlyGoal } from "@/app/features/employees/actions";
 import {
   CheckCircle,
   Clock,
@@ -36,14 +35,6 @@ const formatCurrency = (amount: number): string => {
     maximumFractionDigits: 0,
   }).format(amount);
 };
-
-interface EmployeeGoal {
-  achieved: number;
-  target: number;
-  percentage: number;
-  incentiveHit: boolean;
-  allowanceHit: boolean;
-}
 
 interface EmployeePerformance {
   status: "PROBATION" | "PERMANENT";
@@ -98,6 +89,12 @@ interface EmployeePerformance {
     approvedAmount: number;
     pendingAmount: number;
   };
+  goal?: {
+    achieved: number;
+    target: number;
+    incentiveHit: boolean;
+    allowanceHit: boolean;
+  };
 }
 
 interface RestrictedViewProps {
@@ -117,29 +114,22 @@ export const RestrictedView = ({
   const year = now.getFullYear();
   const month = now.getMonth() + 1;
 
-  const [goal, setGoal] = useState<EmployeeGoal | null>(null);
   const [performance, setPerformance] = useState<EmployeePerformance | null>(null);
 
   useEffect(() => {
     if (!memberId) return;
-    Promise.all([
-      getEmployeeMonthlyGoal(memberId, year, month),
-      getEmployeePerformance(memberId, year, month),
-    ]).then(([g, p]) => {
-      setGoal(g);
-      setPerformance(p);
-    });
+    getEmployeePerformance(memberId, year, month).then(setPerformance);
   }, [memberId, year, month]);
 
-  const achieved = goal?.achieved ?? 0;
-  const target = goal?.target ?? 0;
+  const achieved = performance?.goal?.achieved ?? 0;
+  const target = performance?.goal?.target ?? 0;
   const percentage =
     target > 0 ? Math.round((achieved / target) * 100) : 0;
 
   const firstName = userName?.split(" ")[0] ?? "there";
 
   // Loading states
-  const isLoading = !isMounted || goal === null || performance === null;
+  const isLoading = !isMounted || performance === null;
 
   return (
     <div className="max-w-2xl mx-auto min-h-screen p-4 sm:p-8 flex flex-col gap-8">
@@ -225,6 +215,16 @@ export const RestrictedView = ({
                       />
                     </div>
                   )}
+
+                  {/* Target Amount */}
+                  {performance.target && (
+                    <div className="mt-3">
+                      <p className="text-xs text-muted-foreground">Target Amount</p>
+                      <p className="text-lg font-black text-foreground">
+                        {formatCurrency(performance.target.targetAmount ?? 0)}
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -298,12 +298,12 @@ export const RestrictedView = ({
 
         {/* Incentive / allowance badges */}
         <AchievementBadges
-          incentiveHit={isLoading ? false : goal?.incentiveHit ?? false}
-          allowanceHit={isLoading ? false : goal?.allowanceHit ?? false}
+          incentiveHit={isLoading ? false : performance?.goal?.incentiveHit ?? false}
+          allowanceHit={isLoading ? false : performance?.goal?.allowanceHit ?? false}
         />
 
         {/* No payroll record yet */}
-        {!goal && isMounted && (
+        {!performance?.currentPayroll && isMounted && (
           <p className="text-xs text-muted-foreground font-medium italic">
             No payroll record for this month yet.
           </p>
