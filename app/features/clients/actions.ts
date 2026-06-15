@@ -473,7 +473,6 @@ function serializeData<T>(data: T): T {
 export async function updateClient(id: number, formData: any) {
   const clientId = id;
 
-  // ── Server-side Zod validation ────────────────────────────────────────────
   const parsed = updateClientSchema.safeParse(formData);
   if (!parsed.success) {
     const fieldErrors: Record<string, string[]> = {};
@@ -503,12 +502,9 @@ export async function updateClient(id: number, formData: any) {
         address: formData.applicant.address || null,
         drivingLicense: formData.applicant.drivingLicense || null,
         passportNo: formData.applicant.passportNo || null,
-
         phoneLand: formData.applicant.phoneLand || null,
         idFront: formData.applicant.idFront || null,
         idBack: formData.applicant.idBack || null,
-
-
         dateOfBirth: formData.applicant.dateOfBirth
           ? new Date(formData.applicant.dateOfBirth)
           : undefined,
@@ -517,84 +513,6 @@ export async function updateClient(id: number, formData: any) {
           : undefined,
       },
     });
-
-    // Update investment
-    const existingInvestment = await prisma.investment.findFirst({
-      where: { clientId },
-    });
-
-    if (existingInvestment) {
-      await prisma.investment.update({
-        where: { id: existingInvestment.id },
-        data: {
-          planId: formData.investment?.planId
-            ? Number(formData.investment.planId)
-            : existingInvestment.planId,
-          amount: Number(formData.applicant.investmentAmount) ?? Number(existingInvestment.amount),
-          investmentDate: formData.investment?.investmentDate,
-          proposalFormNo: formData.applicant.proposalFormNo || null,
-          paymentSlip: formData.applicant.paymentSlip || null,
-          proposal: formData.applicant.proposal || null,
-          agreement: formData.applicant.agreement || null,
-        },
-      });
-    }
-
-    // Upsert beneficiary — create new or update existing by id
-    if (formData.beneficiary?.fullName) {
-      if (formData.beneficiary.id) {
-        // Update existing beneficiary
-        await prisma.beneficiary.update({
-          where: { id: formData.beneficiary.id },
-          data: {
-            fullName: formData.beneficiary.fullName,
-            relationship: formData.beneficiary.relationship || "",
-            bankName: formData.beneficiary.bankName || "",
-            accountNo: formData.beneficiary.accountNo || "",
-            bankBranch: formData.beneficiary.bankBranch || "",
-            nic: formData.beneficiary.nic || null,
-            phone: formData.beneficiary.phone || "",
-          },
-        });
-      } else {
-        // Create new beneficiary for this client
-        await prisma.beneficiary.create({
-          data: {
-            clientId,
-            fullName: formData.beneficiary.fullName,
-            relationship: formData.beneficiary.relationship || "",
-            bankName: formData.beneficiary.bankName || "",
-            accountNo: formData.beneficiary.accountNo || "",
-            bankBranch: formData.beneficiary.bankBranch || "",
-            nic: formData.beneficiary.nic || null,
-            phone: formData.beneficiary.phone || "",
-          },
-        });
-      }
-    }
-
-    // Upsert nominee
-    if (formData.nominee?.fullName) {
-      if (formData.nominee.id) {
-        await prisma.nominee.update({
-          where: { id: formData.nominee.id },
-          data: {
-            fullName: formData.nominee.fullName,
-            permanentAddress: formData.nominee.permanentAddress || "",
-            postalAddress: formData.nominee.postalAddress || null,
-          },
-        });
-      } else {
-        await prisma.nominee.create({
-          data: {
-            clientId,
-            fullName: formData.nominee.fullName,
-            permanentAddress: formData.nominee.permanentAddress || "",
-            postalAddress: formData.nominee.postalAddress || null,
-          },
-        });
-      }
-    }
 
     revalidatePath("/features/clients");
 

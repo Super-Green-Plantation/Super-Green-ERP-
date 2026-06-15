@@ -42,18 +42,18 @@ const UpdateClientModal = ({
       address: "",
       drivingLicense: "",
       passportNo: "",
-      // proposalFormNo: "",
       phoneLand: "",
       ...initialData.applicant,
-      // investmentAmount: initialData?.applicant?.investmentAmount
-      //   ? initialData.applicant.investmentAmount.toString().trim()
-      //   : "",
+      
     },
-    investment: {
-      planId: initialData?.investment?.planId || "",
-      ...initialData.investment,
-    },
+    // investment: {
+    //   planId: initialData?.investment?.planId || "",
+    //   ...initialData.investment,
+    // },
   });
+
+  console.log(formData);
+  
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [plans, setPlans] = useState<FinancialPlan[]>([]);
@@ -83,37 +83,32 @@ const UpdateClientModal = ({
     `${inputClass} ${fieldErrors[field] ? "!border-red-400 focus:!ring-red-400" : ""}`;
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    // ── Client-side Zod validation ─────────────────────────────────────
-    const parsed = updateApplicantSchema.safeParse(formData.applicant);
-    if (!parsed.success) {
-      const errs: Record<string, string> = {};
-      parsed.error.issues.forEach((issue) => {
-        const key = issue.path[issue.path.length - 1] as string;
-        if (!errs[key]) errs[key] = issue.message;
-      });
-      setFieldErrors(errs);
-      toast.error("Please fix the errors before saving.");
-      return;
-    }
+  const parsed = updateApplicantSchema.safeParse(formData.applicant);
+  if (!parsed.success) {
+    const errs: Record<string, string> = {};
+    parsed.error.issues.forEach((issue) => {
+      const key = issue.path[issue.path.length - 1] as string;
+      if (!errs[key]) errs[key] = issue.message;
+    });
+    setFieldErrors(errs);
+    toast.error("Please fix the errors before saving.");
+    return;
+  }
 
-    const payload = {
-      ...formData,
-      applicant: {
-        ...formData.applicant,
-        investmentAmount: Number(
-          formData.applicant.investmentAmount?.toString().trim() || 0,
-        ),
-        phoneMobile: formData.applicant.phoneMobile?.toString().replace(/\D/g, "").slice(-9),
-        phoneLand: formData.applicant.phoneLand?.toString().replace(/\D/g, "").slice(-9),
-      },
-    };
-
-    onUpdate(payload);
-    queryClient.invalidateQueries({ queryKey: ["client", Number(id)] });
-    onClose();
+  const payload = {
+    applicant: {
+      ...formData.applicant,
+      phoneMobile: formData.applicant.phoneMobile?.toString().replace(/\D/g, "").slice(-9),
+      phoneLand: formData.applicant.phoneLand?.toString().replace(/\D/g, "").slice(-9),
+    },
   };
+
+  onUpdate(payload);
+  queryClient.invalidateQueries({ queryKey: ["client", Number(id)] });
+  onClose();
+};
 
   return (
     <div className="fixed inset-0 z-100 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4 animate-in fade-in duration-300">

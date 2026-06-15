@@ -157,50 +157,35 @@ export type SaveClientInput = z.infer<typeof saveClientSchema>;
 // ─── Update Client (partial) ─────────────────────────────────────────────────
 
 export const updateApplicantSchema = z.object({
-  fullName: z
-    .string()
-    .min(2, "Full name must be at least 2 characters"),
+  fullName: z.string().min(2, "Full name must be at least 2 characters"),
   nic: nicSchema,
   drivingLicense: z.string().optional(),
   passportNo: z.string().optional(),
   email: z
     .string()
     .optional()
-    .refine(
-      (val) => !val || z.string().email().safeParse(val).success,
-      { message: "Invalid email address" }
-    ),
+    .refine((val) => !val || z.string().email().safeParse(val).success, {
+      message: "Invalid email address",
+    }),
   phoneMobile: phoneSchema,
   phoneLand: phoneSchema,
   dateOfBirth: z.string().optional(),
   occupation: z.string().optional(),
-  address: z
-    .string()
-    .min(5, "Address must be at least 5 characters"),
-  investmentAmount: z
-    .union([z.string(), z.number()])
-    .optional()
-    .transform((val) => (val === "" || val === undefined ? undefined : Number(val)))
-    .refine((val) => val === undefined || (!isNaN(val) && val >= 0), {
-      message: "Investment amount must be a positive number",
-    }),
-  proposalFormNo: z.string().optional(),
+  address: z.string().min(5, "Address must be at least 5 characters"),
   idFront: z.string().optional(),
   idBack: z.string().optional(),
-  paymentSlip: z.string().optional(),
-  proposal: z.string().optional(),
-  agreement: z.string().optional(),
+  // ── Removed: investmentAmount, proposalFormNo, paymentSlip, proposal, agreement ──
 });
 
 export const updateClientSchema = z.object({
   applicant: updateApplicantSchema,
-  investment: z.object({
-    planId: z
-      .union([z.string(), z.number()])
-      .optional()
-      .transform((val) => (val === "" || val === undefined ? undefined : Number(val))),
-    investmentDate: z.string().optional(),
-  }).optional(),
+  // investment: z.object({
+  //   planId: z
+  //     .union([z.string(), z.number()])
+  //     .optional()
+  //     .transform((val) => (val === "" || val === undefined ? undefined : Number(val))),
+  //   investmentDate: z.string().optional(),
+  // }).optional(),
   beneficiary: beneficiarySchema.optional(),
   nominee: nomineeSchema.optional(),
 });
