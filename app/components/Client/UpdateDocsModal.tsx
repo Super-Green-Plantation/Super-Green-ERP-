@@ -29,9 +29,9 @@ const BUCKET = "kyc-documents";
 const docTypes = [
   { id: "idFront",     label: "NIC / ID Front",   description: "Clear photo or scan of the front side" },
   { id: "idBack",      label: "NIC / ID Back",    description: "Clear photo or scan of the back side" },
-  { id: "paymentSlip", label: "Payment Slip",      description: "Clear photo or scan of the Payment Slip" },
-  { id: "proposal",    label: "Proposal Form",    description: "Signed digital or scanned copy" },
-  { id: "agreement",   label: "Legal Agreement",  description: "Finalized & stamped document" },
+  // { id: "paymentSlip", label: "Payment Slip",      description: "Clear photo or scan of the Payment Slip" },
+  // { id: "proposal",    label: "Proposal Form",    description: "Signed digital or scanned copy" },
+  // { id: "agreement",   label: "Legal Agreement",  description: "Finalized & stamped document" },
 ];
 
 const uploadToSupabase = async (key: string, file: File): Promise<string> => {

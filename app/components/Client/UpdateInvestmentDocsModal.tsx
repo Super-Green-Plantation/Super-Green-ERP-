@@ -318,7 +318,7 @@ const UpdateInvestmentDocsModal = ({
                             {isUploading ? (
                                 <><Loader2 size={14} className="animate-spin" /> Uploading...</>
                             ) : (
-                                <><CheckCircle2 size={14} /> Commit Changes</>
+                                <><CheckCircle2 size={14} /> Save Documents</>
                             )}
                         </button>
                     </div>

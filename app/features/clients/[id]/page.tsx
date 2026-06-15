@@ -42,7 +42,7 @@ import { MaturityBanner } from "../../investments/Maturitybanner";
 export default function ApplicationViewPage() {
   const queryClient = useQueryClient();
   const { id } = useParams();
-  const [plan, setPlan] = useState<any>();
+  // const [plan, setPlan] = useState<any>();
   const [showUpdateModel, setShowUpdateModel] = useState(false);
   const [showDocUpdateModel, setDocShowUpdateModel] = useState(false);
   const router = useRouter();
@@ -68,16 +68,16 @@ export default function ApplicationViewPage() {
   }, []);
 
 
-  useEffect(() => {
-    if (!formData?.investment.planId) return;
-    const fetchPlan = async () => {
-      const planId = Number(formData.investment.planId);
-      const res = await getFinancialPlanById(planId);
-      setPlan(res);
-    };
+  // useEffect(() => {
+  //   if (!formData?.investment.planId) return;
+  //   const fetchPlan = async () => {
+  //     const planId = Number(formData.investment.planId);
+  //     const res = await getFinancialPlanById(planId);
+  //     setPlan(res);
+  //   };
 
-    fetchPlan();
-  }, [formData]);
+  //   fetchPlan();
+  // }, [formData]);
 
   const handleDocsUpdate = async (updatedFiles: Record<string, string | null>) => {
     if (!updatedFiles) return;
@@ -244,7 +244,7 @@ export default function ApplicationViewPage() {
                   </div>
                   <div className="text-right">
                     <span className="block text-[10px] text-muted-foreground font-bold tracking-widest uppercase mb-1">
-                      Ref: {inv.refNumber}
+                      Proposal : {inv.proposalFormNo}
 
                     </span>
                     <span className="block text-[10px] text-muted-foreground font-bold tracking-widest uppercase mb-1">
