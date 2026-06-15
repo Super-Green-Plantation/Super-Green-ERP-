@@ -207,15 +207,44 @@ const UpdateInvestmentDocsModal = ({
                                                     className="w-16 h-16 object-cover rounded-lg border border-border"
                                                 />
                                             )}
-                                            {canEdit && (
-                                                <button
-                                                    type="button"
-                                                    onClick={e => { e.preventDefault(); e.stopPropagation(); handleFileChange(doc.id, null); }}
-                                                    className="relative z-20 inline-flex items-center justify-center h-7 px-3 bg-red-500/10 text-red-500 hover:bg-red-500/20 text-[10px] font-bold rounded-full border border-red-500/20 transition-colors"
+
+                                            {/* Action row — View · Replace · Remove */}
+                                            <div className="relative z-20 flex flex-row items-center justify-center gap-2 flex-wrap">
+                                                {/* View — opens the object URL in a new tab */}
+                                                <a
+                                                    href={newPreviewUrl!}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    onClick={e => e.stopPropagation()}
+                                                    className="inline-flex items-center justify-center gap-1.5 h-7 px-3 bg-primary/10 text-primary hover:bg-primary/20 text-[10px] font-bold rounded-full border border-primary/20 transition-colors whitespace-nowrap"
                                                 >
-                                                    Remove
-                                                </button>
-                                            )}
+                                                    <Eye size={10} /> View
+                                                </a>
+
+                                                {canEdit && (
+                                                    <>
+                                                        {/* Replace — re-opens file picker for this slot */}
+                                                        <label className="inline-flex items-center justify-center gap-1.5 h-7 px-3 bg-muted text-muted-foreground hover:bg-muted/80 text-[10px] font-bold rounded-full border border-border transition-colors cursor-pointer whitespace-nowrap">
+                                                            <UploadCloud size={10} /> Replace
+                                                            <input
+                                                                type="file"
+                                                                accept="image/*,application/pdf"
+                                                                className="hidden"
+                                                                onChange={e => handleFileChange(doc.id, e.target.files?.[0] || null)}
+                                                            />
+                                                        </label>
+
+                                                        {/* Remove — clears the newly selected file */}
+                                                        <button
+                                                            type="button"
+                                                            onClick={e => { e.preventDefault(); e.stopPropagation(); handleFileChange(doc.id, null); }}
+                                                            className="inline-flex items-center justify-center h-7 px-3 bg-red-500/10 text-red-500 hover:bg-red-500/20 text-[10px] font-bold rounded-full border border-red-500/20 transition-colors whitespace-nowrap"
+                                                        >
+                                                            Remove
+                                                        </button>
+                                                    </>
+                                                )}
+                                            </div>
                                         </div>
                                     )}
 
@@ -318,7 +347,7 @@ const UpdateInvestmentDocsModal = ({
                             {isUploading ? (
                                 <><Loader2 size={14} className="animate-spin" /> Uploading...</>
                             ) : (
-                                <><CheckCircle2 size={14} /> Save Documents</>
+                                <><CheckCircle2 size={14} /> Commit Changes</>
                             )}
                         </button>
                     </div>
