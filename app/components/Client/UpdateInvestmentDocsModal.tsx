@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { usePermission } from "@/app/hooks/usePermission";
 import { PERMISSIONS } from "@/lib/auth/permissions";
-import { Member } from "@/app/types/member";
 
 interface UpdateInvestmentDocsModalProps {
     user: any | null;
@@ -22,14 +21,12 @@ interface UpdateInvestmentDocsModalProps {
     onSave: (files: Record<string, string | null>) => void;
 }
 
-
-
 const BUCKET = "kyc-documents";
 
 const docTypes = [
-    { id: "paymentSlip", label: "Payment Slip", description: "Clear photo or scan of the payment slip" },
-    { id: "proposal", label: "Proposal Form", description: "Signed digital or scanned copy" },
-    { id: "agreement", label: "Legal Agreement", description: "Finalized & stamped document" },
+    { id: "paymentSlip", label: "Payment Slip",   description: "Clear photo or scan of the payment slip" },
+    { id: "proposal",    label: "Proposal Form",   description: "Signed digital or scanned copy" },
+    { id: "agreement",   label: "Legal Agreement", description: "Finalized & stamped document" },
 ];
 
 const uploadToSupabase = async (investmentId: number, key: string, file: File): Promise<string> => {
@@ -59,22 +56,25 @@ const UpdateInvestmentDocsModal = ({
     onSave,
 }: UpdateInvestmentDocsModalProps) => {
     const [isUploading, setIsUploading] = useState(false);
-
     const canEdit = usePermission(user?.role, PERMISSIONS.UPDATE_CLIENTS_DOCUMENT);
 
-    // track new files selected by the user
     const [newFiles, setNewFiles] = useState<Record<string, File | null>>({
         paymentSlip: null,
         proposal: null,
         agreement: null,
     });
 
-    // track which existing URLs were explicitly cleared by the user
     const [cleared, setCleared] = useState<Record<string, boolean>>({
         paymentSlip: false,
         proposal: false,
         agreement: false,
     });
+
+    // Lock body scroll while open
+    useEffect(() => {
+        if (isOpen) document.body.style.overflow = "hidden";
+        return () => { document.body.style.overflow = ""; };
+    }, [isOpen]);
 
     if (!isOpen) return null;
 
@@ -83,7 +83,7 @@ const UpdateInvestmentDocsModal = ({
         if (file.size > 10 * 1024 * 1024) { toast.error("File too large. Max 10MB."); return; }
         if (file.size > 1 * 1024 * 1024) toast.warning("File is >1MB. A smaller file is recommended.");
         setNewFiles(prev => ({ ...prev, [key]: file }));
-        setCleared(prev => ({ ...prev, [key]: false })); // un-clear if they re-upload
+        setCleared(prev => ({ ...prev, [key]: false }));
     };
 
     const handleClearExisting = (key: string) => {
@@ -101,17 +101,13 @@ const UpdateInvestmentDocsModal = ({
         setIsUploading(true);
         try {
             const result: Record<string, string | null> = {};
-
             for (const key of Object.keys(newFiles)) {
-                const file = newFiles[key];
-                if (file) {
-                    result[key] = await uploadToSupabase(investmentId, key, file);
+                if (newFiles[key]) {
+                    result[key] = await uploadToSupabase(investmentId, key, newFiles[key]!);
                 } else if (cleared[key]) {
-                    result[key] = "";   // signal to server action to set null
+                    result[key] = ""; // signal server action to null this field
                 }
-                // if neither — omit the key entirely, parent keeps existing value
             }
-
             await onSave(result);
             onClose();
         } catch (err) {
@@ -123,42 +119,53 @@ const UpdateInvestmentDocsModal = ({
     };
 
     return (
-        <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center sm:p-4">
+            {/* Backdrop */}
             <div className="absolute inset-0 bg-background/80" onClick={onClose} />
-            <div className="relative w-full max-w-lg bg-card rounded-[2.5rem] shadow-lg border border-border overflow-hidden animate-in fade-in zoom-in duration-200">
 
-                {/* Header */}
-                <div className="px-8 pt-8 pb-6 flex items-center justify-between">
+            {/*
+              Mobile:  bottom sheet — slides up, rounded top corners, scrollable body
+              Desktop: centred card, fully rounded, max-w-lg
+            */}
+            <div className="relative w-full sm:max-w-lg bg-card sm:rounded-[2.5rem] rounded-t-[2rem] shadow-lg border border-border flex flex-col max-h-[92dvh] sm:max-h-[90dvh] animate-in fade-in slide-in-from-bottom-4 sm:zoom-in duration-200">
+
+                {/* ── Header (fixed) ── */}
+                <div className="px-6 sm:px-8 pt-6 sm:pt-8 pb-4 sm:pb-6 flex items-center justify-between shrink-0">
                     <div>
                         <div className="flex items-center gap-2 mb-1">
                             <div className="p-1.5 bg-primary/10 rounded-lg">
                                 <CloudLightning size={16} className="text-primary" />
                             </div>
-                            <h2 className="text-xl font-bold text-foreground tracking-tighter">Investment Documents</h2>
+                            <h2 className="text-lg sm:text-xl font-bold text-foreground tracking-tighter">
+                                Investment Documents
+                            </h2>
                         </div>
-                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                             #{investmentRef}
                         </p>
                     </div>
-                    <button onClick={onClose} className="p-3 hover:bg-muted/80 rounded-2xl text-muted-foreground hover:text-foreground transition-colors">
+                    <button
+                        onClick={onClose}
+                        className="p-3 hover:bg-muted/80 rounded-2xl text-muted-foreground hover:text-foreground transition-colors"
+                    >
                         <X size={20} />
                     </button>
                 </div>
 
-                {/* Body */}
-                <div className="px-8 pb-8 space-y-4">
+                {/* ── Scrollable body ── */}
+                <div className="overflow-y-auto flex-1 px-6 sm:px-8 pb-6 space-y-4">
                     {docTypes.map(doc => {
                         const key = doc.id as keyof typeof currentDocs;
                         const existingUrl = currentDocs[key];
                         const newFile = newFiles[doc.id];
                         const isClearedExisting = cleared[doc.id];
 
-                        const showNewPreview = !!newFile;
+                        const showNewPreview     = !!newFile;
                         const showExistingPreview = !newFile && !!existingUrl && !isClearedExisting;
-                        const showEmpty = !showNewPreview && !showExistingPreview;
+                        const showEmpty           = !showNewPreview && !showExistingPreview;
 
-                        const newIsPDF = newFile?.type === "application/pdf";
-                        const newPreviewUrl = newFile ? URL.createObjectURL(newFile) : null;
+                        const newIsPDF        = newFile?.type === "application/pdf";
+                        const newPreviewUrl   = newFile ? URL.createObjectURL(newFile) : null;
                         const existingIsImage = existingUrl ? isImageUrl(existingUrl) : false;
 
                         return (
@@ -167,12 +174,13 @@ const UpdateInvestmentDocsModal = ({
                                     {doc.label}
                                 </label>
 
-                                <div className={`relative flex flex-col items-center justify-center p-5 border-2 border-dashed rounded-2xl transition-all min-h-28 ${showExistingPreview
-                                    ? "border-primary/20 bg-emerald-50/30"
-                                    : "border-border bg-muted/30 group-hover:bg-card group-hover:border-primary cursor-pointer"
-                                    }`}>
+                                <div className={`relative flex flex-col items-center justify-center p-5 border-2 border-dashed rounded-2xl transition-all min-h-[120px] ${
+                                    showExistingPreview
+                                        ? "border-primary/20 bg-emerald-50/30 dark:bg-emerald-950/20"
+                                        : "border-border bg-muted/30 group-hover:bg-card group-hover:border-primary cursor-pointer"
+                                }`}>
 
-                                    {/* file input — only active when not showing existing */}
+                                    {/* File input — only when no existing doc is shown */}
                                     {!showExistingPreview && canEdit && (
                                         <input
                                             type="file"
@@ -182,54 +190,66 @@ const UpdateInvestmentDocsModal = ({
                                         />
                                     )}
 
+                                    {/* ── New file selected ── */}
                                     {showNewPreview && (
-                                        <div className="flex flex-col items-center gap-2 w-full">
+                                        <div className="flex flex-col items-center gap-3 w-full">
                                             {newIsPDF ? (
                                                 <div className="flex flex-col items-center gap-1">
                                                     <FileText className="w-9 h-9 text-muted-foreground" />
-                                                    <p className="text-[10px] text-muted-foreground font-medium truncate max-w-48">{newFile!.name}</p>
+                                                    <p className="text-[10px] text-muted-foreground font-medium truncate max-w-[160px] text-center">
+                                                        {newFile!.name}
+                                                    </p>
                                                 </div>
                                             ) : (
-                                                <img src={newPreviewUrl!} alt="Preview" className="w-16 h-16 object-cover rounded-lg border border-border" />
+                                                <img
+                                                    src={newPreviewUrl!}
+                                                    alt="Preview"
+                                                    className="w-16 h-16 object-cover rounded-lg border border-border"
+                                                />
                                             )}
                                             {canEdit && (
                                                 <button
                                                     type="button"
-                                                    onClick={e => { e.stopPropagation(); handleFileChange(doc.id, null); }}
-                                                    className="mt-1 px-3 py-1 bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:text-foreground text-[10px] font-bold rounded-full border border-red-500/20 transition-colors z-20 relative"
+                                                    onClick={e => { e.preventDefault(); e.stopPropagation(); handleFileChange(doc.id, null); }}
+                                                    className="relative z-20 inline-flex items-center justify-center h-7 px-3 bg-red-500/10 text-red-500 hover:bg-red-500/20 text-[10px] font-bold rounded-full border border-red-500/20 transition-colors"
                                                 >
                                                     Remove
                                                 </button>
                                             )}
-
                                         </div>
                                     )}
 
+                                    {/* ── Existing doc on record ── */}
                                     {showExistingPreview && (
-                                        <div className="flex flex-col items-center gap-2 w-full">
+                                        <div className="flex flex-col items-center gap-3 w-full">
                                             {existingIsImage ? (
-                                                <img src={existingUrl!} alt={doc.label} className="w-16 h-16 object-cover rounded-lg border border-border" />
+                                                <img
+                                                    src={existingUrl!}
+                                                    alt={doc.label}
+                                                    className="w-16 h-16 object-cover rounded-lg border border-border"
+                                                />
                                             ) : (
                                                 <div className="flex flex-col items-center gap-1">
                                                     <FileText className="w-9 h-9 text-emerald-400" />
                                                     <p className="text-[10px] text-emerald-600 font-bold">File on record</p>
                                                 </div>
                                             )}
-                                            <div className="flex items-center gap-2 mt-1 z-20 relative">
+
+                                            {/* Action row — all buttons aligned in a single flex row */}
+                                            <div className="relative z-20 flex flex-row items-center justify-center gap-2 flex-wrap">
                                                 <a
                                                     href={existingUrl!}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     onClick={e => e.stopPropagation()}
-                                                    className="flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary hover:bg-blue-100 text-[10px] font-bold rounded-full border border-blue-200 transition-colors"
+                                                    className="inline-flex items-center justify-center gap-1.5 h-7 px-3 bg-primary/10 text-primary hover:bg-primary/20 text-[10px] font-bold rounded-full border border-primary/20 transition-colors whitespace-nowrap"
                                                 >
                                                     <Eye size={10} /> View
                                                 </a>
-                                                {/* clicking Replace re-activates the file input */}
 
                                                 {canEdit && (
-                                                    <div>
-                                                        <label className="flex items-center gap-1 px-3 py-1 bg-slate-100 text-muted-foreground hover:bg-slate-200 text-[10px] font-bold rounded-full border border-border transition-colors cursor-pointer">
+                                                    <>
+                                                        <label className="inline-flex items-center justify-center gap-1.5 h-7 px-3 bg-muted text-muted-foreground hover:bg-muted/80 text-[10px] font-bold rounded-full border border-border transition-colors cursor-pointer whitespace-nowrap">
                                                             <UploadCloud size={10} /> Replace
                                                             <input
                                                                 type="file"
@@ -240,26 +260,27 @@ const UpdateInvestmentDocsModal = ({
                                                         </label>
                                                         <button
                                                             type="button"
-                                                            onClick={() => handleClearExisting(doc.id)}
-                                                            className="px-3 py-1 bg-red-500/10 text-red-500 hover:bg-red-500/20 hover:text-foreground text-[10px] font-bold rounded-full border border-red-500/20 transition-colors"
+                                                            onClick={e => { e.stopPropagation(); handleClearExisting(doc.id); }}
+                                                            className="inline-flex items-center justify-center h-7 px-3 bg-red-500/10 text-red-500 hover:bg-red-500/20 text-[10px] font-bold rounded-full border border-red-500/20 transition-colors whitespace-nowrap"
                                                         >
                                                             Remove
                                                         </button>
-                                                    </div>
-
+                                                    </>
                                                 )}
-
                                             </div>
                                         </div>
                                     )}
 
+                                    {/* ── Empty / upload prompt ── */}
                                     {showEmpty && (
                                         <>
                                             <div className="w-9 h-9 rounded-xl bg-card shadow-sm border border-border flex items-center justify-center text-muted-foreground group-hover:text-primary transition-colors mb-2">
                                                 <UploadCloud size={16} />
                                             </div>
                                             <p className="text-[11px] font-bold text-muted-foreground">Click to upload</p>
-                                            <p className="text-[9px] text-muted-foreground mt-0.5">{doc.description} · Max 10MB</p>
+                                            <p className="text-[9px] text-muted-foreground mt-0.5 text-center">
+                                                {doc.description} · Max 10MB
+                                            </p>
                                         </>
                                     )}
                                 </div>
@@ -267,42 +288,43 @@ const UpdateInvestmentDocsModal = ({
                         );
                     })}
 
-
-                </div>
-                {canEdit && (
-                    <div>
+                    {/* Warning banner — inside scroll area so it doesn't eat footer space */}
+                    {canEdit && (
                         <div className="p-4 bg-orange-500/10 border border-orange-500/20 rounded-2xl flex gap-3">
-                            <div className="w-5 h-5 rounded-full bg-orange-500/100 text-white flex items-center justify-center shrink-0 mt-0.5">
+                            <div className="w-5 h-5 rounded-full bg-orange-500 text-white flex items-center justify-center shrink-0 mt-px">
                                 <span className="text-[10px] font-bold">!</span>
                             </div>
                             <p className="text-[11px] font-bold text-orange-500 leading-relaxed">
                                 Uploading replaces existing files for this investment. This action is permanent.
                             </p>
                         </div>
+                    )}
+                </div>
 
-                        < div className="px-8 py-6 bg-muted/30 border-t border-border flex items-center justify-end gap-3">
-                            <button onClick={onClose} className="px-6 py-3 text-[11px] font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors">
-                                Cancel
-                            </button>
-                            <button
-                                disabled={isUploading}
-                                onClick={handleUpdate}
-                                className="flex items-center gap-2 px-8 py-3.5 bg-primary hover:opacity-90 disabled:opacity-50 text-primary-foreground rounded-2xl text-[11px] font-bold uppercase tracking-[0.15em] transition-all shadow-none active:scale-95"
-                            >
-                                {isUploading ? (
-                                    <><Loader2 size={14} className="animate-spin" /> Uploading...</>
-                                ) : (
-                                    <><CheckCircle2 size={14} /> Commit Changes</>
-                                )}
-                            </button>
-                        </div>
+                {/* ── Footer (fixed) ── */}
+                {canEdit && (
+                    <div className="px-6 sm:px-8 py-4 sm:py-6 bg-muted/30 border-t border-border flex items-center justify-end gap-3 shrink-0">
+                        <button
+                            onClick={onClose}
+                            className="px-5 py-3 text-[11px] font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            disabled={isUploading}
+                            onClick={handleUpdate}
+                            className="flex items-center gap-2 px-6 sm:px-8 py-3 sm:py-3.5 bg-primary hover:opacity-90 disabled:opacity-50 text-primary-foreground rounded-2xl text-[11px] font-bold uppercase tracking-[0.15em] transition-all active:scale-95"
+                        >
+                            {isUploading ? (
+                                <><Loader2 size={14} className="animate-spin" /> Uploading...</>
+                            ) : (
+                                <><CheckCircle2 size={14} /> Commit Changes</>
+                            )}
+                        </button>
                     </div>
-
                 )}
-
-
             </div>
-        </div >
+        </div>
     );
 };
 

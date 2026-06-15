@@ -245,7 +245,10 @@ export default function ApplicationViewPage() {
                   <div className="text-right">
                     <span className="block text-[10px] text-muted-foreground font-bold tracking-widest uppercase mb-1">
                       Ref: {inv.refNumber}
+
                     </span>
+                    <span className="block text-[10px] text-muted-foreground font-bold tracking-widest uppercase mb-1">
+                      Inv. date: {inv.investmentDate.toDateString()}</span>
                     <span className="bg-primary text-primary-foreground text-[13px] py-1 px-3 rounded-full uppercase tracking-tighter">
                       Rs. {(inv.amount).toLocaleString()}
                     </span>
@@ -297,8 +300,8 @@ export default function ApplicationViewPage() {
                         <span
                           key={key}
                           className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold border ${present
-                              ? "bg-primary/10 text-primary border border-primary/20"
-                              : "bg-muted/30 text-muted-foreground border border-border"
+                            ? "bg-primary/10 text-primary border border-primary/20"
+                            : "bg-muted/30 text-muted-foreground border border-border"
                             }`}
                         >
                           {present ? (
