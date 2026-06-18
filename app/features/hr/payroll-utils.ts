@@ -1,10 +1,21 @@
+// payroll-utils.ts
+
+export type ActiveTeamCounts = {
+  advisors: number;
+  fms: number;
+  bms: number;
+};
+
 export type PayrollBreakdown = {
-  basicSalaryPermanent: number;  // was: basicSalary
+  basicSalaryPermanent: number;
   monthlyTarget: number;
   volumeAchieved: number;
 
   incentiveEarned: number;
-  allowanceEarned: number;
+  incentivePartialEarned: number;
+  vehicleEarned: number;
+  teamActiveEarned: number;
+  allowanceEarned: number; // kept for UI backward-compat; mirrors vehicleEarned
   orcEarned: number;
   commissionEarned: number;
 
@@ -13,12 +24,37 @@ export type PayrollBreakdown = {
   etfEmployer: number;
 
   incentiveHit: boolean;
-  allowanceHit: boolean;
+  incentivePartialHit: boolean;
+  vehicleHit: boolean;
+  teamActiveHit: boolean;
+  allowanceHit: boolean; // mirrors vehicleHit
 
   grossPay: number;
   netPay: number;
 };
 
+export type PositionTargetData = {
+  targetAmount: number;
+  bonusAmount: number;
+  partialThreshold: number;
+  partialBonus: number;
+  vehicleThresholdPct: number;
+  vehicleAmount: number;
+  teamActiveThresholdPct: number;
+  teamActiveAmount: number;
+  minActiveAdvisors: number;
+  minActiveFMs: number;
+  minActiveBMs: number;
+};
+
+/**
+ * Calculate a single member's payroll breakdown for a given month.
+ *
+ * ORC is NOT computed here — it must be pre-computed by summing the
+ * member's Commission records of type UPLINE for the month and passed
+ * in as `orcEarned`. This keeps payroll-utils pure and consistent with
+ * how processCommissions already stores ORC.
+ */
 export function calculatePayroll(
   salary: {
     basicSalaryPermanent: number;
@@ -31,62 +67,159 @@ export function calculatePayroll(
     etfEmployer: number;
     allowanceThresholdPermanent: number;
     allowanceThresholdProbation: number;
+    incentivePartialThreshold?: number; // fraction, e.g. 0.75
+    incentivePartialAmount?: number;
+    vehicleThresholdPct?: number;       // fraction, e.g. 0.50
+    vehicleAmount?: number;
+    teamActiveThresholdPct?: number;
+    teamActiveAmount?: number;
+    minActiveAdvisors?: number;
+    minActiveFMs?: number;
+    minActiveBMs?: number;
   },
   commissionEarned: number = 0,
   memberStatus: "PROBATION" | "PERMANENT" | "MANAGEMENT",
   volumeAchieved: number,
-  orcVolume: number = 0,
-  orcRate: number = 0,
+  orcEarned: number = 0,            // pre-summed UPLINE commissions for the month
+  activeTeamCounts?: ActiveTeamCounts,
+  positionTarget?: PositionTargetData,
 ): PayrollBreakdown {
-
-  const safe = (n: any) => Number(n ?? 0);
+  const safe = (n: any): number => Number(n ?? 0);
 
   const isPermanent = memberStatus === "PERMANENT";
+  const isProbation = memberStatus === "PROBATION";
 
-  const basicSalary = isPermanent
-    ? safe(salary.basicSalaryPermanent)
-    : safe(salary.basicSalaryProbation);
+  let basicSalary = 0;
+  let monthlyTarget = 0;
+  let incentiveEarned = 0;
+  let incentivePartialEarned = 0;
+  let vehicleEarned = 0;
+  let teamActiveEarned = 0;
 
-  const basicType = isPermanent ? "PERMANENT" : "PROBATION";
+  let incentiveHit = false;
+  let incentivePartialHit = false;
+  let vehicleHit = false;
+  let teamActiveHit = false;
 
-  const monthlyTarget = safe(salary.monthlyTarget);
-  const incentiveAmount = safe(salary.incentiveAmount);
-  const allowanceAmount = safe(salary.allowanceAmount);
+  if (isProbation && positionTarget) {
+    // ── Probation path ── target/bonus from PositionTarget row
+    monthlyTarget = safe(positionTarget.targetAmount);
 
-  const allowanceThresholdPct = isPermanent
-    ? safe(salary.allowanceThresholdPermanent)
-    : safe(salary.allowanceThresholdProbation);
+    // Full incentive at 100% of target
+    incentiveHit = volumeAchieved >= monthlyTarget;
+    if (incentiveHit) {
+      incentiveEarned = safe(positionTarget.bonusAmount);
+    } else {
+      // Partial incentive at absolute threshold (not a percentage)
+      const partialThreshold = safe(positionTarget.partialThreshold);
+      if (partialThreshold > 0 && volumeAchieved >= partialThreshold) {
+        incentivePartialHit = true;
+        incentivePartialEarned = safe(positionTarget.partialBonus);
+      }
+    }
 
-  const allowanceHit = volumeAchieved >= monthlyTarget * allowanceThresholdPct;
-  const incentiveHit = volumeAchieved >= monthlyTarget;
+    // Vehicle/fuel allowance
+    const vehicleThreshold = monthlyTarget * safe(positionTarget.vehicleThresholdPct);
+    vehicleHit = vehicleThreshold > 0 && volumeAchieved >= vehicleThreshold;
+    if (vehicleHit) vehicleEarned = safe(positionTarget.vehicleAmount);
 
-  const incentiveEarned = incentiveHit ? incentiveAmount : 0;
-  const allowanceEarned = allowanceHit ? allowanceAmount : 0;
+    // Team active bonus — volume threshold AND headcount both required
+    const teamThreshold = monthlyTarget * safe(positionTarget.teamActiveThresholdPct);
+    const volumeOk = teamThreshold > 0 && volumeAchieved >= teamThreshold;
+    if (volumeOk && activeTeamCounts) {
+      const headcountOk =
+        activeTeamCounts.advisors >= safe(positionTarget.minActiveAdvisors) &&
+        activeTeamCounts.fms     >= safe(positionTarget.minActiveFMs) &&
+        activeTeamCounts.bms     >= safe(positionTarget.minActiveBMs);
+      if (headcountOk) {
+        teamActiveHit = true;
+        teamActiveEarned = safe(positionTarget.teamActiveAmount);
+      }
+    }
 
-  const orcEarned = safe(orcVolume) * safe(orcRate);
+  } else {
+    // ── Permanent / Management path ── data from PositionSalary
+    basicSalary = isPermanent
+      ? safe(salary.basicSalaryPermanent)
+      : safe(salary.basicSalaryProbation); // management uses basicSalaryProbation field as their base
+    monthlyTarget = safe(salary.monthlyTarget);
 
-  const epfDeduction = basicSalary * safe(salary.epfEmployee);
+    // Full incentive at 100% of target
+    incentiveHit = monthlyTarget > 0 && volumeAchieved >= monthlyTarget;
+    if (incentiveHit) {
+      incentiveEarned = safe(salary.incentiveAmount);
+    } else {
+      // Partial incentive at configured threshold percentage (e.g. 0.75)
+      const partialPct = safe(salary.incentivePartialThreshold);
+      const partialThreshold = monthlyTarget * partialPct;
+      if (partialPct > 0 && partialThreshold > 0 && volumeAchieved >= partialThreshold) {
+        incentivePartialHit = true;
+        incentivePartialEarned = safe(salary.incentivePartialAmount);
+      }
+    }
+
+    // Vehicle/fuel allowance — vehicleThresholdPct takes priority when configured,
+    // otherwise falls back to legacy allowanceThresholdPermanent field.
+    const vehicleThresholdPct = safe(salary.vehicleThresholdPct);
+    const legacyThresholdPct = safe(salary.allowanceThresholdPermanent);
+    const effectiveVehiclePct = vehicleThresholdPct > 0 ? vehicleThresholdPct : legacyThresholdPct;
+    const vehicleThreshold = monthlyTarget * effectiveVehiclePct;
+
+    vehicleHit = vehicleThreshold > 0 && volumeAchieved >= vehicleThreshold;
+    if (vehicleHit) {
+      // vehicleAmount takes priority over legacy allowanceAmount
+      const vehicleAmt = safe(salary.vehicleAmount);
+      const legacyAmt = safe(salary.allowanceAmount);
+      vehicleEarned = vehicleAmt > 0 ? vehicleAmt : legacyAmt;
+    }
+
+    // Team active bonus
+    const teamThresholdPct = safe(salary.teamActiveThresholdPct);
+    const teamThreshold = monthlyTarget * teamThresholdPct;
+    const volumeOk = teamThresholdPct > 0 && volumeAchieved >= teamThreshold;
+    if (volumeOk && activeTeamCounts) {
+      const headcountOk =
+        activeTeamCounts.advisors >= safe(salary.minActiveAdvisors) &&
+        activeTeamCounts.fms     >= safe(salary.minActiveFMs) &&
+        activeTeamCounts.bms     >= safe(salary.minActiveBMs);
+      if (headcountOk) {
+        teamActiveHit = true;
+        teamActiveEarned = safe(salary.teamActiveAmount);
+      }
+    }
+  }
+
+  // allowance* fields mirror vehicle* for UI backward-compatibility
+  const allowanceEarned = vehicleEarned;
+  const allowanceHit = vehicleHit;
+
+  // EPF / ETF — always on basic salary only
+  const epfDeduction      = basicSalary * safe(salary.epfEmployee);
   const epfEmployerAmount = basicSalary * safe(salary.epfEmployer);
   const etfEmployerAmount = basicSalary * safe(salary.etfEmployer);
 
   const grossPay =
     basicSalary +
     incentiveEarned +
-    allowanceEarned +
-    orcEarned +
+    incentivePartialEarned +
+    vehicleEarned +
+    teamActiveEarned +
+    safe(orcEarned) +
     safe(commissionEarned);
 
   const netPay = grossPay - epfDeduction;
 
   return {
-   basicSalaryPermanent: basicSalary,
-    
+    basicSalaryPermanent: basicSalary,
     monthlyTarget,
     volumeAchieved,
 
     incentiveEarned,
+    incentivePartialEarned,
+    vehicleEarned,
+    teamActiveEarned,
     allowanceEarned,
-    orcEarned,
+    orcEarned: safe(orcEarned),
     commissionEarned: safe(commissionEarned),
 
     epfDeduction,
@@ -94,6 +227,9 @@ export function calculatePayroll(
     etfEmployer: etfEmployerAmount,
 
     incentiveHit,
+    incentivePartialHit,
+    vehicleHit,
+    teamActiveHit,
     allowanceHit,
 
     grossPay,

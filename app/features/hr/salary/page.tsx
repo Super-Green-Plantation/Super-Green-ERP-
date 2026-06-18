@@ -10,7 +10,8 @@ import {
   Loader2,
   Percent,
   Save,
-  Target
+  Target,
+  Users
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -33,6 +34,15 @@ type SalaryForm = {
   etfEmployer: number;
   allowanceThresholdPermanent: number;
   allowanceThresholdProbation: number;
+  incentivePartialThreshold: number;
+  incentivePartialAmount: number;
+  vehicleThresholdPct: number;
+  vehicleAmount: number;
+  teamActiveThresholdPct: number;
+  teamActiveAmount: number;
+  minActiveAdvisors: number;
+  minActiveFMs: number;
+  minActiveBMs: number;
 };
 
 const DEFAULT_FORM: SalaryForm = {
@@ -50,6 +60,15 @@ const DEFAULT_FORM: SalaryForm = {
   etfEmployer: 0.03,
   allowanceThresholdPermanent: 1.0,
   allowanceThresholdProbation: 0.75,
+  incentivePartialThreshold: 0.75,
+  incentivePartialAmount: 0,
+  vehicleThresholdPct: 0,
+  vehicleAmount: 0,
+  teamActiveThresholdPct: 0,
+  teamActiveAmount: 0,
+  minActiveAdvisors: 0,
+  minActiveFMs: 0,
+  minActiveBMs: 0,
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -156,6 +175,15 @@ export default function SalaryConfigPage() {
             etfEmployer: p.salary.etfEmployer ?? 0.03,
             allowanceThresholdPermanent: p.salary.allowanceThresholdPermanent ?? 1.0,
             allowanceThresholdProbation: p.salary.allowanceThresholdProbation ?? 0.75,
+            incentivePartialThreshold: p.salary.incentivePartialThreshold ?? 0.75,
+            incentivePartialAmount: p.salary.incentivePartialAmount ?? 0,
+            vehicleThresholdPct: p.salary.vehicleThresholdPct ?? 0,
+            vehicleAmount: p.salary.vehicleAmount ?? 0,
+            teamActiveThresholdPct: p.salary.teamActiveThresholdPct ?? 0,
+            teamActiveAmount: p.salary.teamActiveAmount ?? 0,
+            minActiveAdvisors: p.salary.minActiveAdvisors ?? 0,
+            minActiveFMs: p.salary.minActiveFMs ?? 0,
+            minActiveBMs: p.salary.minActiveBMs ?? 0,
           }
           : { ...DEFAULT_FORM };
       }
@@ -324,11 +352,80 @@ export default function SalaryConfigPage() {
                         hint="One-time bonus for full target completion."
                       />
                       <Field
+                        label="Incentive (75% Threshold)"
+                        value={form.incentivePartialAmount}
+                        onChange={(v) => setField(position.id, "incentivePartialAmount", v)}
+                        prefix="Rs."
+                        hint="Partial bonus when 75% of target is achieved."
+                      />
+                      <Field
                         label="Fuel Allowance"
                         value={form.allowanceAmount}
                         onChange={(v) => setField(position.id, "allowanceAmount", v)}
                         prefix="Rs."
                         hint="Fixed fuel and vehicle support subsidy."
+                      />
+                      <Field
+                        label="Vehicle Threshold %"
+                        value={form.vehicleThresholdPct}
+                        onChange={(v) => setField(position.id, "vehicleThresholdPct", v)}
+                        suffix="%"
+                        hint="Target % to qualify for vehicle allowance."
+                      />
+                      <Field
+                        label="Vehicle Amount"
+                        value={form.vehicleAmount}
+                        onChange={(v) => setField(position.id, "vehicleAmount", v)}
+                        prefix="Rs."
+                        hint="Vehicle allowance amount when threshold is met."
+                      />
+                      <Field
+                        label="Team Active Threshold %"
+                        value={form.teamActiveThresholdPct}
+                        onChange={(v) => setField(position.id, "teamActiveThresholdPct", v)}
+                        suffix="%"
+                        hint="Target % to qualify for team active bonus."
+                      />
+                      <Field
+                        label="Team Active Amount"
+                        value={form.teamActiveAmount}
+                        onChange={(v) => setField(position.id, "teamActiveAmount", v)}
+                        prefix="Rs."
+                        hint="Team active bonus when threshold is met."
+                      />
+                    </div>
+                  </div>
+
+                  {/* Team Minimums */}
+                  <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-10">
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/10">
+                          <Users className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-extrabold uppercase tracking-widest text-foreground">Team Minimums Carpet</h3>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <Field
+                        label="Min Active Advisors"
+                        value={form.minActiveAdvisors}
+                        onChange={(v) => setField(position.id, "minActiveAdvisors", v)}
+                        hint="Minimum active advisors required."
+                      />
+                      <Field
+                        label="Min Active FMs"
+                        value={form.minActiveFMs}
+                        onChange={(v) => setField(position.id, "minActiveFMs", v)}
+                        hint="Minimum active FMs required."
+                      />
+                      <Field
+                        label="Min Active BMs"
+                        value={form.minActiveBMs}
+                        onChange={(v) => setField(position.id, "minActiveBMs", v)}
+                        hint="Minimum active BMs required."
                       />
                     </div>
                   </div>

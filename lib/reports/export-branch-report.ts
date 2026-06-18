@@ -18,7 +18,7 @@ const POSITION_TABS: { label: string; positions: string[] }[] = [
   { label: "BM",         positions: ["BM", "JBM", "SBM", "ABM"] },
   { label: "RM",         positions: ["RM", "JRM", "SRM"] },
   { label: "ZM",         positions: ["ZM", "JZM", "SZM"] },
-  // { label: "GM",         positions: ["PRO_AGM", "PER_AGM", "GM", "DGM", ] },
+  { label: "GM",         positions: ["PRO_AGM", "PER_AGM", "GM", "DGM", ] },
   // { label: "Management", positions: ["COO"] },
 ];
 

@@ -103,6 +103,15 @@ model PositionSalary {
   allowanceThresholdProbation Float    @default(0.75)
   basicSalaryPermanent        Float    @default(0)
   basicSalaryProbation        Float    @default(0)
+  incentivePartialThreshold   Float    @default(0.75)
+  incentivePartialAmount      Float    @default(0)
+  vehicleThresholdPct         Float    @default(0)
+  vehicleAmount               Float    @default(0)
+  teamActiveThresholdPct      Float    @default(0)
+  teamActiveAmount            Float    @default(0)
+  minActiveAdvisors           Int      @default(0)
+  minActiveFMs                Int      @default(0)
+  minActiveBMs                Int      @default(0)
   position                    Position @relation(fields: [positionId], references: [id])
 }
 

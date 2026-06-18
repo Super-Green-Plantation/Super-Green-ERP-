@@ -48,8 +48,9 @@ type MemberSummary = {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-const EmpModal = ({ mode, initialData, onClose, onSuccess }: EmpModalProps) => {
-  const { branchId } = useParams<{ branchId: string }>();
+const EmpModal = ({ mode, initialData, onClose, onSuccess, branchId: propBranchId }: EmpModalProps) => {
+  const params = useParams<{ branchId: string }>();
+  const branchId = propBranchId || (params?.branchId ? Number(params.branchId) : undefined);
   const queryClient = useQueryClient();
 
   // ── UI State ──────────────────────────────────────────────────────────────
@@ -86,7 +87,7 @@ const dropdownRef = useRef<HTMLDivElement>(null);
     recruitedById: null,
     recruitedByName: "",
     positionId: "",
-    branchIds: [Number(branchId)],
+    branchIds: branchId ? [Number(branchId)] : [],
     email: "",
     phone: "",
     phone2: "",
@@ -263,7 +264,7 @@ useEffect(() => {
     setFormData((prev) => ({
       ...prev,
       positionId: value,
-      branchIds: isMulti ? prev.branchIds : [Number(branchId)],
+      branchIds: isMulti ? prev.branchIds : (branchId ? [Number(branchId)] : []),
     }));
   };
 

@@ -243,6 +243,8 @@ export default function PayrollPage() {
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Basic</th>
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Incentive</th>
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Allowance</th>
+                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Vehicle</th>
+                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Team Active</th>
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Commission</th>
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">EPF (emp)</th>
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Net Pay</th>
@@ -299,6 +301,18 @@ export default function PayrollPage() {
                           <span className={row.breakdown?.allowanceHit ? "text-primary" : "text-muted-foreground/40"}>
                             {fmt(row.breakdown?.allowanceEarned ?? 0)}
                             {row.breakdown?.allowanceHit && <CheckCircle2 className="inline w-3 h-3 ml-1" />}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4 text-right text-xs font-bold">
+                          <span className={row.breakdown?.vehicleHit ? "text-primary" : "text-muted-foreground/40"}>
+                            {fmt(row.breakdown?.vehicleEarned ?? 0)}
+                            {row.breakdown?.vehicleHit && <CheckCircle2 className="inline w-3 h-3 ml-1" />}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4 text-right text-xs font-bold">
+                          <span className={row.breakdown?.teamActiveHit ? "text-primary" : "text-muted-foreground/40"}>
+                            {fmt(row.breakdown?.teamActiveEarned ?? 0)}
+                            {row.breakdown?.teamActiveHit && <CheckCircle2 className="inline w-3 h-3 ml-1" />}
                           </span>
                         </td>
                         <td className="px-5 py-4 text-right text-xs font-bold text-primary">

@@ -30,44 +30,44 @@ export function ProposalReportExport() {
   };
 
   return (
+    <div className="flex flex-wrap items-end gap-2 w-full sm:w-auto">
 
-    <div className="flex flex-col md:flex-row items-stretch md:items-end gap-4 w-full md:w-auto">
-      
-      {/* Date Pickers Container: Side-by-side even on small screens, but stretching equally */}
-      <div className="flex gap-3 w-full md:w-auto">
-        <div className="grid gap-1.5 flex-1 md:w-36">
-          <Label>From</Label>
+      {/* Date Pickers — side by side, compact */}
+      <div className="flex gap-2 flex-1 sm:flex-none">
+        <div className="grid gap-1 flex-1 sm:w-32">
+          <Label className="text-xs">From</Label>
           <Input
             type="date"
             value={from}
             onChange={(e) => setFrom(e.target.value)}
-            className="w-full min-w-30 cursor-pointer"
+            className="w-full text-xs cursor-pointer h-8"
           />
         </div>
-        
-        <div className="grid gap-1.5 flex-1 md:w-36">
-          <Label>To</Label>
+
+        <div className="grid gap-1 flex-1 sm:w-32">
+          <Label className="text-xs">To</Label>
           <Input
             type="date"
             value={to}
             onChange={(e) => setTo(e.target.value)}
-            className="w-full min-w-30 cursor-pointer"
+            className="w-full text-xs cursor-pointer h-8"
           />
         </div>
       </div>
 
-      {/* Button takes full width on mobile, auto-sizes on desktop */}
+      {/* Export button */}
       <Button
         onClick={handleExport}
         disabled={!from || !to || loading}
-        // className="w-full md:w-auto shrink-0"
+        size="sm"
+        className="shrink-0 h-8 text-xs"
       >
         {loading ? (
-          <Loader2  />
+          <Loader2 className="h-3 w-3 animate-spin" />
         ) : (
-          <Download className="mr-2 h-4 w-4" />
+          <Download className="mr-1.5 h-3 w-3" />
         )}
-        Export Investment Report
+        Export Report
       </Button>
     </div>
   );

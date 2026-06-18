@@ -95,6 +95,15 @@ export interface PositionSalary {
   etfEmployer: number;
   allowanceThresholdProbation: number;
   allowanceThresholdPermanent: number;
+  incentivePartialThreshold: number;
+  incentivePartialAmount: number;
+  vehicleThresholdPct: number;
+  vehicleAmount: number;
+  teamActiveThresholdPct: number;
+  teamActiveAmount: number;
+  minActiveAdvisors: number;
+  minActiveFMs: number;
+  minActiveBMs: number;
 }
 
 export interface PersonalCommissionTiers {
@@ -124,6 +133,7 @@ export interface EmpModalProps {
   initialData?: Member;
   onClose: () => void;
   onSuccess?: () => void;
+  branchId?: number;
 }
 
 export interface EmpData {

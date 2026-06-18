@@ -1,18 +1,19 @@
-export function FloatingKpiCard({ icon, title, value, subValue, trend }: { icon: React.ReactNode, title: string, value: string, subValue: string, trend: 'up' | 'down' | 'neutral' }) {
+export function FloatingKpiCard({ icon, title, value, subValue, trend, trendValue }: { icon: React.ReactNode, title: string, value: string, subValue: string, trend: 'up' | 'down' | 'neutral', trendValue?: string }) {
   return (
-    <div className="bg-card/60 backdrop-blur-xl border border-border/30 rounded-[2rem] p-6 flex flex-col shadow-sm group hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 relative overflow-hidden">
-      <div className={`w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0 mb-6 group-hover:text-white transition-all duration-500 shadow-inner border border-primary/20`}>
-        <div className="group-hover:scale-110 transition-all duration-500 text-primary">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5 flex flex-col justify-between shadow-sm transition-colors duration-300 min-h-[130px]">
+      <div className="flex justify-between items-start mb-4">
+        <h3 className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">{title}</h3>
+        <div className="text-[#0f5132] dark:text-[#4ade80] bg-[#f0f9f4] dark:bg-[#064e3b] p-1.5 rounded-md">
           {icon}
         </div>
       </div>
-      <div className="relative z-10">
-        <h3 className="text-[10px] font-bold text-muted-foreground/40 mb-2 uppercase tracking-[0.2em] leading-none">{title}</h3>
-        <p className="text-2xl font-bold text-foreground tracking-tighter mb-2 group-hover:text-primary transition-colors">{value}</p>
-        <div className="flex items-center gap-1.5">
-          {trend === 'up' && <div className="w-1 h-1 rounded-full bg-emerald-500"></div>}
-          <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-tighter">{subValue}</p>
+      
+      <div>
+        <div className="flex items-baseline gap-2 mb-1">
+          <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight leading-none">{value}</p>
+          {trend === 'up' && <span className="text-xs font-bold text-[#0f5132] dark:text-[#4ade80] flex items-center">{trendValue || "+5"}</span>}
         </div>
+        <p className="text-[11px] font-medium text-gray-500 dark:text-gray-400">{subValue}</p>
       </div>
     </div>
   );

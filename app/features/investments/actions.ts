@@ -729,7 +729,9 @@ export async function getProposalReportByBranch(
   }
 
   // Excluded positions (management roles that span all branches)
-  const EXCLUDED_TITLES: Title[] = ["COO", "GM", "DGM", "PER_AGM", "PRO_AGM", "SZM"];
+
+
+  const EXCLUDED_TITLES: Title[] = ["COO","ADMIN", "CHAIRMEN", "HR", "ACC", "IT", "CLEANING", "OPM", "PRO", "SE"];
 
   const branches = await prisma.branch.findMany({
 
@@ -743,6 +745,7 @@ export async function getProposalReportByBranch(
               { remark: { not: "RESIGN" } },
             ],
             channel: { not: Channel.Micro },
+            isActive: true,
             position: {
               title: { notIn: EXCLUDED_TITLES },
             },

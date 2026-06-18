@@ -40,6 +40,19 @@ export async function getEmployeePerformance(memberId: number, year: number, mon
     pendingAmount: pending?._sum.amount ?? 0,
   };
 
+  const recentClients = await prisma.client.findMany({
+    where: { createdById: memberId },
+    orderBy: { createdAt: 'desc' },
+    take: 5,
+    select: {
+      id: true,
+      fullName: true,
+      createdAt: true,
+      status: true,
+      approvalStatus: true,
+    }
+  });
+
   //  Use the selected year/month directly — not latestPayroll
   const currentPayroll = member.monthlyPayrolls.find(
     (p) => p.year === year && p.month === month
@@ -101,6 +114,7 @@ export async function getEmployeePerformance(memberId: number, year: number, mon
       goal,
       evaluation,
       currentPayroll,
+      recentClients,
       ...proposalStats,
     };
   }
@@ -121,6 +135,7 @@ export async function getEmployeePerformance(memberId: number, year: number, mon
     goal,
     currentPayroll,
     payrollHistory,
+    recentClients,
     ...proposalStats,
   };
 }
