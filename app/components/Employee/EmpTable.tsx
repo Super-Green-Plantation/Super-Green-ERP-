@@ -11,6 +11,8 @@ import {
   ExternalLink,
   Pen,
   Phone,
+  ToggleLeft,
+  ToggleRight,
   Trash2,
   User,
 } from "lucide-react";
@@ -22,6 +24,7 @@ import Loading from "../Status/Loading";
 import ConfirmDialog from "../ui/ConfirmDialog";
 import { usePermission } from "@/app/hooks/usePermission";
 import { getInvestmentCountsPerAdvisor } from "@/app/features/investments/actions";
+import { toggleEmployeeStatus } from "@/app/features/branches/actions";
 
 interface EmpTableProps {
   onEdit: (emp: Member) => void;
@@ -136,6 +139,20 @@ const EmpTable = ({ onEdit, onRefresh, branchId, searchQuery }: EmpTableProps) =
     });
   }, [data?.pages.length]);
 
+  // Add alongside deleteMutation
+  const toggleStatusMutation = useMutation({
+    mutationFn: ({ id, isActive }: { id: number; isActive: boolean }) =>
+      toggleEmployeeStatus(id, isActive),
+    onSuccess: (_, { isActive }) => {
+      queryClient.invalidateQueries({ queryKey: ["employees", branchId] });
+      toast.success(`Employee marked as ${isActive ? "inactive" : "active"}`);
+    },
+    onError: () => {
+      toast.error("Failed to update employee status");
+    },
+  });
+
+
   if (isLoading) return <Loading />
   if (isError) return <Error />
 
@@ -156,6 +173,10 @@ const EmpTable = ({ onEdit, onRefresh, branchId, searchQuery }: EmpTableProps) =
               </th>
               <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                 Contact
+              </th>
+
+              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                Status
               </th>
 
               <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
@@ -202,6 +223,34 @@ const EmpTable = ({ onEdit, onRefresh, branchId, searchQuery }: EmpTableProps) =
                     {e.phone ?? "-"}
                   </div>
                 </td>
+
+                <td className="px-6 py-4">
+                  <button
+                    onClick={() =>
+                      toggleStatusMutation.mutate({ id: e.id, isActive: e.isActive })
+                    }
+                    disabled={toggleStatusMutation.isPending}
+                    title={e.isActive ? "Mark as Inactive" : "Mark as Active"}
+                    className="flex items-center gap-2 group/toggle"
+                  >
+                    {e.isActive ? (
+                      <>
+                        <ToggleRight size={22} className="text-green-500" />
+                        <span className="text-xs font-bold text-green-600 uppercase tracking-tight">
+                          Active
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <ToggleLeft size={22} className="text-muted-foreground/50" />
+                        <span className="text-xs font-bold text-muted-foreground uppercase tracking-tight">
+                          Inactive
+                        </span>
+                      </>
+                    )}
+                  </button>
+                </td>
+
                 <td>
                   <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-bold bg-blue-500/10 text-blue-600 border border-blue-500/20 uppercase tracking-tight">
                     {investmentCounts[e.id] ?? 0} Proposals

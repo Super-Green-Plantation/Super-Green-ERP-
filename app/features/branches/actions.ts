@@ -286,6 +286,9 @@ export async function getDescendantBranchIds(
 }
 
 
-export async function getInvestmentsByBranchIds(branchIds: number[]) {
-  
+export async function toggleEmployeeStatus(id: number, isActive: boolean) {
+  await prisma.member.update({
+    where: { id },
+    data: { isActive: !isActive },
+  });
 }
