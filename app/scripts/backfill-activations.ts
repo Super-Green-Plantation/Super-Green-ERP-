@@ -4,7 +4,7 @@ import { Prisma } from "@prisma/client";
 type HierarchyRole = "fmId" | "bmId" | "rmId" | "zmId" | "agmId" | "ccoId";
 type TransactionClient = Prisma.TransactionClient;
 
-async function upsertActivationForMember(
+export async function upsertActivationForMember(
   tx: TransactionClient,
   memberId: number,
   role: HierarchyRole,

@@ -52,14 +52,14 @@ export default function MemberCard({
 
           <div className="flex items-center gap-3 ml-2">
             {/* Earnings Badge */}
-            <div className="text-right">
+            {/* <div className="text-right">
               <p className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-tighter">
                 Total Earned
               </p>
               <p className="text-sm font-bold text-primary">
                 Rs. {member.totalCommission?.toLocaleString()}
               </p>
-            </div>
+            </div> */}
 
             {/* Toggle Button */}
             {onToggle && (

@@ -10,7 +10,6 @@ import { ActivityAction, ActivityEntity, Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import crypto from "crypto"
 import nodemailer from "nodemailer";
-import { upsertVolumeAchieved } from "./_helpers";
 import { upsertActivationsForInvestment } from "../hr/salary/action";
 
 
@@ -139,19 +138,27 @@ export async function getClientById(id: number) {
           client: true,
           plan: true,
           beneficiary: true,
-          nominee: true
+          nominee: true,
+          // hierarchy members on the investment itself
+          fa: { include: { position: { include: { orc: true, salary: true } }, branches: { include: { branch: true } } } },
+          fm: { include: { position: { include: { orc: true, salary: true } }, branches: { include: { branch: true } } } },
+          bm: { include: { position: { include: { orc: true, salary: true } }, branches: { include: { branch: true } } } },
+          rm: { include: { position: { include: { orc: true, salary: true } }, branches: { include: { branch: true } } } },
+          zm: { include: { position: { include: { orc: true, salary: true } }, branches: { include: { branch: true } } } },
+          agm: { include: { position: { include: { orc: true, salary: true } }, branches: { include: { branch: true } } } },
+          cco: { include: { position: { include: { orc: true, salary: true } }, branches: { include: { branch: true } } } },
         }
       },
       branch: true,
       nominees: true,
       beneficiaries: true,
-      fa: { include: { position: { include: { salary: true, orc: true } }, branches: { include: { branch: true } } } },
-      fm: { include: { position: { include: { salary: true, orc: true } }, branches: { include: { branch: true } } } },
-      bm: { include: { position: { include: { salary: true, orc: true } }, branches: { include: { branch: true } } } },
-      rm: { include: { position: { include: { salary: true, orc: true } }, branches: { include: { branch: true } } } },
-      zm: { include: { position: { include: { salary: true, orc: true } }, branches: { include: { branch: true } } } },
-      agm: { include: { position: { include: { salary: true, orc: true } }, branches: { include: { branch: true } } } },
-      cco: { include: { position: { include: { salary: true, orc: true } }, branches: { include: { branch: true } } } },
+    //   fa: { include: { position: { include: { salary: true, orc: true } }, branches: { include: { branch: true } } } },
+    //   fm: { include: { position: { include: { salary: true, orc: true } }, branches: { include: { branch: true } } } },
+    //   bm: { include: { position: { include: { salary: true, orc: true } }, branches: { include: { branch: true } } } },
+    //   rm: { include: { position: { include: { salary: true, orc: true } }, branches: { include: { branch: true } } } },
+    //   zm: { include: { position: { include: { salary: true, orc: true } }, branches: { include: { branch: true } } } },
+    //   agm: { include: { position: { include: { salary: true, orc: true } }, branches: { include: { branch: true } } } },
+    //   cco: { include: { position: { include: { salary: true, orc: true } }, branches: { include: { branch: true } } } },
     },
   });
 
@@ -161,6 +168,7 @@ export async function getClientById(id: number) {
 
   return client;
 }
+
 // Get clients by branch
 export async function getClientsByBranch(branchId: number) {
   try {
@@ -263,13 +271,13 @@ export async function saveClient(
           idFront: applicant.idFront,
           idBack: applicant.idBack,
           createdById: currentUser?.member?.id ?? null,
-          faId: applicant.faId ?? null,
-          fmId: applicant.fmId ?? null,
-          bmId: applicant.bmId ?? null,
-          rmId: applicant.rmId ?? null,
-          zmId: applicant.zmId ?? null,
-          agmId: applicant.agmId ?? null,
-          ccoId: applicant.ccoId ?? null,
+          // faId: applicant.faId ?? null,
+          // fmId: applicant.fmId ?? null,
+          // bmId: applicant.bmId ?? null,
+          // rmId: applicant.rmId ?? null,
+          // zmId: applicant.zmId ?? null,
+          // agmId: applicant.agmId ?? null,
+          // ccoId: applicant.ccoId ?? null,
         },
       });
 
@@ -375,50 +383,50 @@ export async function saveClient(
       });
 
       // Volume tracking across hierarchy
-      const hierarchyMemberIds = [
-        applicant.faId ?? null,
-        applicant.fmId ?? null,
-        applicant.bmId ?? null,
-        applicant.rmId ?? null,
-        applicant.zmId ?? null,
-        applicant.agmId ?? null,
-        applicant.ccoId ?? null,
-      ].filter((id): id is number => id !== null);
+      // const hierarchyMemberIds = [
+      //   applicant.faId ?? null,
+      //   applicant.fmId ?? null,
+      //   applicant.bmId ?? null,
+      //   applicant.rmId ?? null,
+      //   applicant.zmId ?? null,
+      //   applicant.agmId ?? null,
+      //   applicant.ccoId ?? null,
+      // ].filter((id): id is number => id !== null);
 
-      const uniqueHierarchyIds = [...new Set(hierarchyMemberIds)];
+      // const uniqueHierarchyIds = [...new Set(hierarchyMemberIds)];
       const year = investmentDate.getFullYear();
       const month = investmentDate.getMonth() + 1;
 
-      await Promise.all(
-        uniqueHierarchyIds.map((memberId) =>
-          tx.monthlyPayroll.upsert({
-            where: { memberId_year_month: { memberId, year, month } },
-            update: { volumeAchieved: { increment: amount } },
-            create: {
-              memberId,
-              year,
-              month,
-              basicSalaryPermanent: 0,
-              monthlyTarget: 0,
-              volumeAchieved: amount,
-            },
-          })
-        )
-      );
+      // await Promise.all(
+      //   uniqueHierarchyIds.map((memberId) =>
+      //     tx.monthlyPayroll.upsert({
+      //       where: { memberId_year_month: { memberId, year, month } },
+      //       update: { volumeAchieved: { increment: amount } },
+      //       create: {
+      //         memberId,
+      //         year,
+      //         month,
+      //         basicSalaryPermanent: 0,
+      //         monthlyTarget: 0,
+      //         volumeAchieved: amount,
+      //       },
+      //     })
+      //   )
+      // );
 
-      await upsertActivationsForInvestment(
-        tx,
-        {
-          fmId: applicant.fmId ?? null,
-          bmId: applicant.bmId ?? null,
-          rmId: applicant.rmId ?? null,
-          zmId: applicant.zmId ?? null,
-          agmId: applicant.agmId ?? null,
-          ccoId: applicant.ccoId ?? null,
-        },
-        year,
-        month,
-      );
+      // await upsertActivationsForInvestment(
+      //   tx,
+      //   {
+      //     fmId: applicant.fmId ?? null,
+      //     bmId: applicant.bmId ?? null,
+      //     rmId: applicant.rmId ?? null,
+      //     zmId: applicant.zmId ?? null,
+      //     agmId: applicant.agmId ?? null,
+      //     ccoId: applicant.ccoId ?? null,
+      //   },
+      //   year,
+      //   month,
+      // );
 
       return { ...createClient, investments: [createInvestment] };
     });

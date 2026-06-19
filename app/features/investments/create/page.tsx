@@ -3,10 +3,10 @@
 import { useEffect, useState, useRef } from "react";
 import { getFinancialPlans } from "@/app/features/financial_plans/actions";
 import { getClients } from "@/app/features/clients/actions";
-import {
+import
+ {
   createInvestmentForExistingClient,
   updateInvestment,
-  approveInvestment,
   rejectInvestment,
 } from "@/app/features/investments/actions";
 import { useSessionUser } from "@/app/hooks/useSessionUser";
@@ -20,6 +20,7 @@ import Back from "@/app/components/Buttons/Back";
 import { createPortal } from "react-dom";
 import { investmentFormSchema } from "@/lib/validations/investment.schema";
 import AdvisorHierarchy from "./AdvisorHierarchy";
+import { approveInvestmentWithHierarchyLog } from "../../hr/salary/action";
 
 type BeneficiaryMode = "existing" | "new" | "none";
 type NomineeMode = "existing" | "new" | "none";
@@ -1006,7 +1007,7 @@ export default function CreateInvestmentForm({
                     type="button"
                     onClick={async () => {
                       setLoading(true);
-                      const res = await approveInvestment({
+                      const res = await approveInvestmentWithHierarchyLog({
                         investmentId: investmentId!,
                         advisorId,
                         ...hierarchy,

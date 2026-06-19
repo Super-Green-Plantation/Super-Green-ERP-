@@ -8,6 +8,7 @@ import { serializeData } from "@/app/utils/serializers";
 import { revalidatePath } from "next/cache";
 import { logActivity } from "@/lib/logActivity";
 import { ActivityAction, ActivityEntity } from "@prisma/client";
+import { getHierarchyEmpNosFromInvestment } from "../hr/salary/action";
 
 
 export async function generateCommissionRef() {
@@ -256,5 +257,67 @@ export async function processCommissions(data: {
       success: false,
       error: { code: "INTERNAL_ERROR", message: "Something went wrong" },
     };
+  }
+}
+
+export async function processCommissionsFromSavedHierarchy(data: {
+  investmentId: number;
+  empNo: string;
+  branchId: number;
+  disabledEmpNos?: string[];
+  manualEmpNos?: string[];
+  skipModifiedWarning?: boolean;
+}): Promise<{
+  success: boolean;
+  receipt?: any;
+  hierarchyModifiedWarning?: boolean;
+  error?: any;
+}> {
+  try {
+    // ── Step 1: Resolve hierarchy empNos from the saved investment snapshot ──
+    const { success, empNos, hierarchyModified, error } =
+      await getHierarchyEmpNosFromInvestment(data.investmentId);
+ 
+    if (!success) {
+      return { success: false, error };
+    }
+ 
+    // ── Step 2: Warn if hierarchy was manually overridden ────────────────────
+    // Return the warning flag so the UI can show a confirmation dialog.
+    // The caller can re-invoke with skipModifiedWarning: true to proceed.
+    if (hierarchyModified && !data.skipModifiedWarning) {
+      return {
+        success: false,
+        hierarchyModifiedWarning: true,
+        error:
+          "This investment's hierarchy was manually edited after approval. " +
+          "Re-submit with skipModifiedWarning: true to process using the overridden list.",
+      };
+    }
+ 
+    // ── Step 3: Delegate to the existing processCommissions ──────────────────
+    // Import processCommissions from wherever it lives in your codebase.
+    // It already accepts hierarchyEmpNos and handles the rest correctly.
+    //
+    // The dynamic call below is illustrative — replace with a direct import.
+ 
+    const result = await processCommissions({
+      investmentId: data.investmentId,
+      empNo: data.empNo,
+      branchId: data.branchId,
+      disabledEmpNos: data.disabledEmpNos ?? [],
+      manualEmpNos: data.manualEmpNos ?? [],
+      // ← This is the key: pass the pre-resolved list instead of letting
+      //   processCommissions fall through to getUplineChain.
+      hierarchyEmpNos: empNos,
+    });
+ 
+    return {
+      ...result,
+      hierarchyModifiedWarning: false,
+    };
+  } catch (err: any) {
+    console.error("processCommissionsFromSavedHierarchy error:", err);
+    return { success: false, error: { code: "INTERNAL_ERROR", message: err.message } };
   }
 }

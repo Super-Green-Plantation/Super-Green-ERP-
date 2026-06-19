@@ -142,7 +142,7 @@ const Page = () => {
 
   const displayUserName = dbUser?.name || "Admin User";
   const displayUserRole = dbUser?.role || "ADMIN";
-
+  
   // ── Render ───────────────────────────────────────────────────────────────
   return (
     <div className="max-w-[1400px] mx-auto min-h-screen p-3 sm:p-6 lg:p-8 font-sans transition-colors duration-300 w-full">

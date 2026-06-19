@@ -8,7 +8,7 @@ import { createInvestmentForExistingClientSchema, updateInvestmentSchema } from 
 import { ActivityAction, ActivityEntity, Channel, Prisma, Title } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { getDescendantBranchIds } from "../branches/actions";
-import { upsertActivationsForInvestment } from "../hr/salary/action";
+import { upsertActivationForMember } from "@/app/scripts/backfill-activations";
 
 // Generate investment reference number
 function generateInvestmentNumber() {
@@ -1040,7 +1040,37 @@ export async function getInvestmentSummary(filters: {
   };
 }
 
-export async function approveInvestment(data: {
+type TransactionClient = Prisma.TransactionClient;
+
+
+type HierarchyRole = "fmId" | "bmId" | "rmId" | "zmId" | "agmId" | "ccoId";
+
+async function upsertActivationsForInvestment(
+  tx: TransactionClient,
+  hierarchy: {
+    fmId?:  number | null;
+    bmId?:  number | null;
+    rmId?:  number | null;
+    zmId?:  number | null;
+    agmId?: number | null;
+    ccoId?: number | null;
+  },
+  year: number,
+  month: number,
+) {
+  const roles: HierarchyRole[] = ["fmId", "bmId", "rmId", "zmId", "agmId", "ccoId"];
+ 
+  await Promise.all(
+    roles
+      .filter((role) => !!hierarchy[role])
+      .map((role) =>
+        upsertActivationForMember(tx, hierarchy[role]!, role, year, month)
+      )
+  );
+}
+
+
+export async function approveInvestmentWithHierarchyLog(data: {
   investmentId: number;
   faId?: number | null;
   fmId?: number | null;
@@ -1051,25 +1081,30 @@ export async function approveInvestment(data: {
   ccoId?: number | null;
   reviewNote?: string;
   advisorId?: number | null;
-}) {
+}): Promise<{ success: boolean; investment?: any; error?: string }> {
   try {
     const currentUser = await getCurrentUserWithRole();
     if (!currentUser) throw new Error("Not authorized");
-
-    const approverIds = [data.faId, data.fmId, data.bmId, data.rmId, data.zmId, data.agmId, data.ccoId];
-
-    // If NOT even one is present, throw the error
-    if (!approverIds.some(id => id)) {
+ 
+    // Guard: at least one hierarchy member must be supplied
+    const approverIds = [
+      data.faId, data.fmId, data.bmId, data.rmId,
+      data.zmId, data.agmId, data.ccoId,
+    ];
+    if (!approverIds.some((id) => id)) {
       throw new Error("At least one approver is required for approval");
     }
+ 
     const investment = await prisma.investment.findUnique({
       where: { id: data.investmentId },
-      include: { client: true }
+      include: { client: true },
     });
+ 
     if (!investment) throw new Error("Investment not found");
     if (investment.approvalStatus !== "PENDING") throw new Error("Investment is not pending");
-
+ 
     const result = await prisma.$transaction(async (tx) => {
+      // ── a. Stamp approval fields on the investment ──────────────────────────
       const updated = await tx.investment.update({
         where: { id: data.investmentId },
         data: {
@@ -1087,7 +1122,8 @@ export async function approveInvestment(data: {
           advisorId: data.advisorId ?? investment.advisorId,
         },
       });
-
+ 
+      // ── b. Upsert monthlyPayroll volume for each hierarchy member ───────────
       const hierarchyMemberIds = [
         data.faId ?? null,
         data.fmId ?? null,
@@ -1097,13 +1133,13 @@ export async function approveInvestment(data: {
         data.agmId ?? null,
         data.ccoId ?? null,
       ].filter((id): id is number => id !== null);
-
+ 
       const uniqueHierarchyIds = [...new Set(hierarchyMemberIds)];
-
+ 
       if (uniqueHierarchyIds.length > 0) {
         const year = new Date(investment.investmentDate).getFullYear();
         const month = new Date(investment.investmentDate).getMonth() + 1;
-
+ 
         await Promise.all(
           uniqueHierarchyIds.map((memberId) =>
             tx.monthlyPayroll.upsert({
@@ -1120,14 +1156,17 @@ export async function approveInvestment(data: {
             })
           )
         );
-
+ 
+        // ── c. Upsert activations for each non-FA hierarchy member ────────────
+        // Recalculates MonthlyActivation counts so that isActivated flags and
+        // cumulative activation counts stay accurate after this investment is saved.
         await upsertActivationsForInvestment(
           tx,
           {
-            fmId: data.fmId ?? null,
-            bmId: data.bmId ?? null,
-            rmId: data.rmId ?? null,
-            zmId: data.zmId ?? null,
+            fmId:  data.fmId  ?? null,
+            bmId:  data.bmId  ?? null,
+            rmId:  data.rmId  ?? null,
+            zmId:  data.zmId  ?? null,
             agmId: data.agmId ?? null,
             ccoId: data.ccoId ?? null,
           },
@@ -1135,7 +1174,8 @@ export async function approveInvestment(data: {
           month,
         );
       }
-
+ 
+      // ── d. Auto-approve client if still pending ─────────────────────────────
       if (investment.client && investment.client.approvalStatus !== "APPROVED") {
         await tx.client.update({
           where: { id: investment.clientId },
@@ -1144,17 +1184,43 @@ export async function approveInvestment(data: {
             reviewedAt: new Date(),
             reviewedBy: currentUser.id,
             reviewNote: "Automatically approved upon investment approval.",
-          }
+          },
         });
       }
-
+ 
       return updated;
     });
-
+ 
     revalidatePath("/features/investments");
+ 
+    // ── e. Audit log — fires AFTER transaction commits ─────────────────────
+    // Hierarchy snapshot is stored in metadata so you can always reconstruct
+    // "who was on this investment when it was approved".
+    void logActivity({
+      action: ActivityAction.APPROVE,
+      entity: ActivityEntity.INVESTMENT,
+      entityId: data.investmentId,
+      performedById: currentUser?.member?.id ?? 0,
+      branchId: investment.branchId,
+      metadata: {
+        event: "hierarchy_snapshot_at_approval",
+        hierarchySnapshot: {
+          faId: data.faId ?? null,
+          fmId: data.fmId ?? null,
+          bmId: data.bmId ?? null,
+          rmId: data.rmId ?? null,
+          zmId: data.zmId ?? null,
+          agmId: data.agmId ?? null,
+          ccoId: data.ccoId ?? null,
+        },
+        reviewNote: data.reviewNote ?? null,
+        approvedAt: new Date().toISOString(),
+      },
+    });
+ 
     return { success: true, investment: result };
   } catch (error: any) {
-    console.error("approveInvestment error:", error);
+    console.error("approveInvestmentWithHierarchyLog error:", error);
     return { success: false, error: error.message };
   }
 }

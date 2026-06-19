@@ -26,7 +26,7 @@ const links = [
   // { name: "Branches", href: "/features/branches", icon: GitBranch, role: ["ADMIN", "HR", "DEV"] },
   { name: "Employee", href: "/features/branches/employees", icon: IdCardLanyard, role: ["ADMIN", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "AGM"] },
   { name: "Targets", href: "/features/hr/targets", icon: Target, role: ["ADMIN", "HR", "DEV"] },
-  { name: "Evaluations", href: "/features/hr/evaluations", icon: ChartCandlestick, role: ["ADMIN", "HR", "DEV"] },
+  // { name: "Evaluations", href: "/features/hr/evaluations", icon: ChartCandlestick, role: ["ADMIN", "HR", "DEV"] },
   { name: "Payroll", href: "/features/hr/payroll", icon: Nfc, role: ["ADMIN", "HR", "DEV"] },
   { name: "Financial Plans", href: "/features/financial_plans", icon: Landmark, role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "AGM"] },
   { name: "Commissions", href: "/features/commissions", icon: Percent, role: ["ADMIN", "HR", "DEV"] },
