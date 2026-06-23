@@ -70,33 +70,88 @@ function toPositionTargetData(target: any) {
   };
 }
 
-async function getActiveTeamCounts(memberId: number): Promise<ActiveTeamCounts> {
+async function getActiveTeamCounts(
+  memberEmpNo: string,
+  year: number,
+  month: number
+): Promise<ActiveTeamCounts> {
+  const startDate = new Date(Date.UTC(year, month - 1, 1));
+  const endDate = new Date(Date.UTC(year, month, 1));
+
   const member = await prisma.member.findUnique({
-    where: { id: memberId },
-    include: { recruits: { include: { position: true } } },
+    where: { empNo: memberEmpNo },
+    select: { id: true, position: { select: { rank: true } } },
   });
 
   if (!member) return { advisors: 0, fms: 0, bms: 0 };
+  const memberId = member.id;
+  const rank = member.position?.rank ?? 0;
 
-  const advisors = member.recruits.filter(
-    (r: any) => r.isActive && r.position?.title === "FA",
-  ).length;
-  const fms = member.recruits.filter(
-    (r: any) =>
-      r.isActive &&
-      (r.position?.title === "TL" || r.position?.title === "FM"),
-  ).length;
-  const bms = member.recruits.filter(
-    (r: any) => r.isActive && r.position?.title === "BM",
-  ).length;
+  if (rank === 1 || rank === 11 || rank === 12) return { advisors: 0, fms: 0, bms: 0 };
 
-  return { advisors, fms, bms };
+  const investments = await prisma.investment.findMany({
+    where: {
+      investmentDate: { gte: startDate, lt: endDate },
+      OR: [
+        { fmId: memberId },
+        { bmId: memberId },
+        { rmId: memberId },
+        { zmId: memberId },
+        { agmId: memberId },
+        { ccoId: memberId },
+      ],
+    },
+    select: {
+      faId: true, fmId: true, bmId: true,
+      rmId: true, zmId: true, agmId: true, ccoId: true,
+    },
+  });
+
+  if (investments.length === 0) return { advisors: 0, fms: 0, bms: 0 };
+
+  const activeAdvisorIds = new Set<number>();
+  const activeFmIds = new Set<number>();
+  const activeBmIds = new Set<number>();
+
+  for (const inv of investments) {
+    // Lowest non-null rank member = the person who brought this investment
+    const lowestBringer =
+      inv.faId ?? inv.fmId ?? inv.bmId ??
+      inv.rmId ?? inv.zmId ?? inv.agmId ?? inv.ccoId ?? null;
+
+    if (!lowestBringer || lowestBringer === memberId) continue;
+
+    // Bucket by which field they occupy — exclude self from each bucket
+    if (inv.faId && inv.faId === lowestBringer) activeAdvisorIds.add(inv.faId);
+    if (inv.fmId && inv.fmId === lowestBringer && inv.fmId !== memberId) activeFmIds.add(inv.fmId);
+    if (inv.bmId && inv.bmId === lowestBringer && inv.bmId !== memberId) activeBmIds.add(inv.bmId);
+  }
+
+  const showFms = rank >= 3;   // BM and above see FM activations
+  const showBms = rank >= 4;   // RM and above see BM activations
+
+  for (const inv of investments) {
+    const lowestBringer =
+      inv.faId ?? inv.fmId ?? inv.bmId ??
+      inv.rmId ?? inv.zmId ?? inv.agmId ?? inv.ccoId ?? null;
+
+    if (!lowestBringer || lowestBringer === memberId) continue;
+
+    // Count ALL non-null members below this member on the investment
+    // Each unique member at each level counts as one activation
+    if (inv.faId && inv.faId !== memberId) activeAdvisorIds.add(inv.faId);
+    if (inv.fmId && inv.fmId !== memberId) activeFmIds.add(inv.fmId);
+    if (inv.bmId && inv.bmId !== memberId) activeBmIds.add(inv.bmId);
+  }
+
+  return {
+    advisors: activeAdvisorIds.size,
+    fms: showFms ? activeFmIds.size : 0,
+    bms: showBms ? activeBmIds.size : 0,
+  };
 }
 
-/**
- * Normalize a PositionSalary row from Prisma (Decimal → number).
- * Returns null when salary is missing (unconfigured position).
- */
+
 function normalizeSalary(salary: any) {
   if (!salary) return null;
   return {
@@ -130,8 +185,9 @@ export async function getPayrollPreview(
   month: number,
   volumes: Record<number, number> = {},
 ) {
-  const startDate = new Date(year, month - 1, 1);
-  const endDate = new Date(year, month, 1);
+
+  const startDate = new Date(Date.UTC(year, month - 1, 1));
+  const endDate = new Date(Date.UTC(year, month, 1));
 
   const branchMembers = await prisma.memberBranch.findMany({
     where: { branchId },
@@ -194,21 +250,19 @@ export async function getPayrollPreview(
       const positionTargetData = toPositionTargetData(positionTargetRow);
 
       // Active team counts only needed for probation (team active bonus)
-      const activeTeamCounts =
-        member.status === "PROBATION"
-          ? await getActiveTeamCounts(member.id)
-          : undefined;
+      // Remove the conditional — always fetch
+      const activeTeamCounts = await getActiveTeamCounts(member.empNo, year, month);
 
       const breakdown = normalizedSalary
         ? calculatePayroll(
-            normalizedSalary,
-            personalCommissionEarned,
-            member.status,
-            volumeAchieved,
-            orcEarned,
-            activeTeamCounts,
-            positionTargetData,
-          )
+          normalizedSalary,
+          personalCommissionEarned,
+          member.status,
+          volumeAchieved,
+          orcEarned,
+          activeTeamCounts,
+          positionTargetData,
+        )
         : null;
 
       return {
@@ -223,7 +277,8 @@ export async function getPayrollPreview(
         personalCommissionEarned,
         orcEarned,
         // kept as `actualCommissionEarned` for UI backward-compat
-        actualCommissionEarned: personalCommissionEarned,
+        actualCommissionEarned: personalCommissionEarned + orcEarned,
+        activeTeamCounts: activeTeamCounts ?? { advisors: 0, fms: 0, bms: 0 },
         breakdown,
       };
     }),
@@ -241,8 +296,9 @@ export async function runMonthlyPayroll(
   volumes: Record<number, number>,
   force = false,
 ) {
-  const startDate = new Date(year, month - 1, 1);
-  const endDate = new Date(year, month, 1);
+
+  const startDate = new Date(Date.UTC(year, month - 1, 1));
+  const endDate = new Date(Date.UTC(year, month, 1));
 
   const branchMembers = await prisma.memberBranch.findMany({
     where: { branchId },
@@ -272,14 +328,15 @@ export async function runMonthlyPayroll(
   const errors: string[] = [];
 
   for (const { member } of branchMembers) {
-    const alreadyProcessed = member.monthlyPayrolls?.length > 0;
+    const existingPayroll = member.monthlyPayrolls?.[0] ?? null;
+    const alreadyProcessed = existingPayroll !== null && existingPayroll.monthlyTarget > 0;
+
     if (alreadyProcessed && !force) {
       skipped++;
       continue;
     }
 
     const salary = member.position?.salary;
-    const volumeAchieved = volumes[member.id] ?? 0;
 
     const personalCommissionEarned = member.commissions.reduce(
       (sum: number, c: any) => sum + Number(c.amount),
@@ -313,35 +370,57 @@ export async function runMonthlyPayroll(
     const positionTargetRow = resolvePositionTarget(member, year, month);
     const positionTargetData = toPositionTargetData(positionTargetRow);
 
-    const activeTeamCounts =
-      member.status === "PROBATION"
-        ? await getActiveTeamCounts(member.id)
-        : undefined;
+    const activeTeamCounts = await getActiveTeamCounts(member.empNo, year, month);
+
+
+    const dbVolumeAchieved = existingPayroll?.volumeAchieved
+      ? Number(existingPayroll.volumeAchieved)
+      : (volumes[member.id] ?? 0);
 
     const breakdown = calculatePayroll(
       normalizedSalary,
       personalCommissionEarned,
       member.status,
-      volumeAchieved,
+      dbVolumeAchieved,  // ← from DB, not UI
       orcEarned,
       activeTeamCounts,
       positionTargetData,
     );
 
+    const payrollData = {
+      basicSalaryPermanent: breakdown.basicSalaryPermanent,
+      monthlyTarget: breakdown.monthlyTarget,
+      // volumeAchieved intentionally NOT included — owned by approveInvestment
+      incentiveEarned: breakdown.incentiveEarned,
+      incentivePartialEarned: breakdown.incentivePartialEarned,
+      vehicleEarned: breakdown.vehicleEarned,
+      vehicleHit: breakdown.vehicleHit,
+      activationAllowanceEarned: breakdown.teamActiveEarned,
+      orcEarned: breakdown.orcEarned,
+      commissionEarned: breakdown.commissionEarned,
+      epfDeduction: breakdown.epfDeduction,
+      epfEmployer: breakdown.epfEmployer,
+      etfEmployer: breakdown.etfEmployer,
+      incentiveHit: breakdown.incentiveHit,
+      incentivePartialHit: breakdown.incentivePartialHit,
+      grossPay: breakdown.grossPay,
+      netPay: breakdown.netPay,
+    };
+
     try {
-      await prisma.monthlyPayroll.upsert({
-        where: {
-          memberId_year_month: { memberId: member.id, year, month },
-        },
-        create: { memberId: member.id, year, month, ...breakdown },
-        update: { ...breakdown },
-      });
-      processed++;
+    await prisma.monthlyPayroll.upsert({
+      where: { memberId_year_month: { memberId: member.id, year, month } },
+      create: {
+        memberId: member.id, year, month,
+        volumeAchieved: dbVolumeAchieved,
+        ...payrollData
+      },
+      update: { ...payrollData }, // ← volumeAchieved NOT in update
+    });
+    processed++
     } catch (e) {
-      errors.push(
-        `${member.nameWithInitials ?? member.empNo}: ${String(e)}`,
-      );
-    }
+    errors.push(`${member.nameWithInitials ?? member.empNo}: ${String(e)}`);
+  }
   }
 
   revalidatePath("/features/hr/payroll");

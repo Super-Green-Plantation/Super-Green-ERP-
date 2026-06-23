@@ -67,6 +67,16 @@ export async function createEmployee(data: EmpData) {
 
     // ── STEP 2: DB Transaction ───────────────────────────────────────────
     const result = await prisma.$transaction(async (tx) => {
+
+      const reportingPersons = data.recruitedById
+        ? await buildReportingChain(
+          await prisma.member
+            .findUnique({ where: { id: data.recruitedById }, select: { empNo: true } })
+            .then((m) => m?.empNo ?? "")
+        )
+        : data.reportingPersons ?? [];
+
+
       const genEmpNo = await generateEmpNo(tx);
 
       const empNo =
@@ -103,7 +113,7 @@ export async function createEmployee(data: EmpData) {
           gender: data.gender || null,
           civilStatus: data.civilStatus || null,
           address: data.address || null,
-          reportingPersons: data.reportingPersons ?? [],
+          reportingPersons: reportingPersons,
           dateOfJoin: data.dateOfJoin ? new Date(data.dateOfJoin) : null,
           appointmentLetter: data.appointmentLetter || null,
           confirmation: data.confirmation || null,
@@ -351,6 +361,13 @@ export async function updateEmployee(memberId: number, data: EmpData) {
       // remove old branches
       await tx.memberBranch.deleteMany({ where: { memberId } });
 
+      const reportingPersons = data.recruitedById
+        ? await buildReportingChain(
+          await prisma.member
+            .findUnique({ where: { id: data.recruitedById }, select: { empNo: true } })
+            .then((m) => m?.empNo ?? "")
+        )
+        : data.reportingPersons ?? [];
 
       return await tx.member.update({
         where: { id: memberId },
@@ -383,8 +400,7 @@ export async function updateEmployee(memberId: number, data: EmpData) {
           profilePic: data.profilePic,
 
           // Employment
-          reportingPersons: data.reportingPersons ?? [],
-          dateOfJoin: data.dateOfJoin
+          reportingPersons, dateOfJoin: data.dateOfJoin
             ? new Date(data.dateOfJoin)
             : null,
           appointmentLetter: data.appointmentLetter || null,
@@ -626,7 +642,7 @@ export async function searchEmployees(searchText: string) {
 }
 
 export async function getEmployeeMonthlyGoal(memberId: number, year: number, month: number) {
-    console.log("getEmployeeMonthlyGoal called:", { memberId, year, month });
+  console.log("getEmployeeMonthlyGoal called:", { memberId, year, month });
 
   try {
     // Try MonthlyPayroll first
@@ -640,7 +656,7 @@ export async function getEmployeeMonthlyGoal(memberId: number, year: number, mon
       },
     });
 
-        console.log("payroll result:", payroll);
+    console.log("payroll result:", payroll);
 
 
     if (payroll) {
@@ -732,4 +748,21 @@ export async function searchMembersByName(query: string) {
     },
     take: 8,
   });
+}
+
+/**
+ * Builds the full upline reporting chain for a member.
+ * Given a direct manager's empNo, returns [managerEmpNo, ...their upline]
+ * 
+ * Example: new BM reports to PM000005 (PER_AGM)
+ *   PM000005.reportingPersons = ["PM000060"]
+ *   → result = ["PM000005", "PM000060"]
+ */
+async function buildReportingChain(directManagerEmpNo: string): Promise<string[]> {
+  const manager = await prisma.member.findUnique({
+    where: { empNo: directManagerEmpNo },
+    select: { empNo: true, reportingPersons: true },
+  });
+  if (!manager) return [directManagerEmpNo];
+  return [directManagerEmpNo, ...manager.reportingPersons];
 }

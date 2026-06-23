@@ -36,7 +36,7 @@ export default function PayrollPage() {
   const [running, setRunning] = useState(false);
 
   console.log(preview);
-  
+
   // Load branches once
   useEffect(() => {
     getBranches().then((data: any[]) => {
@@ -52,23 +52,26 @@ export default function PayrollPage() {
     try {
       const rows = await getPayrollPreview(selectedBranchId, year, month, volumes);
       setPreview(rows);
-      // Seed volumes from existing payroll records on first load
-      const seedVolumes: Record<number, number> = {};
-      for (const r of rows) {
-        if (!(r.memberId in volumes)) {
-          seedVolumes[r.memberId] = r.volumeAchieved ?? 0;
+
+      console.log("rows ---------- ", rows);
+      
+
+      // Seed volumes from DB — only for members not yet in local state
+      setVolumes((prev) => {
+        const next = { ...prev };
+        for (const r of rows) {
+          if (!(r.memberId in next) && r.volumeAchieved > 0) {
+            next[r.memberId] = r.volumeAchieved;
+          }
         }
-      }
-      if (Object.keys(seedVolumes).length > 0) {
-        setVolumes((prev) => ({ ...seedVolumes, ...prev }));
-      }
+        return next;
+      });
     } catch {
       toast.error("Failed to load preview");
     } finally {
       setLoadingPreview(false);
     }
-  }, [selectedBranchId, year, month]); // intentionally excludes volumes to avoid loop
-
+  }, [selectedBranchId, year, month]); // keep volumes excluded to avoid loop
   useEffect(() => {
     loadPreview();
   }, [loadPreview]);
@@ -120,7 +123,7 @@ export default function PayrollPage() {
 
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-6">
+    <div className="max-w-8xl mx-auto px-4 py-8 space-y-6">
 
       {/* Header */}
       <div>
@@ -239,6 +242,9 @@ export default function PayrollPage() {
                 <tr className="border-b border-border bg-muted/30">
                   <th className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Employee</th>
                   <th className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Position</th>
+                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                    Active Team
+                  </th>
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Volume Achieved</th>
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Basic</th>
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Incentive</th>
@@ -263,12 +269,23 @@ export default function PayrollPage() {
                         <span className="text-xs font-bold text-muted-foreground">{row.position}</span>
                         <div className="flex">
                           <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider ${row.status === "PERMANENT"
-                              ? "bg-green-500/10 text-green-600 border-green-500/20"
-                              : "bg-amber-500/10 text-amber-600 border-amber-500/20"
+                            ? "bg-green-500/10 text-green-600 border-green-500/20"
+                            : "bg-amber-500/10 text-amber-600 border-amber-500/20"
                             }`}>
                             {row.status === "PERMANENT" ? "Permanent" : "Probation"}
                           </span>
                         </div>
+                      </div>
+                    </td>
+
+                    <td className="px-5 py-4 text-right">
+                      <div className="flex flex-col items-end gap-0.5">
+                        <span className="text-xs font-bold text-foreground">
+                          {row.activeTeamCounts?.advisors ?? 0} FA
+                        </span>
+                        <span className="text-[10px] text-muted-foreground font-medium">
+                          {row.activeTeamCounts?.fms ?? 0} FM · {row.activeTeamCounts?.bms ?? 0} BM
+                        </span>
                       </div>
                     </td>
 
@@ -287,44 +304,44 @@ export default function PayrollPage() {
                         No salary config — will be skipped
                       </td> */}
                     {/* // ) : ( */}
-                      <>
-                        <td className="px-5 py-4 text-right text-xs font-bold text-muted-foreground">
-                          {fmt(row.breakdown?.basicSalaryPermanent ?? 0)}
-                        </td>
-                        <td className="px-5 py-4 text-right text-xs font-bold">
-                          <span className={row.breakdown?.incentiveHit ? "text-green-600" : "text-muted-foreground/40"}>
-                            {fmt(row.breakdown?.incentiveEarned ?? 0)}
-                            {row.breakdown?.incentiveHit && <CheckCircle2 className="inline w-3 h-3 ml-1" />}
-                          </span>
-                        </td>
-                        <td className="px-5 py-4 text-right text-xs font-bold">
-                          <span className={row.breakdown?.allowanceHit ? "text-primary" : "text-muted-foreground/40"}>
-                            {fmt(row.breakdown?.allowanceEarned ?? 0)}
-                            {row.breakdown?.allowanceHit && <CheckCircle2 className="inline w-3 h-3 ml-1" />}
-                          </span>
-                        </td>
-                        <td className="px-5 py-4 text-right text-xs font-bold">
-                          <span className={row.breakdown?.vehicleHit ? "text-primary" : "text-muted-foreground/40"}>
-                            {fmt(row.breakdown?.vehicleEarned ?? 0)}
-                            {row.breakdown?.vehicleHit && <CheckCircle2 className="inline w-3 h-3 ml-1" />}
-                          </span>
-                        </td>
-                        <td className="px-5 py-4 text-right text-xs font-bold">
-                          <span className={row.breakdown?.teamActiveHit ? "text-primary" : "text-muted-foreground/40"}>
-                            {fmt(row.breakdown?.teamActiveEarned ?? 0)}
-                            {row.breakdown?.teamActiveHit && <CheckCircle2 className="inline w-3 h-3 ml-1" />}
-                          </span>
-                        </td>
-                        <td className="px-5 py-4 text-right text-xs font-bold text-primary">
-                          {fmt(row.actualCommissionEarned ?? 0)}
-                        </td>
-                        <td className="px-5 py-4 text-right text-xs font-bold text-destructive">
-                          -{fmt(row.breakdown?.epfDeduction ?? 0)}
-                        </td>
-                        <td className="px-5 py-4 text-right text-sm font-bold text-foreground">
-                          {fmt(row.breakdown?.netPay ?? 0)}
-                        </td>
-                      </>
+                    <>
+                      <td className="px-5 py-4 text-right text-xs font-bold text-muted-foreground">
+                        {fmt(row.breakdown?.basicSalaryPermanent ?? 0)}
+                      </td>
+                      <td className="px-5 py-4 text-right text-xs font-bold">
+                        <span className={row.breakdown?.incentiveHit ? "text-green-600" : "text-muted-foreground/40"}>
+                          {fmt(row.breakdown?.incentiveEarned ?? 0)}
+                          {row.breakdown?.incentiveHit && <CheckCircle2 className="inline w-3 h-3 ml-1" />}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 text-right text-xs font-bold">
+                        <span className={row.breakdown?.allowanceHit ? "text-primary" : "text-muted-foreground/40"}>
+                          {fmt(row.breakdown?.allowanceEarned ?? 0)}
+                          {row.breakdown?.allowanceHit && <CheckCircle2 className="inline w-3 h-3 ml-1" />}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 text-right text-xs font-bold">
+                        <span className={row.breakdown?.vehicleHit ? "text-primary" : "text-muted-foreground/40"}>
+                          {fmt(row.breakdown?.vehicleEarned ?? 0)}
+                          {row.breakdown?.vehicleHit && <CheckCircle2 className="inline w-3 h-3 ml-1" />}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 text-right text-xs font-bold">
+                        <span className={row.breakdown?.teamActiveHit ? "text-primary" : "text-muted-foreground/40"}>
+                          {fmt(row.breakdown?.teamActiveEarned ?? 0)}
+                          {row.breakdown?.teamActiveHit && <CheckCircle2 className="inline w-3 h-3 ml-1" />}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 text-right text-xs font-bold text-primary">
+                        {fmt(row.actualCommissionEarned ?? 0)}
+                      </td>
+                      <td className="px-5 py-4 text-right text-xs font-bold text-destructive">
+                        -{fmt(row.breakdown?.epfDeduction ?? 0)}
+                      </td>
+                      <td className="px-5 py-4 text-right text-sm font-bold text-foreground">
+                        {fmt(row.breakdown?.netPay ?? 0)}
+                      </td>
+                    </>
                     {/* // )} */}
 
                     <td className="px-5 py-4 text-center">

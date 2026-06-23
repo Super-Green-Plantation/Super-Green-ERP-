@@ -69,22 +69,41 @@ const Page = () => {
   }, [clientData, selectedInvestmentId]);
 
   // ── Derived: advisor empNo from investment.fa (read-only, no user input) ────
-  const advisorEmpNo: string = (selectedInvestment as any)?.fa?.empNo ?? "";
-  const advisorName: string = (selectedInvestment as any)?.fa?.nameWithInitials ?? "";
+  // The advisor is whoever holds the lowest rank on this investment
+  // FA → FM → BM → RM → ZM → AGM → CCO (first non-null wins)
+  const advisorMember = (selectedInvestment as any)
+    ? (
+      (selectedInvestment as any).fa ??
+      (selectedInvestment as any).fm ??
+      (selectedInvestment as any).bm ??
+      (selectedInvestment as any).rm ??
+      (selectedInvestment as any).zm ??
+      (selectedInvestment as any).agm ??
+      (selectedInvestment as any).cco ??
+      null
+    )
+    : null;
+
+  const advisorEmpNo: string = advisorMember?.empNo ?? "";
+  const advisorName: string = advisorMember?.nameWithInitials ?? "";
 
   // ── Derived: hierarchy members from investment snapshot ──────────────────────
   // FA is excluded here — FA's personal commission is handled via advisorEmpNo
   const hierarchyMembers = useMemo<Member[]>(() => {
-    if (!selectedInvestment) return [];
+    if (!selectedInvestment || !advisorEmpNo) return [];
+    // All hierarchy members ABOVE the advisor (exclude whoever is the advisor)
     return [
+      (selectedInvestment as any).fa,
       (selectedInvestment as any).fm,
       (selectedInvestment as any).bm,
       (selectedInvestment as any).rm,
       (selectedInvestment as any).zm,
       (selectedInvestment as any).agm,
       (selectedInvestment as any).cco,
-    ].filter(Boolean) as Member[];
-  }, [selectedInvestment]);
+    ]
+      .filter(Boolean)
+      .filter((m: any) => m.empNo !== advisorEmpNo) as Member[];
+  }, [selectedInvestment, advisorEmpNo]);
 
   const hasSavedHierarchy = hierarchyMembers.length > 0;
 
@@ -196,8 +215,8 @@ const Page = () => {
         setCommissionDetails(result.receipt);
         await createProfit(result.receipt);
         result.receipt.alreadyProcessed
-          ? toast.warning("Record already exists in ledger.")
-          : toast.success("Ledger updated successfully.");
+          ? toast.warning("Record already exists.")
+          : toast.success("Commission updated successfully.");
       } else {
         toast.error(result.error?.message ?? "Processing failed.");
       }
@@ -465,7 +484,7 @@ const Page = () => {
                 {selectedInvestmentId && !advisorEmpNo && (
                   <div className="rounded-lg bg-amber-500/10 border border-amber-500/20 px-3 py-2">
                     <p className="text-[10px] font-bold text-amber-400">
-                      No advisor (FA) saved on this investment. Cannot process.
+                      No members saved on this investment. Cannot process.
                     </p>
                   </div>
                 )}

@@ -15,15 +15,15 @@ model Branch {
   id          Int            @id @default(autoincrement())
   status      Status         @default(Active)
   parentId    Int?
+  zoneId      Int?
   ActivityLog ActivityLog[]
   parent      Branch?        @relation("BranchHierarchy", fields: [parentId], references: [id])
   children    Branch[]       @relation("BranchHierarchy")
+  zone        Zone?          @relation(fields: [zoneId], references: [id])
   client      Client[]
   commission  Commission[]
   investments Investment[]
   members     MemberBranch[]
-  zoneId      Int?
-  zone        Zone?          @relation(fields: [zoneId], references: [id])
 }
 
 model Position {
@@ -81,8 +81,14 @@ model MonthlyPayroll {
   netPay                    Float    @default(0)
   createdAt                 DateTime @default(now())
   basicSalaryPermanent      Float    @default(0)
-  member                    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
   activationAllowanceEarned Float    @default(0)
+  incentivePartialEarned    Float    @default(0)
+  teamActiveEarned          Float    @default(0)
+  vehicleEarned             Float    @default(0)
+  incentivePartialHit       Boolean  @default(false)
+  teamActiveHit             Boolean  @default(false)
+  vehicleHit                Boolean  @default(false)
+  member                    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
   @@unique([memberId, year, month])
 }
@@ -103,15 +109,15 @@ model PositionSalary {
   allowanceThresholdProbation Float    @default(0.75)
   basicSalaryPermanent        Float    @default(0)
   basicSalaryProbation        Float    @default(0)
-  incentivePartialThreshold   Float    @default(0.75)
   incentivePartialAmount      Float    @default(0)
-  vehicleThresholdPct         Float    @default(0)
-  vehicleAmount               Float    @default(0)
-  teamActiveThresholdPct      Float    @default(0)
-  teamActiveAmount            Float    @default(0)
+  incentivePartialThreshold   Float    @default(0.75)
   minActiveAdvisors           Int      @default(0)
-  minActiveFMs                Int      @default(0)
   minActiveBMs                Int      @default(0)
+  minActiveFMs                Int      @default(0)
+  teamActiveAmount            Float    @default(0)
+  teamActiveThresholdPct      Float    @default(0)
+  vehicleAmount               Float    @default(0)
+  vehicleThresholdPct         Float    @default(0)
   position                    Position @relation(fields: [positionId], references: [id])
 }
 
@@ -134,14 +140,7 @@ model MemberZone {
   @@unique([memberId, zoneId])
 }
 
-enum ApprovalStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
 model Member {
-  totalCommission        Float               @default(0)
   createdAt              DateTime            @default(now())
   updatedAt              DateTime?
   id                     Int                 @id @default(autoincrement())
@@ -171,48 +170,44 @@ model Member {
   lastClientRegisteredAt DateTime?
   reportingPersons       String[]
   etfNo                  String?
-  recruitedById          Int?
-  recruitedBy            Member?             @relation("RecruitedBy", fields: [recruitedById], references: [id])
-  recruits               Member[]            @relation("RecruitedBy")
   isActive               Boolean             @default(true)
   channel                Channel             @default(Chanel_01)
+  approvalStatus         ApprovalStatus      @default(PENDING)
+  recruitedById          Int?
+  reviewNote             String?
+  reviewedAt             DateTime?
+  reviewedBy             String?
+  submittedAt            DateTime            @default(now())
+  totalCommission        Float?
   activityLog            ActivityLog[]
+  clientsAsAGM           Client[]            @relation("ClientAGM")
+  clientsAsBM            Client[]            @relation("ClientBM")
+  clientsAsCCO           Client[]            @relation("ClientCCO")
   createdClients         Client[]            @relation("CreatedByMember")
+  clientsAsFA            Client[]            @relation("ClientFA")
+  clientsAsFM            Client[]            @relation("ClientFM")
   clients                Client[]
+  clientsAsRM            Client[]            @relation("ClientRM")
+  clientsAsZM            Client[]            @relation("ClientZM")
   commissions            Commission[]
   advisorInvestments     Investment[]        @relation("AdvisorInvestments")
+  investmentsAsAGM       Investment[]        @relation("InvestmentAGM")
+  investmentsAsBM        Investment[]        @relation("InvestmentBM")
+  investmentsAsCCO       Investment[]        @relation("InvestmentCCO")
+  investments            Investment[]        @relation("InvestmentCreatedBy")
+  investmentsAsFA        Investment[]        @relation("InvestmentFA")
+  investmentsAsFM        Investment[]        @relation("InvestmentFM")
+  investmentsAsRM        Investment[]        @relation("InvestmentRM")
+  investmentsAsZM        Investment[]        @relation("InvestmentZM")
   position               Position            @relation(fields: [positionId], references: [id])
+  recruitedBy            Member?             @relation("RecruitedBy", fields: [recruitedById], references: [id])
+  recruits               Member[]            @relation("RecruitedBy")
   user                   User?               @relation(fields: [userId], references: [id], onDelete: Cascade)
   branches               MemberBranch[]
+  zones                  MemberZone[]
+  monthlyActivations     MonthlyActivation[]
   monthlyEvaluations     MonthlyEvaluation[]
   monthlyPayrolls        MonthlyPayroll[]
-
-  approvalStatus ApprovalStatus @default(PENDING)
-  submittedAt    DateTime       @default(now())
-  reviewedAt     DateTime?
-  reviewedBy     String? // FK to Employee
-  reviewNote     String? // reason for rejection or any comment
-
-  clientsAsFA  Client[] @relation("ClientFA")
-  clientsAsFM  Client[] @relation("ClientFM")
-  clientsAsBM  Client[] @relation("ClientBM")
-  clientsAsRM  Client[] @relation("ClientRM")
-  clientsAsZM  Client[] @relation("ClientZM")
-  clientsAsAGM Client[] @relation("ClientAGM")
-  clientsAsCCO Client[] @relation("ClientCCO")
-
-  investmentsAsFA  Investment[] @relation("InvestmentFA")
-  investmentsAsFM  Investment[] @relation("InvestmentFM")
-  investmentsAsBM  Investment[] @relation("InvestmentBM")
-  investmentsAsRM  Investment[] @relation("InvestmentRM")
-  investmentsAsZM  Investment[] @relation("InvestmentZM")
-  investmentsAsAGM Investment[] @relation("InvestmentAGM")
-  investmentsAsCCO Investment[] @relation("InvestmentCCO")
-
-  monthlyActivations MonthlyActivation[]
-  zones              MemberZone[]
-
-  investments Investment[] @relation("InvestmentCreatedBy")
 }
 
 model PositionTarget {
@@ -295,94 +290,87 @@ model Investment {
   paymentSlip          String?
   investmentRates      Float[]        @default([])
   status               InvStatus      @default(Active)
+  agmId                Int?
+  approvalStatus       ApprovalStatus @default(PENDING)
+  bmId                 Int?
+  ccoId                Int?
+  createdById          Int?
+  faId                 Int?
+  fmId                 Int?
+  renewedFromId        Int?
+  reviewNote           String?
+  reviewedAt           DateTime?
+  reviewedBy           String?
+  rmId                 Int?
+  submittedAt          DateTime       @default(now())
+  zmId                 Int?
   commission           Commission[]
   advisor              Member?        @relation("AdvisorInvestments", fields: [advisorId], references: [id])
+  agm                  Member?        @relation("InvestmentAGM", fields: [agmId], references: [id])
   beneficiary          Beneficiary?   @relation(fields: [beneficiaryId], references: [id])
+  bm                   Member?        @relation("InvestmentBM", fields: [bmId], references: [id])
   branch               Branch         @relation(fields: [branchId], references: [id])
+  cco                  Member?        @relation("InvestmentCCO", fields: [ccoId], references: [id])
   client               Client         @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  createdBy            Member?        @relation("InvestmentCreatedBy", fields: [createdById], references: [id])
+  fa                   Member?        @relation("InvestmentFA", fields: [faId], references: [id])
+  fm                   Member?        @relation("InvestmentFM", fields: [fmId], references: [id])
   nominee              Nominee?       @relation(fields: [nomineeId], references: [id])
   plan                 FinancialPlan? @relation(fields: [planId], references: [id])
+  renewedFrom          Investment?    @relation("RenewalChain", fields: [renewedFromId], references: [id])
+  renewals             Investment[]   @relation("RenewalChain")
+  rm                   Member?        @relation("InvestmentRM", fields: [rmId], references: [id])
+  zm                   Member?        @relation("InvestmentZM", fields: [zmId], references: [id])
   profit               Profit?
-  createdById          Int?
-  createdBy            Member?        @relation("InvestmentCreatedBy", fields: [createdById], references: [id])
-
-  approvalStatus ApprovalStatus @default(PENDING)
-  submittedAt    DateTime       @default(now())
-  reviewedAt     DateTime?
-  reviewedBy     String? // FK to Employee
-  reviewNote     String? // reason for rejection or any comment
-
-  renewedFromId Int? // links new → old investment
-  renewedFrom   Investment?  @relation("RenewalChain", fields: [renewedFromId], references: [id])
-  renewals      Investment[] @relation("RenewalChain")
-
-  faId  Int?
-  fmId  Int?
-  bmId  Int?
-  rmId  Int?
-  zmId  Int?
-  agmId Int?
-  ccoId Int?
-
-  fa  Member? @relation("InvestmentFA", fields: [faId], references: [id])
-  fm  Member? @relation("InvestmentFM", fields: [fmId], references: [id])
-  bm  Member? @relation("InvestmentBM", fields: [bmId], references: [id])
-  rm  Member? @relation("InvestmentRM", fields: [rmId], references: [id])
-  zm  Member? @relation("InvestmentZM", fields: [zmId], references: [id])
-  agm Member? @relation("InvestmentAGM", fields: [agmId], references: [id])
-  cco Member? @relation("InvestmentCCO", fields: [ccoId], references: [id])
 }
 
 model Client {
-  id             Int            @id @default(autoincrement())
-  email          String?        @unique
-  address        String
-  branchId       Int
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  dateOfBirth    DateTime?
-  drivingLicense String?        @unique
-  fullName       String
-  nic            String?        @unique
-  occupation     String?
-  passportNo     String?        @unique
-  phoneLand      String?
-  phoneMobile    String?
-  status         Status         @default(Active)
-  idBack         String?
-  idFront        String?
-  signature      String?
-  memberId       Int?
-  createdById    Int?
-  approvalStatus ApprovalStatus @default(PENDING)
-  submittedAt    DateTime       @default(now())
-  reviewedAt     DateTime?
-  reviewedBy     String? // FK to Employee
-  reviewNote     String? // reason for rejection or any comment
-
+  id                    Int                     @id @default(autoincrement())
+  email                 String?                 @unique
+  address               String
+  branchId              Int
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  dateOfBirth           DateTime?
+  drivingLicense        String?                 @unique
+  fullName              String
+  nic                   String?                 @unique
+  occupation            String?
+  passportNo            String?                 @unique
+  phoneLand             String?
+  phoneMobile           String?
+  status                Status                  @default(Active)
+  idBack                String?
+  idFront               String?
+  signature             String?
+  memberId              Int?
+  createdById           Int?
+  agmId                 Int?
+  bmId                  Int?
+  ccoId                 Int?
+  faId                  Int?
+  fmId                  Int?
+  rmId                  Int?
+  zmId                  Int?
+  approvalStatus        ApprovalStatus          @default(PENDING)
+  reviewNote            String?
+  reviewedAt            DateTime?
+  reviewedBy            String?
+  submittedAt           DateTime                @default(now())
   beneficiaries         Beneficiary[]
+  agm                   Member?                 @relation("ClientAGM", fields: [agmId], references: [id])
+  bm                    Member?                 @relation("ClientBM", fields: [bmId], references: [id])
   branch                Branch                  @relation(fields: [branchId], references: [id])
+  cco                   Member?                 @relation("ClientCCO", fields: [ccoId], references: [id])
   createdBy             Member?                 @relation("CreatedByMember", fields: [createdById], references: [id])
+  fa                    Member?                 @relation("ClientFA", fields: [faId], references: [id])
+  fm                    Member?                 @relation("ClientFM", fields: [fmId], references: [id])
   member                Member?                 @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  rm                    Member?                 @relation("ClientRM", fields: [rmId], references: [id])
+  zm                    Member?                 @relation("ClientZM", fields: [zmId], references: [id])
   ClientDocumentRequest ClientDocumentRequest[]
   investments           Investment[]
   nominees              Nominee[]
-
-  faId  Int?
-  fmId  Int?
-  bmId  Int?
-  rmId  Int?
-  zmId  Int?
-  agmId Int?
-  ccoId Int?
-
-  fa  Member? @relation("ClientFA", fields: [faId], references: [id])
-  fm  Member? @relation("ClientFM", fields: [fmId], references: [id])
-  bm  Member? @relation("ClientBM", fields: [bmId], references: [id])
-  rm  Member? @relation("ClientRM", fields: [rmId], references: [id])
-  zm  Member? @relation("ClientZM", fields: [zmId], references: [id])
-  agm Member? @relation("ClientAGM", fields: [agmId], references: [id])
-  cco Member? @relation("ClientCCO", fields: [ccoId], references: [id])
 }
 
 model Beneficiary {
@@ -520,6 +508,26 @@ model Quotation {
   @@index([createdAt])
 }
 
+model MonthlyActivation {
+  id              Int      @id @default(autoincrement())
+  memberId        Int
+  year            Int
+  month           Int
+  activationCount Int      @default(0)
+  isActivated     Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  member          Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([memberId, year, month])
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum Status {
   Active
   Inactive
@@ -578,8 +586,8 @@ enum EmployeeStatus {
 enum Channel {
   Chanel_01
   Chanel_02
-  Chanel_03
   Micro
+  Chanel_03
 }
 
 enum InvStatus {
@@ -635,18 +643,4 @@ enum QuotationFrequency {
   QUARTERLY
   SEMI_ANNUAL
   ANNUAL
-}
-
-model MonthlyActivation {
-  id              Int      @id @default(autoincrement())
-  memberId        Int
-  year            Int
-  month           Int
-  activationCount Int      @default(0)
-  isActivated     Boolean  @default(false)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  member          Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
-
-  @@unique([memberId, year, month])
 }

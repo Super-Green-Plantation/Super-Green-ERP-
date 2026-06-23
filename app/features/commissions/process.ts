@@ -166,7 +166,7 @@ export async function processCommissions(data: {
           branchId,
           amount: personalCommissionAmount,
           type: "PERSONAL",
-          refNumber: generateCommissionRef()
+          refNumber:await generateCommissionRef()
         } as any,
         include: { member: { include: { position: true } } },
       });
@@ -191,7 +191,7 @@ export async function processCommissions(data: {
         await tx.member.update({ where: { empNo: upline.empNo }, data: { totalCommission: { increment: uplineAmount } } });
 
         const uplineCommissionRecord = await tx.commission.create({
-          data: { investmentId, memberEmpNo: upline.empNo, amount: uplineAmount, type: "UPLINE", refNumber: generateCommissionRef(), branchId } as any,
+          data: { investmentId, memberEmpNo: upline.empNo, amount: uplineAmount, type: "UPLINE", refNumber:await generateCommissionRef(), branchId } as any,
           include: { member: { include: { position: true } } },
         });
         createdCommissions.push(uplineCommissionRecord);
