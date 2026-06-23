@@ -198,6 +198,7 @@ export async function getPayrollPreview(
             include: { salary: true, orc: true, positionTargets: true },
           },
           monthlyPayrolls: { where: { year, month } },
+          branches: true,
           // Personal commission: direct business written by this member
           commissions: {
             where: {
@@ -212,9 +213,22 @@ export async function getPayrollPreview(
       },
     },
   });
+  const filteredMembers = branchMembers.filter(({ member }: any) => {
+    const rank = member.position?.rank ?? 0;
+
+    // Management roles (ADMIN, HR, IT etc.) — rank 100+ but isManagement=true
+    // COO (104), GM (105) are NOT management, they're sales hierarchy → filter by primary
+    // Pure management (ADMIN=100, HR=101, ACC=102, IT=103) → show in their branch
+    if (rank < 4) return true;  // FA, TL, BM — show in any branch they belong to
+
+    // Check primary branch for rank 4 and above (including COO/GM)
+    const primaryBranch = member.branches?.find((b: any) => b.isPrimary === true);
+    return primaryBranch?.branchId === branchId;
+  });
+
 
   const rows = await Promise.all(
-    branchMembers.map(async ({ member }: any) => {
+    filteredMembers.map(async ({ member }: any) => {
       const salary = member.position?.salary;
       const existing = member.monthlyPayrolls?.[0] ?? null;
       const volumeAchieved =
@@ -309,6 +323,7 @@ export async function runMonthlyPayroll(
             include: { salary: true, orc: true, positionTargets: true },
           },
           monthlyPayrolls: { where: { year, month } },
+          branches: true,
           commissions: {
             where: {
               type: "PERSONAL",
@@ -323,14 +338,23 @@ export async function runMonthlyPayroll(
     },
   });
 
+  const HEAD_OFFICE_BRANCH_ID = 6;
+  const HIGH_RANK_THRESHOLD = 4;
+
+  const filteredMembers = branchMembers.filter(({ member }: any) => {
+    const rank = member.position?.rank ?? 0;
+    if (rank < HIGH_RANK_THRESHOLD) return true;
+    const primaryBranch = member.branches?.find((b: any) => b.isPrimary);
+    return primaryBranch?.branchId === branchId;
+  });
+
   let processed = 0;
   let skipped = 0;
   const errors: string[] = [];
 
-  for (const { member } of branchMembers) {
+  for (const { member } of filteredMembers) {
     const existingPayroll = member.monthlyPayrolls?.[0] ?? null;
-    const alreadyProcessed = existingPayroll !== null && existingPayroll.monthlyTarget > 0;
-
+    const alreadyProcessed = existingPayroll !== null && Number(existingPayroll.monthlyTarget) > 0;
     if (alreadyProcessed && !force) {
       skipped++;
       continue;
@@ -408,19 +432,19 @@ export async function runMonthlyPayroll(
     };
 
     try {
-    await prisma.monthlyPayroll.upsert({
-      where: { memberId_year_month: { memberId: member.id, year, month } },
-      create: {
-        memberId: member.id, year, month,
-        volumeAchieved: dbVolumeAchieved,
-        ...payrollData
-      },
-      update: { ...payrollData }, // ← volumeAchieved NOT in update
-    });
-    processed++
+      await prisma.monthlyPayroll.upsert({
+        where: { memberId_year_month: { memberId: member.id, year, month } },
+        create: {
+          memberId: member.id, year, month,
+          volumeAchieved: dbVolumeAchieved,
+          ...payrollData
+        },
+        update: { ...payrollData }, // ← volumeAchieved NOT in update
+      });
+      processed++
     } catch (e) {
-    errors.push(`${member.nameWithInitials ?? member.empNo}: ${String(e)}`);
-  }
+      errors.push(`${member.nameWithInitials ?? member.empNo}: ${String(e)}`);
+    }
   }
 
   revalidatePath("/features/hr/payroll");
