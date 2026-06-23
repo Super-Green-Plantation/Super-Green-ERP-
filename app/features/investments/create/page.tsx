@@ -3,11 +3,10 @@
 import { useEffect, useState, useRef } from "react";
 import { getFinancialPlans } from "@/app/features/financial_plans/actions";
 import { getClients } from "@/app/features/clients/actions";
-import
- {
-  createInvestmentForExistingClient,
-  updateInvestment,
-  rejectInvestment,
+import {
+createInvestmentForExistingClient,
+updateInvestment,
+rejectInvestment,
 } from "@/app/features/investments/actions";
 import { useSessionUser } from "@/app/hooks/useSessionUser";
 import { FinancialPlan } from "@/app/types/FinancialPlan";
@@ -35,34 +34,43 @@ type NomineeFields = {
 };
 
 // ---------- sub-components (unchanged) ----------
-function SectionHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
+function SectionHeader({ icon, title, action }: { icon: React.ReactNode; title: string; action?: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-2 pb-3 border-b border-border">
-      <span className="text-muted-foreground">{icon}</span>
-      <h3 className="text-xs font-black text-foreground uppercase tracking-widest">{title}</h3>
+    <div className="flex items-center justify-between border-b border-border pb-3 mb-1">
+      <div className="flex items-center gap-2 text-primary font-semibold">
+        <span className="shrink-0">{icon}</span>
+        <span className="text-[18px] font-semibold uppercase tracking-tight">{title}</span>
+      </div>
+      {action && <div>{action}</div>}
     </div>
   );
 }
 
 function Field({
-  label, value, onChange, placeholder, disabled, type = "text", readOnly, error,
+  label,
+  value,
+  onChange,
+  disabled,
+  readOnly,
+  placeholder,
+  type = "text",
+  error,
 }: {
-  label: string; value: string; onChange?: (v: string) => void;
-  placeholder?: string; disabled?: boolean; readOnly?: boolean; type?: string; error?: string;
+  label: string;
+  value: string;
+  onChange?: (v: string) => void;
+  disabled?: boolean;
+  readOnly?: boolean;
+  placeholder?: string;
+  type?: string;
+  error?: string;
 }) {
   return (
-    <div>
-      <label className="block text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1">
+    <div className="space-y-1">
+      <label className="text-[11px] font-semibold text-muted-foreground uppercase block">
         {label}
       </label>
-      <div className={`flex items-center  rounded-xl overflow-hidden transition-all bg-card
-        ${disabled || readOnly
-          ? "border-muted bg-muted/50"
-          : error
-            ? "border-red-400 focus-within:border-red-400 focus-within:ring-2 focus-within:ring-red-400/10"
-            : "border-border focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10"
-        }`}
-      >
+      <div className="relative">
         <input
           type={type}
           value={value}
@@ -70,7 +78,12 @@ function Field({
           readOnly={readOnly}
           placeholder={placeholder}
           onChange={e => onChange?.(e.target.value)}
-          className="flex-1 px-3 py-2 text-sm font-semibold text-foreground outline-none bg-transparent disabled:text-muted-foreground"
+          className={`w-full border rounded-lg text-sm py-2 px-3 transition-colors outline-none focus:ring-1 ${disabled || readOnly
+              ? "bg-muted/50 border-border cursor-not-allowed text-muted-foreground focus:ring-0 focus:border-border"
+              : error
+                ? "bg-card border-red-500 focus:ring-red-500 focus:border-red-500"
+                : "bg-card border-border focus:ring-primary focus:border-primary"
+            }`}
         />
       </div>
       {error && (
@@ -82,16 +95,15 @@ function Field({
 
 function ModeToggle({ value, onChange }: { value: string; onChange: (v: any) => void }) {
   return (
-    <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-lg w-fit border border-border">
+    <div className="flex p-1 bg-muted/50 rounded-lg gap-1">
       {(["none", "existing", "new"] as const).map(mode => (
         <button
           key={mode}
           type="button"
           onClick={() => onChange(mode)}
-          className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all
-            ${value === mode
-              ? "bg-primary text-primary-foreground"
-              : "text-muted-foreground hover:text-foreground"
+          className={`px-4 py-1.5 text-[11px] font-semibold rounded-md transition-all uppercase ${value === mode
+              ? "bg-primary text-primary-foreground shadow-sm font-bold"
+              : "text-muted-foreground hover:bg-background hover:shadow-sm"
             }`}
         >
           {mode === "none" ? "Skip" : mode === "existing" ? "Use Existing" : "Add New"}
@@ -293,7 +305,9 @@ export default function CreateInvestmentForm({
   const [clients, setClients] = useState<any[]>([]);
   const [plans, setPlans] = useState<FinancialPlan[]>([]);
   const [selectedClient, setSelectedClient] = useState<any | null>(lockedClient ?? null);
-  const [loading, setLoading] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
 
@@ -568,7 +582,7 @@ export default function CreateInvestmentForm({
     const { beneficiaryId, newBeneficiary } = resolveBeneficiary();
     const { nomineeId, newNominee } = resolveNominee();
 
-    setLoading(true);
+    setIsUpdating(true);
     try {
       if (isEditMode) {
         const res = await updateInvestment({
@@ -606,7 +620,7 @@ export default function CreateInvestmentForm({
       }
       onSuccess?.();
     } finally {
-      setLoading(false);
+      setIsUpdating(false);
     }
   };
 
@@ -651,17 +665,19 @@ export default function CreateInvestmentForm({
       {/* Edit fields — shown when: mode=new, OR mode=existing and a card was selected */}
       {(beneficiaryMode === "new" || (beneficiaryMode === "existing" && beneficiaryLabel)) && (
         <div className="space-y-4">
-          {/* Label pill when editing an existing record */}
           {beneficiaryLabel && (
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary border border-primary/20 rounded-lg text-[11px] font-bold">
-                <Pencil className="w-3 h-3" /> Editing: {beneficiaryLabel}
-              </span>
-              {originalBeneficiary && !isEqual(beneficiaryFields, originalBeneficiary) && (
-                <span className="inline-flex items-center px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-[11px] font-bold">
-                  Modified — will create new record
+            <div className="p-3 bg-muted/30 rounded-lg border border-primary/20 flex justify-between items-center mb-2">
+              <div className="flex items-center gap-2">
+                <Pencil className="w-[18px] h-[18px] text-primary" />
+                <span className="text-[11px] font-bold text-foreground">
+                  Editing: <span className="uppercase">{beneficiaryLabel}</span>
                 </span>
-              )}
+                {originalBeneficiary && !isEqual(beneficiaryFields, originalBeneficiary) && (
+                  <span className="ml-2 inline-flex items-center px-2 py-0.5 bg-amber-100 text-amber-800 border border-amber-300 rounded text-[10px] font-bold">
+                    MODIFIED
+                  </span>
+                )}
+              </div>
               <button
                 type="button"
                 onClick={() => {
@@ -670,30 +686,30 @@ export default function CreateInvestmentForm({
                   setOriginalBeneficiary(null);
                   setBeneficiaryFields(EMPTY_BENEFICIARY);
                 }}
-                className="ml-auto text-[11px] text-muted-foreground hover:text-destructive font-bold"
+                className="text-primary text-[10px] font-bold underline uppercase"
               >
                 Change
               </button>
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-5 bg-muted/20 rounded-lg border border-border/50">
+          <div className="space-y-4 pt-2">
             <div className="sm:col-span-2">
               <Field label="Full Name" value={beneficiaryFields.fullName}
                 onChange={v => setBeneficiaryFields(p => ({ ...p, fullName: v }))} />
             </div>
-            <Field label="NIC" value={beneficiaryFields.nic}
-              onChange={v => setBeneficiaryFields(p => ({ ...p, nic: v }))} />
-            <Field label="Relationship" value={beneficiaryFields.relationship}
-              onChange={v => setBeneficiaryFields(p => ({ ...p, relationship: v }))} />
-            <Field label="Phone" value={beneficiaryFields.phone}
-              onChange={v => setBeneficiaryFields(p => ({ ...p, phone: v }))} />
-            <Field label="Bank Name" value={beneficiaryFields.bankName}
-              onChange={v => setBeneficiaryFields(p => ({ ...p, bankName: v }))} />
-            <Field label="Bank Branch" value={beneficiaryFields.bankBranch}
-              onChange={v => setBeneficiaryFields(p => ({ ...p, bankBranch: v }))} />
-            <Field label="Account No." value={beneficiaryFields.accountNo}
-              onChange={v => setBeneficiaryFields(p => ({ ...p, accountNo: v }))} />
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="NIC" value={beneficiaryFields.nic} onChange={v => setBeneficiaryFields(p => ({ ...p, nic: v }))} />
+              <Field label="Relationship" value={beneficiaryFields.relationship} onChange={v => setBeneficiaryFields(p => ({ ...p, relationship: v }))} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Phone" value={beneficiaryFields.phone} onChange={v => setBeneficiaryFields(p => ({ ...p, phone: v }))} />
+              <Field label="Bank Name" value={beneficiaryFields.bankName} onChange={v => setBeneficiaryFields(p => ({ ...p, bankName: v }))} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Bank Branch" value={beneficiaryFields.bankBranch} onChange={v => setBeneficiaryFields(p => ({ ...p, bankBranch: v }))} />
+              <Field label="Account No." value={beneficiaryFields.accountNo} onChange={v => setBeneficiaryFields(p => ({ ...p, accountNo: v }))} />
+            </div>
           </div>
         </div>
       )}
@@ -737,15 +753,18 @@ export default function CreateInvestmentForm({
       {(nomineeMode === "new" || (nomineeMode === "existing" && nomineeLabel)) && (
         <div className="space-y-4">
           {nomineeLabel && (
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-accent/10 text-accent border border-accent/20 rounded-lg text-[11px] font-bold">
-                <Pencil className="w-3 h-3" /> Editing: {nomineeLabel}
-              </span>
-              {originalNominee && !isEqual(nomineeFields, originalNominee) && (
-                <span className="inline-flex items-center px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-[11px] font-bold">
-                  Modified — will create new record
+            <div className="p-3 bg-muted/30 rounded-lg border border-primary/20 flex justify-between items-center mb-2">
+              <div className="flex items-center gap-2">
+                <Pencil className="w-[18px] h-[18px] text-primary" />
+                <span className="text-[11px] font-bold text-foreground">
+                  Editing: <span className="uppercase">{nomineeLabel}</span>
                 </span>
-              )}
+                {originalNominee && !isEqual(nomineeFields, originalNominee) && (
+                  <span className="ml-2 inline-flex items-center px-2 py-0.5 bg-amber-100 text-amber-800 border border-amber-300 rounded text-[10px] font-bold">
+                    MODIFIED
+                  </span>
+                )}
+              </div>
               <button
                 type="button"
                 onClick={() => {
@@ -754,24 +773,38 @@ export default function CreateInvestmentForm({
                   setOriginalNominee(null);
                   setNomineeFields(EMPTY_NOMINEE);
                 }}
-                className="ml-auto text-[11px] text-muted-foreground hover:text-destructive font-bold"
+                className="text-primary text-[10px] font-bold underline uppercase"
               >
                 Change
               </button>
             </div>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-5 bg-muted/20 rounded-lg border border-border/50">
+          <div className="space-y-4 pt-2">
             <div className="sm:col-span-2">
               <Field label="Full Name" value={nomineeFields.fullName}
                 onChange={v => setNomineeFields(p => ({ ...p, fullName: v }))} />
             </div>
-            <Field label="NIC" value={nomineeFields.nic}
-              onChange={v => setNomineeFields(p => ({ ...p, nic: v }))} />
-            <Field label="Permanent Address" value={nomineeFields.permanentAddress}
-              onChange={v => setNomineeFields(p => ({ ...p, permanentAddress: v }))} />
-            <Field label="Postal Address" value={nomineeFields.postalAddress}
-              onChange={v => setNomineeFields(p => ({ ...p, postalAddress: v }))} />
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="NIC" value={nomineeFields.nic} onChange={v => setNomineeFields(p => ({ ...p, nic: v }))} />
+              <Field label="Contact No." value={nomineeFields.postalAddress} onChange={v => setNomineeFields(p => ({ ...p, postalAddress: v }))} />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Permanent Address</label>
+              <textarea
+                value={nomineeFields.permanentAddress}
+                onChange={e => setNomineeFields(p => ({ ...p, permanentAddress: e.target.value }))}
+                className="w-full px-3 py-2.5 text-sm font-semibold bg-card border border-border rounded-md outline-none focus:border-[#0f5132] focus:ring-1 focus:ring-[#0f5132] transition-all resize-y min-h-[80px]"
+              />
+            </div>
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Postal Address</label>
+              <textarea
+                value={nomineeFields.postalAddress}
+                onChange={e => setNomineeFields(p => ({ ...p, postalAddress: e.target.value }))}
+                className="w-full px-3 py-2.5 text-sm font-semibold bg-card border border-border rounded-md outline-none focus:border-[#0f5132] focus:ring-1 focus:ring-[#0f5132] transition-all resize-y min-h-[80px]"
+              />
+            </div>
           </div>
         </div>
       )}
@@ -779,7 +812,7 @@ export default function CreateInvestmentForm({
   );
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto pb-12">
+    <div className="space-y-6 w-full md:max-w-8xl mx-auto pb-12">
       {/* Header — hidden when embedded inside another page */}
       {!hideHeader && (
         <div className="flex items-center gap-5 pb-8 border-b border-border">
@@ -796,39 +829,38 @@ export default function CreateInvestmentForm({
         </div>
       )}
 
-      {/* Client */}
-      <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden">
-        <div className="px-6 py-4 bg-muted/30 border-b border-border/60">
-          <SectionHeader icon={<User className="w-4 h-4 text-primary" />} title="Account Owner" />
-        </div>
-        <div className="p-6 space-y-4">
-          <ClientSearch clients={clients} selected={selectedClient} onSelect={handleClientSelect} locked={isEditMode} />
-          {client && (
-            <div className="animate-in fade-in slide-in-from-top-1 duration-300">
-              <Field label="Assigned Branch" value={client.branch?.name ?? "No Branch"} disabled />
+      <div className="grid grid-cols-12 gap-6 items-start">
+        {/* Client (Account Owner) */}
+        <section className="col-span-12 lg:col-span-4 flex flex-col gap-4">
+          <div className="bg-card border border-border rounded-xl p-6 shadow-sm flex flex-col gap-4">
+            <SectionHeader icon={<User className="w-[20px] h-[20px]" />} title="Account Owner" />
+            <div className="space-y-4">
+              <ClientSearch clients={clients} selected={selectedClient} onSelect={handleClientSelect} locked={isEditMode} />
+              {client && (
+                <div className="animate-in fade-in slide-in-from-top-1 duration-300">
+                  <Field label="Assigned Branch" value={client.branch?.name ?? "No Branch"} disabled />
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </div>
+          </div>
+        </section>
 
-      {client && (
-        <div className="space-y-6 animate-in fade-in duration-500">
-          {/* Investment Details */}
-          <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden">
-            <div className="px-6 py-4 bg-muted/30 border-b border-border/60">
-              <SectionHeader icon={<DollarSign className="w-4 h-4 text-accent" />} title="Investment Parameters" />
-            </div>
-            <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1">
-                  Financial Plan
-                </label>
-                <div className={`flex items-center rounded-lg bg-card transition-all ${isLockedForSubmitter ? "border-muted bg-muted/50" : "focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10"}`}>
+        {/* Investment Details */}
+        {client && (
+          <section className="col-span-12 lg:col-span-8">
+            <div className="bg-card border border-border rounded-xl p-6 shadow-sm flex flex-col gap-4 animate-in fade-in duration-500 h-full">
+              <SectionHeader icon={<DollarSign className="w-[20px] h-[20px]" />} title="Investment Parameters" />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Row 1 */}
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-muted-foreground uppercase block">
+                    Financial Plan
+                  </label>
                   <select
                     value={planId}
                     disabled={isLockedForSubmitter}
                     onChange={e => setPlanId(e.target.value)}
-                    className="flex-1 px-3 py-2 text-sm font-semibold text-foreground outline-none bg-transparent appearance-none disabled:text-muted-foreground"
+                    className="w-full bg-card border border-border rounded-lg text-sm py-2 px-3 outline-none focus:ring-1 focus:ring-primary focus:border-primary disabled:opacity-70 disabled:cursor-not-allowed"
                   >
                     <option value="">Select Plan</option>
                     {plans.map(p => (
@@ -838,80 +870,112 @@ export default function CreateInvestmentForm({
                     ))}
                   </select>
                 </div>
-              </div>
 
-              <Field label="Investment Date *" value={investmentDate} disabled={isLockedForSubmitter} onChange={setInvestmentDate} type="date" error={fieldErrors.investmentDate} />
-              <Field label="Investment Amount (LKR) *" value={amount} disabled={isLockedForSubmitter} onChange={v => { setAmount(v); setFieldErrors(p => ({ ...p, amount: "" })); }} placeholder="0.00" type="number" error={fieldErrors.amount} />
-              <Field label="Proposal No. *" value={proposalFormNo} disabled={isLockedForSubmitter} onChange={v => { setProposalFormNo(v); setFieldErrors(p => ({ ...p, proposal: "" })); }} type="text" error={fieldErrors.proposal} />
-              {/* REMOVE the single Rate field, REPLACE with this */}
-              <div className="sm:col-span-2 space-y-3">
-                <label className="block text-[10px] font-black uppercase tracking-wider text-muted-foreground">
-                  Rate per Year (%)
-                </label>
-                {investmentRates.length === 0 ? (
-                  <p className="text-xs text-muted-foreground italic font-medium">
-                    Select a plan to set rates.
-                  </p>
-                ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-                    {investmentRates.map((rate, i) => (
-                      <div key={i}>
-                        <label className="block text-[10px] font-bold text-muted-foreground mb-1">
-                          Year {i + 1}
-                        </label>
-                        <div className={`flex items-center rounded-lg bg-card transition-all ${isLockedForSubmitter ? "border-muted bg-muted/50" : "focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10"}`}>
-                          <input
-                            type="number"
-                            value={rate}
-                            disabled={isLockedForSubmitter}
-                            onChange={e => {
-                              const updated = [...investmentRates];
-                              updated[i] = Number(e.target.value);
-                              setInvestmentRates(updated);
-                              rateOverriddenByUser.current = true;
-                            }}
-                            className="flex-1 px-3 py-2 text-sm font-semibold text-foreground outline-none bg-transparent"
-                          />
-                          <span className="pr-3 text-xs text-muted-foreground font-bold">%</span>
+                <Field label="Investment Date *" value={investmentDate} disabled={isLockedForSubmitter} onChange={setInvestmentDate} type="date" error={fieldErrors.investmentDate} />
+                <Field label="Investment Amount (LKR) *" value={amount} disabled={isLockedForSubmitter} onChange={v => { setAmount(v); setFieldErrors(p => ({ ...p, amount: "" })); }} placeholder="0.00" type="number" error={fieldErrors.amount} />
+
+                {/* Row 2 */}
+                <Field label="Proposal No. *" value={proposalFormNo} disabled={isLockedForSubmitter} onChange={v => { setProposalFormNo(v); setFieldErrors(p => ({ ...p, proposal: "" })); }} type="text" error={fieldErrors.proposal} />
+                <Field label="Monthly Harvest (LKR)" value={monthlyHarvest} placeholder="—" readOnly />
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-muted-foreground uppercase block">
+                    Total Harvest
+                  </label>
+                  <input
+                    type="text"
+                    value={totalHarvest || "—"}
+                    readOnly
+                    className="w-full bg-card border border-border rounded-lg text-sm py-2 px-3 font-bold text-primary outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors"
+                  />
+                </div>
+
+                {/* Row 3 */}
+                <div className="space-y-2 md:col-span-3">
+                  <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
+                    Rate per Year (%)
+                  </label>
+                  {investmentRates.length === 0 ? (
+                    <p className="text-xs text-muted-foreground italic font-medium py-1">
+                      Select a plan to set rates.
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                      {investmentRates.map((rate, i) => (
+                        <div key={i} className="space-y-1">
+                          <label className="text-[10px] font-bold text-muted-foreground/80 uppercase block">
+                            Year {i + 1}
+                          </label>
+                          <div className="flex items-center gap-1">
+                            <input
+                              type="number"
+                              value={rate || ""}
+                              disabled={isLockedForSubmitter}
+                              onChange={(e) => {
+                                const updated = [...investmentRates];
+                                updated[i] = e.target.value === "" ? 0 : Number(e.target.value);
+                                setInvestmentRates(updated);
+                                rateOverriddenByUser.current = true;
+                              }}
+                              // [X-ONLY]: Hides native spinners across Chrome, Safari, and Firefox
+                               className="w-full bg-card border border-border rounded-lg text-sm py-2 px-3 font-bold text-primary outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors"
+                              placeholder="0"
+                            />
+                            <span className="text-sm font-medium text-muted-foreground select-none ml-1">
+                              %
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
-              <Field label="Monthly Harvest (LKR)" value={monthlyHarvest} placeholder="—" readOnly />
-              <Field label="Total Harvest (LKR)" value={totalHarvest} placeholder="—" readOnly />
             </div>
+          </section>
+        )}
+      </div>
+
+      {client && (
+        <div className="space-y-6 animate-in fade-in duration-500">
+          <div className="grid grid-cols-12 gap-6 items-start">
+            {/* Beneficiary */}
+            <section className="col-span-12 xl:col-span-6">
+              <div className="bg-card border border-border rounded-xl p-6 shadow-sm flex flex-col gap-4">
+                <SectionHeader
+                  icon={<Landmark className="w-[20px] h-[20px]" />}
+                  title="Beneficiary Details"
+                  action={!isLockedForSubmitter && <ModeToggle value={beneficiaryMode} onChange={handleBeneficiaryModeChange} />}
+                />
+                <div className="pt-2">
+                  {beneficiaryMode !== "none" && BeneficiaryEditPanel}
+                </div>
+              </div>
+            </section>
+
+            {/* Nominee */}
+            <section className="col-span-12 xl:col-span-6">
+              <div className="bg-card border border-border rounded-xl p-6 shadow-sm flex flex-col gap-4">
+                <SectionHeader
+                  icon={<Users className="w-[20px] h-[20px]" />}
+                  title="Nominee Details"
+                  action={!isLockedForSubmitter && <ModeToggle value={nomineeMode} onChange={handleNomineeModeChange} />}
+                />
+                <div className="pt-2">
+                  {nomineeMode !== "none" && NomineeEditPanel}
+                </div>
+              </div>
+            </section>
           </div>
 
-          {/* Beneficiary */}
-          <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden">
-            <div className="px-6 py-4 bg-muted/30 border-b border-border/60">
-              <SectionHeader icon={<Landmark className="w-4 h-4 text-primary" />} title="Beneficiary" />
-            </div>
-            <div className="p-6 space-y-5">
-              {!isLockedForSubmitter && <ModeToggle value={beneficiaryMode} onChange={handleBeneficiaryModeChange} />}
-              {beneficiaryMode !== "none" && BeneficiaryEditPanel}
-            </div>
-          </div>
-
-          {/* Nominee */}
-          <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden">
-            <div className="px-6 py-4 bg-muted/30 border-b border-border/60">
-              <SectionHeader icon={<Users className="w-4 h-4 text-accent" />} title="Nominee Details" />
-            </div>
-            <div className="p-6 space-y-5">
-              {!isLockedForSubmitter && <ModeToggle value={nomineeMode} onChange={handleNomineeModeChange} />}
-              {nomineeMode !== "none" && NomineeEditPanel}
-            </div>
-          </div>
-
-          {(!isEditMode || isApprovedOrRejected) && (
-            <AdvisorHierarchy
-              values={hierarchy}
-              onChange={(key, id) => setHierarchy(p => ({ ...p, [key]: id }))}
-              initialMembers={hierarchyInitialMembers} />
-          )}
+          {/* Hierarchy */}
+          <section className="w-full">
+            {(!isEditMode || isApprovedOrRejected) && (
+              <AdvisorHierarchy
+                values={hierarchy}
+                onChange={(key, id) => setHierarchy(p => ({ ...p, [key]: id }))}
+                initialMembers={hierarchyInitialMembers} />
+            )}
+          </section>
 
           {isApprovedOrRejected && (
             <div className={`p-5 rounded-lg border ${approvalStatus === "APPROVED" ? "bg-green-500/10 border-green-500/20 text-green-700" : "bg-red-500/10 border-red-500/20 text-red-700"}`}>
@@ -925,134 +989,89 @@ export default function CreateInvestmentForm({
           )}
 
           {showApprovalSection && (
-            <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden mt-8">
-              <div className="px-6 py-4 bg-muted/30 border-b border-border/60">
-                <SectionHeader icon={<Check className="w-4 h-4 text-primary" />} title="Management Approval" />
+            <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden mt-8">
+              <div className="px-6 py-4 border-b border-border">
+                <SectionHeader icon={<Check className="w-[20px] h-[20px]" />} title="Management Approval Hierarchy" />
               </div>
-              <div className="p-6 space-y-6">
-                <AdvisorHierarchy
-                  values={hierarchy}
-                  onChange={(key, id) => setHierarchy(p => ({ ...p, [key]: id }))}
-                // displays={hierarchyDisplays}
-                />
+              <div className="flex flex-col">
+                <div className="p-6">
+                  <AdvisorHierarchy
+                    values={hierarchy}
+                    onChange={(key, id) => setHierarchy(p => ({ ...p, [key]: id }))}
+                    hideCard
+                  />
+                </div>
 
-                <div>
-                  <label className="block text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-2">
+                <div className="px-6 pb-6 space-y-2">
+                  <label className="text-[11px] font-bold text-muted-foreground uppercase block">
                     Review Note
                   </label>
                   <textarea
                     value={reviewNote}
                     onChange={e => setReviewNote(e.target.value)}
                     placeholder="Add comments or rejection reason..."
-                    className="w-full p-3 text-sm bg-background border border-border rounded-lg focus:ring-2 focus:ring-primary/10 outline-none"
+                    className="w-full bg-background border border-border rounded-lg text-sm py-3 px-4 focus:ring-1 focus:ring-primary focus:border-primary shadow-inner outline-none transition-all"
                     rows={3}
                   />
                 </div>
 
-                {/* Advisor selector */}
-                <div className="space-y-2">
-                  <label className="block text-[10px] font-black uppercase tracking-wider text-muted-foreground">
-                    Advisor (Proposal Credit)
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {HIERARCHY_PRIORITY
-                      .filter(({ key }) => hierarchy[key] != null)
-                      .map(({ key, label }) => {
-                        const memberId = hierarchy[key]!;
-                        // resolve display name from hierarchyInitialMembers
-                        const memberObj = hierarchyInitialMembers[key];
-                        const name = memberObj?.nameWithInitials ?? `ID ${memberId}`;
-                        const isSelected = advisorId === memberId;
-                        return (
-                          <button
-                            key={key}
-                            type="button"
-                            onClick={() => {
-                              setAdvisorId(memberId);
-                              setAdvisorOverridden(true);
-                            }}
-                            className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-bold transition-all
-              ${isSelected
-                                ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                                : "bg-card text-foreground border-border hover:border-primary/50"
-                              }`}
-                          >
-                            <span className="text-[10px] font-black uppercase opacity-70">{label}</span>
-                            {name}
-                            {isSelected && <Check className="w-3 h-3 shrink-0" />}
-                          </button>
-                        );
-                      })
-                    }
+                {/* Quick Actions Footer */}
+                <div className="px-6 py-4 bg-muted/30 border-t border-border flex flex-col md:flex-row gap-4 items-center">
+                  <div className="flex-1 text-[11px] font-bold text-muted-foreground uppercase">
+                    Reviewing as: <span className="text-foreground ml-1">{userData?.name}</span>
                   </div>
-                  {advisorOverridden && (
+                  <div className="flex gap-3 w-full md:w-auto">
                     <button
                       type="button"
-                      onClick={() => setAdvisorOverridden(false)}
-                      className="text-[10px] text-muted-foreground hover:text-foreground font-bold"
+                      onClick={async () => {
+                        setIsApproving(true);
+                        const res = await approveInvestmentWithHierarchyLog({
+                          investmentId: investmentId!,
+                          advisorId,
+                          ...hierarchy,
+                          reviewNote
+                        });
+                        setIsApproving(false);
+                        if (res.success) {
+                          toast.success("Investment successfully approved.");
+                          onSuccess?.();
+                        } else {
+                          toast.error(res.error || "Failed to approve investment. Please try again.");
+                        }
+                      }}
+                      disabled={isApproving || isRejecting || isUpdating}
+                      className="flex-1 md:flex-none px-8 py-3 bg-[#0f5132] text-white rounded-lg font-bold text-sm flex items-center justify-center gap-2 hover:brightness-95 active:scale-95 transition-all disabled:opacity-50"
                     >
-                      Reset to auto
+                      {isApproving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                      APPROVE
                     </button>
-                  )}
-                </div>
-
-
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold uppercase text-muted-foreground">Reviewing as:</span>
-                  <span className="text-xs font-black text-foreground">{userData?.name}</span>
-                </div>
-
-                <div className="flex flex-col sm:flex-row items-center gap-4 pt-4">
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      setLoading(true);
-                      const res = await approveInvestmentWithHierarchyLog({
-                        investmentId: investmentId!,
-                        advisorId,
-                        ...hierarchy,
-                        reviewNote
-                      });
-                      setLoading(false);
-                      if (res.success) {
-                        toast.success("Investment approved");
-                        onSuccess?.();
-                      } else {
-                        toast.error(res.error || "Approval failed");
-                      }
-                    }}
-                    disabled={loading}
-                    className="flex-1 w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-bold text-sm transition-colors flex justify-center items-center gap-2"
-                  >
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                    Approve
-                  </button>
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      if (!reviewNote.trim()) {
-                        toast.error("Review note is required for rejection");
-                        return;
-                      }
-                      setLoading(true);
-                      const res = await rejectInvestment({
-                        investmentId: investmentId!,
-                        reviewNote
-                      });
-                      setLoading(false);
-                      if (res.success) {
-                        toast.success("Investment rejected");
-                        onSuccess?.();
-                      } else {
-                        toast.error(res.error || "Rejection failed");
-                      }
-                    }}
-                    disabled={loading}
-                    className="flex-1 w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-bold text-sm transition-colors flex justify-center items-center gap-2"
-                  >
-                    {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
-                    Reject
-                  </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!reviewNote.trim()) {
+                          toast.warning("A review note is required to reject this investment.");
+                          return;
+                        }
+                        setIsRejecting(true);
+                        const res = await rejectInvestment({
+                          investmentId: investmentId!,
+                          reviewNote
+                        });
+                        setIsRejecting(false);
+                        if (res.success) {
+                          toast.success("Investment has been successfully rejected.");
+                          onSuccess?.();
+                        } else {
+                          toast.error(res.error || "Failed to reject investment.");
+                        }
+                      }}
+                      disabled={isApproving || isRejecting || isUpdating}
+                      className="flex-1 md:flex-none px-8 py-3 bg-red-600 text-white rounded-lg font-bold text-sm flex items-center justify-center gap-2 hover:brightness-95 active:scale-95 transition-all disabled:opacity-50"
+                    >
+                      {isRejecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
+                      REJECT
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1060,21 +1079,19 @@ export default function CreateInvestmentForm({
 
           {/* Submit */}
           {!isLockedForSubmitter && (
-            <button
-              type="button"
-              onClick={handleSubmit}
-              // disabled={loading}
-              className={`w-full flex items-center justify-center gap-3 px-8 py-5  text-primary-foreground text-xs font-black uppercase tracking-[0.25em] rounded-lg transition-all hover:shadow-2xl active:scale-[0.98]
-                ${isEditMode
-                  ? "bg-green-700 hover:bg-green-800 hover:shadow-accent/30"
-                  : "bg-green-700 hover:bg-green-800 hover:shadow-primary/30"
-                }`}
-            >
-              {loading
-                ? <><Loader2 className="w-5 h-5 animate-spin" /> {isEditMode ? "Saving..." : "Finalizing..."}</>
-                : <><Plus className="w-5 h-5" /> {isEditMode ? "Update Investment" : "Create Investment"}</>
-              }
-            </button>
+            <div className="pt-2 pb-12">
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={isApproving || isRejecting || isUpdating}
+                className={`w-full py-5 bg-[#0f5132] text-white rounded-xl font-bold text-[18px] flex items-center justify-center gap-3 shadow-lg shadow-primary/20 hover:shadow-primary/40 active:scale-[0.99] transition-all uppercase tracking-widest disabled:opacity-50`}
+              >
+                {isUpdating
+                  ? <><Loader2 className="w-6 h-6 animate-spin" /> {isEditMode ? "Saving Updates..." : "Finalizing..."}</>
+                  : <><Check className="w-6 h-6" /> {isEditMode ? "Update Investment Record" : "Create Investment Record"}</>
+                }
+              </button>
+            </div>
           )}
         </div>
       )}

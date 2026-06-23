@@ -72,9 +72,10 @@ export default function PayrollPage() {
       setLoadingPreview(false);
     }
   }, [selectedBranchId, year, month]); // keep volumes excluded to avoid loop
-  useEffect(() => {
-    loadPreview();
-  }, [loadPreview]);
+  // Removed auto-fetch useEffect
+  // useEffect(() => {
+  //   loadPreview();
+  // }, [loadPreview]);
 
   // Refresh preview when volume changes (debounced via button)
   const handleVolumeChange = (memberId: number, value: number) => {
@@ -123,7 +124,7 @@ export default function PayrollPage() {
 
 
   return (
-    <div className="max-w-8xl mx-auto px-4 py-8 space-y-6">
+    <div className="w-full min-h-screen p-4 sm:p-8 flex flex-col gap-6 sm:gap-8 font-sans text-gray-900 dark:text-gray-100 transition-colors duration-300">
 
       {/* Header */}
       <div>
@@ -177,14 +178,20 @@ export default function PayrollPage() {
         </div>
 
         <button
+          onClick={loadPreview}
+          disabled={loadingPreview}
+          className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-50"
+        >
+          <Play className="w-4 h-4" />
+          Search
+        </button>
+
+        <button
           onClick={handleRefreshPreview}
           disabled={loadingPreview}
           className="flex items-center gap-2 px-6 py-3 bg-card border border-border hover:bg-muted text-foreground text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-50"
         >
-          {loadingPreview
-            ? <Loader2 className="w-4 h-4 animate-spin" />
-            : <RefreshCw className="w-4 h-4" />
-          }
+          <RefreshCw className="w-4 h-4" />
           Refresh
         </button>
       </div>

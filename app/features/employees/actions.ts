@@ -193,14 +193,25 @@ export async function createEmployee(data: EmpData) {
 export async function getEmployeesByBranch(
   branchId: number,
   cursor?: number,
-  limit = 10
+  limit = 10,
+  searchQuery?: string
 ) {
   const employees = await prisma.member.findMany({
     where: {
       channel: { not: "Micro" },
-      branches: {
-        some: { branchId },
-      },
+      ...(searchQuery && searchQuery.trim() !== ""
+        ? {
+            OR: [
+              { empNo: { contains: searchQuery, mode: "insensitive" } },
+              { nameWithInitials: { contains: searchQuery, mode: "insensitive" } },
+              { nic:  { contains: searchQuery, mode: "insensitive"  } },
+            ],
+          }
+        : {
+            branches: {
+              some: { branchId },
+            },
+          }),
     },
 
 

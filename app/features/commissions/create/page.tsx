@@ -127,6 +127,8 @@ const Page = () => {
     getClientsByBranch(selectedBranchId).then((res) => setClients(res.clients as any));
   }, [selectedBranchId]);
 
+  const [isLoadingClient, setIsLoadingClient] = useState(false);
+
   // ── Load client data when client selected ────────────────────────────────────
   useEffect(() => {
     if (!selectedClientId) {
@@ -134,15 +136,25 @@ const Page = () => {
       setSelectedInvestmentId(null);
       setManualMembers([]);
       setDisabledEmpNos(new Set());
+      setIsLoadingClient(false);
       return;
     }
-    getClientById(selectedClientId).then((data) => {
-      setClientData(data as any);
-      // Reset investment selection when switching clients
-      setSelectedInvestmentId(null);
-      setManualMembers([]);
-      setDisabledEmpNos(new Set());
-    });
+    setIsLoadingClient(true);
+    setClientData(null); // Clear previous data
+    getClientById(selectedClientId)
+      .then((data) => {
+        setClientData(data as any);
+        // Reset investment selection when switching clients
+        setSelectedInvestmentId(null);
+        setManualMembers([]);
+        setDisabledEmpNos(new Set());
+      })
+      .catch((err) => {
+        console.error("Failed to fetch client:", err);
+      })
+      .finally(() => {
+        setIsLoadingClient(false);
+      });
   }, [selectedClientId]);
 
   // ── Reset exception state when investment changes ────────────────────────────
@@ -396,7 +408,14 @@ const Page = () => {
               onChange={setSelectedClientId}
             />
 
-            {clientData ? (
+            {isLoadingClient ? (
+              <div className="h-75 flex flex-col items-center justify-center border border-border rounded-2xl bg-card shadow-sm animate-in fade-in duration-300">
+                <Loader2 className="w-8 h-8 text-primary animate-spin mb-3" />
+                <p className="text-muted-foreground font-medium text-sm">
+                  Loading client portfolios...
+                </p>
+              </div>
+            ) : clientData ? (
               <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <ClientDetailsCard
                   client={clientData}

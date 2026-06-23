@@ -51,8 +51,8 @@ const MemberSearchInput = ({ slot, value, onChange, initialMember }: MemberSearc
   const containerRef = useRef<HTMLDivElement>(null);
   // True while the field still holds its pre-populated value untouched
 
-  const labelClass = "text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-2 ml-1 block";
-  const badgeClass = "text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md bg-primary/10 text-primary/70";
+  const labelClass = "text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1 mb-1";
+  const badgeClass = "text-[9px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded-md bg-primary/10 text-primary/70";
 
   const search = useCallback(async (q: string) => {
     if (!q.trim()) { setResults([]); setOpen(false); return; }
@@ -97,7 +97,7 @@ const MemberSearchInput = ({ slot, value, onChange, initialMember }: MemberSearc
   };
 
   const inputClass =
-    "bg-background/50 border border-border/50 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:bg-background outline-none transition-all w-full placeholder:text-muted-foreground/30 font-medium pr-10";
+    "w-full pl-10 pr-3 py-2 bg-muted/30 border border-border rounded-lg text-sm focus:bg-card focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all placeholder:text-muted-foreground/50";
 
   useEffect(() => {
     if (lockedRef.current) return;   // ← pre-populated, user hasn't typed yet
@@ -111,6 +111,7 @@ const MemberSearchInput = ({ slot, value, onChange, initialMember }: MemberSearc
   return (
     <div ref={containerRef} className="relative">
       <label className={labelClass}>
+        <span className="w-1.5 h-1.5 rounded-full bg-[#10b981]"></span>
         <span className="inline-flex items-center gap-2">
           {slot.label}
           {selected && (
@@ -121,10 +122,10 @@ const MemberSearchInput = ({ slot, value, onChange, initialMember }: MemberSearc
 
       <div className="relative">
         {/* Search icon / loader */}
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/30 pointer-events-none">
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
           {loading
-            ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            : <Search className="w-3.5 h-3.5" />
+            ? <Loader2 className="w-[18px] h-[18px] animate-spin" />
+            : <Search className="w-[18px] h-[18px]" />
           }
         </div>
 
@@ -138,7 +139,7 @@ const MemberSearchInput = ({ slot, value, onChange, initialMember }: MemberSearc
           }}
           onFocus={() => { if (results.length) setOpen(true); }}
           placeholder={slot.placeholder}
-          className={`${inputClass} pl-9`}
+          className={inputClass}
         />
 
         {/* Clear button */}
@@ -204,31 +205,36 @@ type AdvisorHierarchyProps = {
   values: HierarchyState;
   onChange: (key: keyof HierarchyState, id: number | null) => void;
   initialMembers?: Partial<Record<keyof HierarchyState, { id: number; nameWithInitials: string; position: { title: string } } | null>>;
+  hideCard?: boolean;
 };
 
-const AdvisorHierarchy = ({ values, onChange, initialMembers = {} }: AdvisorHierarchyProps) => {
-  return (
-    <div className="bg-card/60 backdrop-blur-xl rounded-[2.5rem] border border-border/50 shadow-sm  text-card-foreground mt-6">
-      {/* Header */}
-      <div className="px-8 py-5 border-b border-border/30 flex items-center gap-3">
-        <Network className="w-4 h-4 text-muted-foreground/60" />
-        <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground opacity-60">
-          Advisor Hierarchy (Investment Specific)
-        </h2>
-      </div>
+const AdvisorHierarchy = ({ values, onChange, initialMembers = {}, hideCard }: AdvisorHierarchyProps) => {
+  const GridContent = (
+    <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4 ${hideCard ? '' : 'p-6'}`}>
+      {SLOTS.map((slot) => (
+        <div key={slot.key} className={slot.key === "ccoId" ? "col-span-1 md:col-span-2" : ""}>
+          <MemberSearchInput
+            slot={slot}
+            value={values[slot.key]}
+            initialMember={initialMembers[slot.key]}
+            onChange={(id) => onChange(slot.key, id)}
+          />
+        </div>
+      ))}
+    </div>
+  );
 
-      {/* Fields */}
-      <div className="sm:p-6 p-4 space-y-6">
-        {SLOTS.map((slot) => (
-      <MemberSearchInput
-        key={slot.key}
-        slot={slot}
-        value={values[slot.key]}
-        initialMember={initialMembers[slot.key]}
-        onChange={(id) => onChange(slot.key, id)}
-      />
-    ))}
+  if (hideCard) return GridContent;
+
+  return (
+    <div className="bg-card border border-border rounded-xl shadow-sm flex flex-col mt-6">
+      <div className="px-6 py-4 border-b border-border flex items-center gap-2 text-primary font-semibold">
+        <Network className="w-[20px] h-[20px]" />
+        <span className="text-[18px] font-semibold uppercase tracking-tight">
+          Advisor Hierarchy
+        </span>
       </div>
+      {GridContent}
     </div>
   );
 };

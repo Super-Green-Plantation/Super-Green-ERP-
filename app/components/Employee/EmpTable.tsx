@@ -49,6 +49,18 @@ const EmpTable = ({ onEdit, onRefresh, branchId, searchQuery }: EmpTableProps) =
     branchId: null,
   });
 
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 500);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchQuery]);
+
   const {
     data,
     fetchNextPage,
@@ -56,25 +68,15 @@ const EmpTable = ({ onEdit, onRefresh, branchId, searchQuery }: EmpTableProps) =
     isFetchingNextPage,
     isLoading,
     isError,
-  } = useEmployees(branchId);
+  } = useEmployees(branchId, debouncedSearchQuery);
 
   const allEmployees = data?.pages.flatMap((page) => page.emp) ?? [];
-
-  const filteredEmployees = useMemo(() => {
-    if (!searchQuery?.trim()) return allEmployees;
-    const q = searchQuery.toLowerCase();
-    return allEmployees.filter(emp =>
-      emp.nameWithInitials?.toLowerCase().includes(q) ||
-      emp.empNo?.toLowerCase().includes(q) ||
-      emp.position?.title?.toLowerCase().includes(q)
-    );
-  }, [allEmployees, searchQuery]);
 
   const totalLoaded = allEmployees.length;
   const loadedPages = data?.pages.length ?? 0;
 
   // Visible slice for current page
-  const pageEmployees = filteredEmployees.slice(
+  const pageEmployees = allEmployees.slice(
     (currentPage - 1) * PAGE_SIZE,
     currentPage * PAGE_SIZE
   );

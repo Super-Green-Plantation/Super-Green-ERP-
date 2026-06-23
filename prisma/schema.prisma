@@ -52,11 +52,12 @@ model CommissionRate {
 }
 
 model MemberBranch {
-  id       Int    @id @default(autoincrement())
-  memberId Int
-  branchId Int
-  branch   Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  id        Int     @id @default(autoincrement())
+  memberId  Int
+  branchId  Int
+  branch    Branch  @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  member    Member  @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  isPrimary Boolean @default(false)
 
   @@unique([memberId, branchId])
 }
