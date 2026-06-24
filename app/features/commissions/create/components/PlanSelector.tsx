@@ -27,7 +27,7 @@ const PlanSelector = ({
 
         {investments?.map((inv) => (
           <option key={inv.id} value={inv.id} className="py-2">
-            {`${inv.plan?.name ?? "Plan"}  |  Rs. ${inv.amount.toLocaleString()}  |  Prop: ${inv.proposalFormNo ?? 'N/A'}`}
+            {`${inv.plan?.name ?? "Plan"}  --  Rs. ${inv.amount.toLocaleString()}  --  Prop: ${inv.proposalFormNo ?? 'N/A'} -- ${inv.commissionsProcessed ? 'Processed'  : 'Pending'} `}
           </option>
         ))}
       </select>
