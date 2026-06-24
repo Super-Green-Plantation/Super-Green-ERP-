@@ -23,16 +23,28 @@ const ClientSelector = ({
   // Derive available years from client data
   const availableYears = useMemo(() => {
     const years = new Set(
-      clients.map((c) => new Date(c.createdAt).getFullYear())
+      clients.flatMap((c) =>
+        (c.investments ?? []).map((inv: any) =>
+          new Date(inv.investmentDate).getFullYear()
+        )
+      )
     );
-    return Array.from(years).sort((a, b) => b - a);
+    const result = Array.from(years).sort((a, b) => b - a);
+    // Always include current year as fallback
+    if (!result.includes(new Date().getFullYear())) {
+      result.unshift(new Date().getFullYear());
+    }
+    return result;
   }, [clients]);
 
   // Filter clients by selected month + year
   const filteredClients = useMemo(() => {
     return clients.filter((c) => {
-      const d = new Date(c.createdAt);
-      return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+      // Check if this client has any investment in the selected month+year
+      return (c.investments ?? []).some((inv: any) => {
+        const d = new Date(inv.investmentDate);
+        return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+      });
     });
   }, [clients, selectedMonth, selectedYear]);
 
@@ -138,7 +150,7 @@ const ClientSelector = ({
                 </option>
                 {filteredClients.map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.fullName}
+                    {c.fullName} 
                   </option>
                 ))}
               </select>

@@ -45,6 +45,8 @@ export const SubmitButton = ({
   const [loading, setLoading] = useState(false);
   const [dbUser, setDbUser] = useState<DbUser | null>(null);
   const { reset } = form;
+  console.log("form data =========== ", form);
+  
 
   useEffect(() => {
     fetch("/api/me")
@@ -55,24 +57,24 @@ export const SubmitButton = ({
   // ── PATH A: existing client — only create the investment ─────────────────
   const handleExistingClientSubmit = async () => {
     // Validate only investment-relevant fields
-    const isValid = await form.trigger([
-      "applicant.investmentAmount",
-      "applicant.proposalFormNo",
-      "applicant.investmentDate",
-      "investment.planId",
-      "beneficiary",
-      "nominee",
-    ]);
+    // const isValid = await form.trigger([
+    //   "applicant.investmentAmount",
+    //   "applicant.proposalFormNo",
+    //   "applicant.investmentDate",
+    //   "investment.planId",
+    //   "beneficiary",
+    //   "nominee",
+    // ]);
 
-    if (!isValid) {
-      const errs = form.formState.errors;
-      const first =
-        (errs.applicant as any)?.investmentAmount?.message ||
-        (errs.applicant as any)?.proposalFormNo?.message ||
-        "Please fix the errors in the form.";
-      toast.error(first);
-      return;
-    }
+    // if (!isValid) {
+    //   const errs = form.formState.errors;
+    //   const first =
+    //     (errs.applicant as any)?.investmentAmount?.message ||
+    //     (errs.applicant as any)?.proposalFormNo?.message ||
+    //     "Please fix the errors in the form.";
+    //   toast.error(first);
+    //   return;
+    // }
 
     setLoading(true);
     try {

@@ -181,10 +181,7 @@ const EmpTable = ({ onEdit, onRefresh, branchId, searchQuery }: EmpTableProps) =
                 Status
               </th>
 
-              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                Proposal Count
-              </th>
-
+             
               <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground text-center">
                 Actions
               </th>
@@ -253,11 +250,7 @@ const EmpTable = ({ onEdit, onRefresh, branchId, searchQuery }: EmpTableProps) =
                   </button>
                 </td>
 
-                <td>
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-bold bg-blue-500/10 text-blue-600 border border-blue-500/20 uppercase tracking-tight">
-                    {investmentCounts[e.id] ?? 0} Proposals
-                  </div>
-                </td>
+             
 
                 <td className="px-6 py-4">
                   <div className="flex items-center justify-center gap-2">

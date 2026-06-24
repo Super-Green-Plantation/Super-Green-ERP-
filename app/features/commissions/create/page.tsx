@@ -125,6 +125,8 @@ const Page = () => {
     }
     getBranchById(selectedBranchId).then(setBranchData as any);
     getClientsByBranch(selectedBranchId).then((res) => setClients(res.clients as any));
+    console.log("branch clients : ", clients);
+
   }, [selectedBranchId]);
 
   const [isLoadingClient, setIsLoadingClient] = useState(false);
@@ -277,6 +279,7 @@ const Page = () => {
                 </h2>
               </div>
               <select
+                value={selectedBranchId ?? ""}
                 className="w-full appearance-none rounded-xl border border-border bg-muted/30 px-4 py-2.5 text-sm font-semibold text-foreground outline-none transition-all focus:border-blue-500 focus:ring-4 focus:ring-primary/10 cursor-pointer"
                 onChange={(e) => setSelectedBranchId(e.target.value ? Number(e.target.value) : null)}
               >

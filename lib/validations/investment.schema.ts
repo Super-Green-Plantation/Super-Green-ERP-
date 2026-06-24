@@ -14,7 +14,7 @@ export const createInvestmentSchema = z.object({
     }),
   proposalFormNo: z
     .string()
-    .min(3, "Proposal form number must be at least 3 characters"),
+    .min(1, "Proposal form number must be at least 1 characters"),
 });
 
 // ─── Investment beneficiary fields ───────────────────────────────────────────
@@ -23,7 +23,7 @@ export const beneficiaryFieldsSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),
   nic: z.string().optional(),
   phone: z.string().optional(),
-  bankName: z.string().min(1, "Bank name is required"),
+  bankName: z.string().optional(),
   bankBranch: z.string().optional(),
   accountNo: z.string().min(1, "Account number is required"),
   relationship: z.string().optional(),
@@ -36,7 +36,7 @@ export type BeneficiaryFieldsInput = z.infer<typeof beneficiaryFieldsSchema>;
 export const nomineeFieldsSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),
   nic: z.string().optional(),
-  permanentAddress: z.string().min(1, "Permanent address is required"),
+  permanentAddress: z.string().optional(),
   postalAddress: z.string().optional(),
 });
 
@@ -56,7 +56,7 @@ export const createInvestmentForExistingClientSchema = z.object({
     }),
   proposalFormNo: z
     .string()
-    .min(3, "Proposal form number must be at least 3 characters"),
+    .min(1, "Proposal form number must be at least 1 characters"),
   investmentDate: z.date().optional(),
   investmentRates: z.array(z.number().min(0).max(100)).optional(),
   beneficiaryId: z.number().nullable().optional(),
@@ -80,9 +80,6 @@ export const updateInvestmentSchema = z.object({
     .refine((val) => !isNaN(val) && val > 0, {
       message: "Investment amount must be a positive number",
     }),
-    // proposalFormNo: z
-    // .string()
-    // .min(3, "Proposal form number must be at least 3 characters"),
   investmentDate: z.coerce.date().refine((d) => !!d, { message: "Investment date is required" }),
   investmentRates: z.array(z.number().min(0).max(100)).optional(),
   beneficiaryId: z.number().nullable(),
@@ -104,7 +101,7 @@ export const investmentFormSchema = z.object({
     }),
   proposalFormNo: z
     .string()
-    .min(3, "Proposal form number must be at least 3 characters"),
+    .min(1, "Proposal form number must be at least 1 characters"),
   investmentDate: z
     .string()
     .min(1, "Investment date is required"),
