@@ -27,15 +27,16 @@ export interface RowConfig {
     minActiveFMs: number;
     minActiveBMs: number;
     excessRate: number;
-    partialThreshold: number;
+    partialThresholdPct: number;
     partialBonus: number;
     after6MonthTarget: number;
+    after6MonthIncentivePct: number; // UI: 0–100 (%), DB: 0–1 fraction
 }
 
 export interface FaPeriodConfig {
     targetAmount: number;
     bonusAmount: number;
-    partialThreshold: number;
+    partialThresholdPct: number;
     partialBonus: number;
     excessRate: number;
 }
@@ -48,6 +49,7 @@ export type PositionEdits = Record<number, {
     orcRatePermanent: number;
     orcRateNonPermanent: number;
     after6MonthTarget: number;
+    after6MonthIncentivePct: number; // UI: 0–100 (%)
 }>;
 
 export const RANK_COLORS: Record<number, string> = {
@@ -66,8 +68,8 @@ export function blankRow(period: number, month: number): RowConfig {
         vehicleAmount: 0, vehicleThresholdPct: 0,
         teamActiveAmount: 0, teamActiveThresholdPct: 0,
         minActiveAdvisors: 0, minActiveFMs: 0, minActiveBMs: 0,
-        excessRate: 0, partialThreshold: 0, partialBonus: 0,
-        after6MonthTarget: 0,
+        excessRate: 0, partialThresholdPct: 0, partialBonus: 0,
+        after6MonthTarget: 0, after6MonthIncentivePct: 0,
     };
 }
 
@@ -100,14 +102,14 @@ export function buildEdits(position: PositionWithTargets): PositionEdits[number]
             p1: {
                 targetAmount: p1row.targetAmount,
                 bonusAmount: p1row.bonusAmount,
-                partialThreshold: p1row.partialThreshold,
+                partialThresholdPct: p1row.partialThresholdPct,
                 partialBonus: p1row.partialBonus,
                 excessRate: p1row.excessRate
             },
             p2: {
                 targetAmount: p2row.targetAmount,
                 bonusAmount: p2row.bonusAmount,
-                partialThreshold: p2row.partialThreshold,
+                partialThresholdPct: p2row.partialThresholdPct,
                 partialBonus: p2row.partialBonus,
                 excessRate: p2row.excessRate
             },
@@ -115,6 +117,8 @@ export function buildEdits(position: PositionWithTargets): PositionEdits[number]
         orcRatePermanent: Number(position.orc?.ratePermanent ?? 0) * 100,
         orcRateNonPermanent: Number(position.orc?.rateNonPermanent ?? 0) * 100,
         after6MonthTarget: sourceRow?.after6MonthTarget ?? 0,
+        // DB stores 0-1 fraction; UI works in 0-100 percentage
+        after6MonthIncentivePct: (Number(sourceRow?.after6MonthIncentivePct ?? 0)) * 100,
     };
 }
 

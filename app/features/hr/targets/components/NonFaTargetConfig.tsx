@@ -18,6 +18,8 @@ interface NonFaTargetConfigProps {
   ) => void;
   after6MonthTarget: number;
   onUpdateAfter6Month: (value: number) => void;
+  after6MonthIncentivePct: number;           // UI: 0–100 (%)
+  onUpdateAfter6MonthIncentivePct: (value: number) => void;
 
   onSyncToggle: (period: number, month: number, checked: boolean) => void;
   onUpdateOrc: (status: string, value: number) => void;
@@ -25,7 +27,9 @@ interface NonFaTargetConfigProps {
 
 export default function NonFaTargetConfig({
   positionId, edit, syncedMonths, syncKey,
-  onUpdateRow, onSyncToggle, onUpdateOrc, after6MonthTarget, onUpdateAfter6Month
+  onUpdateRow, onSyncToggle, onUpdateOrc,
+  after6MonthTarget, onUpdateAfter6Month,
+  after6MonthIncentivePct, onUpdateAfter6MonthIncentivePct,
 }: NonFaTargetConfigProps) {
   return (
     <div className="space-y-6">
@@ -60,7 +64,7 @@ export default function NonFaTargetConfig({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
-        <Section icon={<TrendingUp className="w-4 h-4" />} title="After 6th Month Target">
+      <Section icon={<TrendingUp className="w-4 h-4" />} title="After 6th Month Target">
           <Field
             label="Monthly Target — After 6 Months"
             value={after6MonthTarget}
@@ -70,6 +74,17 @@ export default function NonFaTargetConfig({
               formatIndicator(after6MonthTarget)
                 ? `Currently: ${formatIndicator(after6MonthTarget)} — ongoing target after probation period`
                 : "Volume target applicable after completing 6 months"
+            }
+          />
+          <Field
+            label="Incentive Threshold — After 6 Months"
+            value={after6MonthIncentivePct}
+            onChange={onUpdateAfter6MonthIncentivePct}
+            suffix="%"
+            hint={
+              after6MonthIncentivePct > 0 && after6MonthTarget > 0
+                ? `Partial threshold: Rs. ${formatIndicator(after6MonthTarget * after6MonthIncentivePct / 100) || (after6MonthTarget * after6MonthIncentivePct / 100).toLocaleString()} — must achieve this volume to unlock incentive`
+                : "Minimum % of after-6-month target required to unlock partial incentive (e.g. 45 for 45%)"
             }
           />
         </Section>

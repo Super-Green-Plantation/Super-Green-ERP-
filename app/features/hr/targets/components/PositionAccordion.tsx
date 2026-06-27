@@ -26,6 +26,7 @@ interface PositionAccordionProps {
   ) => void;
 
   onUpdateAfter6Month: (value: number) => void;
+  onUpdateAfter6MonthIncentivePct: (value: number) => void;
   onUpdateFa: (period: "p1" | "p2", field: keyof FaPeriodConfig, value: number) => void;
   onUpdateOrc: (status: string, value: number) => void;
   onSyncToggle: (period: number, month: number, checked: boolean) => void;
@@ -33,7 +34,7 @@ interface PositionAccordionProps {
 
 export default function PositionAccordion({
   position, isExpanded, isSaving, edit, syncedMonths, syncKey,
-  onToggle, onSave, onUpdateRow, onUpdateFa, onUpdateOrc, onSyncToggle, onUpdateAfter6Month
+  onToggle, onSave, onUpdateRow, onUpdateFa, onUpdateOrc, onSyncToggle, onUpdateAfter6Month, onUpdateAfter6MonthIncentivePct
 }: PositionAccordionProps) {
   const isFa = position.rank === 1;
   const rankColor = RANK_COLORS[position.rank] ?? RANK_COLORS[1];
@@ -105,6 +106,8 @@ export default function PositionAccordion({
                   onUpdateOrc={onUpdateOrc}
                   after6MonthTarget={edit.after6MonthTarget}
                   onUpdateAfter6Month={onUpdateAfter6Month}
+                  after6MonthIncentivePct={edit.after6MonthIncentivePct}
+                  onUpdateAfter6MonthIncentivePct={onUpdateAfter6MonthIncentivePct}
                 />
               )}
             </div>

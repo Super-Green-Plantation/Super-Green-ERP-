@@ -28,6 +28,7 @@ export const UpdateNominee = ({ onClose, initialData }: UpdateNomineeModalProps)
       nic: initialData?.nic || "",
       permanentAddress: initialData?.permanentAddress || "",
       postalAddress: initialData?.postalAddress || "",
+      contact: initialData?.contact || "",
     },
   });
 

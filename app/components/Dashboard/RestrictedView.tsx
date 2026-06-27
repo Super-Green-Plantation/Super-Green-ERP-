@@ -50,7 +50,7 @@ interface EmployeePerformance {
     bonusAmount: number;
     excessRate: number;
     partialBonus: number;
-    partialThreshold: number;
+    partialThresholdPct: number;
     bonusThresholdPct: number;
     minActiveAdvisors: number;
     minActiveBMs: number;

@@ -212,25 +212,26 @@ model Member {
 }
 
 model PositionTarget {
-  id                     Int      @id @default(autoincrement())
-  positionId             Int
-  periodNumber           Int
-  monthNumber            Int
-  targetAmount           Float
-  bonusAmount            Float
-  excessRate             Float    @default(0)
-  partialBonus           Float    @default(0)
-  partialThreshold       Float    @default(0)
-  bonusThresholdPct      Float    @default(1.0)
-  minActiveAdvisors      Int      @default(0)
-  minActiveBMs           Int      @default(0)
-  minActiveFMs           Int      @default(0)
-  teamActiveAmount       Float    @default(0)
-  teamActiveThresholdPct Float    @default(0)
-  vehicleAmount          Float    @default(0)
-  vehicleThresholdPct    Float    @default(0)
-  after6MonthTarget      Float    @default(0)
-  position               Position @relation(fields: [positionId], references: [id])
+  id                      Int      @id @default(autoincrement())
+  positionId              Int
+  periodNumber            Int
+  monthNumber             Int
+  targetAmount            Float
+  bonusAmount             Float
+  excessRate              Float    @default(0)
+  partialBonus            Float    @default(0)
+  partialThresholdPct        Float    @default(0)
+  bonusThresholdPct       Float    @default(1.0)
+  minActiveAdvisors       Int      @default(0)
+  minActiveBMs            Int      @default(0)
+  minActiveFMs            Int      @default(0)
+  teamActiveAmount        Float    @default(0)
+  teamActiveThresholdPct  Float    @default(0)
+  vehicleAmount           Float    @default(0)
+  vehicleThresholdPct     Float    @default(0)
+  after6MonthTarget       Float    @default(0)
+  after6MonthIncentivePct Float    @default(0)
+  position                Position @relation(fields: [positionId], references: [id])
 
   @@unique([positionId, periodNumber, monthNumber])
 }

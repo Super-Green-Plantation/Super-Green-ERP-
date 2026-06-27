@@ -30,6 +30,7 @@ type BeneficiaryFields = {
 };
 type NomineeFields = {
   fullName: string; nic: string;
+  contact:string;
   permanentAddress: string; postalAddress: string;
 };
 
@@ -231,7 +232,7 @@ const EMPTY_BENEFICIARY: BeneficiaryFields = {
   fullName: "", nic: "", phone: "", bankName: "", bankBranch: "", accountNo: "", relationship: "",
 };
 const EMPTY_NOMINEE: NomineeFields = {
-  fullName: "", nic: "", permanentAddress: "", postalAddress: "",
+  fullName: "", nic: "",contact:"", permanentAddress: "", postalAddress: "",
 };
 
 function beneficiaryFromRecord(b: any): BeneficiaryFields {
@@ -243,7 +244,7 @@ function beneficiaryFromRecord(b: any): BeneficiaryFields {
 }
 function nomineeFromRecord(n: any): NomineeFields {
   return {
-    fullName: n.fullName ?? "", nic: n.nic ?? "",
+    fullName: n.fullName ?? "", nic: n.nic ?? "",contact: n.contact ?? "",
     permanentAddress: n.permanentAddress ?? "", postalAddress: n.postalAddress ?? "",
   };
 }
@@ -787,7 +788,7 @@ export default function CreateInvestmentForm({
             </div>
             <div className="grid grid-cols-2 gap-4">
               <Field label="NIC" value={nomineeFields.nic} onChange={v => setNomineeFields(p => ({ ...p, nic: v }))} />
-              <Field label="Contact No." value={nomineeFields.postalAddress} onChange={v => setNomineeFields(p => ({ ...p, postalAddress: v }))} />
+              <Field label="Contact No." value={nomineeFields.contact} onChange={v => setNomineeFields(p => ({ ...p, contact: v }))} />
             </div>
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Permanent Address</label>

@@ -43,8 +43,9 @@ export async function upsertPositionTargets(
     minActiveFMs: number;
     minActiveBMs: number;
     excessRate: number;
-    partialThreshold: number;
+    partialThresholdPct: number;
     partialBonus: number;
+    after6MonthIncentivePct: number; // decimal fraction, e.g. 0.45 for 45%
   }[]
 ) {
   try {

@@ -139,6 +139,12 @@ export default function PositionTargetsPage() {
     }));
   }, []);
 
+  const updateAfter6MonthIncentivePct = useCallback((positionId: number, value: number) => {
+    setEdits(prev => ({
+      ...prev,
+      [positionId]: { ...prev[positionId], after6MonthIncentivePct: value },
+    }));
+  }, []);
 
   const handleSave = async (positionId: number, isFa: boolean) => {
     setSaving(positionId);
@@ -157,9 +163,10 @@ export default function PositionTargetsPage() {
             teamActiveAmount: 0, teamActiveThresholdPct: 0,
             minActiveAdvisors: 0, minActiveFMs: 0, minActiveBMs: 0,
             excessRate: p1.excessRate / 100,
-            partialThreshold: p1.partialThreshold,
+            partialThresholdPct: p1.partialThresholdPct/100,
             partialBonus: p1.partialBonus,
             after6MonthTarget: 0,
+            after6MonthIncentivePct: 0,
           })),
           ...[1, 2, 3].map(m => ({
             periodNumber: 2, monthNumber: m,
@@ -169,9 +176,10 @@ export default function PositionTargetsPage() {
             teamActiveAmount: 0, teamActiveThresholdPct: 0,
             minActiveAdvisors: 0, minActiveFMs: 0, minActiveBMs: 0,
             excessRate: p2.excessRate / 100,
-            partialThreshold: p2.partialThreshold,
+            partialThresholdPct: p2.partialThresholdPct/100,
             partialBonus: p2.partialBonus,
             after6MonthTarget: 0,
+            after6MonthIncentivePct: 0,
           })),
         ];
       } else {
@@ -182,7 +190,7 @@ export default function PositionTargetsPage() {
           teamActiveThresholdPct: r.teamActiveThresholdPct / 100,
           excessRate: r.excessRate / 100,
           after6MonthTarget: edit.after6MonthTarget, // ← write from position-level state
-
+          after6MonthIncentivePct: edit.after6MonthIncentivePct / 100, // UI % → DB fraction
         }));
       }
 
@@ -252,6 +260,7 @@ export default function PositionTargetsPage() {
             onSyncToggle={(period, month, checked) =>
               handleSyncToggle(position.id, period, month, checked)}
             onUpdateAfter6Month={(value) => updateAfter6Month(position.id, value)}
+            onUpdateAfter6MonthIncentivePct={(value) => updateAfter6MonthIncentivePct(position.id, value)}
 
           />
         ))}

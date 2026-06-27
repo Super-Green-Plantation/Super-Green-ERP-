@@ -7,7 +7,6 @@ import { calculatePayroll } from "./payroll-utils";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type ActiveTeamCounts = { advisors: number; fms: number; bms: number };
-type PositionTargetRow = Awaited<ReturnType<typeof resolvePositionTarget>>;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -50,7 +49,14 @@ function resolvePositionTarget(member: any, year: number, month: number) {
 
   // After 6 months: use after6MonthTarget from any row
   const anyTarget = targets[0];
-  return { ...anyTarget, targetAmount: anyTarget.after6MonthTarget ?? 0 };
+  const after6Target = anyTarget.after6MonthTarget ?? 0;
+  const after6Pct = anyTarget.after6MonthIncentivePct ?? 0;
+
+  return {
+    ...anyTarget, targetAmount: anyTarget.after6MonthTarget,
+    partialThreshold: after6Target * after6Pct,
+    partialBonus: anyTarget.bonusAmount, // full incentive amount stays
+  };
 }
 
 function toPositionTargetData(target: any) {

@@ -72,7 +72,7 @@ export async function getEvaluationPreview(branchId: number, year: number, month
               if (periodNumber === 2 && excessRate > 0) {
                 excessBonus = (volumeAchieved - targetAmount) * excessRate;
               }
-            } else if (target.partialThreshold > 0 && volumeAchieved >= target.partialThreshold) {
+            } else if (target.partialThresholdPct > 0 && volumeAchieved >= target.partialThresholdPct) {
               bonusEarned = target.partialBonus;
             }
           }
@@ -197,8 +197,8 @@ export async function runBatchEvaluation(
                 excessBonus = (volumeAchieved - targetAmount) * target.excessRate;
               }
             } else if (
-              target.partialThreshold > 0 &&
-              volumeAchieved >= target.partialThreshold
+              target.partialThresholdPct > 0 &&
+              volumeAchieved >= target.partialThresholdPct
             ) {
               // Partial threshold hit → partial bonus only
               bonusEarned = target.partialBonus;
