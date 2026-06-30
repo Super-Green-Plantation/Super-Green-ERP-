@@ -159,7 +159,7 @@ export const RestrictedView = ({
         </div>
       </div>
 
-      <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 flex flex-col gap-8 max-w-[1200px] w-full mx-auto">
+      <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 flex flex-col gap-8 max-w-300 w-full mx-auto">
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6 sm:gap-4">
           <div>

@@ -86,6 +86,7 @@ export function buildEdits(position: PositionWithTargets): PositionEdits[number]
                 vehicleThresholdPct: found.vehicleThresholdPct * 100, // 0.60 → 60
                 teamActiveThresholdPct: found.teamActiveThresholdPct * 100,
                 excessRate: found.excessRate * 100,
+                partialThresholdPct: Math.round(found.partialThresholdPct * 100 * 100) / 100, // 2 decimal precision
             } : blankRow(p, m));
         }
     }

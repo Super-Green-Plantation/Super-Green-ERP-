@@ -57,8 +57,8 @@ export default function FaTargetConfig({ fa, onUpdate }: FaTargetConfigProps) {
                   label="Partial Threshold"
                   value={config.partialThresholdPct}
                   onChange={v => onUpdate(pk, "partialThresholdPct", v)}
-                  prefix="Rs."
-                  hint={formatIndicator(config.partialThresholdPct) ? `Currently: ${formatIndicator(config.partialThresholdPct)}` : "Lower volume for partial bonus"}
+                  suffix="%"
+                  hint={`Currently: ${config.partialThresholdPct}% of full target — must achieve this to unlock partial bonus`}
                 />
                 <Field
                   label="Partial Bonus"

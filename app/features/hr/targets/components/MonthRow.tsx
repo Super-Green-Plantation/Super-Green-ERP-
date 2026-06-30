@@ -84,6 +84,8 @@ const MonthRow = React.memo(({ row, isSynced, onUpdate, onSyncToggle }: MonthRow
           </div>
         </Section>
 
+        
+
         <Section icon={<Car className="w-4 h-4" />} title="Vehicle & Fuel Allowance">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field

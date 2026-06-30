@@ -63,6 +63,7 @@ export default function NonFaTargetConfig({
       })}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        
 
       <Section icon={<TrendingUp className="w-4 h-4" />} title="After 6th Month Target">
           <Field

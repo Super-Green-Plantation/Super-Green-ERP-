@@ -189,6 +189,7 @@ export default function PositionTargetsPage() {
           vehicleThresholdPct: r.vehicleThresholdPct / 100,
           teamActiveThresholdPct: r.teamActiveThresholdPct / 100,
           excessRate: r.excessRate / 100,
+           partialThresholdPct: r.partialThresholdPct / 100,
           after6MonthTarget: edit.after6MonthTarget, // ← write from position-level state
           after6MonthIncentivePct: edit.after6MonthIncentivePct / 100, // UI % → DB fraction
         }));
