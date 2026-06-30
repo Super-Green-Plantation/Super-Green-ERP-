@@ -122,6 +122,8 @@ export default function PayrollPage() {
   const alreadyProcessedCount = preview.filter((r) => r.alreadyProcessed).length;
   const unconfiguredCount = preview.filter((r) => !r.salaryConfigured).length;
 
+  console.log(preview);
+  
 
   return (
     <div className="w-full min-h-screen p-4 sm:p-8 flex flex-col gap-6 sm:gap-8 font-sans text-gray-900 dark:text-gray-100 transition-colors duration-300">

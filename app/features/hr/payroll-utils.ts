@@ -106,7 +106,7 @@ export function calculatePayroll(
     monthlyTarget = safe(positionTarget.targetAmount);
 
     // Full incentive at 100% of target
-    incentiveHit = volumeAchieved >= monthlyTarget;
+    incentiveHit = monthlyTarget > 0 && volumeAchieved >= monthlyTarget;
     if (incentiveHit) {
       incentiveEarned = safe(positionTarget.bonusAmount);
     } else {
