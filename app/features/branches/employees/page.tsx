@@ -279,7 +279,7 @@ const Page = () => {
                 </button>
               </div>
 
-              <div className="overflow-x-auto bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-sm">
+              <div className="overflow-x-auto">
                 <EmpTable
                   onEdit={(emp) => { setSelectedEmp(emp); setIsEmpModalOpen(true); }}
                   onRefresh={handleRefreshEmployees}

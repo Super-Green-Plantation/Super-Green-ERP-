@@ -37,12 +37,12 @@ type NomineeFields = {
 // ---------- sub-components (unchanged) ----------
 function SectionHeader({ icon, title, action }: { icon: React.ReactNode; title: string; action?: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between border-b border-border pb-3 mb-1">
+    <div className="md:flex items-center justify-between border-b border-border pb-3 mb-1">
       <div className="flex items-center gap-2 text-primary font-semibold">
         <span className="shrink-0">{icon}</span>
         <span className="text-[18px] font-semibold uppercase tracking-tight">{title}</span>
       </div>
-      {action && <div>{action}</div>}
+      {action && <div >{action}</div>}
     </div>
   );
 }
@@ -313,7 +313,7 @@ export default function CreateInvestmentForm({
 
 
   const { data: userData } = useSessionUser();
-  const isManager = userData && ["ADMIN", "AGM", "REGIONAL_MANAGER", "BRANCH_MANAGER", "HR", "DEV", "ZONAL_MANAGER"].includes(userData.role);
+  const isManager = userData && ["ADMIN", "HR", "DEV",].includes(userData.role);
 
   const approvalStatus = initialData?.approvalStatus || "PENDING";
   const isApprovedOrRejected = approvalStatus === "APPROVED" || approvalStatus === "REJECTED";
@@ -614,6 +614,7 @@ export default function CreateInvestmentForm({
           newBeneficiary,
           newNominee,
           proposal,
+          proposalFormNo,
           ...hierarchy,
         });
         if (!res.success) { toast.error(res.error ?? "Failed"); return; }
@@ -669,7 +670,7 @@ export default function CreateInvestmentForm({
           {beneficiaryLabel && (
             <div className="p-3 bg-muted/30 rounded-lg border border-primary/20 flex justify-between items-center mb-2">
               <div className="flex items-center gap-2">
-                <Pencil className="w-[18px] h-[18px] text-primary" />
+                <Pencil className="w-4.5 h-4.5 text-primary" />
                 <span className="text-[11px] font-bold text-foreground">
                   Editing: <span className="uppercase">{beneficiaryLabel}</span>
                 </span>
@@ -968,15 +969,17 @@ export default function CreateInvestmentForm({
             </section>
           </div>
 
-          {/* Hierarchy */}
-          <section className="w-full">
-            {(!isEditMode || isApprovedOrRejected) && (
-              <AdvisorHierarchy
-                values={hierarchy}
-                onChange={(key, id) => setHierarchy(p => ({ ...p, [key]: id }))}
-                initialMembers={hierarchyInitialMembers} />
-            )}
-          </section>
+          {/* Hierarchy — only visible to management roles */}
+          {isManager && (
+            <section className="w-full">
+              {(!isEditMode || isApprovedOrRejected) && (
+                <AdvisorHierarchy
+                  values={hierarchy}
+                  onChange={(key, id) => setHierarchy(p => ({ ...p, [key]: id }))}
+                  initialMembers={hierarchyInitialMembers} />
+              )}
+            </section>
+          )}
 
           {isApprovedOrRejected && (
             <div className={`p-5 rounded-lg border ${approvalStatus === "APPROVED" ? "bg-green-500/10 border-green-500/20 text-green-700" : "bg-red-500/10 border-red-500/20 text-red-700"}`}>
@@ -1085,7 +1088,7 @@ export default function CreateInvestmentForm({
                 type="button"
                 onClick={handleSubmit}
                 disabled={isApproving || isRejecting || isUpdating}
-                className={`w-full py-5 bg-[#0f5132] text-white rounded-xl font-bold text-[18px] flex items-center justify-center gap-3 shadow-lg shadow-primary/20 hover:shadow-primary/40 active:scale-[0.99] transition-all uppercase tracking-widest disabled:opacity-50`}
+                className={`w-full py-5 bg-[#0f5132] text-white rounded-xl font-bold text-[12px] flex items-center justify-center gap-3 shadow-lg shadow-primary/20 hover:shadow-primary/40 active:scale-[0.99] transition-all uppercase tracking-widest disabled:opacity-50`}
               >
                 {isUpdating
                   ? <><Loader2 className="w-6 h-6 animate-spin" /> {isEditMode ? "Saving Updates..." : "Finalizing..."}</>

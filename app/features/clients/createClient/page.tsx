@@ -101,7 +101,7 @@ const Page = () => {
               onClientLock={handleLockClient}
             />
 
-            <div className="bg-card/60 backdrop-blur-xl border border-border/50 rounded-[2rem] p-6 shadow-sm">
+            <div className="bg-card/60 backdrop-blur-xl border border-border/50 rounded-xl p-6 shadow-sm">
               <DocumentUploadSection
                 key={resetKey}
                 pendingFilesRef={pendingFilesRef}

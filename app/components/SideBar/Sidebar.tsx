@@ -22,18 +22,18 @@ type SidebarProps = {
 };
 
 const links = [
-  { name: "Dashboard", href: "/features/dashboard", icon: LayoutDashboard, role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "AGM"] },
+  { name: "Dashboard", href: "/features/dashboard", icon: LayoutDashboard, role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER","ZONAL_MANAGER", "AGM"] },
   // { name: "Branches", href: "/features/branches", icon: GitBranch, role: ["ADMIN", "HR", "DEV"] },
-  { name: "Employee", href: "/features/branches/employees", icon: IdCardLanyard, role: ["ADMIN", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "AGM"] },
+  { name: "Employee", href: "/features/branches/employees", icon: IdCardLanyard, role: ["ADMIN", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "ZONAL_MANAGER", "AGM"] },
   { name: "Targets", href: "/features/hr/targets", icon: Target, role: ["ADMIN", "HR", "DEV"] },
   // { name: "Evaluations", href: "/features/hr/evaluations", icon: ChartCandlestick, role: ["ADMIN", "HR", "DEV"] },
   { name: "Payroll", href: "/features/hr/payroll", icon: Nfc, role: ["ADMIN", "HR", "DEV"] },
-  { name: "Financial Plans", href: "/features/financial_plans", icon: Landmark, role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "AGM"] },
+  { name: "Financial Plans", href: "/features/financial_plans", icon: Landmark, role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "ZONAL_MANAGER", "AGM"] },
   { name: "Commissions", href: "/features/commissions", icon: Percent, role: ["ADMIN", "HR", "DEV"] },
-  { name: "Investments", href: "/features/investments", icon: BanknoteArrowUp, role: ["ADMIN", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "AGM"] },
-  { name: "Quotations", href: "/features/quotations", icon: ReceiptText, role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "AGM"] },
-  { name: "Calculations", href: "/features/calculations", icon: Calculator, role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "AGM"] },
-  { name: "Clients", href: "/features/clients", icon: Users, role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "AGM"] },
+  { name: "Investments", href: "/features/investments", icon: BanknoteArrowUp, role: ["ADMIN", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "ZONAL_MANAGER", "AGM"] },
+  { name: "Quotations", href: "/features/quotations", icon: ReceiptText, role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "ZONAL_MANAGER", "AGM"] },
+  { name: "Calculations", href: "/features/calculations", icon: Calculator, role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "ZONAL_MANAGER", "AGM"] },
+  { name: "Clients", href: "/features/clients", icon: Users, role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "ZONAL_MANAGER", "AGM"] },
   { name: "Users", href: "/features/users", icon: User, role: ["ADMIN", "HR", "DEV"] },
   { name: "Profile", href: "/features/profile", icon: CircleUserRound, role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "AGM"] },
 ];

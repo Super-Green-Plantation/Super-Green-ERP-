@@ -55,7 +55,7 @@ const NomineeDetails = ({ lockedClient }: Props) => {
   const savedNominees: any[] = lockedClient?.nominees ?? [];
 
   return (
-    <div className="bg-card/60 backdrop-blur-xl rounded-[2.5rem] border border-border/50 shadow-sm overflow-hidden text-card-foreground">
+    <div className="bg-card/60 backdrop-blur-xl rounded-xl border border-border/50 shadow-sm overflow-hidden text-card-foreground">
       <div className="px-8 py-5 border-b border-border/30 flex items-center gap-3">
         <Users className="w-4 h-4 text-muted-foreground/60" />
         <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground opacity-60">

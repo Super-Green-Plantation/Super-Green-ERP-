@@ -254,6 +254,13 @@ export async function saveClient(
         },
       });
 
+      // Resolve the creator's member ID:
+      // 1. Prefer the member linked via User.member (userId FK) from getCurrentUserWithRole()
+      // 2. Fall back to the member found by email in this transaction (covers cases where
+      //    member.userId was never set but the email matches)
+      const creatorMemberId =
+        currentUser?.member?.id ?? member?.id ?? null;
+
       const createClient = await tx.client.create({
         data: {
           fullName: applicant.fullName,
@@ -270,7 +277,7 @@ export async function saveClient(
           signature: applicant.signature,
           idFront: applicant.idFront,
           idBack: applicant.idBack,
-          createdById: currentUser?.member?.id ?? null,
+          createdById: creatorMemberId,
           // faId: applicant.faId ?? null,
           // fmId: applicant.fmId ?? null,
           // bmId: applicant.bmId ?? null,

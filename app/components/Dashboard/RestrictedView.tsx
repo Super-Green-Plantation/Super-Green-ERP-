@@ -9,30 +9,30 @@ import {
   ShieldCheck,
   XCircle,
   AlertTriangle,
-  BarChart2
+  TrendingUp,
+  User,
+  Target,
+  FileText
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ThemeToggle } from "../ThemeToggle";
-
-const MONTH_NAMES = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
 
 const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat("en-LK", {
     maximumFractionDigits: 0,
   }).format(amount);
+};
+
+const getRelativeTime = (dateInput: Date | string) => {
+  const date = new Date(dateInput);
+  const diffMs = new Date().getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffMins < 60) return `${Math.max(1, diffMins)}h ago`; // Fallback to hours or mins
+  if (diffHours < 24) return `${diffHours}h ago`;
+  return `${diffDays}d ago`;
 };
 
 interface EmployeePerformance {
@@ -129,221 +129,340 @@ export const RestrictedView = ({
 
   const achieved = performance?.goal?.achieved ?? 0;
   const target = performance?.goal?.target ?? 0;
-  const percentage =
-    target > 0 ? Math.round((achieved / target) * 100) : 0;
-
+  const percentage = target > 0 ? Math.round((achieved / target) * 100) : 0;
   const firstName = userName?.split(" ")[0] ?? "there";
 
-  // Loading states
-  const isLoading = !isMounted || performance === null;
+  const formattedDate = now.toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "short",
+    day: "numeric",
+  }).toUpperCase();
+
+  // Draw semi-circular gauge arc SVG path
+  const renderGaugeArc = (pctValue: number) => {
+    const strokeWidth = 8;
+    const radius = 35;
+    const circumference = Math.PI * radius; // semi-circle arc length
+    const clampedPct = Math.min(Math.max(pctValue / 100, 0), 1);
+    const strokeDashoffset = circumference - clampedPct * circumference;
+
+    return (
+      <div className="relative flex flex-col items-center justify-center w-full h-28 mt-2">
+        <svg className="w-40 h-20" viewBox="0 0 100 50">
+          <path
+            d="M 15 48 A 35 35 0 0 1 85 48"
+            fill="none"
+            stroke="currentColor"
+            className="text-gray-200 dark:text-gray-800"
+            strokeWidth={strokeWidth}
+            strokeLinecap="round"
+          />
+          <path
+            d="M 15 48 A 35 35 0 0 1 85 48"
+            fill="none"
+            stroke="currentColor"
+            className="text-[#0f5132] dark:text-[#4ade80] transition-all duration-1000 ease-out"
+            strokeWidth={strokeWidth}
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+          />
+        </svg>
+        <div className="absolute bottom-1 text-center">
+          <span className="text-2xl font-extrabold text-gray-900 dark:text-gray-100">
+            {pctValue}%
+          </span>
+        </div>
+      </div>
+    );
+  };
+
+  // Generate monthly trend using actual client registration counts grouped by week of the current month (Weeks 1-4)
+  const getWeeklyMonthlyTrendData = () => {
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    
+    const weekLabels = ["WEEK 1", "WEEK 2", "WEEK 3", "WEEK 4"];
+    const counts = [0, 0, 0, 0];
+
+    if (performance?.recentClients) {
+      performance.recentClients.forEach((client) => {
+        const clientDate = new Date(client.createdAt);
+        if (clientDate.getMonth() === currentMonth && clientDate.getFullYear() === currentYear) {
+          const dateNum = clientDate.getDate();
+          if (dateNum <= 7) {
+            counts[0] += 1;
+          } else if (dateNum <= 14) {
+            counts[1] += 1;
+          } else if (dateNum <= 21) {
+            counts[2] += 1;
+          } else {
+            counts[3] += 1;
+          }
+        }
+      });
+    }
+
+    const maxCount = Math.max(...counts, 1);
+
+    return weekLabels.map((label, idx) => {
+      const pct = (counts[idx] / maxCount) * 100;
+      const barHeight = counts[idx] > 0 ? `${Math.max(pct, 10)}%` : "0%";
+      return {
+        label,
+        height: barHeight,
+        count: counts[idx],
+      };
+    });
+  };
+
+  const monthlyTrend = getWeeklyMonthlyTrendData();
+
+  if (!isMounted || performance === null) {
+    return (
+      <div className="w-full min-h-screen flex items-center justify-center bg-[#FAFBF9]  text-gray-900 dark:text-gray-100">
+        <div className="flex flex-col items-center gap-4">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#0f5132] dark:border-[#4ade80]"></div>
+          <p className="text-sm font-medium animate-pulse">Loading overview...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="w-full min-h-screen p-4 sm:p-8 flex flex-col gap-8  dark:bg-gray-950 text-gray-900 dark:text-gray-100 font-sans transition-colors duration-300">
-      {/* Top Navigation */}
-      <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-6 w-full">
-        <div className="flex items-center gap-2 sm:gap-4">
-          <button className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors">
+    <div className="w-full min-h-screen  text-gray-900 dark:text-gray-100 font-sans pb-12 transition-colors duration-300">
+
+      {/* Top Header bar */}
+      <div className="sticky top-0 z-50 backdrop-blur-md  border-b border-gray-100 dark:border-gray-900/50 px-4 sm:px-8 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-[#E8EAE6] dark:bg-gray-800 overflow-hidden flex items-center justify-center border border-gray-200 dark:border-gray-700 shadow-inner">
+            <span className="text-[#0f5132] dark:text-[#4ade80] text-base font-extrabold">{firstName[0]}</span>
+          </div>
+          <div>
+            <h2 className="text-base font-bold tracking-tight text-gray-900 dark:text-gray-100">
+              Performance Insight
+            </h2>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <button className="relative p-2.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-900 text-gray-600 dark:text-gray-400 transition-colors">
             <Bell className="w-5 h-5" />
+            <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-red-500"></span>
           </button>
           <ThemeToggle />
         </div>
-        <div className="h-8 w-px bg-gray-300 dark:bg-gray-800"></div>
-        <div className="flex items-center gap-3">
-          <div className="text-right flex flex-col justify-center">
-            <span className="text-sm font-semibold leading-tight">{firstName}</span>
-            <span className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider">{userRole}</span>
-          </div>
-          <div className="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-800 overflow-hidden flex items-center justify-center">
-            <span className="text-gray-500 dark:text-gray-400 text-sm font-bold">{firstName[0]}</span>
-          </div>
-        </div>
       </div>
 
-      <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 flex flex-col gap-8 max-w-300 w-full mx-auto">
-        {/* Header Section */}
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-6 sm:gap-4">
-          <div>
-            <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
-              Hello, {firstName}.
+      <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-4xl mx-auto px-4 sm:px-6 mt-6 flex flex-col gap-6">
+
+        {/* Title and date overview */}
+        <div className="flex flex-col gap-1.5">
+          <span className="text-xs font-bold tracking-widest text-[#0f5132] dark:text-[#4ade80]">
+            {formattedDate}
+          </span>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">
+              Employee Overview
             </h1>
-            <p className="text-sm font-medium text-[#0f5132] dark:text-[#4ade80] mt-2 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 leading-relaxed">
-              <span>{MONTH_NAMES[now.getMonth()]} {now.getDate()}, {year} •</span>
-              <span className="flex flex-wrap gap-1">
-                <span>{userRole}</span>
-                {performance?.status && <span>/ {performance.status === "PERMANENT" ? "Permanent" : "Probation"}</span>}
-              </span>
-            </p>
+            <div className="flex items-center gap-2 bg-[#d1e7dd] dark:bg-[#064e3b]/80 px-3.5 py-1.5 rounded-full text-xs font-bold text-[#0f5132] dark:text-[#4ade80] shadow-sm">
+              <TrendingUp className="w-4 h-4" />
+              <span>+{percentage}% vs target</span>
+            </div>
           </div>
-          <button className="bg-[#0f5132] dark:bg-[#166534] hover:bg-[#0b3d25] dark:hover:bg-[#14532d] text-white px-5 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-colors shadow-sm w-fit sm:w-auto">
-            <PlusCircle className="w-5 h-5" />
-            <span>New Proposal</span>
+        </div>
+
+        {/* Action Bar (New Proposal) */}
+        <div className="md:flex items-center justify-between gap-4">
+
+          <div className="flex items-center justify-between gap-4 bg-[#F4F5F1] dark:bg-gray-900 p-4 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm">
+            <div className="flex flex-col">
+              <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Active Role</span>
+              <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">{userRole} • {performance.status === "PERMANENT" ? "Permanent" : "Probation"}</span>
+            </div>
+          </div>
+          <button className="bg-[#0f5132] dark:bg-[#166534] hover:bg-[#0b3d25] dark:hover:bg-[#14532d] text-white px-4 py-2 rounded-xl font-bold flex items-center gap-2 transition-transform hover:scale-[1.02] active:scale-[0.98] shadow-sm">
+            <PlusCircle className="w-4.5 h-4.5" />
+            <span className="text-xs">New Proposal</span>
           </button>
         </div>
 
 
-        {/* Cards Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-          {/* Volume Achieved Card - spans 3 columns */}
-          <div className="lg:col-span-3 bg-[#F4F5F1] dark:bg-gray-900 rounded-2xl p-6 sm:p-8 border border-gray-200 dark:border-gray-800 shadow-sm relative overflow-hidden flex flex-col sm:flex-row items-center sm:items-center justify-between gap-8 sm:gap-6 transition-colors duration-300">
-            <div className="flex flex-col items-center sm:items-start gap-4 z-10 text-center sm:text-left">
-              <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Volume Achieved</p>
-              <div className="flex flex-row items-center sm:items-baseline gap-2">
-                <span className="text-7xl sm:text-6xl font-bold text-[#0f5132] dark:text-[#4ade80] leading-none">{formatCurrency(achieved)}</span>
-                <span className="text-xl font-semibold text-gray-500 dark:text-gray-400 w-24 sm:w-auto text-left leading-tight">({percentage}% of target)</span>
-              </div>
 
-              {target > achieved && (
-                <div className="inline-flex items-center gap-1.5 bg-[#f8d7da] dark:bg-red-900/30 text-[#842029] dark:text-red-400 px-4 sm:px-3 py-2 sm:py-1.5 rounded-full text-sm sm:text-xs font-bold w-fit mt-2">
-                  <AlertTriangle className="w-4 h-4 shrink-0" />
-                  Remaining {formatCurrency(target - achieved)}
-                </div>
-              )}
+
+        {/* Row 1: Yearly Performance & Monthly Target */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Yearly Performance / Volume Achieved Card */}
+          <div className="bg-[#F4F5F1] dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-all duration-300 relative group flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
+                YEARLY PERFORMANCE
+              </span>
+              <FileText className="w-5 h-5 text-gray-400 dark:text-gray-500" />
             </div>
 
-            <div className="z-10 bg-[#E8EAE6] dark:bg-gray-800 rounded-2xl p-6 w-full sm:w-64 flex flex-col justify-center gap-4 transition-colors duration-300">
-              <div className="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-2">
-                <div className="bg-[#0f5132] dark:bg-[#22c55e] h-2 rounded-full" style={{ width: `${Math.min(percentage, 100)}%` }}></div>
-              </div>
-              <p className="text-xs font-medium text-center text-gray-600 dark:text-gray-400">Monthly Progress</p>
-            </div>
+            {renderGaugeArc(percentage)}
 
-            {/* Background decoration */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white dark:bg-gray-800 rounded-full -translate-y-1/2 translate-x-1/4 opacity-40 dark:opacity-20 pointer-events-none"></div>
+            <div className="text-center mt-3">
+              <p className="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tight">
+                {formatCurrency(achieved)}
+              </p>
+              <p className="text-xs font-extrabold text-[#0f5132] dark:text-[#4ade80] uppercase tracking-wider mt-1">
+                {percentage}% OF TARGET
+              </p>
+            </div>
           </div>
 
-          {/* Probation Progress Card - spans 2 columns */}
-          <div className="lg:col-span-2 bg-[#F4F5F1] dark:bg-gray-900 rounded-2xl p-6 sm:p-8 border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col justify-between transition-colors duration-300">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">Probation Progress</h3>
-              <ShieldCheck className="w-6 h-6 text-[#0f5132] dark:text-[#4ade80]" />
+          {/* Monthly Target / Monthly Progress */}
+          <div className="bg-[#F4F5F1] dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm hover:shadow-md transition-all duration-300 relative group flex flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
+                MONTHLY TARGET
+              </span>
+              <Target className="w-5 h-5 text-gray-400 dark:text-gray-500" />
             </div>
 
-            <div className="space-y-3">
-              <div className="flex justify-between text-sm font-medium">
-                <span className="text-gray-500 dark:text-gray-400">Completion</span>
-                <span className="text-gray-900 dark:text-gray-100">{performance?.monthInPeriod || 0} / 3 Months</span>
-              </div>
-              <div className="w-full bg-gray-300 dark:bg-gray-700 rounded-full h-2.5">
-                <div className="bg-[#0f5132] dark:bg-[#22c55e] h-2.5 rounded-full" style={{ width: `${Math.min(((performance?.monthInPeriod || 0) / 3) * 100, 100)}%` }}></div>
-              </div>
+            {renderGaugeArc(percentage)}
+
+            <div className="text-center mt-3">
+              <p className="text-3xl font-black text-gray-900 dark:text-gray-100 tracking-tight">
+                {percentage}%
+              </p>
+              <p className="text-xs font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider mt-1">
+                {target > achieved
+                  ? `${100 - Math.min(percentage, 100)}% TO GOAL (${formatCurrency(target - achieved)} Lacking)`
+                  : "GOAL ACHIEVED 🎉"}
+              </p>
             </div>
+          </div>
+        </div>
 
-            <div className="w-full h-px bg-gray-300 dark:bg-gray-800 my-6"></div>
-
+        {/* Row 2: Status Cards (Accepted, Pending, Rejected) */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {/* Accepted badge */}
+          <div className="bg-[#F4F5F1] dark:bg-gray-900 rounded-2xl p-4 border border-gray-200 dark:border-gray-800 border-l-4 border-l-[#0f5132] dark:border-l-[#4ade80] shadow-sm flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Target Amount</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{formatCurrency(performance?.target?.targetAmount || target)}</p>
+              <p className="text-xs font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider">ACCEPTED</p>
+              <p className="text-3xl font-black text-[#0f5132] dark:text-[#4ade80] mt-1">
+                {performance?.proposals?.approvedCount ?? 0}
+              </p>
+              <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 mt-0.5">
+                {formatCurrency(performance?.proposals?.approvedAmount ?? 0)}
+              </p>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-[#d1e7dd] dark:bg-[#064e3b]/80 flex items-center justify-center">
+              <CheckCircle className="w-5 h-5 text-[#0f5132] dark:text-[#4ade80]" />
+            </div>
+          </div>
+
+          {/* Pending badge */}
+          <div className="bg-[#F4F5F1] dark:bg-gray-900 rounded-2xl p-4 border border-gray-200 dark:border-gray-800 border-l-4 border-l-[#e2e3e5] dark:border-l-gray-700 shadow-sm flex items-center justify-between">
+            <div>
+              <p className="text-xs font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider">PENDING</p>
+              <p className="text-3xl font-black text-gray-800 dark:text-gray-200 mt-1">
+                {performance?.proposals?.pendingCount ?? 0}
+              </p>
+              <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 mt-0.5">
+                {formatCurrency(performance?.proposals?.pendingAmount ?? 0)}
+              </p>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
+              <Clock className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            </div>
+          </div>
+
+          {/* Rejected badge */}
+          <div className="bg-[#F4F5F1] dark:bg-gray-900 rounded-2xl p-4 border border-gray-200 dark:border-gray-800 border-l-4 border-l-[#f8d7da] dark:border-l-red-500 shadow-sm flex items-center justify-between">
+            <div>
+              <p className="text-xs font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider">REJECTED</p>
+              <p className="text-3xl font-black text-red-600 dark:text-red-400 mt-1">
+                {performance?.proposals?.rejectedCount ?? 0}
+              </p>
+              <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 mt-0.5">
+                Action Required
+              </p>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-[#f8d7da] dark:bg-red-950/50 flex items-center justify-center">
+              <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />
             </div>
           </div>
         </div>
 
-        {/* My Proposals Section */}
-        <div className="mt-4 space-y-6">
-          <div className="flex items-center gap-4">
-            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 whitespace-nowrap">My Proposals</h3>
-            <div className="h-px bg-gray-300 dark:bg-gray-800 flex-1"></div>
+        {/* Row 3: Monthly Trend Bar Chart */}
+        <div className="bg-[#F4F5F1] dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
+              MONTHLY TREND (CLIENT REGISTRATIONS)
+            </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-            {/* Pending */}
-            <div className="bg-[#F4F5F1] dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col gap-4 transition-colors duration-300">
-              <div className="flex gap-4 items-start">
-                <div className="w-12 h-12 bg-[#e2e3e5] dark:bg-gray-800 rounded-xl flex items-center justify-center shrink-0">
-                  <Clock className="w-6 h-6 text-[#41464b] dark:text-gray-300" />
+          <div className="flex items-end justify-between gap-2 h-44 px-2 pt-4">
+            {monthlyTrend.map((data, idx) => (
+              <div key={idx} className="flex flex-col items-center flex-1 group">
+                <div className="w-full bg-[#E8EAE6]/50 dark:bg-gray-800/50 rounded-t-lg h-36 flex items-end overflow-hidden relative">
+                  <div
+                    style={{ height: data.height }}
+                    className="w-full bg-gradient-to-t from-[#0f5132]/30 to-[#0f5132] dark:from-[#4ade80]/20 dark:to-[#4ade80] rounded-t-md transition-all duration-700 ease-out group-hover:opacity-85"
+                  ></div>
+                  {data.count > 0 && (
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/10 dark:bg-white/5 pointer-events-none">
+                      <span className="text-[10px] font-bold bg-[#0f5132] dark:bg-[#4ade80] text-white dark:text-gray-900 px-1.5 py-0.5 rounded shadow">
+                        {data.count}
+                      </span>
+                    </div>
+                  )}
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm font-bold text-gray-500 dark:text-gray-400">Pending</p>
-                  <p className="text-xl font-bold text-gray-900 dark:text-gray-100">Amount: {formatCurrency(performance?.proposals?.pendingAmount || 0)}</p>
-                </div>
+                <span className="text-[10px] font-extrabold text-gray-500 dark:text-gray-400 mt-2 uppercase">
+                  {data.label}
+                </span>
               </div>
-              <div className="mt-auto pt-2">
-                <span className="inline-flex bg-[#e2e3e5] dark:bg-gray-800 text-[#41464b] dark:text-gray-300 px-3 py-1 rounded-full text-xs font-bold">Waiting for review</span>
-              </div>
-            </div>
-
-            {/* Approved */}
-            <div className="bg-[#F4F5F1] dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col gap-4 transition-colors duration-300">
-              <div className="flex gap-4 items-start">
-                <div className="w-12 h-12 bg-[#d1e7dd] dark:bg-[#064e3b] rounded-xl flex items-center justify-center shrink-0">
-                  <CheckCircle className="w-6 h-6 text-[#0f5132] dark:text-[#34d399]" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-bold text-gray-500 dark:text-gray-400">Approved</p>
-                  <p className="text-xl font-bold text-gray-900 dark:text-gray-100">Amount: {formatCurrency(performance?.proposals?.approvedAmount || 0)}</p>
-                </div>
-              </div>
-              <div className="mt-auto pt-2">
-                <span className="inline-flex bg-[#d1e7dd] dark:bg-[#064e3b] text-[#0f5132] dark:text-[#34d399] px-3 py-1 rounded-full text-xs font-bold">Verified Proposals</span>
-              </div>
-            </div>
-
-            {/* Rejected */}
-            <div className="bg-[#F4F5F1] dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm flex flex-col gap-4 transition-colors duration-300">
-              <div className="flex gap-4 items-start">
-                <div className="w-12 h-12 bg-[#f8d7da] dark:bg-[#7f1d1d] rounded-xl flex items-center justify-center shrink-0">
-                  <XCircle className="w-6 h-6 text-[#842029] dark:text-[#f87171]" />
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-bold text-gray-500 dark:text-gray-400">Rejected</p>
-                  <p className="text-xl font-bold text-gray-900 dark:text-gray-100">{performance?.proposals?.rejectedCount === 0 ? "No items found" : `Amount: ${formatCurrency(performance?.proposals?.rejectedCount || 0)}`}</p>
-                </div>
-              </div>
-              <div className="mt-auto pt-2">
-                <span className="inline-flex bg-[#f8d7da] dark:bg-[#7f1d1d] text-[#842029] dark:text-[#f87171] px-3 py-1 rounded-full text-xs font-bold">Action required</span>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
 
-        {/* Recent Client Registrations */}
-        <div className="mt-4 bg-[#E8EAE6] dark:bg-gray-800 rounded-2xl border border-gray-300 dark:border-gray-700 overflow-hidden transition-colors duration-300">
-          <div className="flex justify-between items-center px-4 sm:px-6 py-4 border-b border-gray-300 dark:border-gray-700">
-            <div className="flex items-center gap-2 text-gray-900 dark:text-gray-100 font-bold text-sm sm:text-base">
-              <BarChart2 className="w-5 h-5 text-[#0f5132] dark:text-[#4ade80]" />
-              Recent Clients
+        {/* Row 4: Client Activity list */}
+        <div className="bg-[#F4F5F1] dark:bg-gray-900 rounded-2xl p-6 border border-gray-200 dark:border-gray-800 shadow-sm">
+          <div className="flex items-center justify-between mb-4 border-b border-gray-200 dark:border-gray-800 pb-3">
+            <span className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">
+              CLIENT ACTIVITY
+            </span>
+            <button className="text-xs font-extrabold text-[#0f5132] dark:text-[#4ade80] uppercase hover:underline transition-all">
+              VIEW LOGS
+            </button>
+          </div>
+
+          {!performance?.recentClients || performance.recentClients.length === 0 ? (
+            <p className="text-sm text-gray-500 dark:text-gray-400 italic py-4 text-center">
+              No recent client registrations found.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {performance.recentClients.slice(0, 3).map((client) => (
+                <div
+                  key={client.id}
+                  className="flex items-center justify-between p-3.5 bg-[#FAFBF9] dark:bg-gray-950 rounded-xl border border-gray-200/60 dark:border-gray-800/60 hover:scale-[1.005] transition-all"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-[#E8EAE6] dark:bg-gray-800 flex items-center justify-center">
+                      <User className="w-4.5 h-4.5 text-[#0f5132] dark:text-[#4ade80]" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-gray-900 dark:text-gray-100">
+                        {client.fullName}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                        {client.approvalStatus} • {client.status}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-xs text-gray-400 dark:text-gray-500 font-medium">
+                    {getRelativeTime(client.createdAt)}
+                  </span>
+                </div>
+              ))}
             </div>
-          </div>
-          <div className="p-6">
-            {!performance?.recentClients || performance.recentClients.length === 0 ? (
-              <p className="text-sm text-gray-500 dark:text-gray-400 italic">No recent client registrations found.</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
-                  <thead className="text-xs text-gray-500 dark:text-gray-400 uppercase bg-[#F4F5F1] dark:bg-gray-900 rounded-lg">
-                    <tr>
-                      <th className="px-4 py-3 rounded-tl-lg">Client Name</th>
-                      <th className="px-4 py-3">Registration Date</th>
-                      <th className="px-4 py-3">Status</th>
-                      <th className="px-4 py-3 rounded-tr-lg">Approval</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {performance.recentClients.map((client) => (
-                      <tr key={client.id} className="border-b border-gray-300 dark:border-gray-700 last:border-0">
-                        <td className="px-4 py-3 font-medium text-gray-900 dark:text-gray-100">{client.fullName}</td>
-                        <td className="px-4 py-3 text-gray-600 dark:text-gray-400">{new Date(client.createdAt).toLocaleDateString()}</td>
-                        <td className="px-4 py-3">
-                          <span className={`px-2 py-1 rounded-full text-[10px] uppercase font-bold ${client.status === "Active" ? "bg-[#d1e7dd] dark:bg-[#064e3b] text-[#0f5132] dark:text-[#34d399]" : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
-                            }`}>
-                            {client.status}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={`px-2 py-1 rounded-full text-[10px] uppercase font-bold ${client.approvalStatus === "APPROVED" ? "bg-[#d1e7dd] dark:bg-[#064e3b] text-[#0f5132] dark:text-[#34d399]" :
-                              client.approvalStatus === "PENDING" ? "bg-[#e2e3e5] dark:bg-gray-700 text-[#41464b] dark:text-gray-300" :
-                                "bg-[#f8d7da] dark:bg-[#7f1d1d] text-[#842029] dark:text-[#f87171]"
-                            }`}>
-                            {client.approvalStatus}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
+          )}
         </div>
+
       </div>
     </div>
   );

@@ -306,6 +306,7 @@ export async function createInvestmentForExistingClient(data: {
   planId?: number;
   amount: number;
   proposal?: string;
+  proposalFormNo:string;
   investmentDate?: Date;
   investmentRates?: number[];
   beneficiaryId?: number | null;

@@ -36,7 +36,7 @@ const DuplicateBanner = ({
   onUseExisting: (c: NonNullable<ClientMatch>) => void;
   onViewClient: (id: number) => void;
 }) => (
-  <div className="md:col-span-2 rounded-[1.5rem] border border-amber-300/60 bg-amber-50/60 dark:bg-amber-950/20 dark:border-amber-700/40 p-5 flex flex-col gap-3">
+  <div className="md:col-span-2 rounded-xl border border-amber-300/60 bg-amber-50/60 dark:bg-amber-950/20 dark:border-amber-700/40 p-5 flex flex-col gap-3">
     <div className="flex items-start justify-between gap-3">
       <div className="flex items-center gap-2">
         <div className="w-2 h-2 rounded-full bg-amber-500 shrink-0 mt-0.5" />
@@ -233,7 +233,7 @@ const ApplicantDetails = ({ lockedClient, onClientLock }: Props) => {
     "text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-2 ml-1 block";
 
   return (
-    <div className="bg-card/60 backdrop-blur-xl rounded-[2.5rem] border border-border/50 shadow-sm overflow-hidden text-card-foreground">
+    <div className="bg-card/60 backdrop-blur-xl rounded-xl border border-border/50 shadow-sm overflow-hidden text-card-foreground">
       <div className="px-8 py-6 border-b border-border/30 flex items-center justify-between">
         <h2 className="text-sm font-black uppercase tracking-[0.25em] text-foreground opacity-80">
           Applicant Information

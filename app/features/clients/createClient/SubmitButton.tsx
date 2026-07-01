@@ -44,9 +44,7 @@ export const SubmitButton = ({
   const { form } = useFormContext();
   const [loading, setLoading] = useState(false);
   const [dbUser, setDbUser] = useState<DbUser | null>(null);
-  const { reset } = form;
-  console.log("form data =========== ", form);
-  
+  const { reset } = form;  
 
   useEffect(() => {
     fetch("/api/me")
@@ -56,25 +54,7 @@ export const SubmitButton = ({
 
   // ── PATH A: existing client — only create the investment ─────────────────
   const handleExistingClientSubmit = async () => {
-    // Validate only investment-relevant fields
-    // const isValid = await form.trigger([
-    //   "applicant.investmentAmount",
-    //   "applicant.proposalFormNo",
-    //   "applicant.investmentDate",
-    //   "investment.planId",
-    //   "beneficiary",
-    //   "nominee",
-    // ]);
-
-    // if (!isValid) {
-    //   const errs = form.formState.errors;
-    //   const first =
-    //     (errs.applicant as any)?.investmentAmount?.message ||
-    //     (errs.applicant as any)?.proposalFormNo?.message ||
-    //     "Please fix the errors in the form.";
-    //   toast.error(first);
-    //   return;
-    // }
+  
 
     setLoading(true);
     try {
@@ -125,6 +105,7 @@ export const SubmitButton = ({
         nomineeId: existingNomineeId ?? null,
         newBeneficiary,
         newNominee,
+        proposalFormNo: data.applicant.proposalFormNo ?? "",
       });
 
       if (!res.success) {
@@ -257,12 +238,7 @@ export const SubmitButton = ({
         )}
       </button>
 
-      {!loading && (
-        <div className="text-center text-[9px] text-muted-foreground/40 font-black uppercase tracking-[0.3em] mt-6 flex items-center justify-center gap-2">
-          <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
-          Secure End-to-End Encryption Active
-        </div>
-      )}
+      
     </div>
   );
 };

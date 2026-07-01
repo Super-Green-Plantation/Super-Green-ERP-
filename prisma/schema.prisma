@@ -324,6 +324,7 @@ model Investment {
   rm                   Member?        @relation("InvestmentRM", fields: [rmId], references: [id])
   zm                   Member?        @relation("InvestmentZM", fields: [zmId], references: [id])
   profit               Profit?
+  renewalCreditedAt DateTime?
 }
 
 model Client {

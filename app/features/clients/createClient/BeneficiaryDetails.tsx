@@ -65,7 +65,7 @@ const BeneficiaryDetails = ({ lockedClient }: Props) => {
   const savedBeneficiaries: any[] = lockedClient?.beneficiaries ?? [];
 
   return (
-    <div className="bg-card/60 backdrop-blur-xl rounded-[2.5rem] border border-border/50 shadow-sm overflow-hidden text-card-foreground">
+    <div className="bg-card/60 backdrop-blur-xl rounded-xl border border-border/50 shadow-sm overflow-hidden text-card-foreground">
       <div className="px-8 py-5 border-b border-border/30 flex items-center gap-3">
         <Landmark className="w-4 h-4 text-muted-foreground/60" />
         <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground opacity-60">
@@ -180,7 +180,7 @@ const BeneficiaryDetails = ({ lockedClient }: Props) => {
           </div>
         )}
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid sm:grid-cols-2 grid-cols-1 gap-4">
           <div>
             <label className={labelClass}>NIC</label>
             <input
@@ -219,7 +219,7 @@ const BeneficiaryDetails = ({ lockedClient }: Props) => {
           <FieldError message={beneficiaryErrors?.bankName?.message} />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid sm:grid-cols-2 grid-cols-1 gap-4">
           <div>
             <label className={labelClass}>Bank Branch</label>
             <input
