@@ -81,7 +81,7 @@ export const PrivilegedView = ({ data, userName, userRole, achieved, target, per
         </div>
       </div>
 
-      <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 flex flex-col gap-6 w-full mx-auto max-w-[1400px]">
+      <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 flex flex-col gap-6 w-full mx-auto max-w-350">
         
         {/* KPI Cards Row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -122,7 +122,7 @@ export const PrivilegedView = ({ data, userName, userRole, achieved, target, per
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* Chart Section */}
-          <div className="lg:col-span-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm flex flex-col min-h-[350px]">
+          <div className="lg:col-span-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm flex flex-col min-h-87.5">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
               <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">Branch Registrations</h2>
               
@@ -139,7 +139,7 @@ export const PrivilegedView = ({ data, userName, userRole, achieved, target, per
           </div>
 
           {/* Recent Activity Section */}
-          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-sm flex flex-col overflow-hidden min-h-[350px]">
+          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-sm flex flex-col overflow-hidden min-h-87.5">
             <div className="flex justify-between items-center p-5 px-6 border-b border-gray-100 dark:border-gray-800">
               <h2 className="text-[15px] font-bold text-gray-900 dark:text-gray-100">Recent Activity</h2>
               <Link href="#" className="text-[10px] font-bold text-[#0f5132] dark:text-[#4ade80] uppercase tracking-wider hover:underline">View All</Link>
@@ -152,13 +152,13 @@ export const PrivilegedView = ({ data, userName, userRole, achieved, target, per
                       <UserAvatar seed={inv.client?.fullName || "User"} className="w-5 h-5 opacity-80 mix-blend-luminosity" />
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-sm font-bold text-gray-900 dark:text-gray-100 truncate max-w-[140px] sm:max-w-[200px] lg:max-w-[120px] xl:max-w-[180px]">{inv.client?.fullName}</span>
+                      <span className="text-sm font-bold text-gray-900 dark:text-gray-100 truncate max-w-35 sm:max-w-50 lg:max-w-30 xl:max-w-45">{inv.client?.fullName}</span>
                       <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">{isMounted ? new Date(inv.investmentDate).toLocaleDateString() : ""} • {isMounted ? new Date(inv.investmentDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}</span>
                     </div>
                   </div>
                   <div className="text-right flex flex-col shrink-0">
                     <span className="text-sm font-bold text-[#0f5132] dark:text-[#4ade80] whitespace-nowrap">Rs. {isMounted ? inv.amount.toLocaleString() : inv.amount}</span>
-                    <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5 uppercase tracking-tighter truncate max-w-[80px]">FA: {inv.advisor?.nameWithInitials?.split(' ')[0] || "Unassigned"}</span>
+                    <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5 uppercase tracking-tighter truncate max-w-20">FA: {inv.advisor?.nameWithInitials?.split(' ')[0] || "Unassigned"}</span>
                   </div>
                 </div>
               ))}
@@ -173,7 +173,7 @@ export const PrivilegedView = ({ data, userName, userRole, achieved, target, per
             {modules.map((mod, idx) => (
               <Link key={idx} href={mod.href} className="group relative h-36 sm:h-44 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all block">
                 <img src={mod.image} alt={mod.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0f5132]/90 via-[#0f5132]/40 to-transparent dark:from-black/90 dark:via-black/40"></div>
+                <div className="absolute inset-0 bg-linear-to-t from-[#0f5132]/90 via-[#0f5132]/40 to-transparent dark:from-black/90 dark:via-black/40"></div>
                 <div className="absolute bottom-5 left-5 right-5">
                   <h4 className="text-white font-bold text-lg sm:text-xl leading-tight tracking-tight drop-shadow-md">{mod.title}</h4>
                 </div>
