@@ -152,13 +152,13 @@ export async function getClientById(id: number) {
       branch: true,
       nominees: true,
       beneficiaries: true,
-    //   fa: { include: { position: { include: { salary: true, orc: true } }, branches: { include: { branch: true } } } },
-    //   fm: { include: { position: { include: { salary: true, orc: true } }, branches: { include: { branch: true } } } },
-    //   bm: { include: { position: { include: { salary: true, orc: true } }, branches: { include: { branch: true } } } },
-    //   rm: { include: { position: { include: { salary: true, orc: true } }, branches: { include: { branch: true } } } },
-    //   zm: { include: { position: { include: { salary: true, orc: true } }, branches: { include: { branch: true } } } },
-    //   agm: { include: { position: { include: { salary: true, orc: true } }, branches: { include: { branch: true } } } },
-    //   cco: { include: { position: { include: { salary: true, orc: true } }, branches: { include: { branch: true } } } },
+      //   fa: { include: { position: { include: { salary: true, orc: true } }, branches: { include: { branch: true } } } },
+      //   fm: { include: { position: { include: { salary: true, orc: true } }, branches: { include: { branch: true } } } },
+      //   bm: { include: { position: { include: { salary: true, orc: true } }, branches: { include: { branch: true } } } },
+      //   rm: { include: { position: { include: { salary: true, orc: true } }, branches: { include: { branch: true } } } },
+      //   zm: { include: { position: { include: { salary: true, orc: true } }, branches: { include: { branch: true } } } },
+      //   agm: { include: { position: { include: { salary: true, orc: true } }, branches: { include: { branch: true } } } },
+      //   cco: { include: { position: { include: { salary: true, orc: true } }, branches: { include: { branch: true } } } },
     },
   });
 
@@ -254,12 +254,17 @@ export async function saveClient(
         },
       });
 
-      // Resolve the creator's member ID:
-      // 1. Prefer the member linked via User.member (userId FK) from getCurrentUserWithRole()
-      // 2. Fall back to the member found by email in this transaction (covers cases where
-      //    member.userId was never set but the email matches)
-      const creatorMemberId =
-        currentUser?.member?.id ?? member?.id ?? null;
+      const memberRecord = await tx.member.findUnique({
+        where: { userId: currentUser?.id },
+        select: { id: true },
+      });
+
+      if (!memberRecord) {
+        throw new Error("Member not found for current user");
+      }
+
+      const memberId = memberRecord.id; // now a real number, e.g. 673
+
 
       const createClient = await tx.client.create({
         data: {
@@ -277,14 +282,7 @@ export async function saveClient(
           signature: applicant.signature,
           idFront: applicant.idFront,
           idBack: applicant.idBack,
-          createdById: creatorMemberId,
-          // faId: applicant.faId ?? null,
-          // fmId: applicant.fmId ?? null,
-          // bmId: applicant.bmId ?? null,
-          // rmId: applicant.rmId ?? null,
-          // zmId: applicant.zmId ?? null,
-          // agmId: applicant.agmId ?? null,
-          // ccoId: applicant.ccoId ?? null,
+          createdById: memberId,
         },
       });
 
@@ -386,54 +384,9 @@ export async function saveClient(
           proposal: applicant.proposal,
           paymentSlip: applicant.paymentSlip,
           agreement: applicant.agreement,
+          createdById: memberId,
         },
       });
-
-      // Volume tracking across hierarchy
-      // const hierarchyMemberIds = [
-      //   applicant.faId ?? null,
-      //   applicant.fmId ?? null,
-      //   applicant.bmId ?? null,
-      //   applicant.rmId ?? null,
-      //   applicant.zmId ?? null,
-      //   applicant.agmId ?? null,
-      //   applicant.ccoId ?? null,
-      // ].filter((id): id is number => id !== null);
-
-      // const uniqueHierarchyIds = [...new Set(hierarchyMemberIds)];
-      const year = investmentDate.getFullYear();
-      const month = investmentDate.getMonth() + 1;
-
-      // await Promise.all(
-      //   uniqueHierarchyIds.map((memberId) =>
-      //     tx.monthlyPayroll.upsert({
-      //       where: { memberId_year_month: { memberId, year, month } },
-      //       update: { volumeAchieved: { increment: amount } },
-      //       create: {
-      //         memberId,
-      //         year,
-      //         month,
-      //         basicSalaryPermanent: 0,
-      //         monthlyTarget: 0,
-      //         volumeAchieved: amount,
-      //       },
-      //     })
-      //   )
-      // );
-
-      // await upsertActivationsForInvestment(
-      //   tx,
-      //   {
-      //     fmId: applicant.fmId ?? null,
-      //     bmId: applicant.bmId ?? null,
-      //     rmId: applicant.rmId ?? null,
-      //     zmId: applicant.zmId ?? null,
-      //     agmId: applicant.agmId ?? null,
-      //     ccoId: applicant.ccoId ?? null,
-      //   },
-      //   year,
-      //   month,
-      // );
 
       return { ...createClient, investments: [createInvestment] };
     });

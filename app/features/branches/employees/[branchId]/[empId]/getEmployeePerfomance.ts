@@ -2,8 +2,11 @@
 
 import { prisma } from "@/lib/prisma";
 
-export async function getEmployeePerformance(memberId: number, year: number, month: number) {
-
+export async function getEmployeePerformance(
+  memberId: number,
+  year: number | null,
+  month: number | null // null = All Time
+) {
   const member = await prisma.member.findUnique({
     where: { id: memberId },
     select: {
@@ -13,90 +16,76 @@ export async function getEmployeePerformance(memberId: number, year: number, mon
       position: { include: { salary: true, positionTargets: true } },
       monthlyPayrolls: {
         orderBy: [{ year: "desc" }, { month: "desc" }],
-        take: 6,
+        // take 6 only makes sense for the "recent history" list, not All Time totals
       },
     },
   });
 
   if (!member) return null;
 
-  // ── Proposal stats ───────────────────────────────────────────────────────
-  const proposals = await prisma.investment.groupBy({
-    by: ["approvalStatus"],
-    where: { createdById: memberId },
-    _count: { id: true },
-    _sum: { amount: true },
-  });
-
-  const pending = proposals.find(p => p.approvalStatus === "PENDING");
-  const approved = proposals.find(p => p.approvalStatus === "APPROVED");
-  const rejected = proposals.find(p => p.approvalStatus === "REJECTED");
-
-  const proposalStats = {
-    pendingCount: pending?._count.id ?? 0,
-    approvedCount: approved?._count.id ?? 0,
-    rejectedCount: rejected?._count.id ?? 0,
-    approvedAmount: approved?._sum.amount ?? 0,
-    pendingAmount: pending?._sum.amount ?? 0,
-  };
-
   const recentClients = await prisma.client.findMany({
     where: { createdById: memberId },
-    orderBy: { createdAt: 'desc' },
+    orderBy: { createdAt: "desc" },
     take: 5,
-    select: {
-      id: true,
-      fullName: true,
-      createdAt: true,
-      status: true,
-      approvalStatus: true,
-    }
+    select: { id: true, fullName: true, createdAt: true, status: true, approvalStatus: true },
   });
 
-  //  Use the selected year/month directly — not latestPayroll
-  const currentPayroll = member.monthlyPayrolls.find(
-    (p) => p.year === year && p.month === month
-  ) ?? null;
+  const isAllTime = year === null || month === null;
 
-  //  History = everything except the selected month
-  const payrollHistory = member.monthlyPayrolls.filter(
-    (p) => !(p.year === year && p.month === month)
-  );
+  const currentPayroll = isAllTime
+    ? null
+    : member.monthlyPayrolls.find((p) => p.year === year && p.month === month) ?? null;
 
-  //  Evaluation also uses selected year/month
-  const evaluation = await prisma.monthlyEvaluation.findUnique({
-    where: { memberId_year_month: { memberId, year, month } },
-  });
+  const payrollHistory = isAllTime
+    ? member.monthlyPayrolls
+    : member.monthlyPayrolls.filter((p) => !(p.year === year && p.month === month));
 
-  // ── PROBATION ──────────────────────────────────────────────────────────────
+  const evaluation = isAllTime
+    ? null
+    : await prisma.monthlyEvaluation.findUnique({
+        where: { memberId_year_month: { memberId, year: year!, month: month! } },
+      });
+
+  // ── All-time aggregate goal ──
+  if (isAllTime) {
+    const achieved = member.monthlyPayrolls.reduce((sum, p) => sum + (p.volumeAchieved ?? 0), 0);
+    const target = member.monthlyPayrolls.reduce((sum, p) => sum + (p.monthlyTarget ?? 0), 0);
+
+    const goal = {
+      achieved,
+      target,
+      incentiveHit: false, // not meaningful across multiple periods
+      allowanceHit: false,
+    };
+
+    return {
+      status: member.position.isProbation ? ("PROBATION" as const) : ("PERMANENT" as const),
+      salary: member.position.salary ?? null,
+      goal,
+      currentPayroll: null,
+      payrollHistory,
+      recentClients,
+    };
+  }
+
+  // ── PROBATION (single month) ──
   if (member.position.isProbation === true && member.dateOfJoin) {
     const start = new Date(member.dateOfJoin);
-
-    const monthsElapsed =
-      (year - start.getFullYear()) * 12 +
-      (month - (start.getMonth() + 1));
-
+    const monthsElapsed = (year! - start.getFullYear()) * 12 + (month! - (start.getMonth() + 1));
     const periodNumber = monthsElapsed < 3 ? 1 : 2;
-    const monthInPeriod = (monthsElapsed % 3) + 1; // 1,2,3 within each 3-month block
+    const monthInPeriod = (monthsElapsed % 3) + 1;
 
-    // Try standard month numbering first (1-3 for each period). If not found,
-    // fallback to the user's numbering where 2nd period months are 4,5,6.
     let target = member.position.positionTargets.find(
-      (t: any) =>
-        Number(t.periodNumber) === periodNumber &&
-        Number(t.monthNumber) === monthInPeriod
+      (t: any) => Number(t.periodNumber) === periodNumber && Number(t.monthNumber) === monthInPeriod
     ) ?? null;
 
     if (!target && monthsElapsed >= 3) {
-      const altMonth = monthsElapsed + 1; // e.g. 4, 5, 6 for 2nd period
+      const altMonth = monthsElapsed + 1;
       target = member.position.positionTargets.find(
-        (t: any) =>
-          Number(t.periodNumber) === periodNumber &&
-          Number(t.monthNumber) === altMonth
+        (t: any) => Number(t.periodNumber) === periodNumber && Number(t.monthNumber) === altMonth
       ) ?? null;
     }
 
-    // Build goal data for the dashboard progress bar
     const goal = {
       achieved: currentPayroll?.volumeAchieved ?? 0,
       target: target?.targetAmount ?? 0,
@@ -106,7 +95,7 @@ export async function getEmployeePerformance(memberId: number, year: number, mon
 
     return {
       status: "PROBATION" as const,
-      probationStartDate: member.dateOfJoin ? member.dateOfJoin.toISOString() : null,
+      probationStartDate: member.dateOfJoin.toISOString(),
       monthsElapsed,
       periodNumber,
       monthInPeriod,
@@ -115,13 +104,10 @@ export async function getEmployeePerformance(memberId: number, year: number, mon
       evaluation,
       currentPayroll,
       recentClients,
-      ...proposalStats,
     };
   }
 
-  // ── PERMANENT ─────────────────────────────────────────────────────────────
-  const salary = member.position.salary ?? null;
-
+  // ── PERMANENT (single month) ──
   const goal = {
     achieved: currentPayroll?.volumeAchieved ?? 0,
     target: currentPayroll?.monthlyTarget ?? 0,
@@ -131,11 +117,10 @@ export async function getEmployeePerformance(memberId: number, year: number, mon
 
   return {
     status: "PERMANENT" as const,
-    salary,
+    salary: member.position.salary ?? null,
     goal,
     currentPayroll,
     payrollHistory,
     recentClients,
-    ...proposalStats,
   };
 }

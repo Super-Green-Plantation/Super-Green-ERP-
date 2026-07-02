@@ -219,15 +219,39 @@ export async function getPayrollPreview(
       },
     },
   });
+  // const filteredMembers = branchMembers.filter(({ member }: any) => {
+  //   const rank = member.position?.rank ?? 0;
+
+  //   // Management roles (ADMIN, HR, IT etc.) — rank 100+ but isManagement=true
+  //   // COO (104), GM (105) are NOT management, they're sales hierarchy → filter by primary
+  //   // Pure management (ADMIN=100, HR=101, ACC=102, IT=103) → show in their branch
+  //   if (rank < 4) return true;  // FA, TL, BM — show in any branch they belong to
+
+  //   // Check primary branch for rank 4 and above (including COO/GM)
+  //   const primaryBranch = member.branches?.find((b: any) => b.isPrimary === true);
+  //   return primaryBranch?.branchId === branchId;
+  // });
+  
+
+  // Ranks that represent FA / TL / BM level (probation + permanent variants).
+  // These members show up in EVERY branch they belong to, not just their primary branch.
+  const BRANCH_LOCAL_RANKS = new Set([
+    1,  // FA (probation)
+    2,  // TL (probation)
+    3,  // BM (probation)
+    11, // TRAINEE_FA
+    12, // P_FA
+    13, // P_TL
+    14, // JBM
+    15, // SBM
+  ]);
+
   const filteredMembers = branchMembers.filter(({ member }: any) => {
     const rank = member.position?.rank ?? 0;
 
-    // Management roles (ADMIN, HR, IT etc.) — rank 100+ but isManagement=true
-    // COO (104), GM (105) are NOT management, they're sales hierarchy → filter by primary
-    // Pure management (ADMIN=100, HR=101, ACC=102, IT=103) → show in their branch
-    if (rank < 4) return true;  // FA, TL, BM — show in any branch they belong to
+    if (BRANCH_LOCAL_RANKS.has(rank)) return true; // FA/TL/BM level — any branch
 
-    // Check primary branch for rank 4 and above (including COO/GM)
+    // RM and above (16,17,18,19,20,4,5,6,100+ etc.) — only in their primary branch
     const primaryBranch = member.branches?.find((b: any) => b.isPrimary === true);
     return primaryBranch?.branchId === branchId;
   });

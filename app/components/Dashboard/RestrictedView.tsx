@@ -1,4 +1,3 @@
-"use client";
 
 import { getEmployeePerformance } from "@/app/features/branches/employees/[branchId]/[empId]/getEmployeePerfomance";
 import {
@@ -16,6 +15,8 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ThemeToggle } from "../ThemeToggle";
+import { getEmployeeProposalStats } from "@/app/features/dashboard/getEmployeeProposalStats";
+import { getRecentMonthOptions } from "@/lib/monthOptions";
 
 const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat("en-LK", {
@@ -110,7 +111,7 @@ interface RestrictedViewProps {
   memberId: number | null | undefined;
 }
 
-export const RestrictedView = ({
+export const RestrictedView =  ({
   userName,
   userRole,
   isMounted,
@@ -120,13 +121,23 @@ export const RestrictedView = ({
   const year = now.getFullYear();
   const month = now.getMonth() + 1;
 
+  const monthOptions = getRecentMonthOptions(12);
+  type Period = { year: number; month: number } | "all";
+
+  const [selectedPeriod, setSelectedPeriod] = useState<Period>({
+    year: now.getFullYear(),
+    month: now.getMonth() + 1,
+  });
+
   const [performance, setPerformance] = useState<EmployeePerformance | null>(null);
+  const [proposalStats, setProposalStats] = useState<any>(null);
 
   useEffect(() => {
     if (!memberId) return;
-    getEmployeePerformance(memberId, year, month).then(setPerformance);
-  }, [memberId, year, month]);
-
+    const [y, m] = selectedPeriod === "all" ? [null, null] : [selectedPeriod.year, selectedPeriod.month];
+    getEmployeePerformance(memberId, y, m).then(setPerformance);
+    getEmployeeProposalStats(memberId, y, m).then(setProposalStats);
+  }, [memberId, selectedPeriod]);
   const achieved = performance?.goal?.achieved ?? 0;
   const target = performance?.goal?.target ?? 0;
   const percentage = target > 0 ? Math.round((achieved / target) * 100) : 0;
@@ -181,7 +192,7 @@ export const RestrictedView = ({
   const getWeeklyMonthlyTrendData = () => {
     const currentMonth = new Date().getMonth();
     const currentYear = new Date().getFullYear();
-    
+
     const weekLabels = ["WEEK 1", "WEEK 2", "WEEK 3", "WEEK 4"];
     const counts = [0, 0, 0, 0];
 
@@ -287,7 +298,25 @@ export const RestrictedView = ({
         </div>
 
 
-
+        <select
+          value={selectedPeriod === "all" ? "all" : `${selectedPeriod.year}-${selectedPeriod.month}`}
+          onChange={(e) => {
+            if (e.target.value === "all") {
+              setSelectedPeriod("all");
+            } else {
+              const [year, month] = e.target.value.split("-").map(Number);
+              setSelectedPeriod({ year, month });
+            }
+          }}
+          className="text-xs font-semibold bg-[#F4F5F1] dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg px-3 py-1.5"
+        >
+          <option value="all">All Time</option>
+          {monthOptions.map((opt) => (
+            <option key={`${opt.year}-${opt.month}`} value={`${opt.year}-${opt.month}`}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
 
         {/* Row 1: Yearly Performance & Monthly Target */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -343,10 +372,10 @@ export const RestrictedView = ({
             <div>
               <p className="text-xs font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider">ACCEPTED</p>
               <p className="text-3xl font-black text-[#0f5132] dark:text-[#4ade80] mt-1">
-                {performance?.proposals?.approvedCount ?? 0}
+                 {proposalStats?.approvedCount ?? 0}
               </p>
               <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 mt-0.5">
-                {formatCurrency(performance?.proposals?.approvedAmount ?? 0)}
+                {formatCurrency(proposalStats?.approvedAmount ?? 0)}
               </p>
             </div>
             <div className="w-10 h-10 rounded-full bg-[#d1e7dd] dark:bg-[#064e3b]/80 flex items-center justify-center">
@@ -359,10 +388,10 @@ export const RestrictedView = ({
             <div>
               <p className="text-xs font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider">PENDING</p>
               <p className="text-3xl font-black text-gray-800 dark:text-gray-200 mt-1">
-                {performance?.proposals?.pendingCount ?? 0}
+                {proposalStats?.pendingCount ?? 0}
               </p>
               <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 mt-0.5">
-                {formatCurrency(performance?.proposals?.pendingAmount ?? 0)}
+               {formatCurrency(proposalStats?.pendingAmount ?? 0)}
               </p>
             </div>
             <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-800 flex items-center justify-center">
@@ -375,7 +404,7 @@ export const RestrictedView = ({
             <div>
               <p className="text-xs font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider">REJECTED</p>
               <p className="text-3xl font-black text-red-600 dark:text-red-400 mt-1">
-                {performance?.proposals?.rejectedCount ?? 0}
+                {proposalStats?.rejectedCount ?? 0}
               </p>
               <p className="text-[10px] font-bold text-gray-500 dark:text-gray-400 mt-0.5">
                 Action Required

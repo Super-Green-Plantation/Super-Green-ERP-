@@ -9,6 +9,7 @@ import { useIsMounted } from "@/app/hooks/useIsMounted";
 const DashboardPage = () => {
   const { data, isLoading, isError } = useDashboard();
   const isMounted = useIsMounted();
+   
 
   if (isLoading) return <Loading />;
   if (isError) return <Error />;
@@ -30,9 +31,6 @@ const DashboardPage = () => {
   return <RestrictedView
   userName={userName} 
   userRole={userRole} 
-  // achieved={achieved} 
-  // target={target} 
-  // percentage={percentage} 
   isMounted={isMounted} 
   memberId={data.user?.member?.id}
   />;
