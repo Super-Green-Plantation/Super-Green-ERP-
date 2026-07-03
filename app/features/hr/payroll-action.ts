@@ -251,7 +251,7 @@ export async function getPayrollPreview(
       const breakdown = normalizedSalary
         ? calculatePayroll(
           normalizedSalary,
-          personalCommissionEarned,
+          personalCommissionEarned + excessEarned,
           member.status,
           volumeAchieved,
           orcEarned,
@@ -280,7 +280,7 @@ export async function getPayrollPreview(
         personalCommissionEarned,
         orcEarned,
         excessEarned,
-        advanceDeducted,                 // NEW
+        advanceDeducted,                
         advanceTypes: deductionDetails.map((d: any) => d.type), // NEW — e.g. ["FESTIVAL"] or ["SALARY","FESTIVAL"]
         actualCommissionEarned: personalCommissionEarned + orcEarned + excessEarned,
         activeTeamCounts: activeTeamCounts ?? { advisors: 0, fms: 0, bms: 0 },
