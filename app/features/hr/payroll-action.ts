@@ -23,7 +23,7 @@ function getMonthsInProbation(
   );
 }
 
-function resolvePositionTarget(member: any, year: number, month: number) {
+export function resolvePositionTarget(member: any, year: number, month: number) {
   if (member.status !== "PROBATION" || !member.probationStartDate) return null;
 
   const monthsElapsed = getMonthsInProbation(

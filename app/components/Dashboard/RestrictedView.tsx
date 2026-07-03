@@ -235,7 +235,7 @@ export const RestrictedView = ({
   }
 
   return (
-    <div className="w-full min-h-screen text-gray-900 dark:text-gray-100 font-sans pb-6 sm:pb-12 transition-colors duration-300">
+    <div className=" min-h-screen text-gray-900 dark:text-gray-100 font-sans pb-6 sm:pb-12 transition-colors duration-300">
       
       {/* Top Header bar - Reduced padding on mobile */}
       <div className="sticky top-0 z-20 backdrop-blur-md border-b border-gray-100 dark:border-gray-900/50 px-3 sm:px-8 py-2.5 sm:py-4 flex items-center justify-between">

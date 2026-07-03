@@ -603,6 +603,7 @@ enum InvStatus {
 enum CommissionType {
   PERSONAL
   UPLINE
+  EXCESS
 }
 
 enum ActivityAction {
