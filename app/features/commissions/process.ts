@@ -7,21 +7,46 @@ import { getUplineChain } from "./actions";
 import { serializeData } from "@/app/utils/serializers";
 import { revalidatePath } from "next/cache";
 import { logActivity } from "@/lib/logActivity";
-import { ActivityAction, ActivityEntity } from "@prisma/client";
+import { ActivityAction, ActivityEntity, Prisma } from "@prisma/client";
 import { getHierarchyEmpNosFromInvestment } from "../hr/salary/action";
+import { computeExcessCommission } from "@/lib/commissions/excess";
+import { resolvePositionTarget } from "@/lib/commissions/resolvePositionTarget";
 
 
 export async function generateCommissionRef() {
   return `COM-${Date.now()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
 }
 
+async function getPriorVolumeThisMonth(
+  tx: Prisma.TransactionClient,
+  advisorId: number,
+  year: number,
+  month: number,
+  excludeInvestmentId: number,
+) {
+  const startDate = new Date(Date.UTC(year, month - 1, 1));
+  const endDate = new Date(Date.UTC(year, month, 1));
+
+  const result = await tx.investment.aggregate({
+    where: {
+      advisorId,
+      commissionsProcessed: true,
+      investmentDate: { gte: startDate, lt: endDate },
+      id: { not: excludeInvestmentId },
+    },
+    _sum: { amount: true },
+  });
+
+  return Number(result._sum.amount ?? 0);
+}
+
 export async function processCommissions(data: {
   investmentId: number;
   empNo: string;
   branchId: number;
-  disabledEmpNos?: string[];      // members toggled off in UI — fully skipped
-  manualEmpNos?: string[];        // manually added members to receive ORC
-  hierarchyEmpNos?: string[];     // pre-saved client hierarchy (fa/fm/bm/rm/zm/agm/cco) — bypasses dynamic upline lookup
+  disabledEmpNos?: string[];
+  manualEmpNos?: string[];
+  hierarchyEmpNos?: string[];
 }) {
   const {
     investmentId,
@@ -41,17 +66,21 @@ export async function processCommissions(data: {
       where: { empNo },
       include: {
         position: {
-          include: {
-            orc: true,
-            salary: true,
-          },
+          include: { orc: true, salary: true, positionTargets: true },
         },
       },
     });
 
     if (!advisor) throw new ApiError("ADVISOR_NOT_FOUND", "Advisor not found", 404);
+    if (!advisor.position) throw new ApiError("POSITION_MISSING", "Advisor has no position");
 
-    // Fetch upline chain — use pre-saved client hierarchy when available, otherwise derive dynamically
+    const isManagement = advisor.position.type === "MANAGEMENT";
+
+    // Only enforce salary config for non-management, non-probation employees
+    if (!isManagement && advisor.status !== "PROBATION" && !advisor.position.salary) {
+      throw new ApiError("SALARY_CONFIG_MISSING", "No salary config for position");
+    }
+
     const uplines =
       hierarchyEmpNos && hierarchyEmpNos.length > 0
         ? await prisma.member.findMany({
@@ -63,63 +92,34 @@ export async function processCommissions(data: {
           })
         : await getUplineChain(advisor.position.rank, branchId);
 
-    // Fetch manually added members with their ORC config
     const manualMembers =
       manualEmpNos.length > 0
         ? await prisma.member.findMany({
-          where: { empNo: { in: manualEmpNos } },
-          include: {
-            position: {
-              include: { orc: true, salary: true },
-            },
-          },
-        })
+            where: { empNo: { in: manualEmpNos } },
+            include: { position: { include: { orc: true, salary: true } } },
+          })
         : [];
 
     const result = await prisma.$transaction(async (tx) => {
       const createdCommissions: any[] = [];
 
-      const investment = await tx.investment.findUnique({
-        where: { id: investmentId },
-      });
-
-      if (!investment)
-        throw new ApiError("INVESTMENT_NOT_FOUND", "Investment not found", 404);
+      const investment = await tx.investment.findUnique({ where: { id: investmentId } });
+      if (!investment) throw new ApiError("INVESTMENT_NOT_FOUND", "Investment not found", 404);
 
       if (investment.commissionsProcessed) {
         const existingCommissions = await tx.commission.findMany({
           where: { investmentId },
-          include: {
-            member: {
-              select: { empNo: true, nameWithInitials: true, position: true },
-            },
-          },
+          include: { member: { select: { empNo: true, nameWithInitials: true, position: true } } },
         });
-        return serializeData({
-          alreadyProcessed: true,
-          investment,
-          commissions: existingCommissions,
-        });
+        return serializeData({ alreadyProcessed: true, investment, commissions: existingCommissions });
       }
 
-      if (!advisor.position)
-        throw new ApiError("POSITION_MISSING", "Advisor has no position");
-
-      const isManagement = advisor.position.type === "MANAGEMENT";
-
-      // Only enforce salary config for non-management, non-probation employees
-      if (!isManagement && advisor.status !== "PROBATION" && !advisor.position.salary) {
-        throw new ApiError("SALARY_CONFIG_MISSING", "No salary config for position");
-      }
-
-      const investmentDate = new Date(investment.investmentDate); // or investment.startDate
+      const investmentDate = new Date(investment.investmentDate);
       const year = investmentDate.getFullYear();
       const month = investmentDate.getMonth() + 1;
 
       const commThreshold = Number(advisor.position.salary?.commThreshold ?? 500000);
       const isHighRate = investment.amount >= commThreshold;
-
-      // Management treated as permanent for commission rate purposes
       const isPermanentOrManagement = advisor.status === "PERMANENT" || isManagement;
 
       const commRate = isPermanentOrManagement
@@ -137,7 +137,6 @@ export async function processCommissions(data: {
         data: { commissionsProcessed: true, advisorId: advisor.id },
       });
 
-      // Step 3 — advisor commission
       const updatedAdvisor = await tx.member.update({
         where: { empNo },
         data: { totalCommission: { increment: personalCommissionAmount } },
@@ -150,14 +149,49 @@ export async function processCommissions(data: {
           branchId,
           amount: personalCommissionAmount,
           type: "PERSONAL",
-          refNumber:await generateCommissionRef()
+          refNumber: await generateCommissionRef(),
         } as any,
         include: { member: { include: { position: true } } },
       });
       createdCommissions.push(personalCommissionRecord);
 
+      // ── Excess commission — FA and management (management uses FA-package rates/targets) ──
+      const positionTargetRow = resolvePositionTarget(advisor, year, month);
+      const target = Number(positionTargetRow?.targetAmount ?? 0);
+      const excessRate = Number(positionTargetRow?.excessRate ?? 0);
 
-      // upline commissions (no payroll upserts here anymore)
+      if (target > 0 && excessRate > 0) {
+        const priorVolume = await getPriorVolumeThisMonth(tx, advisor.id, year, month, investmentId);
+
+        const { excessCommission } = computeExcessCommission({
+          investmentAmount: investment.amount,
+          priorVolumeThisMonth: priorVolume,
+          target,
+          excessRate,
+        });
+
+        if (excessCommission > 0) {
+          await tx.member.update({
+            where: { empNo },
+            data: { totalCommission: { increment: excessCommission } },
+          });
+
+          const excessCommissionRecord = await tx.commission.create({
+            data: {
+              investmentId,
+              memberEmpNo: empNo,
+              branchId,
+              amount: excessCommission,
+              type: "EXCESS",
+              refNumber: await generateCommissionRef(),
+            } as any,
+            include: { member: { include: { position: true } } },
+          });
+          createdCommissions.push(excessCommissionRecord);
+        }
+      }
+
+      // upline commissions
       for (const upline of uplines) {
         if (disabledSet.has(upline.empNo)) continue;
         if (!upline.position?.orc) continue;
@@ -175,13 +209,13 @@ export async function processCommissions(data: {
         await tx.member.update({ where: { empNo: upline.empNo }, data: { totalCommission: { increment: uplineAmount } } });
 
         const uplineCommissionRecord = await tx.commission.create({
-          data: { investmentId, memberEmpNo: upline.empNo, amount: uplineAmount, type: "UPLINE", refNumber:await generateCommissionRef(), branchId } as any,
+          data: { investmentId, memberEmpNo: upline.empNo, amount: uplineAmount, type: "UPLINE", refNumber: await generateCommissionRef(), branchId } as any,
           include: { member: { include: { position: true } } },
         });
         createdCommissions.push(uplineCommissionRecord);
       }
 
-      // --- Manually added members (flat, same ORC formula) ---
+      // manually added members
       for (const manual of manualMembers) {
         if (disabledSet.has(manual.empNo)) continue;
         if (!manual.position?.orc) continue;
@@ -199,7 +233,7 @@ export async function processCommissions(data: {
         await tx.member.update({ where: { empNo: manual.empNo }, data: { totalCommission: { increment: manualAmount } } });
 
         const manualCommissionRecord = await tx.commission.create({
-          data: { investmentId, memberEmpNo: manual.empNo, amount: manualAmount, type: "UPLINE", refNumber: generateCommissionRef(), branchId } as any,
+          data: { investmentId, memberEmpNo: manual.empNo, amount: manualAmount, type: "UPLINE", refNumber: await generateCommissionRef(), branchId } as any,
           include: { member: { include: { position: true } } },
         });
         createdCommissions.push(manualCommissionRecord);
@@ -229,18 +263,10 @@ export async function processCommissions(data: {
     return { success: true, receipt: serializeData(result) };
   } catch (err: any) {
     console.error("Error processing commissions:", err);
-
     if (err instanceof ApiError) {
-      return {
-        success: false,
-        error: { code: err.code, message: err.message },
-      };
+      return { success: false, error: { code: err.code, message: err.message } };
     }
-
-    return {
-      success: false,
-      error: { code: "INTERNAL_ERROR", message: "Something went wrong" },
-    };
+    return { success: false, error: { code: "INTERNAL_ERROR", message: "Something went wrong" } };
   }
 }
 

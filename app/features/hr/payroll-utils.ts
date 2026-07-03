@@ -29,6 +29,8 @@ export type PayrollBreakdown = {
   teamActiveHit: boolean;
   allowanceHit: boolean; // mirrors vehicleHit
 
+  targetBudgetSalary:number; 
+
   grossPay: number;
   netPay: number;
 };
@@ -83,6 +85,7 @@ export function calculatePayroll(
   orcEarned: number = 0,            // pre-summed UPLINE commissions for the month
   activeTeamCounts?: ActiveTeamCounts,
   positionTarget?: PositionTargetData,
+  targetBudgetAmount: number = 0,
 ): PayrollBreakdown {
   const safe = (n: any): number => Number(n ?? 0);
 
@@ -95,6 +98,7 @@ export function calculatePayroll(
   let incentivePartialEarned = 0;
   let vehicleEarned = 0;
   let teamActiveEarned = 0;
+  let targetBudgetSalary = 0;
 
   let incentiveHit = false;
   let incentivePartialHit = false;
@@ -129,11 +133,22 @@ export function calculatePayroll(
     if (volumeOk && activeTeamCounts) {
       const headcountOk =
         activeTeamCounts.advisors >= safe(positionTarget.minActiveAdvisors) &&
-        activeTeamCounts.fms     >= safe(positionTarget.minActiveFMs) &&
-        activeTeamCounts.bms     >= safe(positionTarget.minActiveBMs);
+        activeTeamCounts.fms >= safe(positionTarget.minActiveFMs) &&
+        activeTeamCounts.bms >= safe(positionTarget.minActiveBMs);
       if (headcountOk) {
         teamActiveHit = true;
         teamActiveEarned = safe(positionTarget.teamActiveAmount);
+      }
+    }
+
+    const TARGET_BUDGET_POOL = 30000;
+    const TARGET_BUDGET_MIN_PCT = 0.25;
+
+    if (targetBudgetAmount > 0) {
+      const pct = volumeAchieved / targetBudgetAmount;
+      if (pct >= TARGET_BUDGET_MIN_PCT) {
+        const cappedPct = Math.min(pct, 1); // cap at 100%
+        targetBudgetSalary = TARGET_BUDGET_POOL * cappedPct;
       }
     }
 
@@ -180,8 +195,8 @@ export function calculatePayroll(
     if (volumeOk && activeTeamCounts) {
       const headcountOk =
         activeTeamCounts.advisors >= safe(salary.minActiveAdvisors) &&
-        activeTeamCounts.fms     >= safe(salary.minActiveFMs) &&
-        activeTeamCounts.bms     >= safe(salary.minActiveBMs);
+        activeTeamCounts.fms >= safe(salary.minActiveFMs) &&
+        activeTeamCounts.bms >= safe(salary.minActiveBMs);
       if (headcountOk) {
         teamActiveHit = true;
         teamActiveEarned = safe(salary.teamActiveAmount);
@@ -194,7 +209,7 @@ export function calculatePayroll(
   const allowanceHit = vehicleHit;
 
   // EPF / ETF — always on basic salary only
-  const epfDeduction      = basicSalary * safe(salary.epfEmployee);
+  const epfDeduction = basicSalary * safe(salary.epfEmployee);
   const epfEmployerAmount = basicSalary * safe(salary.epfEmployer);
   const etfEmployerAmount = basicSalary * safe(salary.etfEmployer);
 
@@ -204,6 +219,7 @@ export function calculatePayroll(
     incentivePartialEarned +
     vehicleEarned +
     teamActiveEarned +
+    targetBudgetSalary + 
     safe(orcEarned) +
     safe(commissionEarned);
 
@@ -218,6 +234,7 @@ export function calculatePayroll(
     incentivePartialEarned,
     vehicleEarned,
     teamActiveEarned,
+    targetBudgetSalary, 
     allowanceEarned,
     orcEarned: safe(orcEarned),
     commissionEarned: safe(commissionEarned),

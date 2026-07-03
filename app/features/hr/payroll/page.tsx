@@ -3,12 +3,16 @@
 import { useEffect, useState, useCallback } from "react";
 import {
   Loader2, Play, RefreshCw, AlertTriangle, CheckCircle2,
-  ChevronDown, TrendingUp, Banknote, Car, Percent, Users
+  ChevronDown, TrendingUp, Banknote, Car, Percent, Users,
+  TicketSlash,
+  FileSpreadsheet
 } from "lucide-react";
 import { getBranches } from "@/app/features/branches/actions";
 import { toast } from "sonner";
 import { getPayrollPreview, runMonthlyPayroll } from "../payroll-action";
 import Heading from "@/app/components/Heading";
+import Link from "next/link";
+import { exportPayrollToExcel } from "./exportPayrollToExcel";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -54,7 +58,7 @@ export default function PayrollPage() {
       setPreview(rows);
 
       console.log("rows ---------- ", rows);
-      
+
 
       // Seed volumes from DB — only for members not yet in local state
       setVolumes((prev) => {
@@ -123,7 +127,7 @@ export default function PayrollPage() {
   const unconfiguredCount = preview.filter((r) => !r.salaryConfigured).length;
 
   console.log(preview);
-  
+
 
   return (
     <div className="w-full min-h-screen p-4 sm:p-8 flex flex-col gap-6 sm:gap-8 font-sans text-gray-900 dark:text-gray-100 transition-colors duration-300">
@@ -196,7 +200,25 @@ export default function PayrollPage() {
           <RefreshCw className="w-4 h-4" />
           Refresh
         </button>
+
+        <Link
+          href="/features/hr/advances"
+          className="flex items-center gap-2 px-6 py-3 bg-card border border-border hover:bg-muted text-foreground text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-50"
+        >
+          <TicketSlash className="w-4 h-4" />
+          Advance
+        </Link>
+
+        <button
+          onClick={() => exportPayrollToExcel(preview, branches.find(b => b.id === selectedBranchId)?.name ?? "Branch", months[month - 1], year)}
+          className="flex items-center gap-2 px-6 py-3 bg-card border border-border hover:bg-muted text-foreground text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-sm active:scale-95"
+        >
+          <FileSpreadsheet className="w-4 h-4" />
+          Export Excel
+        </button>
+
       </div>
+
 
       {/* Warnings */}
       {alreadyProcessedCount > 0 && (
@@ -250,18 +272,21 @@ export default function PayrollPage() {
               <thead>
                 <tr className="border-b border-border bg-muted/30">
                   <th className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Employee</th>
-                  <th className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Position</th>
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                     Active Team
                   </th>
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Volume Achieved</th>
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Basic</th>
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Incentive</th>
-                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Allowance</th>
+                  {/* <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Allowance</th> */}
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Vehicle</th>
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Team Active</th>
-                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Commission</th>
+                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Target Budget</th>
+                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Personal Comm.</th>
+                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">ORC</th>
+                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Excess</th>
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">EPF (emp)</th>
+                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Advance</th>
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Net Pay</th>
                   <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Status</th>
                 </tr>
@@ -272,9 +297,7 @@ export default function PayrollPage() {
                     <td className="px-5 py-4">
                       <p className="font-bold text-foreground text-sm leading-tight">{row.name}</p>
                       <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-tighter mt-0.5">{row.empNo}</p>
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="flex flex-col gap-1">
+                      <div className="flex  gap-3">
                         <span className="text-xs font-bold text-muted-foreground">{row.position}</span>
                         <div className="flex">
                           <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider ${row.status === "PERMANENT"
@@ -308,11 +331,6 @@ export default function PayrollPage() {
                       />
                     </td>
 
-                    {/* {!row.salaryConfigured ? (
-                      <td colSpan={6} className="px-4 py-3 text-center text-xs text-red-400 font-medium">
-                        No salary config — will be skipped
-                      </td> */}
-                    {/* // ) : ( */}
                     <>
                       <td className="px-5 py-4 text-right text-xs font-bold text-muted-foreground">
                         {fmt(row.breakdown?.basicSalaryPermanent ?? 0)}
@@ -320,33 +338,75 @@ export default function PayrollPage() {
                       <td className="px-5 py-4 text-right text-xs font-bold">
                         <span className={row.breakdown?.incentiveHit ? "text-green-600" : "text-muted-foreground/40"}>
                           {fmt(row.breakdown?.incentiveEarned ?? 0)}
-                          {row.breakdown?.incentiveHit && <CheckCircle2 className="inline w-3 h-3 ml-1" />}
+
                         </span>
                       </td>
-                      <td className="px-5 py-4 text-right text-xs font-bold">
+                      {/* <td className="px-5 py-4 text-right text-xs font-bold">
                         <span className={row.breakdown?.allowanceHit ? "text-primary" : "text-muted-foreground/40"}>
                           {fmt(row.breakdown?.allowanceEarned ?? 0)}
-                          {row.breakdown?.allowanceHit && <CheckCircle2 className="inline w-3 h-3 ml-1" />}
+
                         </span>
-                      </td>
+                      </td> */}
                       <td className="px-5 py-4 text-right text-xs font-bold">
                         <span className={row.breakdown?.vehicleHit ? "text-primary" : "text-muted-foreground/40"}>
                           {fmt(row.breakdown?.vehicleEarned ?? 0)}
-                          {row.breakdown?.vehicleHit && <CheckCircle2 className="inline w-3 h-3 ml-1" />}
+
                         </span>
                       </td>
                       <td className="px-5 py-4 text-right text-xs font-bold">
                         <span className={row.breakdown?.teamActiveHit ? "text-primary" : "text-muted-foreground/40"}>
                           {fmt(row.breakdown?.teamActiveEarned ?? 0)}
-                          {row.breakdown?.teamActiveHit && <CheckCircle2 className="inline w-3 h-3 ml-1" />}
+
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 text-right text-xs font-bold">
+                        <span className={row.breakdown?.targetBudgetSalary > 0 ? "text-primary" : "text-muted-foreground/40"}>
+                          {fmt(row.breakdown?.targetBudgetSalary ?? 0)}
                         </span>
                       </td>
                       <td className="px-5 py-4 text-right text-xs font-bold text-primary">
-                        {fmt(row.actualCommissionEarned ?? 0)}
+                        {fmt(row.personalCommissionEarned ?? 0)}
+                      </td>
+                      <td className="px-5 py-4 text-right text-xs font-bold text-blue-600">
+                        {fmt(row.orcEarned ?? 0)}
+                      </td>
+                      <td className="px-5 py-4 text-right text-xs font-bold text-emerald-600">
+                        {fmt(row.excessEarned ?? 0)}
                       </td>
                       <td className="px-5 py-4 text-right text-xs font-bold text-destructive">
                         -{fmt(row.breakdown?.epfDeduction ?? 0)}
                       </td>
+
+                      <td className="px-5 py-4 text-right text-xs font-bold">
+                        {row.advanceDeducted > 0 ? (
+                          <div
+                            className="flex flex-col items-end gap-0.5 cursor-help"
+                            title={
+                              row.outstandingAdvanceRemaining > row.advanceDeducted
+                                ? `${fmt(row.outstandingAdvanceRemaining - row.advanceDeducted)} remaining after this deduction`
+                                : "Fully paid off after this deduction"
+                            }
+                          >
+                            <span className="text-destructive">-{fmt(row.advanceDeducted)}</span>
+                            <span className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-wider">
+                              {row.advanceTypes?.join(" + ")}
+                            </span>
+                          </div>
+                        ) : row.outstandingAdvanceRemaining > 0 ? (
+                          <div
+                            className="flex flex-col items-end gap-0.5 cursor-help"
+                            title={`${fmt(row.outstandingAdvanceRemaining)} remaining`}
+                          >
+                            <span className="text-amber-600">Rs. 0</span>
+                            <span className="text-[9px] font-bold text-amber-600/70 uppercase tracking-wider">
+                              Pending — no earnings
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground/40">—</span>
+                        )}
+                      </td>
+
                       <td className="px-5 py-4 text-right text-sm font-bold text-foreground">
                         {fmt(row.breakdown?.netPay ?? 0)}
                       </td>

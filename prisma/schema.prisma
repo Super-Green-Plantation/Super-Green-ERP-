@@ -27,18 +27,19 @@ model Branch {
 }
 
 model Position {
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  id              Int              @id @default(autoincrement())
-  title           Title
-  rank            Int              @unique
-  isManagement    Boolean          @default(false)
-  isProbation     Boolean          @default(false)
-  type            PositionType     @default(PROBATION)
-  orc             CommissionRate?
-  members         Member[]
-  salary          PositionSalary?
-  positionTargets PositionTarget[]
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  id                 Int              @id @default(autoincrement())
+  title              Title
+  rank               Int              @unique
+  isManagement       Boolean          @default(false)
+  isProbation        Boolean          @default(false)
+  type               PositionType     @default(PROBATION)
+  targetBudgetAmount Float            @default(0)
+  orc                CommissionRate?
+  members            Member[]
+  salary             PositionSalary?
+  positionTargets    PositionTarget[]
 }
 
 model CommissionRate {
@@ -89,7 +90,10 @@ model MonthlyPayroll {
   incentivePartialHit       Boolean  @default(false)
   teamActiveHit             Boolean  @default(false)
   vehicleHit                Boolean  @default(false)
+  targetBudgetSalary        Float    @default(0)
+  excessEarned              Float    @default(0)
   member                    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  advanceDeducted           Float    @default(0)
 
   @@unique([memberId, year, month])
 }
@@ -209,6 +213,7 @@ model Member {
   monthlyActivations     MonthlyActivation[]
   monthlyEvaluations     MonthlyEvaluation[]
   monthlyPayrolls        MonthlyPayroll[]
+  SalaryAdvances         SalaryAdvance[]
 }
 
 model PositionTarget {
@@ -220,7 +225,6 @@ model PositionTarget {
   bonusAmount             Float
   excessRate              Float    @default(0)
   partialBonus            Float    @default(0)
-  partialThresholdPct        Float    @default(0)
   bonusThresholdPct       Float    @default(1.0)
   minActiveAdvisors       Int      @default(0)
   minActiveBMs            Int      @default(0)
@@ -231,6 +235,7 @@ model PositionTarget {
   vehicleThresholdPct     Float    @default(0)
   after6MonthTarget       Float    @default(0)
   after6MonthIncentivePct Float    @default(0)
+  partialThresholdPct     Float    @default(0)
   position                Position @relation(fields: [positionId], references: [id])
 
   @@unique([positionId, periodNumber, monthNumber])
@@ -306,6 +311,7 @@ model Investment {
   rmId                 Int?
   submittedAt          DateTime       @default(now())
   zmId                 Int?
+  renewalCreditedAt    DateTime?
   commission           Commission[]
   advisor              Member?        @relation("AdvisorInvestments", fields: [advisorId], references: [id])
   agm                  Member?        @relation("InvestmentAGM", fields: [agmId], references: [id])
@@ -324,7 +330,6 @@ model Investment {
   rm                   Member?        @relation("InvestmentRM", fields: [rmId], references: [id])
   zm                   Member?        @relation("InvestmentZM", fields: [zmId], references: [id])
   profit               Profit?
-  renewalCreditedAt DateTime?
 }
 
 model Client {
@@ -647,4 +652,37 @@ enum QuotationFrequency {
   QUARTERLY
   SEMI_ANNUAL
   ANNUAL
+}
+
+enum AdvanceType {
+  SALARY
+  FESTIVAL
+}
+
+model SalaryAdvance {
+  id                Int                @id @default(autoincrement())
+  memberId          Int
+  member            Member             @relation(fields: [memberId], references: [id])
+  type              AdvanceType
+  totalAmount       Float
+  installments      Int // reference only — actual payoff may extend if shortfalls occur
+  installmentAmount Float
+  remainingAmount   Float
+  issuedYear        Int
+  issuedMonth       Int
+  note              String?
+  createdAt         DateTime           @default(now())
+  deductions        AdvanceDeduction[]
+}
+
+model AdvanceDeduction {
+  id              Int           @id @default(autoincrement())
+  salaryAdvanceId Int
+  salaryAdvance   SalaryAdvance @relation(fields: [salaryAdvanceId], references: [id])
+  year            Int
+  month           Int
+  amountDeducted  Float
+  createdAt       DateTime      @default(now())
+
+  @@unique([salaryAdvanceId, year, month]) // idempotency guard — one deduction per advance per month
 }

@@ -3,6 +3,9 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { calculatePayroll } from "./payroll-utils";
+import { resolvePositionTarget } from "@/lib/commissions/resolvePositionTarget";
+import { applyAdvanceDeductions } from "./deduction/action";
+import { previewAdvanceDeductions } from "./deduction/previewAdvanceDeductions";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -10,54 +13,6 @@ type ActiveTeamCounts = { advisors: number; fms: number; bms: number };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function getMonthsInProbation(
-  probationStartDate: string | Date,
-  year: number,
-  month: number,
-) {
-  const start = new Date(probationStartDate);
-  const evalDate = new Date(year, month - 1, 1);
-  return (
-    (evalDate.getFullYear() - start.getFullYear()) * 12 +
-    (evalDate.getMonth() - start.getMonth())
-  );
-}
-
-export function resolvePositionTarget(member: any, year: number, month: number) {
-  if (member.status !== "PROBATION" || !member.probationStartDate) return null;
-
-  const monthsElapsed = getMonthsInProbation(
-    member.probationStartDate,
-    year,
-    month,
-  );
-  if (monthsElapsed < 0) return null;
-
-  const targets = member.position?.positionTargets;
-  if (!targets || targets.length === 0) return null;
-
-  if (monthsElapsed < 6) {
-    const periodNumber = monthsElapsed < 3 ? 1 : 2;
-    const monthInPeriod = (monthsElapsed % 3) + 1;
-    return (
-      targets.find(
-        (t: any) =>
-          t.periodNumber === periodNumber && t.monthNumber === monthInPeriod,
-      ) ?? null
-    );
-  }
-
-  // After 6 months: use after6MonthTarget from any row
-  const anyTarget = targets[0];
-  const after6Target = anyTarget.after6MonthTarget ?? 0;
-  const after6Pct = anyTarget.after6MonthIncentivePct ?? 0;
-
-  return {
-    ...anyTarget, targetAmount: anyTarget.after6MonthTarget,
-    partialThreshold: after6Target * after6Pct,
-    partialBonus: anyTarget.bonusAmount, // full incentive amount stays
-  };
-}
 
 function toPositionTargetData(target: any) {
   if (!target) return undefined;
@@ -219,22 +174,7 @@ export async function getPayrollPreview(
       },
     },
   });
-  // const filteredMembers = branchMembers.filter(({ member }: any) => {
-  //   const rank = member.position?.rank ?? 0;
 
-  //   // Management roles (ADMIN, HR, IT etc.) — rank 100+ but isManagement=true
-  //   // COO (104), GM (105) are NOT management, they're sales hierarchy → filter by primary
-  //   // Pure management (ADMIN=100, HR=101, ACC=102, IT=103) → show in their branch
-  //   if (rank < 4) return true;  // FA, TL, BM — show in any branch they belong to
-
-  //   // Check primary branch for rank 4 and above (including COO/GM)
-  //   const primaryBranch = member.branches?.find((b: any) => b.isPrimary === true);
-  //   return primaryBranch?.branchId === branchId;
-  // });
-  
-
-  // Ranks that represent FA / TL / BM level (probation + permanent variants).
-  // These members show up in EVERY branch they belong to, not just their primary branch.
   const BRANCH_LOCAL_RANKS = new Set([
     1,  // FA (probation)
     2,  // TL (probation)
@@ -264,14 +204,11 @@ export async function getPayrollPreview(
       const volumeAchieved =
         volumes[member.id] ?? Number(existing?.volumeAchieved ?? 0);
 
-      // Personal (direct) commission — business the member wrote themselves
       const personalCommissionEarned = member.commissions.reduce(
         (sum: number, c: any) => sum + Number(c.amount),
         0,
       );
 
-      // ORC (upline) commission — investment.amount × orcRate, already stored
-      // by processCommissions as type=UPLINE records for this member
       const orcCommissions = await prisma.commission.findMany({
         where: {
           memberEmpNo: member.empNo,
@@ -287,14 +224,28 @@ export async function getPayrollPreview(
         0,
       );
 
+      // Excess commission — separate from personal, same shape as ORC query
+      const excessCommissions = await prisma.commission.findMany({
+        where: {
+          memberEmpNo: member.empNo,
+          type: "EXCESS",
+          investment: {
+            investmentDate: { gte: startDate, lt: endDate },
+          },
+        },
+        select: { amount: true },
+      });
+      const excessEarned = excessCommissions.reduce(
+        (sum, c) => sum + Number(c.amount),
+        0,
+      );
+
       const normalizedSalary = normalizeSalary(salary);
 
       // Resolve probation target row
       const positionTargetRow = resolvePositionTarget(member, year, month);
       const positionTargetData = toPositionTargetData(positionTargetRow);
 
-      // Active team counts only needed for probation (team active bonus)
-      // Remove the conditional — always fetch
       const activeTeamCounts = await getActiveTeamCounts(member.empNo, year, month);
 
       const breakdown = normalizedSalary
@@ -306,8 +257,16 @@ export async function getPayrollPreview(
           orcEarned,
           activeTeamCounts,
           positionTargetData,
+          Number(member.position?.targetBudgetAmount ?? 0),
         )
         : null;
+
+      const { totalDeducted: advanceDeducted, deductionDetails, outstandingRemaining, outstandingTypes } =
+        normalizedSalary
+          ? await previewAdvanceDeductions(member.id, year, month, breakdown!.netPay)
+          : { totalDeducted: 0, deductionDetails: [], outstandingRemaining: 0, outstandingTypes: [] };
+
+      const finalNetPay = breakdown ? breakdown.netPay - advanceDeducted : 0;
 
       return {
         memberId: member.id,
@@ -320,11 +279,16 @@ export async function getPayrollPreview(
         volumeAchieved,
         personalCommissionEarned,
         orcEarned,
-        // kept as `actualCommissionEarned` for UI backward-compat
-        actualCommissionEarned: personalCommissionEarned + orcEarned,
+        excessEarned,
+        advanceDeducted,                 // NEW
+        advanceTypes: deductionDetails.map((d: any) => d.type), // NEW — e.g. ["FESTIVAL"] or ["SALARY","FESTIVAL"]
+        actualCommissionEarned: personalCommissionEarned + orcEarned + excessEarned,
         activeTeamCounts: activeTeamCounts ?? { advisors: 0, fms: 0, bms: 0 },
-        breakdown,
+        breakdown: breakdown ? { ...breakdown, netPay: finalNetPay } : null, // show post-advance netPay in preview
+        outstandingAdvanceRemaining: outstandingRemaining,   // NEW
+        outstandingAdvanceTypes: outstandingTypes,           // NEW
       };
+
     }),
   );
 
@@ -332,7 +296,6 @@ export async function getPayrollPreview(
 }
 
 // ─── runMonthlyPayroll ────────────────────────────────────────────────────────
-
 export async function runMonthlyPayroll(
   branchId: number,
   year: number,
@@ -340,7 +303,6 @@ export async function runMonthlyPayroll(
   volumes: Record<number, number>,
   force = false,
 ) {
-
   const startDate = new Date(Date.UTC(year, month - 1, 1));
   const endDate = new Date(Date.UTC(year, month, 1));
 
@@ -357,9 +319,7 @@ export async function runMonthlyPayroll(
           commissions: {
             where: {
               type: "PERSONAL",
-              investment: {
-                investmentDate: { gte: startDate, lt: endDate },
-              },
+              investment: { investmentDate: { gte: startDate, lt: endDate } },
             },
             select: { amount: true },
           },
@@ -368,12 +328,11 @@ export async function runMonthlyPayroll(
     },
   });
 
-  const HEAD_OFFICE_BRANCH_ID = 6;
-  const HIGH_RANK_THRESHOLD = 4;
+  const BRANCH_LOCAL_RANKS = new Set([1, 2, 3, 11, 12, 13, 14, 15]);
 
   const filteredMembers = branchMembers.filter(({ member }: any) => {
     const rank = member.position?.rank ?? 0;
-    if (rank < HIGH_RANK_THRESHOLD) return true;
+    if (BRANCH_LOCAL_RANKS.has(rank)) return true;
     const primaryBranch = member.branches?.find((b: any) => b.isPrimary);
     return primaryBranch?.branchId === branchId;
   });
@@ -397,25 +356,28 @@ export async function runMonthlyPayroll(
       0,
     );
 
-    // ORC from stored UPLINE commission records
     const orcCommissions = await prisma.commission.findMany({
       where: {
         memberEmpNo: member.empNo,
         type: "UPLINE",
-        investment: {
-          investmentDate: { gte: startDate, lt: endDate },
-        },
+        investment: { investmentDate: { gte: startDate, lt: endDate } },
       },
       select: { amount: true },
     });
-    const orcEarned = orcCommissions.reduce(
-      (sum, c) => sum + Number(c.amount),
-      0,
-    );
+    const orcEarned = orcCommissions.reduce((sum, c) => sum + Number(c.amount), 0);
+
+    const excessCommissions = await prisma.commission.findMany({
+      where: {
+        memberEmpNo: member.empNo,
+        type: "EXCESS",
+        investment: { investmentDate: { gte: startDate, lt: endDate } },
+      },
+      select: { amount: true },
+    });
+    const excessEarned = excessCommissions.reduce((sum, c) => sum + Number(c.amount), 0);
 
     const normalizedSalary = normalizeSalary(salary);
 
-    // Skip if no salary config — warn but don't throw so batch continues
     if (!normalizedSalary) {
       errors.push(`${member.nameWithInitials ?? member.empNo}: no salary config`);
       continue;
@@ -423,9 +385,7 @@ export async function runMonthlyPayroll(
 
     const positionTargetRow = resolvePositionTarget(member, year, month);
     const positionTargetData = toPositionTargetData(positionTargetRow);
-
     const activeTeamCounts = await getActiveTeamCounts(member.empNo, year, month);
-
 
     const dbVolumeAchieved = existingPayroll?.volumeAchieved
       ? Number(existingPayroll.volumeAchieved)
@@ -433,18 +393,19 @@ export async function runMonthlyPayroll(
 
     const breakdown = calculatePayroll(
       normalizedSalary,
-      personalCommissionEarned,
+      personalCommissionEarned + excessEarned,
       member.status,
-      dbVolumeAchieved,  // ← from DB, not UI
+      dbVolumeAchieved,
       orcEarned,
       activeTeamCounts,
       positionTargetData,
+      Number(member.position?.targetBudgetAmount ?? 0), // NEW — was missing
     );
 
-    const payrollData = {
+
+    const payrollDataBase = {
       basicSalaryPermanent: breakdown.basicSalaryPermanent,
       monthlyTarget: breakdown.monthlyTarget,
-      // volumeAchieved intentionally NOT included — owned by approveInvestment
       incentiveEarned: breakdown.incentiveEarned,
       incentivePartialEarned: breakdown.incentivePartialEarned,
       vehicleEarned: breakdown.vehicleEarned,
@@ -452,26 +413,40 @@ export async function runMonthlyPayroll(
       activationAllowanceEarned: breakdown.teamActiveEarned,
       orcEarned: breakdown.orcEarned,
       commissionEarned: breakdown.commissionEarned,
+      excessEarned,
+      targetBudgetSalary: breakdown.targetBudgetSalary,
       epfDeduction: breakdown.epfDeduction,
       epfEmployer: breakdown.epfEmployer,
       etfEmployer: breakdown.etfEmployer,
       incentiveHit: breakdown.incentiveHit,
       incentivePartialHit: breakdown.incentivePartialHit,
       grossPay: breakdown.grossPay,
-      netPay: breakdown.netPay,
     };
 
     try {
-      await prisma.monthlyPayroll.upsert({
-        where: { memberId_year_month: { memberId: member.id, year, month } },
-        create: {
-          memberId: member.id, year, month,
-          volumeAchieved: dbVolumeAchieved,
-          ...payrollData
-        },
-        update: { ...payrollData }, // ← volumeAchieved NOT in update
+      await prisma.$transaction(async (tx) => {
+        const { totalDeducted } = await applyAdvanceDeductions(
+          tx, member.id, year, month, breakdown.netPay,
+        );
+        const finalNetPay = breakdown.netPay - totalDeducted;
+
+        await tx.monthlyPayroll.upsert({
+          where: { memberId_year_month: { memberId: member.id, year, month } },
+          create: {
+            memberId: member.id, year, month,
+            volumeAchieved: dbVolumeAchieved,
+            ...payrollDataBase,
+            advanceDeducted: totalDeducted,
+            netPay: finalNetPay,
+          },
+          update: {
+            ...payrollDataBase,
+            advanceDeducted: totalDeducted,
+            netPay: finalNetPay,
+          }, // ← volumeAchieved still NOT in update
+        });
       });
-      processed++
+      processed++;
     } catch (e) {
       errors.push(`${member.nameWithInitials ?? member.empNo}: ${String(e)}`);
     }
@@ -480,7 +455,6 @@ export async function runMonthlyPayroll(
   revalidatePath("/features/hr/payroll");
   return { success: true, processed, skipped, errors };
 }
-
 // ─── getPayrollHistory ────────────────────────────────────────────────────────
 
 export async function getPayrollHistory(memberId: number) {
