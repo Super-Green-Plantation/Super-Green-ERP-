@@ -84,20 +84,20 @@ export async function processCommissions(data: {
     const uplines =
       hierarchyEmpNos && hierarchyEmpNos.length > 0
         ? await prisma.member.findMany({
-            where: { empNo: { in: hierarchyEmpNos } },
-            include: {
-              position: { include: { orc: true, salary: true } },
-              branches: { include: { branch: true } },
-            },
-          })
+          where: { empNo: { in: hierarchyEmpNos } },
+          include: {
+            position: { include: { orc: true, salary: true } },
+            branches: { include: { branch: true } },
+          },
+        })
         : await getUplineChain(advisor.position.rank, branchId);
 
     const manualMembers =
       manualEmpNos.length > 0
         ? await prisma.member.findMany({
-            where: { empNo: { in: manualEmpNos } },
-            include: { position: { include: { orc: true, salary: true } } },
-          })
+          where: { empNo: { in: manualEmpNos } },
+          include: { position: { include: { orc: true, salary: true } } },
+        })
         : [];
 
     const result = await prisma.$transaction(async (tx) => {
@@ -120,9 +120,9 @@ export async function processCommissions(data: {
 
       const commThreshold = Number(advisor.position.salary?.commThreshold ?? 500000);
       const isHighRate = investment.amount >= commThreshold;
-      const isPermanentOrManagement = advisor.status === "PERMANENT" || isManagement;
+      const isPermanentNonManagement = advisor.status === "PERMANENT" && !isManagement;
 
-      const commRate = isPermanentOrManagement
+      const commRate = isPermanentNonManagement
         ? isHighRate
           ? Number(advisor.position.salary?.commRateHigh ?? 0.08)
           : Number(advisor.position.salary?.commRateLow ?? 0.05)
@@ -287,11 +287,11 @@ export async function processCommissionsFromSavedHierarchy(data: {
     // ── Step 1: Resolve hierarchy empNos from the saved investment snapshot ──
     const { success, empNos, hierarchyModified, error } =
       await getHierarchyEmpNosFromInvestment(data.investmentId);
- 
+
     if (!success) {
       return { success: false, error };
     }
- 
+
     // ── Step 2: Warn if hierarchy was manually overridden ────────────────────
     // Return the warning flag so the UI can show a confirmation dialog.
     // The caller can re-invoke with skipModifiedWarning: true to proceed.
@@ -304,13 +304,13 @@ export async function processCommissionsFromSavedHierarchy(data: {
           "Re-submit with skipModifiedWarning: true to process using the overridden list.",
       };
     }
- 
+
     // ── Step 3: Delegate to the existing processCommissions ──────────────────
     // Import processCommissions from wherever it lives in your codebase.
     // It already accepts hierarchyEmpNos and handles the rest correctly.
     //
     // The dynamic call below is illustrative — replace with a direct import.
- 
+
     const result = await processCommissions({
       investmentId: data.investmentId,
       empNo: data.empNo,
@@ -321,7 +321,7 @@ export async function processCommissionsFromSavedHierarchy(data: {
       //   processCommissions fall through to getUplineChain.
       hierarchyEmpNos: empNos,
     });
- 
+
     return {
       ...result,
       hierarchyModifiedWarning: false,

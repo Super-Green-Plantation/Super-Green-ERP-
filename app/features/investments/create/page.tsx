@@ -1,287 +1,66 @@
 "use client";
 
+/**
+ * Investment create/edit form — root orchestration component.
+ *
+ * This file owns all state, effects, and submit logic. Rendering is
+ * delegated to sibling files in this folder:
+ *   ui.tsx                 → SectionHeader, Field, ModeToggle (generic primitives)
+ *   ClientSearch.tsx        → client search + locked view
+ *   BeneficiaryPanel.tsx    → beneficiary card list / edit fields
+ *   NomineePanel.tsx        → nominee card list / edit fields
+ *   InvestmentDocuments.tsx → pay slip / proposal / agreement upload cards
+ *   ApprovalSection.tsx     → management approve/reject panel
+ *   types.ts                → shared types, constants, and helpers
+ *
+ * See README.md in this folder for the full data flow and the
+ * beneficiary/nominee "existing vs new record" business rule — that logic
+ * looks like it could be a bug if you don't know it's intentional.
+ */
+
 import { useEffect, useState, useRef } from "react";
 import { getFinancialPlans } from "@/app/features/financial_plans/actions";
 import { getClients } from "@/app/features/clients/actions";
 import {
-createInvestmentForExistingClient,
-updateInvestment,
-rejectInvestment,
+  createInvestmentForExistingClient,
+  updateInvestment,
+  updateInvestmentDocuments,
 } from "@/app/features/investments/actions";
 import { useSessionUser } from "@/app/hooks/useSessionUser";
 import { FinancialPlan } from "@/app/types/FinancialPlan";
-import {
-  User, DollarSign, Landmark, Users, Plus, Pencil,
-  Check, Loader2, BanknoteArrowUp, Search, X, Lock,
-} from "lucide-react";
+import { User, DollarSign, Landmark, Users, Check, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import Back from "@/app/components/Buttons/Back";
-import { createPortal } from "react-dom";
 import { investmentFormSchema } from "@/lib/validations/investment.schema";
+
 import AdvisorHierarchy from "./AdvisorHierarchy";
-import { approveInvestmentWithHierarchyLog } from "../../hr/salary/action";
-
-type BeneficiaryMode = "existing" | "new" | "none";
-type NomineeMode = "existing" | "new" | "none";
-
-type BeneficiaryFields = {
-  fullName: string; nic: string; phone: string;
-  bankName: string; bankBranch: string; accountNo: string; relationship: string;
-};
-type NomineeFields = {
-  fullName: string; nic: string;
-  contact:string;
-  permanentAddress: string; postalAddress: string;
-};
-
-// ---------- sub-components (unchanged) ----------
-function SectionHeader({ icon, title, action }: { icon: React.ReactNode; title: string; action?: React.ReactNode }) {
-  return (
-    <div className="md:flex items-center justify-between border-b border-border pb-3 mb-1">
-      <div className="flex items-center gap-2 text-primary font-semibold">
-        <span className="shrink-0">{icon}</span>
-        <span className="text-[18px] font-semibold uppercase tracking-tight">{title}</span>
-      </div>
-      {action && <div >{action}</div>}
-    </div>
-  );
-}
-
-function Field({
-  label,
-  value,
-  onChange,
-  disabled,
-  readOnly,
-  placeholder,
-  type = "text",
-  error,
-}: {
-  label: string;
-  value: string;
-  onChange?: (v: string) => void;
-  disabled?: boolean;
-  readOnly?: boolean;
-  placeholder?: string;
-  type?: string;
-  error?: string;
-}) {
-  return (
-    <div className="space-y-1">
-      <label className="text-[11px] font-semibold text-muted-foreground uppercase block">
-        {label}
-      </label>
-      <div className="relative">
-        <input
-          type={type}
-          value={value}
-          disabled={disabled}
-          readOnly={readOnly}
-          placeholder={placeholder}
-          onChange={e => onChange?.(e.target.value)}
-          className={`w-full border rounded-lg text-sm py-2 px-3 transition-colors outline-none focus:ring-1 ${disabled || readOnly
-              ? "bg-muted/50 border-border cursor-not-allowed text-muted-foreground focus:ring-0 focus:border-border"
-              : error
-                ? "bg-card border-red-500 focus:ring-red-500 focus:border-red-500"
-                : "bg-card border-border focus:ring-primary focus:border-primary"
-            }`}
-        />
-      </div>
-      {error && (
-        <p className="mt-1 ml-1 text-[10px] font-bold text-red-500 tracking-wide">{error}</p>
-      )}
-    </div>
-  );
-}
-
-function ModeToggle({ value, onChange }: { value: string; onChange: (v: any) => void }) {
-  return (
-    <div className="flex p-1 bg-muted/50 rounded-lg gap-1">
-      {(["none", "existing", "new"] as const).map(mode => (
-        <button
-          key={mode}
-          type="button"
-          onClick={() => onChange(mode)}
-          className={`px-4 py-1.5 text-[11px] font-semibold rounded-md transition-all uppercase ${value === mode
-              ? "bg-primary text-primary-foreground shadow-sm font-bold"
-              : "text-muted-foreground hover:bg-background hover:shadow-sm"
-            }`}
-        >
-          {mode === "none" ? "Skip" : mode === "existing" ? "Use Existing" : "Add New"}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function ClientSearch({
-  clients, selected, onSelect, locked,
-}: {
-  clients: any[]; selected: any | null;
-  onSelect: (client: any | null) => void; locked?: boolean;
-}) {
-  const [query, setQuery] = useState(selected?.fullName ?? "");
-  const [open, setOpen] = useState(false);
-  const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
-  const inputRef = useRef<HTMLDivElement>(null);
-  const ref = useRef<HTMLDivElement>(null);
-
-  // keep query in sync when locked client is pre-filled
-  useEffect(() => {
-    if (locked && selected) setQuery(selected.fullName);
-  }, [locked, selected]);
-
-  const filtered = !locked && query.trim().length > 0
-    ? clients.filter(c =>
-      c.fullName.toLowerCase().includes(query.toLowerCase()) ||
-      (c.nic ?? "").toLowerCase().includes(query.toLowerCase())
-    ).slice(0, 8)
-    : [];
-
-  const updateDropdownPosition = () => {
-    if (!inputRef.current) return;
-    const rect = inputRef.current.getBoundingClientRect();
-    setDropdownStyle({ position: "fixed", top: rect.bottom + 4, left: rect.left, width: rect.width, zIndex: 9999 });
-  };
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
-
-  if (locked && selected) {
-    return (
-      <div>
-        <label className="block text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1">
-          Client (Locked)
-        </label>
-        <div className="flex items-center gap-3 px-4 py-3 border border-muted bg-muted/30 rounded-lg">
-          <Lock className="w-4 h-4 text-muted-foreground shrink-0" />
-          <div>
-            <p className="text-sm font-bold text-foreground">{selected.fullName}</p>
-            <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-tight">
-              {[selected.nic, selected.branch?.name].filter(Boolean).join(" • ")}
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div ref={ref} className="relative">
-      <label className="block text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-1">
-        Search Client *
-      </label>
-      <div
-        ref={inputRef}
-        className="flex items-center border border-border rounded-lg bg-card focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10 transition-all"
-      >
-        <Search className="ml-3 w-4 h-4 text-muted-foreground shrink-0" />
-        <input
-          type="text"
-          value={query}
-          placeholder="Type client name or NIC..."
-          onChange={e => {
-            setQuery(e.target.value);
-            updateDropdownPosition();
-            setOpen(true);
-            if (!e.target.value) onSelect(null);
-          }}
-          onFocus={() => {
-            if (query.trim().length > 0) { updateDropdownPosition(); setOpen(true); }
-          }}
-          className="flex-1 px-3 py-2 text-sm font-semibold text-foreground outline-none bg-transparent"
-        />
-        {query && (
-          <button type="button" onClick={() => { onSelect(null); setQuery(""); setOpen(false); }}
-            className="mr-3 text-muted-foreground hover:text-destructive">
-            <X className="w-4 h-4" />
-          </button>
-        )}
-      </div>
-
-      {open && filtered.length > 0 && createPortal(
-        <div style={dropdownStyle} className="bg-card border border-border rounded-lg shadow-xl overflow-hidden">
-          {filtered.map(c => (
-            <button key={c.id} type="button" onClick={e => e.preventDefault()}
-              onMouseDown={() => { onSelect(c); setQuery(c.fullName); setOpen(false); }}
-              className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors text-left"
-            >
-              <div>
-                <p className="text-sm font-bold text-foreground">{c.fullName}</p>
-                <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-tight mt-0.5">
-                  {[c.nic, c.branch?.name].filter(Boolean).join(" • ")}
-                </p>
-              </div>
-              {selected?.id === c.id && <Check className="w-4 h-4 text-primary shrink-0" />}
-            </button>
-          ))}
-        </div>,
-        document.body
-      )}
-    </div>
-  );
-}
-
-// ---------- helpers ----------
-const EMPTY_BENEFICIARY: BeneficiaryFields = {
-  fullName: "", nic: "", phone: "", bankName: "", bankBranch: "", accountNo: "", relationship: "",
-};
-const EMPTY_NOMINEE: NomineeFields = {
-  fullName: "", nic: "",contact:"", permanentAddress: "", postalAddress: "",
-};
-
-function beneficiaryFromRecord(b: any): BeneficiaryFields {
-  return {
-    fullName: b.fullName ?? "", nic: b.nic ?? "", phone: b.phone ?? "",
-    bankName: b.bankName ?? "", bankBranch: b.bankBranch ?? "",
-    accountNo: b.accountNo ?? "", relationship: b.relationship ?? "",
-  };
-}
-function nomineeFromRecord(n: any): NomineeFields {
-  return {
-    fullName: n.fullName ?? "", nic: n.nic ?? "",contact: n.contact ?? "",
-    permanentAddress: n.permanentAddress ?? "", postalAddress: n.postalAddress ?? "",
-  };
-}
-function isEqual<T extends object>(a: T, b: T) {
-  return Object.keys(a).every(k => (a as any)[k] === (b as any)[k]);
-}
-
-// =========================================================
-// PROPS
-// =========================================================
-type InitialData = {
-  planId?: number;
-  amount: number;
-  investmentDate: string;
-  investmentRates?: number[];
-  beneficiary?: any;   // full record
-  nominee?: any;       // full record
-  proposalFormNo?: string;
-  faId?: number | null;
-  fmId?: number | null;
-  bmId?: number | null;
-  rmId?: number | null;
-  zmId?: number | null;
-  agmId?: number | null;
-  ccoId?: number | null;
-  fa?: any; fm?: any; bm?: any; rm?: any; zm?: any; agm?: any; cco?: any;
-  approvalStatus?: string;
-  reviewNote?: string;
-  reviewedBy?: string;
-};
+import { SectionHeader, Field, ModeToggle } from "./ui";
+import ClientSearch from "./ClientSearch";
+import BeneficiaryPanel from "./BeneficiaryPanel";
+import NomineePanel from "./NomineePanel";
+import InvestmentDocuments from "./InvestmentDocuments";
+import {
+  InitialData,
+  BeneficiaryMode,
+  NomineeMode,
+  BeneficiaryFields,
+  NomineeFields,
+  HierarchyState,
+  EMPTY_BENEFICIARY,
+  EMPTY_NOMINEE,
+  beneficiaryFromRecord,
+  nomineeFromRecord,
+  isEqual,
+  uploadToSupabase,
+} from "./types";
+import ApprovalSection from "./ApprovalSection";
 
 export default function CreateInvestmentForm({
   onSuccess,
   investmentId,
   initialData,
   lockedClient,       // pass the full client object when in edit mode
-  hideHeader,         // set true when embedding inside another page
+  hideHeader,          // set true when embedding inside another page
 }: {
   onSuccess?: () => void;
   investmentId?: number;
@@ -301,19 +80,34 @@ export default function CreateInvestmentForm({
     ccoId: initialData?.cco ? { id: initialData.cco.id, nameWithInitials: initialData.cco.nameWithInitials, position: initialData.cco.position } : null,
   };
 
-
-
   const [clients, setClients] = useState<any[]>([]);
   const [plans, setPlans] = useState<FinancialPlan[]>([]);
   const [selectedClient, setSelectedClient] = useState<any | null>(lockedClient ?? null);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [isApproving, setIsApproving] = useState(false);
-  const [isRejecting, setIsRejecting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
+  // ---- Investment documents (create mode only) ----
+  const [docFiles, setDocFiles] = useState<Record<string, File | null>>({
+    paymentSlip: null,
+    proposal: null,
+    agreement: null,
+  });
+  const [docPreviews, setDocPreviews] = useState<Record<string, string | null>>({
+    paymentSlip: null,
+    proposal: null,
+    agreement: null,
+  });
+
+  const handleDocFileChange = (key: string, file: File | null) => {
+    setDocFiles(prev => ({ ...prev, [key]: file }));
+    setDocPreviews(prev => {
+      if (prev[key]) URL.revokeObjectURL(prev[key]!);
+      return { ...prev, [key]: file ? URL.createObjectURL(file) : null };
+    });
+  };
 
   const { data: userData } = useSessionUser();
-  const isManager = userData && ["ADMIN", "HR", "DEV",].includes(userData.role);
+  const isManager = userData && ["ADMIN", "HR", "DEV"].includes(userData.role);
 
   const approvalStatus = initialData?.approvalStatus || "PENDING";
   const isApprovedOrRejected = approvalStatus === "APPROVED" || approvalStatus === "REJECTED";
@@ -340,19 +134,15 @@ export default function CreateInvestmentForm({
   const [beneficiaryMode, setBeneficiaryMode] = useState<BeneficiaryMode>(
     initialData?.beneficiary ? "existing" : "none"
   );
-  // ID of the originally linked record (null = none or new)
   const [selectedBeneficiaryId, setSelectedBeneficiaryId] = useState<number | null>(
     initialData?.beneficiary?.id ?? null
   );
-  // Snapshot taken when user clicks a card — used for change-detection
   const [originalBeneficiary, setOriginalBeneficiary] = useState<BeneficiaryFields | null>(
     initialData?.beneficiary ? beneficiaryFromRecord(initialData.beneficiary) : null
   );
-  // Editable fields (either blank for "new", or pre-filled from existing)
   const [beneficiaryFields, setBeneficiaryFields] = useState<BeneficiaryFields>(
     initialData?.beneficiary ? beneficiaryFromRecord(initialData.beneficiary) : EMPTY_BENEFICIARY
   );
-  // Label shown on the edit panel ("Editing: Kamal Perera")
   const [beneficiaryLabel, setBeneficiaryLabel] = useState<string | null>(
     initialData?.beneficiary?.fullName ?? null
   );
@@ -374,9 +164,8 @@ export default function CreateInvestmentForm({
     initialData?.nominee?.fullName ?? null
   );
 
-
   // ---- Hierarchy ----
-  const [hierarchy, setHierarchy] = useState({
+  const [hierarchy, setHierarchy] = useState<HierarchyState>({
     faId: initialData?.faId ?? null,
     fmId: initialData?.fmId ?? null,
     bmId: initialData?.bmId ?? null,
@@ -396,16 +185,19 @@ export default function CreateInvestmentForm({
     { key: "ccoId", label: "CCO" },
   ] as const;
 
+  // `advisorOverridden` tracks whether the user manually picked an advisor
+  // in AdvisorHierarchy. Until they do, `advisorId` auto-follows the
+  // lowest-ranked (closest to client) hierarchy field that's set — see
+  // HIERARCHY_PRIORITY above. Once overridden, auto-fill stops so we don't
+  // clobber a deliberate manual choice.
   const [advisorId, setAdvisorId] = useState<number | null>(null);
   const [advisorOverridden, setAdvisorOverridden] = useState(false);
-
 
   useEffect(() => {
     if (advisorOverridden) return;
     const auto = HIERARCHY_PRIORITY.find(({ key }) => hierarchy[key] != null);
     setAdvisorId(auto ? (hierarchy[auto.key] ?? null) : null);
   }, [hierarchy, advisorOverridden]);
-
 
   // When client changes, auto-fill from client if we aren't in edit mode or if client changed
   useEffect(() => {
@@ -441,7 +233,6 @@ export default function CreateInvestmentForm({
   const rateOverriddenByUser = useRef(false);
 
   // ── plan selection: pre-fill year rates ─────────────────────────────────────
-
   useEffect(() => {
     if (!planId || rateOverriddenByUser.current) return;
     const plan = plans.find(p => p.id === Number(planId));
@@ -479,7 +270,6 @@ export default function CreateInvestmentForm({
     setTotalHarvest(total.toFixed(2));
     setMonthlyHarvest((total / months).toFixed(2));
   }, [amount, investmentRates, planId, plans]);
-
 
   // When switching away from "existing" mode, clear the snapshot/label
   const handleBeneficiaryModeChange = (mode: BeneficiaryMode) => {
@@ -535,9 +325,26 @@ export default function CreateInvestmentForm({
     handleNomineeModeChange("none");
   };
 
+  const handleBeneficiaryClear = () => {
+    setSelectedBeneficiaryId(null);
+    setBeneficiaryLabel(null);
+    setOriginalBeneficiary(null);
+    setBeneficiaryFields(EMPTY_BENEFICIARY);
+  };
 
+  const handleNomineeClear = () => {
+    setSelectedNomineeId(null);
+    setNomineeLabel(null);
+    setOriginalNominee(null);
+    setNomineeFields(EMPTY_NOMINEE);
+  };
 
   // ---- submit logic ----
+  // NOTE (business rule — see README.md): editing an "existing" beneficiary
+  // or nominee's fields never mutates the original record. If the fields
+  // still match the snapshot taken at selection time, we reuse the id.
+  // If anything was edited, we fork a brand-new record instead and link
+  // that to the investment. This is intentional, not a bug.
   const resolveBeneficiary = () => {
     if (beneficiaryMode === "none") return { beneficiaryId: null, newBeneficiary: null };
     if (beneficiaryMode === "new") {
@@ -618,6 +425,35 @@ export default function CreateInvestmentForm({
           ...hierarchy,
         });
         if (!res.success) { toast.error(res.error ?? "Failed"); return; }
+
+        // ── Upload investment documents if any were selected ──────────────
+        // Uploads happen *after* creation succeeds, because the storage
+        // path is keyed by the newly created investment's id.
+        const hasDocFiles = Object.values(docFiles).some(Boolean);
+        if (hasDocFiles && res.investment?.id) {
+          toast.loading("Uploading investment documents...", { id: "inv-doc-upload" });
+          try {
+            const uploaded: Record<string, string> = {};
+            await Promise.all(
+              Object.entries(docFiles).map(async ([key, file]) => {
+                if (!file) return;
+                const url = await uploadToSupabase(key, file);
+                uploaded[key] = url;
+              })
+            );
+            await updateInvestmentDocuments(res.investment.id, {
+              paymentSlip: uploaded.paymentSlip,
+              proposal: uploaded.proposal,
+              agreement: uploaded.agreement,
+            });
+          } catch (uploadErr) {
+            console.error("Document upload error:", uploadErr);
+            toast.warning("Investment created but some documents failed to upload.");
+          } finally {
+            toast.dismiss("inv-doc-upload");
+          }
+        }
+
         toast.success("Investment created successfully");
       }
       onSuccess?.();
@@ -627,191 +463,6 @@ export default function CreateInvestmentForm({
   };
 
   const client = selectedClient ?? lockedClient;
-
-  // ---- shared beneficiary edit panel ----
-  const BeneficiaryEditPanel = (
-    <div className="space-y-5">
-      {/* Show card list only in create mode (existing tab) */}
-      {beneficiaryMode === "existing" && !beneficiaryLabel && (
-        <div className="grid grid-cols-1 gap-3">
-          {client?.beneficiaries?.length > 0 ? client.beneficiaries.map((b: any) => (
-            <div
-              key={b.id}
-              onClick={() => handleBeneficiarySelect(b)}
-              className={`group flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all
-                ${selectedBeneficiaryId === b.id
-                  ? "border-primary bg-primary/5 ring-1 ring-primary"
-                  : "border-border hover:border-primary/40 hover:bg-muted/30"
-                }`}
-            >
-              <div>
-                <p className={`text-sm font-black ${selectedBeneficiaryId === b.id ? "text-primary" : "text-foreground"}`}>
-                  {b.fullName}
-                </p>
-                <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-tight mt-1">
-                  {[b.relationship, b.bankName, b.accountNo].filter(Boolean).join(" • ")}
-                </p>
-              </div>
-              {selectedBeneficiaryId === b.id && (
-                <div className="w-6 h-6 bg-primary rounded-lg flex items-center justify-center shadow-lg shadow-primary/20">
-                  <Check className="w-3.5 h-3.5 text-primary-foreground" />
-                </div>
-              )}
-            </div>
-          )) : (
-            <p className="text-sm text-muted-foreground italic font-medium">No saved beneficiaries found.</p>
-          )}
-        </div>
-      )}
-
-      {/* Edit fields — shown when: mode=new, OR mode=existing and a card was selected */}
-      {(beneficiaryMode === "new" || (beneficiaryMode === "existing" && beneficiaryLabel)) && (
-        <div className="space-y-4">
-          {beneficiaryLabel && (
-            <div className="p-3 bg-muted/30 rounded-lg border border-primary/20 flex justify-between items-center mb-2">
-              <div className="flex items-center gap-2">
-                <Pencil className="w-4.5 h-4.5 text-primary" />
-                <span className="text-[11px] font-bold text-foreground">
-                  Editing: <span className="uppercase">{beneficiaryLabel}</span>
-                </span>
-                {originalBeneficiary && !isEqual(beneficiaryFields, originalBeneficiary) && (
-                  <span className="ml-2 inline-flex items-center px-2 py-0.5 bg-amber-100 text-amber-800 border border-amber-300 rounded text-[10px] font-bold">
-                    MODIFIED
-                  </span>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedBeneficiaryId(null);
-                  setBeneficiaryLabel(null);
-                  setOriginalBeneficiary(null);
-                  setBeneficiaryFields(EMPTY_BENEFICIARY);
-                }}
-                className="text-primary text-[10px] font-bold underline uppercase"
-              >
-                Change
-              </button>
-            </div>
-          )}
-
-          <div className="space-y-4 pt-2">
-            <div className="sm:col-span-2">
-              <Field label="Full Name" value={beneficiaryFields.fullName}
-                onChange={v => setBeneficiaryFields(p => ({ ...p, fullName: v }))} />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="NIC" value={beneficiaryFields.nic} onChange={v => setBeneficiaryFields(p => ({ ...p, nic: v }))} />
-              <Field label="Relationship" value={beneficiaryFields.relationship} onChange={v => setBeneficiaryFields(p => ({ ...p, relationship: v }))} />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="Phone" value={beneficiaryFields.phone} onChange={v => setBeneficiaryFields(p => ({ ...p, phone: v }))} />
-              <Field label="Bank Name" value={beneficiaryFields.bankName} onChange={v => setBeneficiaryFields(p => ({ ...p, bankName: v }))} />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="Bank Branch" value={beneficiaryFields.bankBranch} onChange={v => setBeneficiaryFields(p => ({ ...p, bankBranch: v }))} />
-              <Field label="Account No." value={beneficiaryFields.accountNo} onChange={v => setBeneficiaryFields(p => ({ ...p, accountNo: v }))} />
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
-  const NomineeEditPanel = (
-    <div className="space-y-5">
-      {nomineeMode === "existing" && !nomineeLabel && (
-        <div className="grid grid-cols-1 gap-3">
-          {client?.nominees?.length > 0 ? client.nominees.map((n: any) => (
-            <div
-              key={n.id}
-              onClick={() => handleNomineeSelect(n)}
-              className={`flex items-center justify-between p-4 rounded-lg border-2 cursor-pointer transition-all
-                ${selectedNomineeId === n.id
-                  ? "border-accent bg-accent/5 ring-1 ring-accent"
-                  : "border-border hover:border-accent/40 hover:bg-muted/30"
-                }`}
-            >
-              <div>
-                <p className={`text-sm font-black ${selectedNomineeId === n.id ? "text-accent" : "text-foreground"}`}>
-                  {n.fullName}
-                </p>
-                <p className="text-[11px] text-muted-foreground font-bold mt-1 uppercase tracking-tighter">
-                  {n.permanentAddress}
-                </p>
-              </div>
-              {selectedNomineeId === n.id && (
-                <div className="w-6 h-6 bg-accent rounded-lg flex items-center justify-center shadow-lg shadow-accent/20">
-                  <Check className="w-3.5 h-3.5 text-accent-foreground" />
-                </div>
-              )}
-            </div>
-          )) : (
-            <p className="text-sm text-muted-foreground italic font-medium">No saved nominees found.</p>
-          )}
-        </div>
-      )}
-
-      {(nomineeMode === "new" || (nomineeMode === "existing" && nomineeLabel)) && (
-        <div className="space-y-4">
-          {nomineeLabel && (
-            <div className="p-3 bg-muted/30 rounded-lg border border-primary/20 flex justify-between items-center mb-2">
-              <div className="flex items-center gap-2">
-                <Pencil className="w-[18px] h-[18px] text-primary" />
-                <span className="text-[11px] font-bold text-foreground">
-                  Editing: <span className="uppercase">{nomineeLabel}</span>
-                </span>
-                {originalNominee && !isEqual(nomineeFields, originalNominee) && (
-                  <span className="ml-2 inline-flex items-center px-2 py-0.5 bg-amber-100 text-amber-800 border border-amber-300 rounded text-[10px] font-bold">
-                    MODIFIED
-                  </span>
-                )}
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedNomineeId(null);
-                  setNomineeLabel(null);
-                  setOriginalNominee(null);
-                  setNomineeFields(EMPTY_NOMINEE);
-                }}
-                className="text-primary text-[10px] font-bold underline uppercase"
-              >
-                Change
-              </button>
-            </div>
-          )}
-
-          <div className="space-y-4 pt-2">
-            <div className="sm:col-span-2">
-              <Field label="Full Name" value={nomineeFields.fullName}
-                onChange={v => setNomineeFields(p => ({ ...p, fullName: v }))} />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Field label="NIC" value={nomineeFields.nic} onChange={v => setNomineeFields(p => ({ ...p, nic: v }))} />
-              <Field label="Contact No." value={nomineeFields.contact} onChange={v => setNomineeFields(p => ({ ...p, contact: v }))} />
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Permanent Address</label>
-              <textarea
-                value={nomineeFields.permanentAddress}
-                onChange={e => setNomineeFields(p => ({ ...p, permanentAddress: e.target.value }))}
-                className="w-full px-3 py-2.5 text-sm font-semibold bg-card border border-border rounded-md outline-none focus:border-[#0f5132] focus:ring-1 focus:ring-[#0f5132] transition-all resize-y min-h-[80px]"
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Postal Address</label>
-              <textarea
-                value={nomineeFields.postalAddress}
-                onChange={e => setNomineeFields(p => ({ ...p, postalAddress: e.target.value }))}
-                className="w-full px-3 py-2.5 text-sm font-semibold bg-card border border-border rounded-md outline-none focus:border-[#0f5132] focus:ring-1 focus:ring-[#0f5132] transition-all resize-y min-h-[80px]"
-              />
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
 
   return (
     <div className="space-y-6 w-full md:max-w-8xl mx-auto pb-12">
@@ -919,7 +570,7 @@ export default function CreateInvestmentForm({
                                 rateOverriddenByUser.current = true;
                               }}
                               // [X-ONLY]: Hides native spinners across Chrome, Safari, and Firefox
-                               className="w-full bg-card border border-border rounded-lg text-sm py-2 px-3 font-bold text-primary outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors"
+                              className="w-full bg-card border border-border rounded-lg text-sm py-2 px-3 font-bold text-primary outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors"
                               placeholder="0"
                             />
                             <span className="text-sm font-medium text-muted-foreground select-none ml-1">
@@ -949,7 +600,19 @@ export default function CreateInvestmentForm({
                   action={!isLockedForSubmitter && <ModeToggle value={beneficiaryMode} onChange={handleBeneficiaryModeChange} />}
                 />
                 <div className="pt-2">
-                  {beneficiaryMode !== "none" && BeneficiaryEditPanel}
+                  {beneficiaryMode !== "none" && (
+                    <BeneficiaryPanel
+                      mode={beneficiaryMode}
+                      client={client}
+                      selectedId={selectedBeneficiaryId}
+                      label={beneficiaryLabel}
+                      fields={beneficiaryFields}
+                      originalFields={originalBeneficiary}
+                      onSelect={handleBeneficiarySelect}
+                      onFieldChange={updater => setBeneficiaryFields(updater)}
+                      onClear={handleBeneficiaryClear}
+                    />
+                  )}
                 </div>
               </div>
             </section>
@@ -963,11 +626,28 @@ export default function CreateInvestmentForm({
                   action={!isLockedForSubmitter && <ModeToggle value={nomineeMode} onChange={handleNomineeModeChange} />}
                 />
                 <div className="pt-2">
-                  {nomineeMode !== "none" && NomineeEditPanel}
+                  {nomineeMode !== "none" && (
+                    <NomineePanel
+                      mode={nomineeMode}
+                      client={client}
+                      selectedId={selectedNomineeId}
+                      label={nomineeLabel}
+                      fields={nomineeFields}
+                      originalFields={originalNominee}
+                      onSelect={handleNomineeSelect}
+                      onFieldChange={updater => setNomineeFields(updater)}
+                      onClear={handleNomineeClear}
+                    />
+                  )}
                 </div>
               </div>
             </section>
           </div>
+
+          {/* Investment Documents — only shown in create mode */}
+          {!isEditMode && (
+            <InvestmentDocuments files={docFiles} previews={docPreviews} onChange={handleDocFileChange} />
+          )}
 
           {/* Hierarchy — only visible to management roles */}
           {isManager && (
@@ -993,92 +673,17 @@ export default function CreateInvestmentForm({
           )}
 
           {showApprovalSection && (
-            <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden mt-8">
-              <div className="px-6 py-4 border-b border-border">
-                <SectionHeader icon={<Check className="w-[20px] h-[20px]" />} title="Management Approval Hierarchy" />
-              </div>
-              <div className="flex flex-col">
-                <div className="p-6">
-                  <AdvisorHierarchy
-                    values={hierarchy}
-                    onChange={(key, id) => setHierarchy(p => ({ ...p, [key]: id }))}
-                    hideCard
-                  />
-                </div>
-
-                <div className="px-6 pb-6 space-y-2">
-                  <label className="text-[11px] font-bold text-muted-foreground uppercase block">
-                    Review Note
-                  </label>
-                  <textarea
-                    value={reviewNote}
-                    onChange={e => setReviewNote(e.target.value)}
-                    placeholder="Add comments or rejection reason..."
-                    className="w-full bg-background border border-border rounded-lg text-sm py-3 px-4 focus:ring-1 focus:ring-primary focus:border-primary shadow-inner outline-none transition-all"
-                    rows={3}
-                  />
-                </div>
-
-                {/* Quick Actions Footer */}
-                <div className="px-6 py-4 bg-muted/30 border-t border-border flex flex-col md:flex-row gap-4 items-center">
-                  <div className="flex-1 text-[11px] font-bold text-muted-foreground uppercase">
-                    Reviewing as: <span className="text-foreground ml-1">{userData?.name}</span>
-                  </div>
-                  <div className="flex gap-3 w-full md:w-auto">
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        setIsApproving(true);
-                        const res = await approveInvestmentWithHierarchyLog({
-                          investmentId: investmentId!,
-                          advisorId,
-                          ...hierarchy,
-                          reviewNote
-                        });
-                        setIsApproving(false);
-                        if (res.success) {
-                          toast.success("Investment successfully approved.");
-                          onSuccess?.();
-                        } else {
-                          toast.error(res.error || "Failed to approve investment. Please try again.");
-                        }
-                      }}
-                      disabled={isApproving || isRejecting || isUpdating}
-                      className="flex-1 md:flex-none px-8 py-3 bg-[#0f5132] text-white rounded-lg font-bold text-sm flex items-center justify-center gap-2 hover:brightness-95 active:scale-95 transition-all disabled:opacity-50"
-                    >
-                      {isApproving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                      APPROVE
-                    </button>
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        if (!reviewNote.trim()) {
-                          toast.warning("A review note is required to reject this investment.");
-                          return;
-                        }
-                        setIsRejecting(true);
-                        const res = await rejectInvestment({
-                          investmentId: investmentId!,
-                          reviewNote
-                        });
-                        setIsRejecting(false);
-                        if (res.success) {
-                          toast.success("Investment has been successfully rejected.");
-                          onSuccess?.();
-                        } else {
-                          toast.error(res.error || "Failed to reject investment.");
-                        }
-                      }}
-                      disabled={isApproving || isRejecting || isUpdating}
-                      className="flex-1 md:flex-none px-8 py-3 bg-red-600 text-white rounded-lg font-bold text-sm flex items-center justify-center gap-2 hover:brightness-95 active:scale-95 transition-all disabled:opacity-50"
-                    >
-                      {isRejecting ? <Loader2 className="w-4 h-4 animate-spin" /> : <X className="w-4 h-4" />}
-                      REJECT
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <ApprovalSection
+              investmentId={investmentId!}
+              hierarchy={hierarchy}
+              onHierarchyChange={(key, id) => setHierarchy(p => ({ ...p, [key]: id }))}
+              advisorId={advisorId}
+              reviewNote={reviewNote}
+              onReviewNoteChange={setReviewNote}
+              userData={userData}
+              isUpdating={isUpdating}
+              onSuccess={onSuccess}
+            />
           )}
 
           {/* Submit */}
@@ -1087,7 +692,7 @@ export default function CreateInvestmentForm({
               <button
                 type="button"
                 onClick={handleSubmit}
-                disabled={isApproving || isRejecting || isUpdating}
+                disabled={isUpdating}
                 className={`w-full py-5 bg-[#0f5132] text-white rounded-xl font-bold text-[12px] flex items-center justify-center gap-3 shadow-lg shadow-primary/20 hover:shadow-primary/40 active:scale-[0.99] transition-all uppercase tracking-widest disabled:opacity-50`}
               >
                 {isUpdating

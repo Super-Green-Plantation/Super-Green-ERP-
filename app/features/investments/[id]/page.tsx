@@ -2,9 +2,9 @@
 
 import { getInvestmentById } from "@/app/features/investments/actions";
 import { useParams, notFound } from "next/navigation";
-import CreateInvestmentForm from "../create/page";
 import { useEffect, useState } from "react";
 import Loading from "@/app/components/Status/Loading";
+import CreateInvestmentForm from "../create/page";
 
 // Mirror the shape returned by getInvestmentById
 type InvestmentDetail = NonNullable<Awaited<ReturnType<typeof getInvestmentById>>>;

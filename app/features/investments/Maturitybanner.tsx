@@ -1,7 +1,7 @@
 "use client";
 
+import { CheckCircle2, Clock, LogOut, RefreshCw, X } from "lucide-react";
 import { useState, useTransition } from "react";
-import { AlertTriangle, CheckCircle2, RefreshCw, LogOut, X, Clock } from "lucide-react";
 import { dismissMaturityNotification, leaveInvestment, renewInvestment } from "./renewInvestment";
 
 // ─── Maturity helpers ─────────────────────────────────────────────────────────
