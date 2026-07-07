@@ -207,7 +207,7 @@ export default function InvestmentsPage() {
             <p className="text-sm font-bold text-foreground">{total} total investments</p>
           </div>
         </div>
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+        <div className="flex  items-stretch sm:items-center gap-3 w-full sm:w-auto">
           {investments.length > 0 && (
             <button
               onClick={async () => {
@@ -269,28 +269,32 @@ export default function InvestmentsPage() {
               </p>
             )}
           </div>
+          <div className="sm:flex-col flex gap-3">
+            <div className=" bg-card border border-border rounded-2xl p-5 space-y-1">
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                Total Investments
+              </p>
+              <p className="text-2xl font-black text-foreground tabular-nums">
+                {summary?.investmentCount ?? 0}
+              </p>
+              <p className="text-[10px] text-muted-foreground font-medium">records</p>
+            </div>
 
-          <div className="bg-card border border-border rounded-2xl p-5 space-y-1">
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-              Total Investments
-            </p>
-            <p className="text-2xl font-black text-foreground tabular-nums">
-              {summary?.investmentCount ?? 0}
-            </p>
-            <p className="text-[10px] text-muted-foreground font-medium">records</p>
+            <div className="bg-card border border-border rounded-2xl p-5 space-y-1">
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                Proposals Filed
+              </p>
+              <p className="text-2xl font-black text-foreground tabular-nums">
+                {summary?.proposalCount ?? 0}
+              </p>
+              <p className="text-[10px] text-muted-foreground font-medium">
+                of {summary?.investmentCount ?? 0} have proposal no.
+              </p>
+            </div>
           </div>
 
-          <div className="bg-card border border-border rounded-2xl p-5 space-y-1">
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-              Proposals Filed
-            </p>
-            <p className="text-2xl font-black text-foreground tabular-nums">
-              {summary?.proposalCount ?? 0}
-            </p>
-            <p className="text-[10px] text-muted-foreground font-medium">
-              of {summary?.investmentCount ?? 0} have proposal no.
-            </p>
-          </div>
+
+
         </div>
       </div>
 
@@ -335,33 +339,36 @@ export default function InvestmentsPage() {
           </div>
         </div>
 
-        <div className="relative w-full md:w-52">
-          <select
-            value={branchId}
-            onChange={e => setBranchId(e.target.value)}
-            className="w-full appearance-none pl-4 pr-10 py-3 bg-background border-2 border-border rounded-full text-sm font-semibold text-foreground outline-none cursor-pointer focus:ring-2 focus:ring-primary/50"
-          >
-            <option value="all">All Branches</option>
-            {branchData?.map((branch: any) => (
-              <option key={branch.id} value={branch.id}>{branch.name}</option>
-            ))}
-          </select>
-          <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+        <div className="flex gap-3">
+          <div className="relative w-full md:w-52">
+            <select
+              value={branchId}
+              onChange={e => setBranchId(e.target.value)}
+              className="w-full appearance-none pl-4 pr-10 py-3 bg-background border-2 border-border rounded-full text-sm font-semibold text-foreground outline-none cursor-pointer focus:ring-2 focus:ring-primary/50"
+            >
+              <option value="all">All Branches</option>
+              {branchData?.map((branch: any) => (
+                <option key={branch.id} value={branch.id}>{branch.name}</option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          </div>
+
+          <div className="relative w-full md:w-64">
+            <select
+              value={selectedMonth}
+              onChange={e => { setSelectedMonth(e.target.value); setCurrentPage(1); }}
+              className="w-full appearance-none pl-4 pr-10 py-3 bg-background border-2 border-border rounded-full text-sm font-semibold text-foreground outline-none cursor-pointer focus:ring-2 focus:ring-primary/50"
+            >
+              <option value="all">All Time</option>
+              {getMonthOptions().map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          </div>
         </div>
 
-        <div className="relative w-full md:w-64">
-          <select
-            value={selectedMonth}
-            onChange={e => { setSelectedMonth(e.target.value); setCurrentPage(1); }}
-            className="w-full appearance-none pl-4 pr-10 py-3 bg-background border-2 border-border rounded-full text-sm font-semibold text-foreground outline-none cursor-pointer focus:ring-2 focus:ring-primary/50"
-          >
-            <option value="all">All Time</option>
-            {getMonthOptions().map(opt => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
-          <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-        </div>
 
 
         {isFiltered && (
@@ -459,7 +466,7 @@ export default function InvestmentsPage() {
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider
                         ${inv.approvalStatus === "APPROVED" ? "bg-green-500/10 text-green-600" :
                           inv.approvalStatus === "REJECTED" ? "bg-red-500/10 text-red-600" :
-                          "bg-amber-500/10 text-amber-600"
+                            "bg-amber-500/10 text-amber-600"
                         }`}
                       >
                         {inv.approvalStatus || "PENDING"}

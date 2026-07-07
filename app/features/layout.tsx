@@ -8,6 +8,7 @@ import Toast from "../Toast";
 import { createClient } from "@/lib/supabase/client";
 import { useNavigationLoading } from "../hooks/useNavigationLoading";
 import Loading from "../components/Status/Loading";
+import { Menu } from "lucide-react";
 
 export default function FeaturesLayout({
   children,
@@ -18,8 +19,8 @@ export default function FeaturesLayout({
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-    const { loading: navigating, startLoading } = useNavigationLoading();
-  
+  const { loading: navigating, startLoading } = useNavigationLoading();
+
 
   useEffect(() => {
     const loadUser = async () => {
@@ -41,8 +42,30 @@ export default function FeaturesLayout({
     loadUser();
   }, [router]);
 
+  useEffect(() => {
+    if (window.innerWidth < 768) {
+      setIsCollapsed(true);
+    }
+  }, []);
+
   return (
     <>
+      {!isCollapsed && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 md:hidden"
+          onClick={() => setIsCollapsed(true)}
+        />
+      )}
+
+      {isCollapsed && (
+        <button
+          onClick={() => setIsCollapsed(false)}
+          className="md:hidden fixed top-4 left-4 z-40 p-2 rounded-xl bg-sidebar-accent"
+        >
+          <Menu size={20} />
+        </button>
+      )}
+
       <Sidebar
         role={role}
         loading={loading}
@@ -53,10 +76,10 @@ export default function FeaturesLayout({
 
       <main
         className={`
-          min-h-screen sm:pt-10 pt-8 p-4
-          transition-all duration-300
-          ml-20 ${isCollapsed ? "md:ml-20" : "md:ml-60"}
-        `}
+        min-h-screen sm:pt-10 pt-8 p-4
+        transition-all duration-300
+        ${isCollapsed ? "md:ml-20" : "md:ml-60"}
+      `}
       >
         <Providers>
           <Toast>{children}</Toast>
