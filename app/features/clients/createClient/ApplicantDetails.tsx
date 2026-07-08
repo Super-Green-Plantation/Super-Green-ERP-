@@ -489,7 +489,7 @@ const ApplicantDetails = ({ lockedClient, onClientLock }: Props) => {
               </div>
 
               <div>
-                <label className={labelClass}>Target Plan</label>
+                <label className={labelClass}>Investment Plan</label>
                 <select
                   className={inputClass()}
                   {...register("investment.planId", {
