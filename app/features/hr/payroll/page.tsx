@@ -276,17 +276,17 @@ export default function PayrollPage() {
                     Active Team
                   </th>
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Volume Achieved</th>
-                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Basic</th>
-                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Incentive</th>
+                  {/* <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Basic</th> */}
+                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Basic Incentive</th>
+                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Target Budget</th>
                   {/* <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Allowance</th> */}
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Vehicle</th>
-                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Team Active</th>
-                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Target Budget</th>
-                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Personal Comm.</th>
+                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Team Activation</th>
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">ORC</th>
-                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Excess</th>
+                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Personal Comm.</th>
+                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Additional Comm</th>
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">EPF (emp)</th>
-                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Advance</th>
+                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Total Deduction</th>
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Net Pay</th>
                   <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Status</th>
                 </tr>
@@ -332,15 +332,31 @@ export default function PayrollPage() {
                     </td>
 
                     <>
-                      <td className="px-5 py-4 text-right text-xs font-bold text-muted-foreground">
+                      {/* <td className="px-5 py-4 text-right text-xs font-bold text-muted-foreground">
                         {fmt(row.breakdown?.basicSalaryPermanent ?? 0)}
-                      </td>
+                      </td> */}
                       <td className="px-5 py-4 text-right text-xs font-bold">
-                        <span className={row.breakdown?.incentiveHit ? "text-green-600" : "text-muted-foreground/40"}>
-                          {fmt(row.breakdown?.incentiveEarned ?? 0)}
-
+                        <span className={
+                          row.breakdown?.incentivePartialHit
+                            
+                        }>
+                          {fmt(
+                            row.breakdown?.incentivePartialHit
+                              ? (row.breakdown?.incentivePartialEarned ?? 0)
+                              : (row.breakdown?.incentiveEarned ?? 0)
+                          )}
+                          {row.breakdown?.incentivePartialHit && !row.breakdown?.incentiveHit && (
+                            <span className="block text-[9px] font-bold text-amber-500/70 uppercase tracking-wider">partial</span>
+                          )}
                         </span>
                       </td>
+
+                      <td className="px-5 py-4 text-right text-xs font-bold">
+                        <span className={row.breakdown?.targetBudgetSalary > 0 ? "text-primary" : "text-muted-foreground/40"}>
+                          {fmt(row.breakdown?.targetBudgetSalary ?? 0)}
+                        </span>
+                      </td>
+
                       {/* <td className="px-5 py-4 text-right text-xs font-bold">
                         <span className={row.breakdown?.allowanceHit ? "text-primary" : "text-muted-foreground/40"}>
                           {fmt(row.breakdown?.allowanceEarned ?? 0)}
@@ -359,17 +375,14 @@ export default function PayrollPage() {
 
                         </span>
                       </td>
-                      <td className="px-5 py-4 text-right text-xs font-bold">
-                        <span className={row.breakdown?.targetBudgetSalary > 0 ? "text-primary" : "text-muted-foreground/40"}>
-                          {fmt(row.breakdown?.targetBudgetSalary ?? 0)}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4 text-right text-xs font-bold text-primary">
-                        {fmt(row.personalCommissionEarned ?? 0)}
-                      </td>
                       <td className="px-5 py-4 text-right text-xs font-bold text-blue-600">
                         {fmt(row.orcEarned ?? 0)}
                       </td>
+
+                      <td className="px-5 py-4 text-right text-xs font-bold text-primary">
+                        {fmt(row.personalCommissionEarned ?? 0)}
+                      </td>
+
                       <td className="px-5 py-4 text-right text-xs font-bold text-emerald-600">
                         {fmt(row.excessEarned ?? 0)}
                       </td>

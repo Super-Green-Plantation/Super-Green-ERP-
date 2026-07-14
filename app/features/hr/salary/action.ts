@@ -295,7 +295,7 @@ export async function approveInvestmentWithHierarchyLog(data: {
   ccoId?: number | null;
   reviewNote?: string;
   advisorId?: number | null;
-}): Promise<{ success: boolean; investment?: any; error?: string }> {
+}): Promise<{ success: boolean; investment?: any; error?: string; commissionProcessed?: boolean; commissionError?: string }> {
   try {
     const currentUser = await getCurrentUserWithRole();
     if (!currentUser) throw new Error("Not authorized");
@@ -432,7 +432,43 @@ export async function approveInvestmentWithHierarchyLog(data: {
       },
     });
 
-    return { success: true, investment: result };
+    // ── f. Auto-trigger commission processing ──────────────────────────────
+    // Runs AFTER the approval transaction commits — commission failure
+    // never rolls back the approval. volumeAchieved is already incremented.
+    // processCommissions is idempotent (FOR UPDATE + commissionsProcessed flag)
+    // so re-approving a duplicate is safe and returns early.
+    let commissionResult: { success: boolean; error?: string } = { success: true };
+    if (data.faId) {
+      try {
+        const fa = await prisma.member.findUnique({
+          where: { id: data.faId },
+          select: { empNo: true },
+        });
+        if (fa) {
+          const { processCommissions } = await import(
+            "@/app/features/commissions/process"
+          );
+          const res = await processCommissions({
+            investmentId: data.investmentId,
+            empNo: fa.empNo,
+            branchId: investment.branchId,
+          });
+          if (!res.success) {
+            commissionResult = { success: false, error: res.error?.message ?? "Commission processing failed" };
+          }
+        }
+      } catch (commErr: any) {
+        console.error("Auto-commission processing failed after approval:", commErr);
+        commissionResult = { success: false, error: commErr?.message ?? "Commission processing failed" };
+      }
+    }
+
+    return {
+      success: true,
+      investment: result,
+      commissionProcessed: commissionResult.success,
+      commissionError: commissionResult.success ? undefined : commissionResult.error,
+    };
   } catch (error: any) {
     console.error("approveInvestmentWithHierarchyLog error:", error);
     return { success: false, error: error.message };

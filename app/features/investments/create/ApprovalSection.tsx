@@ -43,7 +43,12 @@ export default function ApprovalSection({
     });
     setIsApproving(false);
     if (res.success) {
-      toast.success("Investment successfully approved.");
+      if (res.commissionError) {
+        toast.success("Investment approved.");
+        toast.warning(`Commission processing needs attention: ${res.commissionError}. Use the Commissions page to process manually.`);
+      } else {
+        toast.success("Investment approved and commissions processed.");
+      }
       onSuccess?.();
     } else {
       toast.error(res.error || "Failed to approve investment. Please try again.");

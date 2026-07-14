@@ -19,7 +19,10 @@ function toPositionTargetData(target: any) {
   return {
     targetAmount: Number(target.targetAmount ?? 0),
     bonusAmount: Number(target.bonusAmount ?? 0),
-    partialThreshold: Number(target.partialThreshold ?? 0),
+    // DB stores partialThresholdPct (fraction, e.g. 0.066).
+    // There is NO partialThreshold field — reading it returns undefined → 0
+    // which silently breaks partial incentive for every probation member.
+    partialThresholdPct: Number(target.partialThresholdPct ?? 0),
     partialBonus: Number(target.partialBonus ?? 0),
     vehicleThresholdPct: Number(target.vehicleThresholdPct ?? 0),
     vehicleAmount: Number(target.vehicleAmount ?? 0),

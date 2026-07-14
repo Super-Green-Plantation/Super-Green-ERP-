@@ -38,7 +38,7 @@ export type PayrollBreakdown = {
 export type PositionTargetData = {
   targetAmount: number;
   bonusAmount: number;
-  partialThreshold: number;
+  partialThresholdPct: number;  // fraction of target, e.g. 0.066 = 6.6% — DB field is partialThresholdPct
   partialBonus: number;
   vehicleThresholdPct: number;
   vehicleAmount: number;
@@ -109,16 +109,27 @@ export function calculatePayroll(
     // ── Probation path ── target/bonus from PositionTarget row
     monthlyTarget = safe(positionTarget.targetAmount);
 
-    // Full incentive at 100% of target
-    incentiveHit = monthlyTarget > 0 && volumeAchieved >= monthlyTarget;
-    if (incentiveHit) {
-      incentiveEarned = safe(positionTarget.bonusAmount);
-    } else {
-      // Partial incentive at absolute threshold (not a percentage)
-      const partialThreshold = safe(positionTarget.partialThreshold);
+    const hasPartialTier = safe(positionTarget.partialThresholdPct) > 0 && safe(positionTarget.partialBonus) > 0;
+
+    if (hasPartialTier) {
+      // FA-style split incentive:
+      //   • 20K (partialBonus) earned independently whenever ≥ partialThresholdPct of target
+      //   • 30K comes from target budget (scaled 25%–100%), handled below
+      //   • bonusAmount (50K) is the combined total — NOT a separate lump sum
+      // So: never award bonusAmount here; partial always evaluates on its own.
+      const partialThreshold = monthlyTarget * safe(positionTarget.partialThresholdPct);
       if (partialThreshold > 0 && volumeAchieved >= partialThreshold) {
         incentivePartialHit = true;
         incentivePartialEarned = safe(positionTarget.partialBonus);
+      }
+      // Full target hit also sets incentiveHit for UI (green vs amber) but
+      // adds no extra amount — the 30K difference comes via target budget.
+      incentiveHit = monthlyTarget > 0 && volumeAchieved >= monthlyTarget;
+    } else {
+      // BM/FM/RM-style: no partial tier — binary full incentive only
+      incentiveHit = monthlyTarget > 0 && volumeAchieved >= monthlyTarget;
+      if (incentiveHit) {
+        incentiveEarned = safe(positionTarget.bonusAmount);
       }
     }
 

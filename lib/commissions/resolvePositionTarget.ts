@@ -1,5 +1,3 @@
-
-
 export function resolvePositionTarget(member: any, year: number, month: number) {
   if (member.status !== "PROBATION" || !member.probationStartDate) return null;
 
@@ -24,15 +22,19 @@ export function resolvePositionTarget(member: any, year: number, month: number) 
     );
   }
 
-  // After 6 months: use after6MonthTarget from any row
+  // After 6 months: use after6MonthTarget and after6MonthIncentivePct.
+  // Pass partialThresholdPct so calculatePayroll computes the absolute
+  // threshold consistently as: targetAmount × partialThresholdPct.
   const anyTarget = targets[0];
-  const after6Target = anyTarget.after6MonthTarget ?? 0;
-  const after6Pct = anyTarget.after6MonthIncentivePct ?? 0;
 
   return {
-    ...anyTarget, targetAmount: anyTarget.after6MonthTarget,
-    partialThreshold: after6Target * after6Pct,
-    partialBonus: anyTarget.bonusAmount, // full incentive amount stays
+    ...anyTarget,
+    targetAmount: anyTarget.after6MonthTarget,
+    // after6MonthIncentivePct is the fraction of target that must be achieved
+    // (e.g. 0.5 = 50% of 8M = 4M for BM after 6 months). Store as
+    // partialThresholdPct so calculatePayroll's probation path handles it.
+    partialThresholdPct: anyTarget.after6MonthIncentivePct ?? 0,
+    partialBonus: anyTarget.bonusAmount,
   };
 }
 
