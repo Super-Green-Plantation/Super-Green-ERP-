@@ -269,7 +269,7 @@ export default function InvestmentsPage() {
               </p>
             )}
           </div>
-          <div className="sm:flex-col flex gap-3">
+          {/* <div className="sm:flex-col flex gap-3">
             <div className=" bg-card border border-border rounded-2xl p-5 space-y-1">
               <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                 Total Investments
@@ -291,7 +291,7 @@ export default function InvestmentsPage() {
                 of {summary?.investmentCount ?? 0} have proposal no.
               </p>
             </div>
-          </div>
+          </div> */}
 
 
 

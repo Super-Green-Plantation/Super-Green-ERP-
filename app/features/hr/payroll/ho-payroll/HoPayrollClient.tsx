@@ -60,7 +60,12 @@ export default function HoPayrollClient({
     refetch,
   } = useQuery({
     queryKey,
-    queryFn: () => getHoPayrollPreview(year, month, overrides),
+    queryFn: () => {
+      const mapped = Object.fromEntries(
+        Object.entries(overrides).map(([id, val]) => [id, { basicSalary: val }])
+      );
+      return getHoPayrollPreview(year, month, mapped);
+    },
     enabled: false,
     initialData: year === initialYear && month === initialMonth ? initialPreview : undefined,
     placeholderData: keepPreviousData,
@@ -93,7 +98,10 @@ export default function HoPayrollClient({
   const handleRunPayroll = async (force = false) => {
     setRunning(true);
     try {
-      const result = await runHoPayroll(year, month, overrides, force);
+      const mapped = Object.fromEntries(
+        Object.entries(overrides).map(([id, val]) => [id, { basicSalary: val }])
+      );
+      const result = await runHoPayroll(year, month, mapped, force);
       if (result.success) {
         toast.success(`HO payroll processed: ${result.processed} employees`);
         if (result.skipped > 0) toast.warning(`${result.skipped} skipped (already processed or paid)`);

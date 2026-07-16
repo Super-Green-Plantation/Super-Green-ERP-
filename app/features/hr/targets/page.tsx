@@ -241,7 +241,7 @@ export default function PositionTargetsPage() {
       </div>
 
       {/* Accordions */}
-      <div className="space-y-3 space-x-0 mx-auto">
+      <div className="space-y-2 space-x-0 mx-auto">
         {positions.map((position) => (
           <PositionAccordion
             key={position.id}

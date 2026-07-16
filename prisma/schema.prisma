@@ -7,6 +7,156 @@ datasource db {
   provider = "postgresql"
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum Status {
+  Active
+  Inactive
+}
+
+enum ReturnFrequency {
+  Monthly
+  HalfYearly
+  Yearly
+}
+
+enum Title {
+  ADMIN
+  CHAIRMEN
+  HR
+  ACC
+  IT
+  ABM
+  PRO
+  OPM
+  CLEANING
+  FA
+  TL
+  BM
+  RM
+  ZM
+  PRO_AGM
+  TRAINEE_FA
+  P_FA
+  P_TL
+  JBM
+  SBM
+  JRM
+  SRM
+  JZM
+  SZM
+  PER_AGM
+  COO
+  DGM
+  GM
+  SE
+}
+
+enum PositionType {
+  PROBATION
+  PERMANENT
+  MANAGEMENT
+}
+
+enum EmployeeStatus {
+  PROBATION
+  PERMANENT
+  MANAGEMENT
+}
+
+enum Channel {
+  Chanel_01
+  Chanel_02
+  Micro
+  Chanel_03
+}
+
+enum InvStatus {
+  Active
+  Inactive
+  Matured
+  Renewed
+}
+
+enum CommissionType {
+  PERSONAL
+  UPLINE
+  EXCESS
+}
+
+enum ActivityAction {
+  CREATE
+  UPDATE
+  DELETE
+  APPROVE
+  REJECT
+  LOGIN
+}
+
+enum ActivityEntity {
+  CLIENT
+  INVESTMENT
+  COMMISSION
+  PROFIT
+  MEMBER
+  BRANCH
+  FINANCIAL_PLAN
+}
+
+enum Role {
+  ADMIN
+  HR
+  DEV
+  BRANCH_MANAGER
+  REGIONAL_MANAGER
+  AGM
+  EMPLOYEE
+  ZONAL_MANAGER
+}
+
+enum QuotationPlanType {
+  CHILD
+  MARGE
+  PENSION
+}
+
+enum QuotationFrequency {
+  MONTHLY
+  QUARTERLY
+  SEMI_ANNUAL
+  ANNUAL
+}
+
+enum AdvanceType {
+  SALARY
+  FESTIVAL
+}
+
+// ── Payroll enums ─────────────────────────────────────────────────────────────
+
+enum PayrollCategory {
+  HEAD_OFFICE
+  MARKETING
+}
+
+enum PayrollStatus {
+  DRAFT
+  APPROVED
+  PAID
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CORE MODELS
+// ─────────────────────────────────────────────────────────────────────────────
+
 model Branch {
   name        String
   location    String?
@@ -24,6 +174,15 @@ model Branch {
   commission  Commission[]
   investments Investment[]
   members     MemberBranch[]
+}
+
+model Zone {
+  id        Int          @id @default(autoincrement())
+  name      String       @unique
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+  branches  Branch[]
+  members   MemberZone[]
 }
 
 model Position {
@@ -52,6 +211,88 @@ model CommissionRate {
   position         Position @relation(fields: [positionId], references: [id])
 }
 
+model Member {
+  createdAt              DateTime               @default(now())
+  updatedAt              DateTime?
+  id                     Int                    @id @default(autoincrement())
+  positionId             Int
+  empNo                  String                 @unique
+  email                  String?                @unique
+  phone                  String?
+  userId                 String?                @unique @db.Uuid
+  accNo                  String?
+  address                String?
+  appointmentLetter      String?
+  bank                   String?
+  bankBranch             String?
+  civilStatus            String?
+  confirmation           String?
+  dateOfJoin             DateTime?
+  dob                    DateTime?
+  gender                 String?
+  nameWithInitials       String?
+  nic                    String?
+  remark                 String?
+  probationStartDate     String?
+  profilePic             String?
+  status                 EmployeeStatus         @default(PROBATION)
+  epfNo                  String?
+  phone2                 String?
+  lastClientRegisteredAt DateTime?
+  reportingPersons       String[]
+  etfNo                  String?
+  isActive               Boolean                @default(true)
+  channel                Channel                @default(Chanel_01)
+  approvalStatus         ApprovalStatus         @default(PENDING)
+  recruitedById          Int?
+  reviewNote             String?
+  reviewedAt             DateTime?
+  reviewedBy             String?
+  submittedAt            DateTime               @default(now())
+  totalCommission        Float?
+
+  // Payroll track override — when null the track is derived from Position.type.
+  // Set explicitly only when a member's compensation track differs from their
+  // position type (rare edge case).
+  payrollCategory        PayrollCategory?
+
+  // ── Relations ──────────────────────────────────────────────────────────────
+  activityLog            ActivityLog[]
+  clientsAsAGM           Client[]               @relation("ClientAGM")
+  clientsAsBM            Client[]               @relation("ClientBM")
+  clientsAsCCO           Client[]               @relation("ClientCCO")
+  createdClients         Client[]               @relation("CreatedByMember")
+  clientsAsFA            Client[]               @relation("ClientFA")
+  clientsAsFM            Client[]               @relation("ClientFM")
+  clients                Client[]
+  clientsAsRM            Client[]               @relation("ClientRM")
+  clientsAsZM            Client[]               @relation("ClientZM")
+  commissions            Commission[]
+  advisorInvestments     Investment[]           @relation("AdvisorInvestments")
+  investmentsAsAGM       Investment[]           @relation("InvestmentAGM")
+  investmentsAsBM        Investment[]           @relation("InvestmentBM")
+  investmentsAsCCO       Investment[]           @relation("InvestmentCCO")
+  investments            Investment[]           @relation("InvestmentCreatedBy")
+  investmentsAsFA        Investment[]           @relation("InvestmentFA")
+  investmentsAsFM        Investment[]           @relation("InvestmentFM")
+  investmentsAsRM        Investment[]           @relation("InvestmentRM")
+  investmentsAsZM        Investment[]           @relation("InvestmentZM")
+  position               Position               @relation(fields: [positionId], references: [id])
+  recruitedBy            Member?                @relation("RecruitedBy", fields: [recruitedById], references: [id])
+  recruits               Member[]               @relation("RecruitedBy")
+  user                   User?                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  branches               MemberBranch[]
+  zones                  MemberZone[]
+  monthlyActivations     MonthlyActivation[]
+  monthlyEvaluations     MonthlyEvaluation[]
+  monthlyPayrolls        MonthlyPayroll[]
+  SalaryAdvances         SalaryAdvance[]
+  ManagementBaseSalary   ManagementBaseSalary[]
+  ManagementSalary       ManagementSalary[]
+  HoPayrollConfig        HoPayrollConfig[]
+  PayrollRecord          PayrollRecord[]
+}
+
 model MemberBranch {
   id        Int     @id @default(autoincrement())
   memberId  Int
@@ -62,6 +303,77 @@ model MemberBranch {
 
   @@unique([memberId, branchId])
 }
+
+model MemberZone {
+  id       Int    @id @default(autoincrement())
+  memberId Int
+  zoneId   Int
+  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  zone     Zone   @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+
+  @@unique([memberId, zoneId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SALARY CONFIGURATION
+// ─────────────────────────────────────────────────────────────────────────────
+
+model PositionSalary {
+  id                          Int      @id @default(autoincrement())
+  positionId                  Int      @unique
+  monthlyTarget               Float
+  incentiveAmount             Float
+  allowanceAmount             Float
+  commRateLow                 Float
+  commRateHigh                Float
+  commThreshold               Float    @default(500000)
+  epfEmployee                 Float    @default(0.08)
+  epfEmployer                 Float    @default(0.12)
+  etfEmployer                 Float    @default(0.03)
+  allowanceThresholdPermanent Float    @default(1.0)
+  allowanceThresholdProbation Float    @default(0.75)
+  basicSalaryPermanent        Float    @default(0)
+  basicSalaryProbation        Float    @default(0)
+  incentivePartialAmount      Float    @default(0)
+  incentivePartialThreshold   Float    @default(0.75)
+  minActiveAdvisors           Int      @default(0)
+  minActiveBMs                Int      @default(0)
+  minActiveFMs                Int      @default(0)
+  teamActiveAmount            Float    @default(0)
+  teamActiveThresholdPct      Float    @default(0)
+  vehicleAmount               Float    @default(0)
+  vehicleThresholdPct         Float    @default(0)
+  position                    Position @relation(fields: [positionId], references: [id])
+}
+
+model PositionTarget {
+  id                      Int      @id @default(autoincrement())
+  positionId              Int
+  periodNumber            Int
+  monthNumber             Int
+  targetAmount            Float
+  bonusAmount             Float
+  excessRate              Float    @default(0)
+  partialBonus            Float    @default(0)
+  bonusThresholdPct       Float    @default(1.0)
+  minActiveAdvisors       Int      @default(0)
+  minActiveBMs            Int      @default(0)
+  minActiveFMs            Int      @default(0)
+  teamActiveAmount        Float    @default(0)
+  teamActiveThresholdPct  Float    @default(0)
+  vehicleAmount           Float    @default(0)
+  vehicleThresholdPct     Float    @default(0)
+  after6MonthTarget       Float    @default(0)
+  after6MonthIncentivePct Float    @default(0)
+  partialThresholdPct     Float    @default(0)
+  position                Position @relation(fields: [positionId], references: [id])
+
+  @@unique([positionId, periodNumber, monthNumber])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PAYROLL — MARKETING TRACK  (branch-level, field advisors & marketing roles)
+// ─────────────────────────────────────────────────────────────────────────────
 
 model MonthlyPayroll {
   id                        Int      @id @default(autoincrement())
@@ -92,174 +404,214 @@ model MonthlyPayroll {
   vehicleHit                Boolean  @default(false)
   targetBudgetSalary        Float    @default(0)
   excessEarned              Float    @default(0)
-  member                    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
   advanceDeducted           Float    @default(0)
 
-  @@unique([memberId, year, month])
-}
+  // ── Decoupled payroll fields (added for dual-track engine) ─────────────────
+  // Routing
+  payrollCategory           String   @default("MARKETING") // PayrollCategory enum value as string
+  tenureMonthCount          Int      @default(1)           // months since join at processing time
 
-model PositionSalary {
-  id                          Int      @id @default(autoincrement())
-  positionId                  Int      @unique
-  monthlyTarget               Float
-  incentiveAmount             Float
-  allowanceAmount             Float
-  commRateLow                 Float
-  commRateHigh                Float
-  commThreshold               Float    @default(500000)
-  epfEmployee                 Float    @default(0.08)
-  epfEmployer                 Float    @default(0.12)
-  etfEmployer                 Float    @default(0.03)
-  allowanceThresholdPermanent Float    @default(1.0)
-  allowanceThresholdProbation Float    @default(0.75)
-  basicSalaryPermanent        Float    @default(0)
-  basicSalaryProbation        Float    @default(0)
-  incentivePartialAmount      Float    @default(0)
-  incentivePartialThreshold   Float    @default(0.75)
-  minActiveAdvisors           Int      @default(0)
-  minActiveBMs                Int      @default(0)
-  minActiveFMs                Int      @default(0)
-  teamActiveAmount            Float    @default(0)
-  teamActiveThresholdPct      Float    @default(0)
-  vehicleAmount               Float    @default(0)
-  vehicleThresholdPct         Float    @default(0)
-  position                    Position @relation(fields: [positionId], references: [id])
-}
+  // Marketing: over-performance bonus (0.5% on surplus above 100% target)
+  excessCommission          Float    @default(0)
 
-model Zone {
-  id        Int          @id @default(autoincrement())
-  name      String       @unique
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
-  branches  Branch[]
-  members   MemberZone[]
-}
+  // Head-office extended fields (zero for all marketing rows — written but ignored in reports)
+  fixedAllowance            Float    @default(0)
+  fuelAllowance             Float    @default(0)
+  channelOperation          Float    @default(0)
+  attendanceAllowance       Float    @default(0)
+  loanInstalments           Float    @default(0)
+  festivalAdvance           Float    @default(0)
+  merchandiseDeduction      Float    @default(0)
 
-model MemberZone {
-  id       Int    @id @default(autoincrement())
-  memberId Int
-  zoneId   Int
-  member   Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  zone     Zone   @relation(fields: [zoneId], references: [id], onDelete: Cascade)
-
-  @@unique([memberId, zoneId])
-}
-
-model Member {
-  createdAt              DateTime            @default(now())
-  updatedAt              DateTime?
-  id                     Int                 @id @default(autoincrement())
-  positionId             Int
-  empNo                  String              @unique
-  email                  String?             @unique
-  phone                  String?
-  userId                 String?             @unique @db.Uuid
-  accNo                  String?
-  address                String?
-  appointmentLetter      String?
-  bank                   String?
-  bankBranch             String?
-  civilStatus            String?
-  confirmation           String?
-  dateOfJoin             DateTime?
-  dob                    DateTime?
-  gender                 String?
-  nameWithInitials       String?
-  nic                    String?
-  remark                 String?
-  probationStartDate     String?
-  profilePic             String?
-  status                 EmployeeStatus      @default(PROBATION)
-  epfNo                  String?
-  phone2                 String?
-  lastClientRegisteredAt DateTime?
-  reportingPersons       String[]
-  etfNo                  String?
-  isActive               Boolean             @default(true)
-  channel                Channel             @default(Chanel_01)
-  approvalStatus         ApprovalStatus      @default(PENDING)
-  recruitedById          Int?
-  reviewNote             String?
-  reviewedAt             DateTime?
-  reviewedBy             String?
-  submittedAt            DateTime            @default(now())
-  totalCommission        Float?
-  activityLog            ActivityLog[]
-  clientsAsAGM           Client[]            @relation("ClientAGM")
-  clientsAsBM            Client[]            @relation("ClientBM")
-  clientsAsCCO           Client[]            @relation("ClientCCO")
-  createdClients         Client[]            @relation("CreatedByMember")
-  clientsAsFA            Client[]            @relation("ClientFA")
-  clientsAsFM            Client[]            @relation("ClientFM")
-  clients                Client[]
-  clientsAsRM            Client[]            @relation("ClientRM")
-  clientsAsZM            Client[]            @relation("ClientZM")
-  commissions            Commission[]
-  advisorInvestments     Investment[]        @relation("AdvisorInvestments")
-  investmentsAsAGM       Investment[]        @relation("InvestmentAGM")
-  investmentsAsBM        Investment[]        @relation("InvestmentBM")
-  investmentsAsCCO       Investment[]        @relation("InvestmentCCO")
-  investments            Investment[]        @relation("InvestmentCreatedBy")
-  investmentsAsFA        Investment[]        @relation("InvestmentFA")
-  investmentsAsFM        Investment[]        @relation("InvestmentFM")
-  investmentsAsRM        Investment[]        @relation("InvestmentRM")
-  investmentsAsZM        Investment[]        @relation("InvestmentZM")
-  position               Position            @relation(fields: [positionId], references: [id])
-  recruitedBy            Member?             @relation("RecruitedBy", fields: [recruitedById], references: [id])
-  recruits               Member[]            @relation("RecruitedBy")
-  user                   User?               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  branches               MemberBranch[]
-  zones                  MemberZone[]
-  monthlyActivations     MonthlyActivation[]
-  monthlyEvaluations     MonthlyEvaluation[]
-  monthlyPayrolls        MonthlyPayroll[]
-  SalaryAdvances         SalaryAdvance[]
-  ManagementBaseSalary      ManagementBaseSalary[]
-  ManagementSalary        ManagementSalary[]
-}
-
-model PositionTarget {
-  id                      Int      @id @default(autoincrement())
-  positionId              Int
-  periodNumber            Int
-  monthNumber             Int
-  targetAmount            Float
-  bonusAmount             Float
-  excessRate              Float    @default(0)
-  partialBonus            Float    @default(0)
-  bonusThresholdPct       Float    @default(1.0)
-  minActiveAdvisors       Int      @default(0)
-  minActiveBMs            Int      @default(0)
-  minActiveFMs            Int      @default(0)
-  teamActiveAmount        Float    @default(0)
-  teamActiveThresholdPct  Float    @default(0)
-  vehicleAmount           Float    @default(0)
-  vehicleThresholdPct     Float    @default(0)
-  after6MonthTarget       Float    @default(0)
-  after6MonthIncentivePct Float    @default(0)
-  partialThresholdPct     Float    @default(0)
-  position                Position @relation(fields: [positionId], references: [id])
-
-  @@unique([positionId, periodNumber, monthNumber])
-}
-
-model MonthlyEvaluation {
-  id             Int      @id @default(autoincrement())
-  memberId       Int
-  year           Int
-  month          Int
-  periodNumber   Int?
-  monthInPeriod  Int?
-  volumeAchieved Float
-  targetAmount   Float
-  bonusEarned    Float    @default(0)
-  excessBonus    Float    @default(0)
-  targetHit      Boolean  @default(false)
-  createdAt      DateTime @default(now())
-  member         Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  member                    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
   @@unique([memberId, year, month])
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PAYROLL — HEAD OFFICE TRACK  (management & corporate staff)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Standing allowance configuration for a Head Office / Management member.
+/// One row per member, updated via the HO Payroll Config page.
+/// ManagementBaseSalary is kept in sync with basicSalary here for backward compat.
+model HoPayrollConfig {
+  id                  Int      @id @default(autoincrement())
+  memberId            Int      @unique
+  member              Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  basicSalary         Decimal  @default(0) @db.Decimal(12, 2)
+  fixedAllowance      Decimal  @default(0) @db.Decimal(12, 2)
+  vehicleAllowance    Decimal  @default(0) @db.Decimal(12, 2)
+  fuelAllowance       Decimal  @default(0) @db.Decimal(12, 2)
+  channelOperation    Decimal  @default(0) @db.Decimal(12, 2)
+  attendanceAllowance Decimal  @default(0) @db.Decimal(12, 2)
+
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+/// Legacy single-field salary store — kept for backward compat.
+/// Always kept in sync with HoPayrollConfig.basicSalary.
+model ManagementBaseSalary {
+  id         Int      @id @default(autoincrement())
+  memberId   Int      @unique
+  member     Member   @relation(fields: [memberId], references: [id])
+  baseSalary Decimal
+  updatedAt  DateTime @updatedAt
+  createdAt  DateTime @default(now())
+}
+
+/// Committed HO payroll record — one row per member per month.
+/// Stores the full earnings + deductions snapshot at run time.
+model ManagementSalary {
+  id                       Int       @id @default(autoincrement())
+  memberId                 Int
+  member                   Member    @relation(fields: [memberId], references: [id])
+  month                    DateTime  // first-of-month, same convention as MonthlyPayroll
+
+  // Core (existing fields — never removed)
+  baseSalary               Decimal
+  personalCommissionEarned Decimal   @default(0)
+  orcEarned                Decimal   @default(0)
+  advanceDeduction         Decimal   @default(0)
+  epfDeduction             Decimal   @default(0)
+  grossPay                 Decimal
+  netPay                   Decimal
+  status                   String    @default("PENDING") // "PENDING" | "PAID"
+  paidAt                   DateTime?
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+
+  // ── Full HO compensation breakdown (added for decoupled payroll) ───────────
+  fixedAllowance           Decimal   @default(0) @db.Decimal(12, 2)
+  vehicleAllowance         Decimal   @default(0) @db.Decimal(12, 2)
+  fuelAllowance            Decimal   @default(0) @db.Decimal(12, 2)
+  channelOperation         Decimal   @default(0) @db.Decimal(12, 2)
+  attendanceAllowance      Decimal   @default(0) @db.Decimal(12, 2)
+  leavesTaken              Float     @default(0)
+  loanInstalments          Decimal   @default(0) @db.Decimal(12, 2)
+  festivalAdvance          Decimal   @default(0) @db.Decimal(12, 2)
+  merchandiseDeduction     Decimal   @default(0) @db.Decimal(12, 2)
+  epfEmployer              Decimal   @default(0) @db.Decimal(12, 2) // employer share — NOT deducted from net
+  etfEmployer              Decimal   @default(0) @db.Decimal(12, 2) // employer share — NOT deducted from net
+
+  @@unique([memberId, month])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PAYROLL — UNIFIED RECORD (plan-defined structure, future use)
+// These three models implement the PayrollRecord/HoPayrollDetail/MarketingPayrollDetail
+// pattern from the implementation plan. They coexist with MonthlyPayroll /
+// ManagementSalary and are intended to replace them once the UI migration is complete.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model PayrollRecord {
+  id              String          @id @default(uuid())
+  employeeId      Int
+  employee        Member          @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  month           DateTime        // first day of the month (e.g., 2026-05-01)
+  category        PayrollCategory
+  status          PayrollStatus   @default(DRAFT)
+  totalEarnings   Decimal         @default(0.0) @db.Decimal(12, 2)
+  totalDeductions Decimal         @default(0.0) @db.Decimal(12, 2)
+  netPay          Decimal         @default(0.0) @db.Decimal(12, 2)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  hoDetail        HoPayrollDetail?
+  mktDetail       MarketingPayrollDetail?
+
+  @@unique([employeeId, month])
+}
+
+model HoPayrollDetail {
+  id                       String        @id @default(uuid())
+  payrollRecordId          String        @unique
+  payrollRecord            PayrollRecord @relation(fields: [payrollRecordId], references: [id], onDelete: Cascade)
+
+  // Earnings
+  basicSalary              Decimal       @default(0.0) @db.Decimal(12, 2)
+  fixedAllowance           Decimal       @default(0.0) @db.Decimal(12, 2)
+  vehicleAllowance         Decimal       @default(0.0) @db.Decimal(12, 2)
+  fuelAllowance            Decimal       @default(0.0) @db.Decimal(12, 2)
+  channelOperation         Decimal       @default(0.0) @db.Decimal(12, 2)
+  incentive                Decimal       @default(0.0) @db.Decimal(12, 2)
+  attendanceAllowance      Decimal       @default(0.0) @db.Decimal(12, 2)
+  orcAmount                Decimal       @default(0.0) @db.Decimal(12, 2)
+  personalCommissionEarned Decimal       @default(0.0) @db.Decimal(12, 2)
+
+  // Leave
+  hoLeavesTaken            Float         @default(0.0)
+
+  // Deductions
+  loanInstalments          Decimal       @default(0.0) @db.Decimal(12, 2)
+  festivalAdvance          Decimal       @default(0.0) @db.Decimal(12, 2)
+  merchandiseDeduction     Decimal       @default(0.0) @db.Decimal(12, 2)
+  epfEmployee              Decimal       @default(0.0) @db.Decimal(12, 2)
+
+  // Employer contributions (display only — not deducted from net pay)
+  epfEmployer              Decimal       @default(0.0) @db.Decimal(12, 2)
+  etfEmployer              Decimal       @default(0.0) @db.Decimal(12, 2)
+}
+
+model MarketingPayrollDetail {
+  id                       String        @id @default(uuid())
+  payrollRecordId          String        @unique
+  payrollRecord            PayrollRecord @relation(fields: [payrollRecordId], references: [id], onDelete: Cascade)
+
+  // Performance context (snapshotted at run time)
+  targetAmount             Decimal       @db.Decimal(12, 2)
+  achievedAmount           Decimal       @db.Decimal(12, 2)
+  achievementPct           Float
+  tenureMonthCount         Int
+
+  // Dynamic earnings
+  targetBudgetSalary       Decimal       @default(0.0) @db.Decimal(12, 2)
+  basicIncentive           Decimal       @default(0.0) @db.Decimal(12, 2)
+  excessCommission         Decimal       @default(0.0) @db.Decimal(12, 2)
+  vehicleEarned            Decimal       @default(0.0) @db.Decimal(12, 2)
+  teamActiveEarned         Decimal       @default(0.0) @db.Decimal(12, 2)
+  otherSalesCommission     Decimal       @default(0.0) @db.Decimal(12, 2)
+  orcEarned                Decimal       @default(0.0) @db.Decimal(12, 2)
+  personalCommissionEarned Decimal       @default(0.0) @db.Decimal(12, 2)
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ADVANCES & DEDUCTIONS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model SalaryAdvance {
+  id                Int                @id @default(autoincrement())
+  memberId          Int
+  member            Member             @relation(fields: [memberId], references: [id])
+  type              AdvanceType
+  totalAmount       Float
+  installments      Int
+  installmentAmount Float
+  remainingAmount   Float
+  issuedYear        Int
+  issuedMonth       Int
+  note              String?
+  createdAt         DateTime           @default(now())
+  deductions        AdvanceDeduction[]
+}
+
+model AdvanceDeduction {
+  id              Int           @id @default(autoincrement())
+  salaryAdvanceId Int
+  salaryAdvance   SalaryAdvance @relation(fields: [salaryAdvanceId], references: [id])
+  year            Int
+  month           Int
+  amountDeducted  Float
+  createdAt       DateTime      @default(now())
+
+  @@unique([salaryAdvanceId, year, month])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INVESTMENTS, CLIENTS, COMMISSIONS
+// ─────────────────────────────────────────────────────────────────────────────
 
 model FinancialPlan {
   id          Int          @id @default(autoincrement())
@@ -438,22 +790,45 @@ model Profit {
   investment       Investment @relation(fields: [investmentId], references: [id], onDelete: Cascade)
 }
 
-model ActivityLog {
-  id            Int            @id @default(autoincrement())
-  action        ActivityAction
-  entity        ActivityEntity
-  entityId      Int?
-  performedById Int?
-  branchId      Int?
-  metadata      Json?
-  createdAt     DateTime       @default(now())
-  branch        Branch?        @relation(fields: [branchId], references: [id])
-  performedBy   Member?        @relation(fields: [performedById], references: [id], onDelete: Cascade)
+// ─────────────────────────────────────────────────────────────────────────────
+// EVALUATIONS & ACTIVATIONS
+// ─────────────────────────────────────────────────────────────────────────────
 
-  @@index([entity, entityId])
-  @@index([performedById])
-  @@index([branchId])
+model MonthlyEvaluation {
+  id             Int      @id @default(autoincrement())
+  memberId       Int
+  year           Int
+  month          Int
+  periodNumber   Int?
+  monthInPeriod  Int?
+  volumeAchieved Float
+  targetAmount   Float
+  bonusEarned    Float    @default(0)
+  excessBonus    Float    @default(0)
+  targetHit      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  member         Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([memberId, year, month])
 }
+
+model MonthlyActivation {
+  id              Int      @id @default(autoincrement())
+  memberId        Int
+  year            Int
+  month           Int
+  activationCount Int      @default(0)
+  isActivated     Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  member          Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([memberId, year, month])
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// USERS, AUTH, DOCUMENTS
+// ─────────────────────────────────────────────────────────────────────────────
 
 model User {
   role                  Role                    @default(EMPLOYEE)
@@ -490,6 +865,23 @@ model ClientDocument {
   request    ClientDocumentRequest @relation(fields: [requestId], references: [id])
 }
 
+model ActivityLog {
+  id            Int            @id @default(autoincrement())
+  action        ActivityAction
+  entity        ActivityEntity
+  entityId      Int?
+  performedById Int?
+  branchId      Int?
+  metadata      Json?
+  createdAt     DateTime       @default(now())
+  branch        Branch?        @relation(fields: [branchId], references: [id])
+  performedBy   Member?        @relation(fields: [performedById], references: [id], onDelete: Cascade)
+
+  @@index([entity, entityId])
+  @@index([performedById])
+  @@index([branchId])
+}
+
 model Quotation {
   id                String             @id @default(cuid())
   clientName        String
@@ -516,205 +908,4 @@ model Quotation {
   @@index([createdByUserId])
   @@index([planType])
   @@index([createdAt])
-}
-
-model MonthlyActivation {
-  id              Int      @id @default(autoincrement())
-  memberId        Int
-  year            Int
-  month           Int
-  activationCount Int      @default(0)
-  isActivated     Boolean  @default(false)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  member          Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
-
-  @@unique([memberId, year, month])
-}
-
-enum ApprovalStatus {
-  PENDING
-  APPROVED
-  REJECTED
-}
-
-enum Status {
-  Active
-  Inactive
-}
-
-enum ReturnFrequency {
-  Monthly
-  HalfYearly
-  Yearly
-}
-
-enum Title {
-  ADMIN
-  CHAIRMEN
-  HR
-  ACC
-  IT
-  ABM
-  PRO
-  OPM
-  CLEANING
-  FA
-  TL
-  BM
-  RM
-  ZM
-  PRO_AGM
-  TRAINEE_FA
-  P_FA
-  P_TL
-  JBM
-  SBM
-  JRM
-  SRM
-  JZM
-  SZM
-  PER_AGM
-  COO
-  DGM
-  GM
-  SE
-}
-
-enum PositionType {
-  PROBATION
-  PERMANENT
-  MANAGEMENT
-}
-
-enum EmployeeStatus {
-  PROBATION
-  PERMANENT
-  MANAGEMENT
-}
-
-enum Channel {
-  Chanel_01
-  Chanel_02
-  Micro
-  Chanel_03
-}
-
-enum InvStatus {
-  Active
-  Inactive
-  Matured
-  Renewed
-}
-
-enum CommissionType {
-  PERSONAL
-  UPLINE
-  EXCESS
-}
-
-enum ActivityAction {
-  CREATE
-  UPDATE
-  DELETE
-  APPROVE
-  REJECT
-  LOGIN
-}
-
-enum ActivityEntity {
-  CLIENT
-  INVESTMENT
-  COMMISSION
-  PROFIT
-  MEMBER
-  BRANCH
-  FINANCIAL_PLAN
-}
-
-enum Role {
-  ADMIN
-  HR
-  DEV
-  BRANCH_MANAGER
-  REGIONAL_MANAGER
-  AGM
-  EMPLOYEE
-  ZONAL_MANAGER
-}
-
-enum QuotationPlanType {
-  CHILD
-  MARGE
-  PENSION
-}
-
-enum QuotationFrequency {
-  MONTHLY
-  QUARTERLY
-  SEMI_ANNUAL
-  ANNUAL
-}
-
-enum AdvanceType {
-  SALARY
-  FESTIVAL
-}
-
-model SalaryAdvance {
-  id                Int                @id @default(autoincrement())
-  memberId          Int
-  member            Member             @relation(fields: [memberId], references: [id])
-  type              AdvanceType
-  totalAmount       Float
-  installments      Int // reference only — actual payoff may extend if shortfalls occur
-  installmentAmount Float
-  remainingAmount   Float
-  issuedYear        Int
-  issuedMonth       Int
-  note              String?
-  createdAt         DateTime           @default(now())
-  deductions        AdvanceDeduction[]
-}
-
-model AdvanceDeduction {
-  id              Int           @id @default(autoincrement())
-  salaryAdvanceId Int
-  salaryAdvance   SalaryAdvance @relation(fields: [salaryAdvanceId], references: [id])
-  year            Int
-  month           Int
-  amountDeducted  Float
-  createdAt       DateTime      @default(now())
-
-  @@unique([salaryAdvanceId, year, month]) // idempotency guard — one deduction per advance per month
-}
-
-
-model ManagementBaseSalary {
-  id         Int      @id @default(autoincrement())
-  memberId   Int      @unique
-  member     Member   @relation(fields: [memberId], references: [id])
-  baseSalary Decimal
-  updatedAt  DateTime @updatedAt
-  createdAt  DateTime @default(now())
-}
-
-model ManagementSalary {
-  id                       Int       @id @default(autoincrement())
-  memberId                 Int
-  member                   Member    @relation(fields: [memberId], references: [id])
-  month                    DateTime  // first-of-month, same convention as MonthlyPayroll
-  baseSalary               Decimal   // snapshotted from ManagementBaseSalary at run time, editable per run
-  personalCommissionEarned Decimal   @default(0) // 0 for HR/ACC, populated for RM/ZM/AGM
-  orcEarned                Decimal   @default(0) // 0 for HR/ACC, populated for RM/ZM/AGM
-  advanceDeduction         Decimal   @default(0)
-  epfDeduction             Decimal   @default(0)
-  grossPay                 Decimal
-  netPay                   Decimal
-  status                   String    @default("PENDING") // "PENDING" | "PAID"
-  paidAt                   DateTime?
-  createdAt                DateTime  @default(now())
-  updatedAt                DateTime  @updatedAt
-
-  @@unique([memberId, month])
 }

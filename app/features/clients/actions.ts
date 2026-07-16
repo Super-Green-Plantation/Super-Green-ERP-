@@ -259,9 +259,9 @@ export async function saveClient(
         select: { id: true },
       });
 
-      if (!memberRecord) {
-        throw new Error("Member not found for current user");
-      }
+      // if (!memberRecord) {
+      //   throw new Error("Member not found for current user");
+      // }
 
       const memberId = memberRecord.id; // now a real number, e.g. 673
 

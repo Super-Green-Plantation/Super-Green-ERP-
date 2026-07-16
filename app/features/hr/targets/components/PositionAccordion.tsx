@@ -52,7 +52,7 @@ export default function PositionAccordion({
             role="button" tabIndex={0}
             onClick={onToggle}
             onKeyDown={(e) => e.key === "Enter" && onToggle()}
-            className="w-full flex items-center justify-between px-6 py-5 hover:bg-muted/30 transition-colors cursor-pointer"
+            className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors cursor-pointer"
           >
             <div className="sm:flex items-center gap-4">
               <span className={`px-4 py-1.5 rounded-xl text-[10px] font-bold border uppercase tracking-widest ${rankColor}`}>
@@ -88,7 +88,7 @@ export default function PositionAccordion({
 
           {/* Body */}
           {isExpanded && edit && (
-            <div className="border-t border-border px-6 pb-8 pt-8 bg-card">
+            <div className="border-t border-border px-4 pb-4 pt-4 bg-card">
               {isFa ? (
                 <FaTargetConfig
                   fa={edit.fa}

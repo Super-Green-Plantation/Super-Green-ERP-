@@ -75,6 +75,7 @@ export async function getCommissionDetails() {
       select: {
         id: true,
         amount: true,
+        type: true,
         Branch: true,
 
         investment: { include: { plan: true, client: true } },

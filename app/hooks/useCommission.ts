@@ -4,7 +4,7 @@ import { getCommissionStats } from "../features/commissions/stats";
 
 export const useCommission = () => {
   return useQuery({
-    queryKey: ["commissions"],
+    queryKey: ["commissions", "v2"],
     queryFn: getCommissionDetails,
     staleTime: 1000 * 60 * 3,
     retry: 1,

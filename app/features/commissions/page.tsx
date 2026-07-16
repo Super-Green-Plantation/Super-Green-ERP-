@@ -1,6 +1,6 @@
 "use client";
 
-import InvestmentTable from "@/app/components/Commission/InvestmentTable";
+import CommissionAccordionList from "@/app/components/Commission/CommissionAccordionList";
 import Heading from "@/app/components/Heading";
 import { PERMISSIONS } from "@/lib/auth/permissions";
 import { usePermission } from "@/app/hooks/usePermission";
@@ -48,7 +48,7 @@ const Commission = () => {
 
       {/* Table Container */}
       <div className="">
-        <InvestmentTable />
+        <CommissionAccordionList />
       </div>
     </div>
   );

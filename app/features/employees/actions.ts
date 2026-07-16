@@ -594,7 +594,6 @@ export async function uploadProfilePic(file: File, empNo: string) {
   }
 }
 
-// server action
 export async function getPositions() {
   return prisma.position.findMany({
     orderBy: { rank: "desc" },

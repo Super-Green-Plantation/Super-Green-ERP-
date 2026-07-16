@@ -17,7 +17,7 @@ const MonthRow = React.memo(({ row, isSynced, onUpdate, onSyncToggle }: MonthRow
   const sourceMonthLabel = row.periodNumber === 1 ? 1 : 4;
 
   return (
-    <div className="p-6 bg-card rounded-2xl border border-border space-y-6 shadow-sm">
+    <div className="p-4 bg-card rounded-xl border border-border space-y-4 shadow-sm">
 
       {/* Month badge + sync checkbox */}
       <div className="flex items-center justify-between">
@@ -51,10 +51,10 @@ const MonthRow = React.memo(({ row, isSynced, onUpdate, onSyncToggle }: MonthRow
         )}
       </div>
 
-      <div className={`space-y-8 ${isSynced ? "opacity-30 pointer-events-none grayscale" : ""}`}>
+      <div className={`space-y-4 ${isSynced ? "opacity-30 pointer-events-none grayscale" : ""}`}>
 
         <Section icon={<TrendingUp className="w-4 h-4" />} title="Volume Target">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <Field
               label="Monthly Target"
               value={row.targetAmount}
@@ -66,7 +66,7 @@ const MonthRow = React.memo(({ row, isSynced, onUpdate, onSyncToggle }: MonthRow
         </Section>
 
         <Section icon={<Award className="w-4 h-4" />} title="Basic Incentive">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <Field
               label="Incentive Amount"
               value={row.bonusAmount}
@@ -87,7 +87,7 @@ const MonthRow = React.memo(({ row, isSynced, onUpdate, onSyncToggle }: MonthRow
         
 
         <Section icon={<Car className="w-4 h-4" />} title="Vehicle & Fuel Allowance">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <Field
               label="Allowance Amount"
               value={row.vehicleAmount}
@@ -106,7 +106,7 @@ const MonthRow = React.memo(({ row, isSynced, onUpdate, onSyncToggle }: MonthRow
         </Section>
 
         <Section icon={<Users className="w-4 h-4" />} title="Team Active">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <Field
               label="Team Active Amount"
               value={row.teamActiveAmount}
@@ -122,7 +122,7 @@ const MonthRow = React.memo(({ row, isSynced, onUpdate, onSyncToggle }: MonthRow
               hint={`Currently: ${row.teamActiveThresholdPct}% of monthly target`}
             />
           </div>
-          <div className="grid grid-cols-3 gap-4 mt-2">
+          <div className="grid grid-cols-3 gap-2 mt-2">
             <Field
               label="Min. Advisors"
               value={row.minActiveAdvisors}

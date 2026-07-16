@@ -137,7 +137,7 @@ export function Field({
     const indicator = prefix === "Rs." ? formatIndicator(value) : null;
     return (
         <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
                 {label}
             </label>
             <div className={`flex items-center border rounded-xl overflow-hidden transition-all bg-muted/30
@@ -157,7 +157,7 @@ export function Field({
                     value={value ?? 0}
                     disabled={disabled}
                     onChange={(e) => onChange(Number(e.target.value))}
-                    className="flex-1 px-4 py-2.5 text-sm font-bold text-foreground outline-none bg-transparent placeholder:text-muted-foreground/30 disabled:text-muted-foreground/50 min-w-0"
+                    className="flex-1 px-3 py-1.5 text-sm font-bold text-foreground outline-none bg-transparent placeholder:text-muted-foreground/30 disabled:text-muted-foreground/50 min-w-0"
                 />
                 {indicator && (
                     <span className="px-3 py-2 text-[10px] font-bold text-green-600 shrink-0">
@@ -170,7 +170,7 @@ export function Field({
                     </span>
                 )}
             </div>
-            {hint && <p className="text-[10px] text-muted-foreground/70 font-medium mt-1.5 ml-1">{hint}</p>}
+            {hint && <p className="text-[10px] text-muted-foreground/70 font-medium mt-1 ml-1">{hint}</p>}
         </div>
     );
 }
@@ -183,8 +183,8 @@ export function Section({
     children: React.ReactNode;
 }) {
     return (
-        <div className="space-y-4">
-            <div className="flex items-center gap-2 pb-2 border-b border-border">
+        <div className="space-y-2">
+            <div className="flex items-center gap-2 pb-1 border-b border-border">
                 <span className="text-primary opacity-70">{icon}</span>
                 <h3 className="text-[11px] font-bold text-foreground uppercase tracking-[0.2em]">{title}</h3>
             </div>

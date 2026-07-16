@@ -13,7 +13,7 @@ interface FaTargetConfigProps {
 
 export default function FaTargetConfig({ fa, onUpdate }: FaTargetConfigProps) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {(["p1", "p2"] as const).map((pk) => {
         const config = fa[pk];
         const period = pk === "p1" ? 1 : 2;
@@ -31,14 +31,14 @@ export default function FaTargetConfig({ fa, onUpdate }: FaTargetConfigProps) {
                   Period {period} — {period === 1 ? "First 3 Months" : "Second 3 Months"}
                 </span>
               </div>
-              <div className="mb-6 ml-1 mt-2">
+              <div className="mb-3 ml-1 mt-1">
                 <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-tighter opacity-70">same configuration applies to all 3 months</span>
               </div>
 
             </div>
 
             <Section icon={<TrendingUp className="w-4 h-4" />} title="Volume Target & Bonus">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <Field
                   label="Full Target"
                   value={config.targetAmount}
@@ -71,7 +71,7 @@ export default function FaTargetConfig({ fa, onUpdate }: FaTargetConfigProps) {
             </Section>
 
             <Section icon={<Percent className="w-4 h-4" />} title="Excess Commission">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <Field
                   label="Excess Rate"
                   value={config.excessRate}

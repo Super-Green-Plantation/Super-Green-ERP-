@@ -107,7 +107,7 @@ export function Field({
     const indicator = prefix === "Rs." ? formatIndicator(value) : null;
     return (
         <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-foreground/80 mb-2">
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-foreground/80 mb-1">
                 {label}
             </label>
             <div className={`flex items-center  rounded-xl overflow-hidden transition-all bg-muted/30
@@ -127,7 +127,7 @@ export function Field({
                     value={value ?? 0}
                     disabled={disabled}
                     onChange={(e) => onChange(Number(e.target.value))}
-                    className="flex-1 px-4 py-2.5 text-sm font-bold text-foreground outline-none bg-transparent placeholder:text-muted-foreground/30 disabled:text-muted-foreground/50 min-w-0"
+                    className="flex-1 px-3 py-1.5 text-sm font-bold text-foreground outline-none bg-transparent placeholder:text-muted-foreground/30 disabled:text-muted-foreground/50 min-w-0"
                 />
                 {indicator && (
                     <span className="px-3 py-2 text-[10px] font-bold text-green-600 shrink-0">
@@ -140,7 +140,7 @@ export function Field({
                     </span>
                 )}
             </div>
-            {hint && <p className="text-[10px] text-muted-foreground font-medium mt-1.5 ml-1">{hint}</p>}
+            {hint && <p className="text-[10px] text-muted-foreground font-medium mt-1 ml-1">{hint}</p>}
         </div>
     );
 }
@@ -223,8 +223,8 @@ export default function SalaryConfigPage() {
   if (loading) return <Loading />
 
   return (
-    <div className="max-w-350 mx-auto sm:space-y-10 space-y-1 p-4 sm:p-10 min-h-screen">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 border-b border-border/50 pb-10 mb-6">
+    <div className="max-w-350 mx-auto sm:space-y-6 space-y-2 p-4 sm:p-6 min-h-screen">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/50 pb-6 mb-4">
         <div className="flex gap-6 items-center">
           <Back />
           <div>
@@ -238,7 +238,7 @@ export default function SalaryConfigPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 gap-3">
         {positions.filter(p => !p.isProbation && !p.isManagement).map((position) => {
           const isExpanded = expandedId === position.id;
           const isConfigured = !!position.salary;
@@ -256,7 +256,7 @@ export default function SalaryConfigPage() {
                 tabIndex={0}
                 onClick={() => setExpandedId(isExpanded ? null : position.id)}
                 onKeyDown={(e) => e.key === "Enter" && setExpandedId(isExpanded ? null : position.id)}
-                className={`w-full flex items-center justify-between px-8 py-3 hover:bg-muted/30 transition-all cursor-pointer ${isExpanded ? 'bg-muted/10' : ''}`}
+                className={`w-full flex items-center justify-between px-5 py-3 hover:bg-muted/30 transition-all cursor-pointer ${isExpanded ? 'bg-muted/10' : ''}`}
               >
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
                   <div className="flex items-center gap-4">
@@ -284,7 +284,7 @@ export default function SalaryConfigPage() {
                       type="button"
                       onClick={(e) => { e.stopPropagation(); handleSave(position.id); }}
                       disabled={isSaving}
-                      className="hidden sm:flex items-center gap-3 px-8 py-4 bg-primary text-primary-foreground text-[10px] font-extrabold uppercase tracking-[0.2em] rounded-2xl transition-all hover:shadow-2xl hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50"
+                      className="hidden sm:flex items-center gap-3 px-6 py-3 bg-primary text-primary-foreground text-[10px] font-extrabold uppercase tracking-[0.2em] rounded-2xl transition-all hover:shadow-2xl hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50"
                     >
                       {isSaving
                         ? <><Loader2 className="w-4 h-4 animate-spin" /> Committing...</>
@@ -299,10 +299,10 @@ export default function SalaryConfigPage() {
               </div>
 
               {isExpanded && (
-                <div className="px-10 pb-12 border-t border-border/50 space-y-12 pt-12 animate-in slide-in-from-top-4 duration-500">
+                <div className="px-6 pb-6 border-t border-border/50 space-y-6 pt-6 animate-in slide-in-from-top-4 duration-500">
 
                   {/* Basic & Target */}
-                  <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-10">
+                  <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-4">
                     <div className="space-y-4">
                       <div className="flex items-center gap-3">
                         <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/10">
@@ -313,7 +313,7 @@ export default function SalaryConfigPage() {
                         </div>
                       </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <Field
                         label="Monthly Salary (Rs.)"
                         value={form.basicSalaryPermanent}
@@ -332,7 +332,7 @@ export default function SalaryConfigPage() {
                   </div>
 
                   {/* Incentive & Allowance */}
-                  <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-10">
+                  <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-4">
                     <div className="space-y-4">
                       <div className="flex items-center gap-3">
                         <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/10">
@@ -343,7 +343,7 @@ export default function SalaryConfigPage() {
                         </div>
                       </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <Field
                         label="Incentive (100% Target)"
                         value={form.incentiveAmount}
@@ -397,7 +397,7 @@ export default function SalaryConfigPage() {
                   </div>
 
                   {/* Team Minimums */}
-                  <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-10">
+                  <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-4">
                     <div className="space-y-4">
                       <div className="flex items-center gap-3">
                         <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/10">
@@ -408,7 +408,7 @@ export default function SalaryConfigPage() {
                         </div>
                       </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       <Field
                         label="Min Active Advisors"
                         value={form.minActiveAdvisors}
@@ -431,14 +431,14 @@ export default function SalaryConfigPage() {
                   </div>
 
                   {/* Commission */}
-                  <div className="space-y-10">
+                  <div className="space-y-6">
                    
 
                     <div className="bg-primary/10 border border-primary/20 text-primary text-[11px] font-bold p-4 rounded-xl uppercase tracking-wider">
                       Alert: These rates apply to <span className="text-foreground underline underline-offset-4">Permanent</span> staff. Probation tiers are locked at 7% / 10%.
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       <Field
                         label="Tier 1: Below Threshold"
                         value={form.commRateLow}
@@ -464,8 +464,8 @@ export default function SalaryConfigPage() {
                   </div>
 
                   {/* ORC & Statutory */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 pt-6 border-t border-border/30">
-                    <div className="space-y-8">
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4 border-t border-border/30">
+                    <div className="space-y-4">
                       <div className="flex items-center gap-2 mb-2">
                         <Percent className="w-5 h-5 text-primary" />
                         <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-foreground">Hierarchy Override (ORC)</span>
@@ -479,12 +479,12 @@ export default function SalaryConfigPage() {
                       />
                     </div>
 
-                    <div className="space-y-8">
+                    <div className="space-y-4">
                       <div className="flex items-center gap-2 mb-2">
                         <Car className="w-5 h-5 text-primary" />
                         <span className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-foreground">EPF Structure</span>
                       </div>
-                      <div className="grid grid-cols-1 gap-4">
+                      <div className="grid grid-cols-1 gap-2">
                         <Field label="EPF (Emp)" value={form.epfEmployee} onChange={(v) => setField(position.id, "epfEmployee", v)} suffix="%" />
                         <Field label="EPF (Comp)" value={form.epfEmployer} onChange={(v) => setField(position.id, "epfEmployer", v)} suffix="%" />
                         <Field label="ETF (Comp)" value={form.etfEmployer} onChange={(v) => setField(position.id, "etfEmployer", v)} suffix="%" />

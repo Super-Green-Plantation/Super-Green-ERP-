@@ -277,7 +277,8 @@ export default function PayrollPage() {
                   </th>
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Volume Achieved</th>
                   {/* <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Basic</th> */}
-                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Basic Incentive</th>
+                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Partial (20K)</th>
+                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Incentive</th>
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Target Budget</th>
                   {/* <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Allowance</th> */}
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Vehicle</th>
@@ -335,19 +336,17 @@ export default function PayrollPage() {
                       {/* <td className="px-5 py-4 text-right text-xs font-bold text-muted-foreground">
                         {fmt(row.breakdown?.basicSalaryPermanent ?? 0)}
                       </td> */}
+                      {/* Partial incentive — 20K when hurdle cleared */}
                       <td className="px-5 py-4 text-right text-xs font-bold">
-                        <span className={
-                          row.breakdown?.incentivePartialHit
-                            
-                        }>
-                          {fmt(
-                            row.breakdown?.incentivePartialHit
-                              ? (row.breakdown?.incentivePartialEarned ?? 0)
-                              : (row.breakdown?.incentiveEarned ?? 0)
-                          )}
-                          {row.breakdown?.incentivePartialHit && !row.breakdown?.incentiveHit && (
-                            <span className="block text-[9px] font-bold text-amber-500/70 uppercase tracking-wider">partial</span>
-                          )}
+                        <span className={row.breakdown?.incentiveHit ? "text-primary" : "text-muted-foreground/40"}>
+                          {fmt(row.breakdown?.incentiveEarned ?? 0)}
+                        </span>
+                      </td>
+
+                      {/* Full incentive — non-FA bonusAmount at 100% target */}
+                      <td className="px-5 py-4 text-right text-xs font-bold">
+                        <span className={row.breakdown?.fullIncentiveHit ? "text-primary" : "text-muted-foreground/40"}>
+                          {fmt(row.breakdown?.fullIncentive ?? 0)}
                         </span>
                       </td>
 
@@ -384,7 +383,7 @@ export default function PayrollPage() {
                       </td>
 
                       <td className="px-5 py-4 text-right text-xs font-bold text-emerald-600">
-                        {fmt(row.excessEarned ?? 0)}
+                        {fmt(row.breakdown?.excessCommission ?? 0)}
                       </td>
                       <td className="px-5 py-4 text-right text-xs font-bold text-destructive">
                         -{fmt(row.breakdown?.epfDeduction ?? 0)}

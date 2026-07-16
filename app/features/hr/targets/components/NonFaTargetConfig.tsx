@@ -32,11 +32,11 @@ export default function NonFaTargetConfig({
   after6MonthIncentivePct, onUpdateAfter6MonthIncentivePct,
 }: NonFaTargetConfigProps) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {[1, 2].map(period => {
         const periodRows = edit.rows.filter(r => r.periodNumber === period);
         return (
-          <div key={period} className="space-y-4 space-x-0">
+          <div key={period} className="space-y-2 space-x-0">
             <div className="flex items-center gap-2">
               <span className={`px-4 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-[0.2em] border
                 ${period === 1
@@ -62,7 +62,7 @@ export default function NonFaTargetConfig({
         );
       })}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
         
 
       <Section icon={<TrendingUp className="w-4 h-4" />} title="After 6th Month Target">
