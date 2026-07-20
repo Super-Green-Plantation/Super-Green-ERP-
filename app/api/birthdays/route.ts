@@ -1,54 +1,40 @@
 import { prisma } from "@/lib/prisma";
-import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req: NextRequest) {
-  try {
-    // 🔐 Auth check
-    const authHeader = req.headers.get("authorization");
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    console.log("🎂 Birthday cron started");
-
-    // 📦 Fetch employees
-    const employees = await prisma.member.findMany({
-      where: {
-        dob: { not: null },
-      },
-      select: {
-        nameWithInitials: true,
-        dob: true,
-        phone: true,
-        position: { select: { title: true } },
-        branches: {
-          select: {
-            branch: { select: { name: true } },
-          },
+export async function GET() {
+  const employees = await prisma.member.findMany({
+    where: { dob: { not: null } },
+    select: {
+      nameWithInitials: true,
+      dob: true,
+      phone: true,
+      position: { select: { title: true } },
+      branches: {
+        select: {
+          branch: { select: { name: true } },
         },
       },
-    });
+    },
+  });
 
-    const now = new Date();
+  const now = new Date();
 
-    const todayStart = new Date(Date.UTC(
-      now.getUTCFullYear(),
-      now.getUTCMonth(),
-      now.getUTCDate()
-    ));
+  const todayStart = new Date(Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate()
+  ));
 
-    const weekEnd = new Date(Date.UTC(
-      now.getUTCFullYear(),
-      now.getUTCMonth(),
-      now.getUTCDate() + 7,
-      23, 59, 59, 999
-    ));
+  const windowEnd = new Date(Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate() + 30,
+    23, 59, 59, 999
+  ));
 
-    // 🎯 Filter upcoming birthdays
-    const upcomingBirthdays = employees.filter((emp) => {
+  const upcomingBirthdays = employees
+    .filter((emp) => {
       if (!emp.dob) return false;
-
-      const dob = new Date(emp.dob as Date);
+      const dob = new Date(emp.dob);
       if (isNaN(dob.getTime())) return false;
 
       let birthday = new Date(Date.UTC(
@@ -65,46 +51,38 @@ export async function GET(req: NextRequest) {
         ));
       }
 
-      return birthday >= todayStart && birthday <= weekEnd;
-    });
+      return birthday >= todayStart && birthday <= windowEnd;
+    })
+    .map((emp) => {
+      const dob = new Date(emp.dob!);
 
-    // 🧾 Build message
-    if (upcomingBirthdays.length === 0) {
-      console.log("No birthdays in next 7 days.");
-      return NextResponse.json({
-        message: "No birthdays in next 7 days.",
-      });
-    }
+      let birthday = new Date(Date.UTC(
+        now.getUTCFullYear(),
+        dob.getUTCMonth(),
+        dob.getUTCDate()
+      ));
 
-    const lines = upcomingBirthdays.map((emp) => {
-      const branchNames =
-        emp.branches?.map((b) => b.branch?.name).filter(Boolean).join(", ") ||
-        "No branch";
+      if (birthday < todayStart) {
+        birthday = new Date(Date.UTC(
+          now.getUTCFullYear() + 1,
+          dob.getUTCMonth(),
+          dob.getUTCDate()
+        ));
+      }
 
-      return `• ${emp.nameWithInitials} — ${emp.position?.title ?? "No position"} — ${branchNames} — ${emp.phone ?? "No phone"} - ${new Date(emp.dob as Date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}`;
-    });
+      return {
+        name: emp.nameWithInitials,
+        birthday: birthday.toISOString().split("T")[0], // "YYYY-MM-DD"
+        phone: emp.phone ?? null,
+        position: emp.position?.title ?? null,
+        branch: emp.branches?.map((b) => b.branch?.name).filter(Boolean).join(", ") || null,
+      };
+    })
+    .sort((a, b) => a.birthday.localeCompare(b.birthday)); // ascending by date
 
-    const message =
-      `🎂 SGP Upcoming Birthdays\n\n` +
-      `Next 7 days (${upcomingBirthdays.length}):\n\n` +
-      lines.join("\n");
-
-    // 🖨️ Console output
-    console.log("=================================");
-    console.log(message);
-    console.log("=================================");
-
-    // 📤 Return response (for testing)
-    return NextResponse.json({
-      message,
-      count: upcomingBirthdays.length,
-    });
-
-  } catch (err: any) {
-    console.error("❌ CRON ERROR:", err);
-    return NextResponse.json(
-      { error: err.message || "Internal error" },
-      { status: 500 }
-    );
-  }
+  return Response.json({
+    window: "next_30_days",
+    count: upcomingBirthdays.length,
+    birthdays: upcomingBirthdays,
+  });
 }

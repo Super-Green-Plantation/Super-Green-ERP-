@@ -325,11 +325,13 @@ export function calculateMarketingPayroll(
       ? (safe(config.hurdleRateProbation) || 0.066)
       : (safe(config.hurdleRatePermanent) || 0.20);
   const basicIncentiveHurdle = target * hurdleRate;
-  const basicIncentiveHit = target > 0 && vol >= basicIncentiveHurdle;
-  // Never default to 20K — if basicIncentiveAmount is 0 the position has no partial tier
-  const basicIncentive = (basicIncentiveHit && safe(config.basicIncentiveAmount) > 0)
-    ? safe(config.basicIncentiveAmount)
-    : 0;
+  // basicIncentiveHit requires BOTH volume threshold AND a configured amount.
+  // Without the amount check, TL/BM/RM (basicIncentiveAmount=0) would show
+  // incentiveHit=true in the UI even though they earn nothing from this tier.
+  const basicIncentiveHit = safe(config.basicIncentiveAmount) > 0
+    && target > 0
+    && vol >= basicIncentiveHurdle;
+  const basicIncentive = basicIncentiveHit ? safe(config.basicIncentiveAmount) : 0;
 
   // ── Full incentive — non-FA positions (bonusAmount at 100% of target) ─────
   // FA: fullIncentiveAmount = 0 (bonus comes from target budget salary instead).

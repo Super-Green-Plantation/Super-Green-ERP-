@@ -3,7 +3,7 @@
 import { ApiError } from "@/lib/error";
 import { getCurrentUserWithRole } from "@/lib/getCurrentUserWithRole";
 import { prisma } from "@/lib/prisma";
-import { getUplineChain } from "./actions";
+// getUplineChain import removed — uplines now resolve from investment hierarchy snapshot only
 import { serializeData } from "@/app/utils/serializers";
 import { revalidatePath } from "next/cache";
 import { logActivity } from "@/lib/logActivity";
@@ -47,6 +47,7 @@ export async function processCommissions(data: {
   disabledEmpNos?: string[];
   manualEmpNos?: string[];
   hierarchyEmpNos?: string[];
+  performedById?: number;   // optional — skips getCurrentUserWithRole when provided
 }) {
   const {
     investmentId,
@@ -55,12 +56,19 @@ export async function processCommissions(data: {
     disabledEmpNos = [],
     manualEmpNos = [],
     hierarchyEmpNos,
+    performedById: callerPerformedById,
   } = data;
 
   const disabledSet = new Set(disabledEmpNos);
 
   try {
-    const currentUser = await getCurrentUserWithRole();
+    // Skip session lookup when called internally (e.g. from approveInvestment).
+    // getCurrentUserWithRole reads Supabase cookies which may not be available
+    // in all server-to-server call chains.
+    const currentUser = callerPerformedById
+      ? null
+      : await getCurrentUserWithRole();
+    const resolvedPerformedById = callerPerformedById ?? currentUser?.member?.id ?? 0;
 
     const advisor = await prisma.member.findUnique({
       where: { empNo },
@@ -81,16 +89,47 @@ export async function processCommissions(data: {
       throw new ApiError("SALARY_CONFIG_MISSING", "No salary config for position");
     }
 
-    const uplines =
-      hierarchyEmpNos && hierarchyEmpNos.length > 0
-        ? await prisma.member.findMany({
-          where: { empNo: { in: hierarchyEmpNos } },
+    // ── Resolve uplines strictly from the investment's saved hierarchy ───────
+    // Never fall back to getUplineChain — it returns every higher-ranked
+    // member in the branch, crediting people who aren't on this investment.
+    // Source of truth: faId…ccoId snapshotted on the investment at approval.
+    //
+    // Priority order:
+    //  1. hierarchyEmpNos passed by caller (commission create page)
+    //  2. faId…ccoId on the investment row (auto-resolve fallback)
+    //  3. Empty list — never getUplineChain
+    let uplines: any[] = [];
+    if (hierarchyEmpNos && hierarchyEmpNos.length > 0) {
+      uplines = await prisma.member.findMany({
+        where: { empNo: { in: hierarchyEmpNos } },
+        include: {
+          position: { include: { orc: true, salary: true } },
+          branches: { include: { branch: true } },
+        },
+      });
+    } else {
+      // Fall back to the investment's own saved hierarchy fields
+      const inv = await prisma.investment.findUnique({
+        where: { id: investmentId },
+        select: { faId: true, fmId: true, bmId: true, rmId: true, zmId: true, agmId: true, ccoId: true },
+      });
+      const savedIds = [
+        inv?.faId, inv?.fmId, inv?.bmId,
+        inv?.rmId, inv?.zmId, inv?.agmId, inv?.ccoId,
+      ].filter((id): id is number => id !== null && id !== undefined);
+      const uniqueSavedIds = [...new Set(savedIds)];
+      if (uniqueSavedIds.length > 0) {
+        uplines = await prisma.member.findMany({
+          where: { id: { in: uniqueSavedIds } },
           include: {
             position: { include: { orc: true, salary: true } },
             branches: { include: { branch: true } },
           },
-        })
-        : await getUplineChain(advisor.position.rank, branchId);
+        });
+      }
+      // If no hierarchy is saved yet, process with no uplines.
+      // Do NOT fall back to getUplineChain.
+    }
 
     const manualMembers =
       manualEmpNos.length > 0
@@ -248,7 +287,7 @@ export async function processCommissions(data: {
       action: ActivityAction.CREATE,
       entity: ActivityEntity.COMMISSION,
       entityId: investmentId,
-      performedById: currentUser?.member?.id ?? 0,
+      performedById: resolvedPerformedById,
       branchId,
       metadata: {
         investmentId,

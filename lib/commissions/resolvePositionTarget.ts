@@ -1,5 +1,20 @@
 export function resolvePositionTarget(member: any, year: number, month: number) {
-  if (member.status !== "PROBATION" || !member.probationStartDate) return null;
+  if (member.status !== "PROBATION") return null;
+
+  const targets = member.position?.positionTargets;
+  if (!targets || targets.length === 0) return null;
+
+  // If probationStartDate is missing we cannot compute tenure, so we default to
+  // period 1 / month 1. This is the safest fallback — the member still gets their
+  // position's vehicle, team-activation, and incentive amounts rather than falling
+  // through to PositionSalary (which has those fields as 0).
+  if (!member.probationStartDate) {
+    return (
+      targets.find((t: any) => t.periodNumber === 1 && t.monthNumber === 1) ??
+      targets[0] ??
+      null
+    );
+  }
 
   const monthsElapsed = getMonthsInProbation(
     member.probationStartDate,
@@ -7,9 +22,6 @@ export function resolvePositionTarget(member: any, year: number, month: number) 
     month,
   );
   if (monthsElapsed < 0) return null;
-
-  const targets = member.position?.positionTargets;
-  if (!targets || targets.length === 0) return null;
 
   if (monthsElapsed < 6) {
     const periodNumber = monthsElapsed < 3 ? 1 : 2;
@@ -34,7 +46,10 @@ export function resolvePositionTarget(member: any, year: number, month: number) 
     // (e.g. 0.5 = 50% of 8M = 4M for BM after 6 months). Store as
     // partialThresholdPct so calculatePayroll's probation path handles it.
     partialThresholdPct: anyTarget.after6MonthIncentivePct ?? 0,
-    partialBonus: anyTarget.bonusAmount,
+    // Do NOT alias bonusAmount → partialBonus here.
+    // anyTarget.partialBonus is already spread above and is the correct value:
+    //   FA:     partialBonus > 0  (e.g. 20 000)  → hasPartial=true → basicIncentive
+    //   TL/BM:  partialBonus = 0                 → hasPartial=false → fullIncentive (bonusAmount)
   };
 }
 

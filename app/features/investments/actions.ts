@@ -3,6 +3,7 @@
 import { serializeData } from "@/app/utils/serializers";
 import { getCurrentUserWithRole } from "@/lib/getCurrentUserWithRole";
 import { logActivity } from "@/lib/logActivity";
+import { processCommissions } from "@/app/features/commissions/process";
 import { prisma } from "@/lib/prisma";
 import { createInvestmentForExistingClientSchema, updateInvestmentSchema } from "@/lib/validations/investment.schema";
 import { ActivityAction, ActivityEntity, Channel, Prisma, Title } from "@prisma/client";
@@ -1082,7 +1083,7 @@ export async function approveInvestmentWithHierarchyLog(data: {
   ccoId?: number | null;
   reviewNote?: string;
   advisorId?: number | null;
-}): Promise<{ success: boolean; investment?: any; error?: string }> {
+}): Promise<{ success: boolean; investment?: any; error?: string; commissionProcessed?: boolean; commissionError?: string }> {
   try {
     const currentUser = await getCurrentUserWithRole();
     if (!currentUser) throw new Error("Not authorized");
@@ -1219,7 +1220,75 @@ export async function approveInvestmentWithHierarchyLog(data: {
       },
     });
  
-    return { success: true, investment: result };
+    // ── f. Auto-process commissions using the snapshotted hierarchy ───────
+    // Runs AFTER the transaction commits so approval is never rolled back
+    // by a commission failure. A commission error surfaces as a warning in
+    // the UI (ApprovalSection checks res.commissionError) and the operator
+    // can process manually from the Commissions page.
+    let commissionError: string | undefined;
+    let commissionProcessed = false;
+
+    console.log("data --------- ", data);
+    
+    if (data.faId) {
+      try {
+        // Resolve the FA's empNo — processCommissions needs it for PERSONAL commission
+        const faMember = await prisma.member.findUnique({
+          where: { id: data.faId },
+          select: { empNo: true },
+        });
+
+        if (!faMember) throw new Error(`FA member not found for id ${data.faId}`);
+
+        // Build the hierarchy empNos in rank order from the snapshotted IDs.
+        // Exclude the FA — processCommissions handles FA personal commission
+        // separately via empNo, so we only pass the upline members here.
+        const hierarchyIds = [
+          data.fmId ?? null,
+          data.bmId ?? null,
+          data.rmId ?? null,
+          data.zmId ?? null,
+          data.agmId ?? null,
+          data.ccoId ?? null,
+        ].filter((id): id is number => id !== null);
+
+        const uniqueHierarchyIds = [...new Set(hierarchyIds)];
+
+        let hierarchyEmpNos: string[] = [];
+        if (uniqueHierarchyIds.length > 0) {
+          const hierarchyMembers = await prisma.member.findMany({
+            where: { id: { in: uniqueHierarchyIds } },
+            select: { id: true, empNo: true },
+          });
+          // Preserve rank order from the hierarchy ID list
+          hierarchyEmpNos = uniqueHierarchyIds
+            .map((id) => hierarchyMembers.find((m) => m.id === id)?.empNo)
+            .filter((e): e is string => !!e);
+        }
+
+        // processCommissions is statically imported at the top of this file
+        const commResult = await processCommissions({
+          investmentId: data.investmentId,
+          empNo: faMember.empNo,
+          branchId: investment.branchId,
+          hierarchyEmpNos,
+        });
+
+        console.log("commResult = ", commResult);
+        
+
+        if (commResult.success) {
+          commissionProcessed = true;
+        } else {
+          commissionError = commResult.error?.message ?? "Commission processing failed";
+        }
+      } catch (commErr: any) {
+        commissionError = commErr.message ?? "Commission processing failed";
+        console.error("Auto-commission error (approval still succeeded):", commErr);
+      }
+    }
+
+    return { success: true, investment: result, commissionProcessed, commissionError };
   } catch (error: any) {
     console.error("approveInvestmentWithHierarchyLog error:", error);
     return { success: false, error: error.message };

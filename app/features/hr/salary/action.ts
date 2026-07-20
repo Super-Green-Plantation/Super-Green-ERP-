@@ -24,6 +24,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUserWithRole } from "@/lib/getCurrentUserWithRole";
 import { logActivity } from "@/lib/logActivity";
 import { ActivityAction, ActivityEntity } from "@prisma/client";
+import { processCommissions } from "@/app/features/commissions/process";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // upsertActivationsForInvestment (inlined from activations helper)
@@ -437,28 +438,77 @@ export async function approveInvestmentWithHierarchyLog(data: {
     // never rolls back the approval. volumeAchieved is already incremented.
     // processCommissions is idempotent (FOR UPDATE + commissionsProcessed flag)
     // so re-approving a duplicate is safe and returns early.
-    let commissionResult: { success: boolean; error?: string } = { success: true };
-    if (data.faId) {
+    // ── f. Auto-trigger commission processing ──────────────────────────────
+    // The personal commission recipient is the LOWEST-ranked member present
+    // on this investment — not necessarily an FA. A BM, RM, ZM or AGM doing
+    // personal business has no FA beneath them and receives PERSONAL commission
+    // directly. Everyone above them in the hierarchy receives ORC (UPLINE).
+    //
+    // Hierarchy IDs in rank order (lowest → highest):
+    //   faId → fmId → bmId → rmId → zmId → agmId → ccoId
+    // The first non-null ID is the personal commission recipient.
+    // All subsequent non-null IDs are upline ORC recipients.
+    const orderedHierarchyIds: Array<{ id: number | null | undefined; role: string }> = [
+      { id: data.faId,  role: "FA"  },
+      { id: data.fmId,  role: "FM"  },
+      { id: data.bmId,  role: "BM"  },
+      { id: data.rmId,  role: "RM"  },
+      { id: data.zmId,  role: "ZM"  },
+      { id: data.agmId, role: "AGM" },
+      { id: data.ccoId, role: "CCO" },
+    ];
+    const presentIds = orderedHierarchyIds.filter((h): h is { id: number; role: string } => !!h.id);
+
+    let commissionResult: { success: boolean; error?: string } = { success: false };
+
+    if (presentIds.length === 0) {
+      commissionResult.error = "No hierarchy members on this investment — commissions skipped";
+    } else {
       try {
-        const fa = await prisma.member.findUnique({
-          where: { id: data.faId },
-          select: { empNo: true },
+        // Resolve all member empNos in one query
+        const allIds = presentIds.map((h) => h.id);
+        const allMembers = await prisma.member.findMany({
+          where: { id: { in: allIds } },
+          select: { id: true, empNo: true },
         });
-        if (fa) {
-          const { processCommissions } = await import(
-            "@/app/features/commissions/process"
-          );
-          const res = await processCommissions({
-            investmentId: data.investmentId,
-            empNo: fa.empNo,
-            branchId: investment.branchId,
-          });
-          if (!res.success) {
-            commissionResult = { success: false, error: res.error?.message ?? "Commission processing failed" };
-          }
+        const idToEmpNo = new Map(allMembers.map((m) => [m.id, m.empNo]));
+
+        // First present member → PERSONAL commission
+        const personalMemberId = presentIds[0].id;
+        const personalEmpNo = idToEmpNo.get(personalMemberId);
+        if (!personalEmpNo) throw new Error(`Member id ${personalMemberId} not found`);
+
+        // Remaining present members → UPLINE (ORC) commissions
+        const hierarchyEmpNos = presentIds
+          .slice(1)
+          .map((h) => idToEmpNo.get(h.id))
+          .filter((e): e is string => !!e);
+
+        console.log("[commission-auto] calling processCommissions", {
+          investmentId: data.investmentId,
+          personalRole: presentIds[0].role,
+          personalEmpNo,
+          uplineCount: hierarchyEmpNos.length,
+          hierarchyEmpNos,
+        });
+
+        const res = await processCommissions({
+          investmentId: data.investmentId,
+          empNo: personalEmpNo,
+          branchId: investment.branchId,
+          hierarchyEmpNos,
+          performedById: currentUser?.member?.id ?? 0,
+        });
+
+        console.log("[commission-auto] processCommissions result", JSON.stringify(res));
+
+        if (res.success) {
+          commissionResult = { success: true };
+        } else {
+          commissionResult = { success: false, error: res.error?.message ?? "Commission processing failed" };
         }
       } catch (commErr: any) {
-        console.error("Auto-commission processing failed after approval:", commErr);
+        console.error("[commission-auto] failed after approval:", commErr);
         commissionResult = { success: false, error: commErr?.message ?? "Commission processing failed" };
       }
     }

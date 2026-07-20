@@ -188,7 +188,10 @@ function buildMktConfig(
   // PositionSalary fallback — used for members past their 6-month probation
   // period whose position has no PositionTarget row for their current tenure.
   if (positionSalary && positionSalary.monthlyTarget > 0) {
-    const hasPartial = positionSalary.incentivePartialAmount > 0;
+    // FA is identified by Position.targetBudgetAmount > 0, NOT incentivePartialAmount.
+    // PositionSalary.incentivePartialAmount is 0 for FA (it's unused on that model).
+    // All FAs get the fixed 20K partial incentive regardless of PositionSalary config.
+    const isFa = positionTargetBudgetAmount > 0;
     return {
       targetAmount: positionSalary.monthlyTarget,
       tenureMonthCount,
@@ -197,10 +200,10 @@ function buildMktConfig(
       targetBudgetMinPct: 0.25,
       hurdleRateProbation: 0.066,
       hurdleRatePermanent: 0.20,
-      // FA (hasPartial): partial is incentivePartialAmount; non-FA: 0
-      basicIncentiveAmount: hasPartial ? positionSalary.incentivePartialAmount : 0,
-      // Non-FA: incentiveAmount is the full-target bonus; FA: 0 (target budget handles it)
-      fullIncentiveAmount: !hasPartial ? (positionSalary.incentiveAmount ?? 0) : 0,
+      // FA always gets 20K partial; non-FA has no partial tier
+      basicIncentiveAmount: isFa ? 20_000 : 0,
+      // Non-FA: incentiveAmount is the full bonus at 100%; FA: 0 (target budget handles it)
+      fullIncentiveAmount: !isFa ? (positionSalary.incentiveAmount ?? 0) : 0,
       excessCommissionRate: 0.005,
       vehicleThresholdPct: positionSalary.vehicleThresholdPct,
       vehicleAmount: positionSalary.vehicleAmount,
