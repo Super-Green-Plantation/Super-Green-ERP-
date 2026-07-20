@@ -79,7 +79,7 @@ export default function HoPayrollClient({
       let changed = false;
       for (const r of preview) {
         if (!(r.memberId in next)) {
-          next[r.memberId] = r.baseSalary;
+          next[r.memberId] = r.basicSalary;
           changed = true;
         }
       }
@@ -144,7 +144,7 @@ export default function HoPayrollClient({
   const totalGross = useMemo(() => preview.reduce((s: number, r: any) => s + (r.grossPay ?? 0), 0), [preview]);
   const totalNet = useMemo(() => preview.reduce((s: number, r: any) => s + (r.netPay ?? 0), 0), [preview]);
   const totalEpf = useMemo(() => preview.reduce((s: number, r: any) => s + (r.epfDeduction ?? 0), 0), [preview]);
-  const unconfiguredCount = useMemo(() => preview.filter((r: any) => !r.baseSalaryConfigured).length, [preview]);
+  const unconfiguredCount = useMemo(() => preview.filter((r: any) => !r.configuredSalary).length, [preview]);
 
   return (
     <div className="w-full min-h-screen p-4 sm:p-8 flex flex-col gap-6 sm:gap-8 font-sans text-gray-900 dark:text-gray-100 transition-colors duration-300">
@@ -245,7 +245,7 @@ export default function HoPayrollClient({
                       <div className="flex items-center justify-end gap-1.5">
                         <input
                           type="number"
-                          value={overrides[row.memberId] ?? row.baseSalary}
+                         value={overrides[row.memberId] ?? row.basicSalary}
                           onChange={(e) => handleBaseSalaryChange(row.memberId, Number(e.target.value))}
                           disabled={row.status === "PAID"}
                           className="w-28 text-right px-3 py-2 bg-muted/30 border border-border rounded-xl text-sm font-bold text-foreground focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all outline-none disabled:opacity-50"
@@ -263,7 +263,7 @@ export default function HoPayrollClient({
                           )}
                         </button>
                       </div>
-                      {!row.baseSalaryConfigured && (
+                      {!row.configuredSalary  && (
                         <p className="text-[9px] font-bold text-amber-600/80 uppercase tracking-wider mt-1">No default set</p>
                       )}
                     </td>
