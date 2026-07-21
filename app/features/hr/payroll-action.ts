@@ -22,9 +22,17 @@ type ActiveTeamCounts = { advisors: number; fms: number; bms: number };
  * fall into the corporate path and probationary HO staff to be evaluated as
  * field reps.
  */
-
+// Rank boundary shared with ho-payroll-action.ts
 const HO_MIN_RANK = 14;
 
+/**
+ * Routes a member to the correct payroll track by position rank.
+ * rank >= 14 → HEAD_OFFICE (permanent BM/RM/ZM/AGM, COO, GM, all HO staff)
+ * rank <  14 → MARKETING  (FA, TL, probation BM/RM/ZM/AGM)
+ *
+ * Using rank (not Position.type) because permanent field roles like JBM(14),
+ * JRM(16), COO(104) have type=PERMANENT but belong on the HO salary track.
+ */
 function resolvePayrollCategory(positionRank: number | null | undefined): PayrollCategory {
   if ((positionRank ?? 0) >= HO_MIN_RANK) return "HEAD_OFFICE";
   return "MARKETING";
@@ -233,7 +241,7 @@ export async function getPayrollPreview(
   const endDate = new Date(Date.UTC(year, month, 1));
 
   const branchMembers = await prisma.memberBranch.findMany({
-    where: { branchId },
+    where: { branchId, member: { channel: { not: "Micro" } } },
     include: {
       member: {
         include: {
@@ -241,7 +249,6 @@ export async function getPayrollPreview(
             include: { salary: true, orc: true, positionTargets: true },
           },
           monthlyPayrolls: { where: { year, month } },
-          ManagementBaseSalary: true,
           branches: true,
           commissions: {
             where: {
@@ -260,7 +267,6 @@ export async function getPayrollPreview(
   const BRANCH_LOCAL_RANKS = new Set([1, 2, 3, 11, 12, 13, 14, 15]);
 
   const filteredMembers = branchMembers.filter(({ member }: any) => {
-    if (member.position?.channelType === "Micro") return false;   // ← exclude micro channel
     const rank = member.position?.rank ?? 0;
     if (BRANCH_LOCAL_RANKS.has(rank)) return true;
     const primaryBranch = member.branches?.find((b: any) => b.isPrimary === true);
@@ -296,7 +302,7 @@ export async function getPayrollPreview(
       }).then((rows) => rows.reduce((sum, c) => sum + Number(c.amount), 0));
 
       // ── Category routing ─────────────────────────────────────────────────
-      const payrollCategory = resolvePayrollCategory(member.position?.type);
+      const payrollCategory = resolvePayrollCategory(member.position?.rank);
 
       const positionTargetRow = resolvePositionTarget(member, year, month);
       const positionTargetData = toPositionTargetData(positionTargetRow);
@@ -312,32 +318,32 @@ export async function getPayrollPreview(
 
       const hoConfig = payrollCategory === "HEAD_OFFICE"
         ? {
-          basicSalary: mgtBaseSalary,
-          fixedAllowance: 0,
-          vehicleAllowance: 0,
-          fuelAllowance: 0,
-          channelOperation: 0,
-          attendanceAllowance: 0,
-          loanInstalments: 0,
-          festivalAdvance: 0,
-          merchandiseDeduction: 0,
-          epfEmployeeRate: 0.08,
-          epfEmployerRate: 0.12,
-          etfEmployerRate: 0.03,
-          maxLeavesWithoutDeduction: 1.5,
-        }
+            basicSalary: mgtBaseSalary,
+            fixedAllowance: 0,
+            vehicleAllowance: 0,
+            fuelAllowance: 0,
+            channelOperation: 0,
+            attendanceAllowance: 0,
+            loanInstalments: 0,
+            festivalAdvance: 0,
+            merchandiseDeduction: 0,
+            epfEmployeeRate: 0.08,
+            epfEmployerRate: 0.12,
+            etfEmployerRate: 0.03,
+            maxLeavesWithoutDeduction: 1.5,
+          }
         : null;
 
       const mktConfig = payrollCategory === "MARKETING"
         ? buildMktConfig(
-          positionTargetData,
-          tenureMonthCount,
-          Number(positionTargetRow?.excessRate ?? 0.005),
-          (member as any).position?.salary ?? null,
-          // Pass Position.targetBudgetAmount to gate/cap the target budget salary.
-          // Only FA has this non-zero; TL/BM/RM etc. are 0 → no target budget.
-          Number((member as any).position?.targetBudgetAmount ?? 0),
-        )
+            positionTargetData,
+            tenureMonthCount,
+            Number(positionTargetRow?.excessRate ?? 0.005),
+            (member as any).position?.salary ?? null,
+            // Pass Position.targetBudgetAmount to gate/cap the target budget salary.
+            // Only FA has this non-zero; TL/BM/RM etc. are 0 → no target budget.
+            Number((member as any).position?.targetBudgetAmount ?? 0),
+          )
         : null;
 
       let breakdown = null;
@@ -419,7 +425,7 @@ export async function runMonthlyPayroll(
   const endDate = new Date(Date.UTC(year, month, 1));
 
   const branchMembers = await prisma.memberBranch.findMany({
-    where: { branchId },
+    where: { branchId, member: { channel: { not: "Micro" } } },
     include: {
       member: {
         include: {
@@ -487,7 +493,7 @@ export async function runMonthlyPayroll(
       }).then((rows) => rows.reduce((sum, c) => sum + Number(c.amount), 0));
 
       // ── Category routing ─────────────────────────────────────────────────
-      const payrollCategory = resolvePayrollCategory((member as any).position?.type);
+      const payrollCategory = resolvePayrollCategory((member as any).position?.rank);
 
       const positionTargetRow = resolvePositionTarget(member, year, month);
       const positionTargetData = toPositionTargetData(positionTargetRow);
@@ -504,30 +510,30 @@ export async function runMonthlyPayroll(
 
       const hoConfig = payrollCategory === "HEAD_OFFICE"
         ? {
-          basicSalary: mgtBaseSalary,
-          fixedAllowance: 0,
-          vehicleAllowance: 0,
-          fuelAllowance: 0,
-          channelOperation: 0,
-          attendanceAllowance: 0,
-          loanInstalments: 0,
-          festivalAdvance: 0,
-          merchandiseDeduction: 0,
-          epfEmployeeRate: 0.08,
-          epfEmployerRate: 0.12,
-          etfEmployerRate: 0.03,
-          maxLeavesWithoutDeduction: 1.5,
-        }
+            basicSalary: mgtBaseSalary,
+            fixedAllowance: 0,
+            vehicleAllowance: 0,
+            fuelAllowance: 0,
+            channelOperation: 0,
+            attendanceAllowance: 0,
+            loanInstalments: 0,
+            festivalAdvance: 0,
+            merchandiseDeduction: 0,
+            epfEmployeeRate: 0.08,
+            epfEmployerRate: 0.12,
+            etfEmployerRate: 0.03,
+            maxLeavesWithoutDeduction: 1.5,
+          }
         : null;
 
       const mktConfig = payrollCategory === "MARKETING"
         ? buildMktConfig(
-          positionTargetData,
-          tenureMonthCount,
-          Number(positionTargetRow?.excessRate ?? 0.005),
-          (member as any).position?.salary ?? null,
-          Number((member as any).position?.targetBudgetAmount ?? 0),
-        )
+            positionTargetData,
+            tenureMonthCount,
+            Number(positionTargetRow?.excessRate ?? 0.005),
+            (member as any).position?.salary ?? null,
+            Number((member as any).position?.targetBudgetAmount ?? 0),
+          )
         : null;
 
       if (payrollCategory === "HEAD_OFFICE" && !hoConfig) {

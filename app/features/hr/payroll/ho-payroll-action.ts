@@ -44,6 +44,7 @@ async function getHoMembers() {
     where: {
       position: { rank: { gte: HO_MIN_RANK } },
       isActive: true,
+      channel: { not: "Micro" },
     },
     include: {
       position: true,
@@ -51,7 +52,7 @@ async function getHoMembers() {
       ManagementBaseSalary: true,
       HoPayrollConfig: true,      // new model — per-member standing HO allowances
     },
-    orderBy: [{ position: { rank: "desc" } }, { nameWithInitials: "asc" }],
+    orderBy: [{ position: { rank: "asc" } }, { nameWithInitials: "asc" }],
   });
 }
 
@@ -200,17 +201,17 @@ export async function getHoPayrollPreview(
       // preview stays consistent with what was committed.
       const effectiveOverrides: HoPayrollOverrides = alreadyProcessed
         ? {
-          basicSalary: memberOverrides.basicSalary ?? (Number(existing!.baseSalary) || undefined),
-          fixedAllowance: memberOverrides.fixedAllowance ?? Number((existing as any).fixedAllowance ?? 0),
-          vehicleAllowance: memberOverrides.vehicleAllowance ?? Number((existing as any).vehicleAllowance ?? 0),
-          fuelAllowance: memberOverrides.fuelAllowance ?? Number((existing as any).fuelAllowance ?? 0),
-          channelOperation: memberOverrides.channelOperation ?? Number((existing as any).channelOperation ?? 0),
-          attendanceAllowance: memberOverrides.attendanceAllowance ?? Number((existing as any).attendanceAllowance ?? 0),
-          leavesTaken: memberOverrides.leavesTaken ?? Number((existing as any).leavesTaken ?? 0),
-          loanInstalments: memberOverrides.loanInstalments ?? Number((existing as any).loanInstalments ?? 0),
-          festivalAdvance: memberOverrides.festivalAdvance ?? Number((existing as any).festivalAdvance ?? 0),
-          merchandiseDeduction: memberOverrides.merchandiseDeduction ?? Number((existing as any).merchandiseDeduction ?? 0),
-        }
+            basicSalary: memberOverrides.basicSalary ?? Number(existing!.baseSalary),
+            fixedAllowance: memberOverrides.fixedAllowance ?? Number((existing as any).fixedAllowance ?? 0),
+            vehicleAllowance: memberOverrides.vehicleAllowance ?? Number((existing as any).vehicleAllowance ?? 0),
+            fuelAllowance: memberOverrides.fuelAllowance ?? Number((existing as any).fuelAllowance ?? 0),
+            channelOperation: memberOverrides.channelOperation ?? Number((existing as any).channelOperation ?? 0),
+            attendanceAllowance: memberOverrides.attendanceAllowance ?? Number((existing as any).attendanceAllowance ?? 0),
+            leavesTaken: memberOverrides.leavesTaken ?? Number((existing as any).leavesTaken ?? 0),
+            loanInstalments: memberOverrides.loanInstalments ?? Number((existing as any).loanInstalments ?? 0),
+            festivalAdvance: memberOverrides.festivalAdvance ?? Number((existing as any).festivalAdvance ?? 0),
+            merchandiseDeduction: memberOverrides.merchandiseDeduction ?? Number((existing as any).merchandiseDeduction ?? 0),
+          }
         : memberOverrides;
 
       const hoConfig = buildHoConfig(member, effectiveOverrides);
@@ -234,7 +235,7 @@ export async function getHoPayrollPreview(
           member.branches.find((b) => b.isPrimary)?.branch?.name ??
           member.branches[0]?.branch?.name ??
           "—",
-        configuredSalary: hoConfig.basicSalary > 0,
+        baseSalaryConfigured: hoConfig.basicSalary > 0,
 
         // Earnings breakdown
         basicSalary: breakdown.basicSalary,

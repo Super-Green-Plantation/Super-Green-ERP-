@@ -343,9 +343,11 @@ export function calculateMarketingPayroll(
   const fullTargetBonusHit = false; // legacy — always false
 
   // ── Excess Commission (0.5% on surplus above 100%) ───────────────────────
-  const excessRate = safe(config.excessCommissionRate) || 0.005;
+  // Use ?? not || — excessRate=0 means no excess commission for this position.
+  // || would treat 0 as falsy and incorrectly apply the 0.5% FA rate to all roles.
+  const excessRate = config.excessCommissionRate ?? 0;
   const surplus = Math.max(0, vol - target);
-  const excessCommission = target > 0 && surplus > 0 ? surplus * excessRate : 0;
+  const excessCommission = excessRate > 0 && target > 0 && surplus > 0 ? surplus * excessRate : 0;
 
   // ── Vehicle Allowance ─────────────────────────────────────────────────────
   const vehicleThreshold = target * safe(config.vehicleThresholdPct);
