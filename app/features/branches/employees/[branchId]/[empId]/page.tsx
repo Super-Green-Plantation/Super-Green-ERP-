@@ -316,15 +316,15 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
           </div>
         </aside>
 
-        {/* Managed Employees (Downline) */}
-        <div>
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">
-            Managed Employees
-          </h3>
-          <SubordinatesSection memberId={employee.id} />
-        </div>
-      </div>
 
+      </div>
+      {/* Managed Employees (Downline) */}
+      <div>
+        <h3 className="text-sm font-semibold text-gray-700 mb-3">
+          Managed Employees
+        </h3>
+        <SubordinatesSection memberId={employee.id} />
+      </div>
 
 
       {/* ── Financial Statement Feed ── */}

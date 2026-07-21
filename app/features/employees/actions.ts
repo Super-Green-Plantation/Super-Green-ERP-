@@ -201,17 +201,17 @@ export async function getEmployeesByBranch(
       channel: { not: "Micro" },
       ...(searchQuery && searchQuery.trim() !== ""
         ? {
-            OR: [
-              { empNo: { contains: searchQuery, mode: "insensitive" } },
-              { nameWithInitials: { contains: searchQuery, mode: "insensitive" } },
-              { nic:  { contains: searchQuery, mode: "insensitive"  } },
-            ],
-          }
+          OR: [
+            { empNo: { contains: searchQuery, mode: "insensitive" } },
+            { nameWithInitials: { contains: searchQuery, mode: "insensitive" } },
+            { nic: { contains: searchQuery, mode: "insensitive" } },
+          ],
+        }
         : {
-            branches: {
-              some: { branchId },
-            },
-          }),
+          branches: {
+            some: { branchId },
+          },
+        }),
     },
 
 
@@ -352,18 +352,29 @@ export async function updateEmployee(memberId: number, data: EmpData) {
         });
 
         //  Send welcome email (non-blocking)
-        try {
-          await sendWelcomeEmail({
-            to: data.email,
-            name: data.nameWithInitials ?? "",
-            empNo: data.empNo,
-            tempPassword,
-          });
-        } catch (e) {
-          console.warn("Welcome email failed:", e);
-        }
+        // try {
+        //   await sendWelcomeEmail({
+        //     to: data.email,
+        //     name: data.nameWithInitials ?? "",
+        //     empNo: data.empNo,
+        //     tempPassword,
+        //   });
+        // } catch (e) {
+        //   console.warn("Welcome email failed:", e);
+        // }
       }
     }
+
+    let reportingPersons = data.reportingPersons ?? [];
+
+    if (data.recruitedById) {
+      const recruiter = await prisma.member.findUnique({
+        where: { id: data.recruitedById },
+        select: { empNo: true },
+      });
+      reportingPersons = await buildReportingChain(recruiter?.empNo ?? "");
+    }
+
 
     // =========================
     // 🔁 TRANSACTION (SAFE UPDATE)
@@ -371,14 +382,6 @@ export async function updateEmployee(memberId: number, data: EmpData) {
     const updated = await prisma.$transaction(async (tx) => {
       // remove old branches
       await tx.memberBranch.deleteMany({ where: { memberId } });
-
-      const reportingPersons = data.recruitedById
-        ? await buildReportingChain(
-          await prisma.member
-            .findUnique({ where: { id: data.recruitedById }, select: { empNo: true } })
-            .then((m) => m?.empNo ?? "")
-        )
-        : data.reportingPersons ?? [];
 
       return await tx.member.update({
         where: { id: memberId },
@@ -411,7 +414,8 @@ export async function updateEmployee(memberId: number, data: EmpData) {
           profilePic: data.profilePic,
 
           // Employment
-          reportingPersons, dateOfJoin: data.dateOfJoin
+          reportingPersons, // pre computed
+           dateOfJoin: data.dateOfJoin
             ? new Date(data.dateOfJoin)
             : null,
           appointmentLetter: data.appointmentLetter || null,
