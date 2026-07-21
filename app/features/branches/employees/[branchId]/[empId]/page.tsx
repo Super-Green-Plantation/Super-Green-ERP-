@@ -28,13 +28,13 @@ import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { generateEmployeeFullProfilePDF } from "@/app/pdf/EmployeeProfile";
-import Link from "next/link";
-import { getEmployeePerformance } from "./getEmployeePerfomance";
 import ConfirmDialog from "@/app/components/ui/ConfirmDialog";
+import { generateEmployeeFullProfilePDF } from "@/app/pdf/EmployeeProfile";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import Link from "next/link";
 import { toast } from "sonner";
-import { Router } from "next/router";
+import SubordinatesSection from "@/app/features/employees/SubordinatesSection";
+
 
 const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: number; readOnly?: boolean }) => {
   const params = useParams();
@@ -223,7 +223,7 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
             <EmployeeStatusSection
               memberId={employee.id}
               status={employee.status}
-              orc={orc}  
+              orc={orc}
             />
           )}
 
@@ -315,6 +315,14 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
             )}
           </div>
         </aside>
+
+        {/* Managed Employees (Downline) */}
+        <div>
+          <h3 className="text-sm font-semibold text-gray-700 mb-3">
+            Managed Employees
+          </h3>
+          <SubordinatesSection memberId={employee.id} />
+        </div>
       </div>
 
 

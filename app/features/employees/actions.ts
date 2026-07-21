@@ -776,3 +776,50 @@ async function buildReportingChain(directManagerEmpNo: string): Promise<string[]
   if (!manager) return [directManagerEmpNo];
   return [directManagerEmpNo, ...manager.reportingPersons];
 }
+
+
+
+export async function getSubordinatesTree(memberId: number) {
+  try {
+    const rows = await prisma.$queryRaw<{
+      id: number;
+      empNo: string;
+      nameWithInitials: string | null;
+      status: string;
+      isActive: boolean;
+      recruitedById: number | null;
+      positionTitle: string | null;
+      depth: number;
+    }[]>`
+      WITH RECURSIVE subordinates AS (
+        SELECT
+          m.id, m."empNo", m."nameWithInitials", m."recruitedById",
+          m.status, m."isActive", m."positionId",
+          0 AS depth
+        FROM "Member" m
+        WHERE m."recruitedById" = ${memberId}
+
+        UNION ALL
+
+        SELECT
+          m.id, m."empNo", m."nameWithInitials", m."recruitedById",
+          m.status, m."isActive", m."positionId",
+          s.depth + 1
+        FROM "Member" m
+        INNER JOIN subordinates s ON m."recruitedById" = s.id
+      )
+      SELECT
+        s.id, s."empNo", s."nameWithInitials", s."recruitedById",
+        s.status, s."isActive", s.depth,
+        p.title AS "positionTitle"
+      FROM subordinates s
+      LEFT JOIN "Position" p ON s."positionId" = p.id
+      ORDER BY s.depth, s."nameWithInitials"
+    `;
+
+    return { subordinates: serializeData(rows) };
+  } catch (error) {
+    console.error("Error fetching subordinates tree:", error);
+    throw error;
+  }
+}
