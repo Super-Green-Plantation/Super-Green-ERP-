@@ -415,7 +415,7 @@ export async function updateEmployee(memberId: number, data: EmpData) {
 
           // Employment
           reportingPersons, // pre computed
-           dateOfJoin: data.dateOfJoin
+          dateOfJoin: data.dateOfJoin
             ? new Date(data.dateOfJoin)
             : null,
           appointmentLetter: data.appointmentLetter || null,
@@ -785,35 +785,42 @@ async function buildReportingChain(directManagerEmpNo: string): Promise<string[]
 
 export async function getSubordinatesTree(memberId: number) {
   try {
+    // Need empNo to search reportingPersons array
+    const member = await prisma.member.findUnique({
+      where: { id: memberId },
+      select: { empNo: true },
+    });
+
+    if (!member) return { subordinates: [] };
+
     const rows = await prisma.$queryRaw<{
       id: number;
       empNo: string;
       nameWithInitials: string | null;
       status: string;
       isActive: boolean;
-      recruitedById: number | null;
       positionTitle: string | null;
       depth: number;
     }[]>`
-      WITH RECURSIVE subordinates AS (
-        SELECT
-          m.id, m."empNo", m."nameWithInitials", m."recruitedById",
-          m.status, m."isActive", m."positionId",
-          0 AS depth
-        FROM "Member" m
-        WHERE m."recruitedById" = ${memberId}
+     WITH RECURSIVE subordinates AS (
+  SELECT
+    m.id, m."empNo", m."nameWithInitials",
+    m.status, m."isActive", m."positionId",
+    0 AS depth
+  FROM "Member" m
+  WHERE ${member.empNo} = ANY(m."reportingPersons")
 
-        UNION ALL
+  UNION  -- ← UNION not UNION ALL, deduplicates rows
 
-        SELECT
-          m.id, m."empNo", m."nameWithInitials", m."recruitedById",
-          m.status, m."isActive", m."positionId",
-          s.depth + 1
-        FROM "Member" m
-        INNER JOIN subordinates s ON m."recruitedById" = s.id
-      )
+  SELECT
+    m.id, m."empNo", m."nameWithInitials",
+    m.status, m."isActive", m."positionId",
+    s.depth + 1
+  FROM "Member" m
+  INNER JOIN subordinates s ON s."empNo" = ANY(m."reportingPersons")
+)
       SELECT
-        s.id, s."empNo", s."nameWithInitials", s."recruitedById",
+        s.id, s."empNo", s."nameWithInitials",
         s.status, s."isActive", s.depth,
         p.title AS "positionTitle"
       FROM subordinates s

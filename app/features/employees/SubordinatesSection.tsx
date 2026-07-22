@@ -30,7 +30,16 @@ export default function SubordinatesSection({ memberId }: { memberId: number }) 
 
     useEffect(() => {
         getSubordinatesTree(memberId)
-            .then((res) => setRows(res.subordinates))
+            .then((res) => {
+                // Keep first occurrence (lowest depth) if same id appears twice
+                const seen = new Set<number>();
+                const unique = res.subordinates.filter((r:any) => {
+                    if (seen.has(r.id)) return false;
+                    seen.add(r.id);
+                    return true;
+                });
+                setRows(unique);
+            })
             .catch(console.error)
             .finally(() => setLoading(false));
     }, [memberId]);
