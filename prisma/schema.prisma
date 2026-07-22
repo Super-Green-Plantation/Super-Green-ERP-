@@ -160,6 +160,7 @@ enum PayrollStatus {
 model Branch {
   name        String
   location    String?
+  code     String  @default("")
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
   id          Int            @id @default(autoincrement())

@@ -129,8 +129,9 @@ export async function getInvestmentById(id: number) {
   try {
 
     const investment = await prisma.investment.findUnique({
-      where: { id: id },
+      where: { id },
       include: {
+        branch: true,
         client: {
           include: {
             branch: true,
@@ -307,7 +308,7 @@ export async function createInvestmentForExistingClient(data: {
   planId?: number;
   amount: number;
   proposal?: string;
-  proposalFormNo:string;
+  proposalFormNo: string;
   investmentDate?: Date;
   investmentRates?: number[];
   beneficiaryId?: number | null;
@@ -733,7 +734,7 @@ export async function getProposalReportByBranch(
   // Excluded positions (management roles that span all branches)
 
 
-  const EXCLUDED_TITLES: Title[] = ["COO","ADMIN", "CHAIRMEN", "HR", "ACC", "IT", "CLEANING", "OPM", "PRO", "SE"];
+  const EXCLUDED_TITLES: Title[] = ["COO", "ADMIN", "CHAIRMEN", "HR", "ACC", "IT", "CLEANING", "OPM", "PRO", "SE"];
 
   const branches = await prisma.branch.findMany({
 
@@ -1050,10 +1051,10 @@ type HierarchyRole = "fmId" | "bmId" | "rmId" | "zmId" | "agmId" | "ccoId";
 async function upsertActivationsForInvestment(
   tx: TransactionClient,
   hierarchy: {
-    fmId?:  number | null;
-    bmId?:  number | null;
-    rmId?:  number | null;
-    zmId?:  number | null;
+    fmId?: number | null;
+    bmId?: number | null;
+    rmId?: number | null;
+    zmId?: number | null;
     agmId?: number | null;
     ccoId?: number | null;
   },
@@ -1061,7 +1062,7 @@ async function upsertActivationsForInvestment(
   month: number,
 ) {
   const roles: HierarchyRole[] = ["fmId", "bmId", "rmId", "zmId", "agmId", "ccoId"];
- 
+
   await Promise.all(
     roles
       .filter((role) => !!hierarchy[role])
@@ -1087,7 +1088,7 @@ export async function approveInvestmentWithHierarchyLog(data: {
   try {
     const currentUser = await getCurrentUserWithRole();
     if (!currentUser) throw new Error("Not authorized");
- 
+
     // Guard: at least one hierarchy member must be supplied
     const approverIds = [
       data.faId, data.fmId, data.bmId, data.rmId,
@@ -1096,15 +1097,15 @@ export async function approveInvestmentWithHierarchyLog(data: {
     if (!approverIds.some((id) => id)) {
       throw new Error("At least one approver is required for approval");
     }
- 
+
     const investment = await prisma.investment.findUnique({
       where: { id: data.investmentId },
       include: { client: true },
     });
- 
+
     if (!investment) throw new Error("Investment not found");
     if (investment.approvalStatus !== "PENDING") throw new Error("Investment is not pending");
- 
+
     const result = await prisma.$transaction(async (tx) => {
       // ── a. Stamp approval fields on the investment ──────────────────────────
       const updated = await tx.investment.update({
@@ -1124,7 +1125,7 @@ export async function approveInvestmentWithHierarchyLog(data: {
           advisorId: data.advisorId ?? investment.advisorId,
         },
       });
- 
+
       // ── b. Upsert monthlyPayroll volume for each hierarchy member ───────────
       const hierarchyMemberIds = [
         data.faId ?? null,
@@ -1135,13 +1136,13 @@ export async function approveInvestmentWithHierarchyLog(data: {
         data.agmId ?? null,
         data.ccoId ?? null,
       ].filter((id): id is number => id !== null);
- 
+
       const uniqueHierarchyIds = [...new Set(hierarchyMemberIds)];
- 
+
       if (uniqueHierarchyIds.length > 0) {
         const year = new Date(investment.investmentDate).getFullYear();
         const month = new Date(investment.investmentDate).getMonth() + 1;
- 
+
         await Promise.all(
           uniqueHierarchyIds.map((memberId) =>
             tx.monthlyPayroll.upsert({
@@ -1158,17 +1159,17 @@ export async function approveInvestmentWithHierarchyLog(data: {
             })
           )
         );
- 
+
         // ── c. Upsert activations for each non-FA hierarchy member ────────────
         // Recalculates MonthlyActivation counts so that isActivated flags and
         // cumulative activation counts stay accurate after this investment is saved.
         await upsertActivationsForInvestment(
           tx,
           {
-            fmId:  data.fmId  ?? null,
-            bmId:  data.bmId  ?? null,
-            rmId:  data.rmId  ?? null,
-            zmId:  data.zmId  ?? null,
+            fmId: data.fmId ?? null,
+            bmId: data.bmId ?? null,
+            rmId: data.rmId ?? null,
+            zmId: data.zmId ?? null,
             agmId: data.agmId ?? null,
             ccoId: data.ccoId ?? null,
           },
@@ -1176,7 +1177,7 @@ export async function approveInvestmentWithHierarchyLog(data: {
           month,
         );
       }
- 
+
       // ── d. Auto-approve client if still pending ─────────────────────────────
       if (investment.client && investment.client.approvalStatus !== "APPROVED") {
         await tx.client.update({
@@ -1189,12 +1190,12 @@ export async function approveInvestmentWithHierarchyLog(data: {
           },
         });
       }
- 
+
       return updated;
     });
- 
+
     revalidatePath("/features/investments");
- 
+
     // ── e. Audit log — fires AFTER transaction commits ─────────────────────
     // Hierarchy snapshot is stored in metadata so you can always reconstruct
     // "who was on this investment when it was approved".
@@ -1219,7 +1220,7 @@ export async function approveInvestmentWithHierarchyLog(data: {
         approvedAt: new Date().toISOString(),
       },
     });
- 
+
     // ── f. Auto-process commissions using the snapshotted hierarchy ───────
     // Runs AFTER the transaction commits so approval is never rolled back
     // by a commission failure. A commission error surfaces as a warning in
@@ -1229,7 +1230,7 @@ export async function approveInvestmentWithHierarchyLog(data: {
     let commissionProcessed = false;
 
     console.log("data --------- ", data);
-    
+
     if (data.faId) {
       try {
         // Resolve the FA's empNo — processCommissions needs it for PERSONAL commission
@@ -1275,7 +1276,7 @@ export async function approveInvestmentWithHierarchyLog(data: {
         });
 
         console.log("commResult = ", commResult);
-        
+
 
         if (commResult.success) {
           commissionProcessed = true;

@@ -1,63 +1,83 @@
 import { useQuery } from "@tanstack/react-query";
 import { getClientById } from "../features/clients/actions";
 
-const mapClientToFormData = (client: any) => ({
-  applicant: {
-    id: client.id,
-    fullName: client.fullName || "",
+const mapClientToFormData = (client: any) => {
+  const mappedInvestments = client.investments?.map((inv: any) => ({
+    ...inv,
+    branch: inv.branch
+      ? {
+        id: inv.branch.id,
+        name: inv.branch.name,
+        code: inv.branch.code,
+        location: inv.branch.location,
+      }
+      : null,
+  })) || [];
 
-    nic: client.nic || "",
-    drivingLicense: client.drivingLicense || "",
-    passportNo: client.passportNo || "",
-    email: client.email || "",
-    phoneMobile: client.phoneMobile || "",
-    phoneLand: client.phoneLand || "",
-    investmentAmount: client.investmentAmount
-      ? `${client.investmentAmount}`
-      : "",
-    dateOfBirth: client.dateOfBirth
-      ? new Date(client.dateOfBirth).toISOString().split("T")[0]
-      : "",
-    occupation: client.occupation || "",
-    address: client.address || "",
-    branchId: client.branch?.id || "",
-    idFront: client.idFront || "",
-    idBack: client.idBack || "",
+  return {
+    applicant: {
+      id: client.id,
+      fullName: client.fullName || "",
 
-    signature: client.signature || "",
-  },
-  investment: {
-    planId: client.investments?.map((p: any) => p.planId?.toString()) || "",
-    refNumber: client.investments?.map((ref: any) => ref.refNumber) || [],
-    paymentSlip: client.paymentSlip || "",
-    proposal: client.proposal || "",
-    proposalFormNo: client.proposalFormNo || "",
-    agreement: client.agreement || "",
-  },
-  beneficiaries: client.beneficiaries?.length
-    ? client.beneficiaries.map((b: any) => ({
-      id: b.id,
-      fullName: b.fullName || "",
-      nic: b.nic || "",
-      phone: b.phone || "",
-      bankName: b.bankName || "",
-      bankBranch: b.bankBranch || "",
-      accountNo: b.accountNo || "",
-      relationship: b.relationship || "",
-    }))
-    : [emptyBeneficiary],
-  nominees: client.nominees?.length
-    ? client.nominees.map((n: any) => ({
-      id: n.id,
-      fullName: n.fullName || "",
-      nic: n.nic || "",
-      permanentAddress: n.permanentAddress || "",
-      postalAddress: n.postalAddress || "",
-    }))
-    : [emptyNominee],
-  investments: client.investments || [],
+      nic: client.nic || "",
+      drivingLicense: client.drivingLicense || "",
+      passportNo: client.passportNo || "",
+      email: client.email || "",
+      phoneMobile: client.phoneMobile || "",
+      phoneLand: client.phoneLand || "",
+      investmentAmount: client.investmentAmount
+        ? `${client.investmentAmount}`
+        : "",
+      dateOfBirth: client.dateOfBirth
+        ? new Date(client.dateOfBirth).toISOString().split("T")[0]
+        : "",
+      occupation: client.occupation || "",
+      address: client.address || "",
+      branchId: client.branch?.id || "",
+      idFront: client.idFront || "",
+      idBack: client.idBack || "",
 
-});
+      signature: client.signature || "",
+    },
+
+    investment: {
+      planId: client.investments?.map((p: any) => p.planId?.toString()) || "",
+      refNumber: client.investments?.map((ref: any) => ref.refNumber) || [],
+      paymentSlip: client.paymentSlip || "",
+      proposal: client.proposal || "",
+      proposalFormNo: client.proposalFormNo || "",
+      agreement: client.agreement || "",
+    },
+
+    beneficiaries: client.beneficiaries?.length
+      ? client.beneficiaries.map((b: any) => ({
+        id: b.id,
+        fullName: b.fullName || "",
+        nic: b.nic || "",
+        phone: b.phone || "",
+        bankName: b.bankName || "",
+        bankBranch: b.bankBranch || "",
+        accountNo: b.accountNo || "",
+        relationship: b.relationship || "",
+      }))
+      : [emptyBeneficiary],
+    nominees: client.nominees?.length
+      ? client.nominees.map((n: any) => ({
+        id: n.id,
+        fullName: n.fullName || "",
+        nic: n.nic || "",
+        permanentAddress: n.permanentAddress || "",
+        postalAddress: n.postalAddress || "",
+      }))
+      : [emptyNominee],
+    investments: mappedInvestments,
+
+
+  }
+
+
+
+};
 
 export const useClient = (clientId: number) => {
   return useQuery({

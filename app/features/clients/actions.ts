@@ -136,6 +136,7 @@ export async function getClientById(id: number) {
       investments: {
         include: {
           client: true,
+          branch: true,
           plan: true,
           beneficiary: true,
           nominee: true,
@@ -152,14 +153,7 @@ export async function getClientById(id: number) {
       branch: true,
       nominees: true,
       beneficiaries: true,
-      //   fa: { include: { position: { include: { salary: true, orc: true } }, branches: { include: { branch: true } } } },
-      //   fm: { include: { position: { include: { salary: true, orc: true } }, branches: { include: { branch: true } } } },
-      //   bm: { include: { position: { include: { salary: true, orc: true } }, branches: { include: { branch: true } } } },
-      //   rm: { include: { position: { include: { salary: true, orc: true } }, branches: { include: { branch: true } } } },
-      //   zm: { include: { position: { include: { salary: true, orc: true } }, branches: { include: { branch: true } } } },
-      //   agm: { include: { position: { include: { salary: true, orc: true } }, branches: { include: { branch: true } } } },
-      //   cco: { include: { position: { include: { salary: true, orc: true } }, branches: { include: { branch: true } } } },
-    },
+        },
   });
 
   if (!client) {

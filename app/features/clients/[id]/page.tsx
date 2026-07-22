@@ -10,16 +10,15 @@ import UpdateNominee from "@/app/components/Client/UpdateNominee";
 import { DetailItem } from "@/app/components/DetailItem";
 import { DocPreview } from "@/app/components/Doc/DocPreview";
 import { ProposalPDF } from "@/app/components/Doc/ProposalTemplate";
+import { InvestmentDownloadButton } from "@/app/components/Proposal/InvestmentDownloadButton";
 import ErrorMessage from "@/app/components/Status/Error";
 import Loading from "@/app/components/Status/Loading";
 import ClientInvestmentTable from "@/app/components/Tables/ClientInvestmentTable";
 import ConfirmDialog from "@/app/components/ui/ConfirmDialog";
 import { deleteBeneficiaryAction, deleteClient, deleteNomineeAction, updateClient, updateClientDocuments } from "@/app/features/clients/actions";
-import { getFinancialPlanById } from "@/app/features/financial_plans/actions";
 import { useClient } from "@/app/hooks/useClient";
 import { useQueryClient } from "@tanstack/react-query";
 import {
-  Banknote,
   CheckCircle2,
   Download,
   HeartHandshake,
@@ -36,8 +35,8 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { updateInvestmentDocuments } from "../../investments/actions";
-import { InvestmentDownloadButton } from "@/app/components/Proposal/InvestmentDownloadButton";
 import { MaturityBanner } from "../../investments/Maturitybanner";
+import { AgreementDownloadButton } from "@/app/components/Proposal/AgreementDownloadButton";
 
 export default function ApplicationViewPage() {
   const queryClient = useQueryClient();
@@ -66,18 +65,6 @@ export default function ApplicationViewPage() {
       .then((res) => res.json())
       .then((data) => setUser(data));
   }, []);
-
-
-  // useEffect(() => {
-  //   if (!formData?.investment.planId) return;
-  //   const fetchPlan = async () => {
-  //     const planId = Number(formData.investment.planId);
-  //     const res = await getFinancialPlanById(planId);
-  //     setPlan(res);
-  //   };
-
-  //   fetchPlan();
-  // }, [formData]);
 
   const handleDocsUpdate = async (updatedFiles: Record<string, string | null>) => {
     if (!updatedFiles) return;
@@ -162,6 +149,8 @@ export default function ApplicationViewPage() {
 
   if (isLoading) return <Loading />;
   if (isError) return <ErrorMessage />;
+  console.log(formData);
+  
 
   return (
     <div className="max-w-7xl mx-auto space-y-10 min-h-screen p-4 md:p-8 pb-24">
@@ -241,6 +230,9 @@ export default function ApplicationViewPage() {
                       beneficiary={inv.beneficiary}
                       nominee={inv.nominee}
                     />
+                  </div>
+                  <div>
+                    <AgreementDownloadButton investment={inv} client={formData} />
                   </div>
                   <div className="text-right">
                     <span className="block text-[10px] text-muted-foreground font-bold tracking-widest uppercase mb-1">
