@@ -4,7 +4,7 @@ import { logout } from "@/app/auth/logout/action";
 import {
   BanknoteArrowUp, Calculator, ChevronLeft, ChevronRight,
   CircleUserRound, IdCardLanyard, Landmark, LayoutDashboard,
-  LogOut, Menu, Nfc, Percent, ReceiptText, Target, User, Users, X,
+  LogOut, Menu, Nfc, Package, Percent, ReceiptText, Target, User, Users, X,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -23,6 +23,7 @@ type SidebarProps = {
 const links = [
   { name: "Dashboard", href: "/features/dashboard", icon: LayoutDashboard, role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "ZONAL_MANAGER", "AGM"] },
   { name: "Employee", href: "/features/branches/employees", icon: IdCardLanyard, role: ["ADMIN", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "ZONAL_MANAGER", "AGM"] },
+  { name: "Inventory", href: "/features/inventory", icon: Package, role: ["ADMIN", "HR", "DEV"], },
   { name: "Targets", href: "/features/hr/targets", icon: Target, role: ["ADMIN", "HR", "DEV"] },
   { name: "Payroll", href: "/features/hr/payroll", icon: Nfc, role: ["ADMIN", "HR", "DEV"] },
   { name: "Financial Plans", href: "/features/financial_plans", icon: Landmark, role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "ZONAL_MANAGER", "AGM"] },

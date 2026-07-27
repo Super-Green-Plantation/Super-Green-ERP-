@@ -175,6 +175,7 @@ model Branch {
   commission  Commission[]
   investments Investment[]
   members     MemberBranch[]
+  InventoryItem InventoryItem[]
 }
 
 model Zone {
@@ -479,6 +480,7 @@ model ManagementSalary {
   epfDeduction             Decimal   @default(0)
   grossPay                 Decimal
   netPay                   Decimal
+  personalIncentive         Decimal   @default(0)
   status                   String    @default("PENDING") // "PENDING" | "PAID"
   paidAt                   DateTime?
   createdAt                DateTime  @default(now())
@@ -909,4 +911,39 @@ model Quotation {
   @@index([createdByUserId])
   @@index([planType])
   @@index([createdAt])
+}
+
+
+enum ItemCondition {
+  GOOD
+  FAIR
+  DAMAGED
+}
+
+
+model InventoryCategory {
+  id            Int             @id @default(autoincrement())
+  name          String
+  abbreviation  String          @unique
+  createdAt     DateTime        @default(now()) @db.Timestamptz(6)
+  updatedAt     DateTime        @default(now()) @db.Timestamptz(6)
+  InventoryItem InventoryItem[]
+}
+
+model InventoryItem {
+  id                Int               @id @default(autoincrement())
+  branchId          Int
+  categoryId        Int
+  name              String
+  itemCode          String            @unique
+  quantity          Int               @default(1)
+  condition         ItemCondition     @default(GOOD)
+  notes             String?
+  createdAt         DateTime          @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime          @default(now()) @db.Timestamptz(6)
+  Branch            Branch            @relation(fields: [branchId], references: [id], onUpdate: NoAction)
+  InventoryCategory InventoryCategory @relation(fields: [categoryId], references: [id], onUpdate: NoAction)
+
+  @@index([branchId])
+  @@index([categoryId])
 }

@@ -13,6 +13,12 @@ const DEFAULT_EPF_EMPLOYER_RATE = 0.12;
 const DEFAULT_ETF_EMPLOYER_RATE = 0.03;
 const DEFAULT_MAX_LEAVES = 1.5;
 
+// Management staff personal incentive & commission rates
+const MGMT_PERSONAL_INCENTIVE_THRESHOLD = 500_000;
+const MGMT_PERSONAL_INCENTIVE_AMOUNT = 15_000;
+const MGMT_COMM_RATE_HIGH = 0.10; // 10% when volume >= 500K
+const MGMT_COMM_RATE_LOW  = 0.07; // 7%  when volume <  500K
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 /**
@@ -50,7 +56,7 @@ async function getHoMembers() {
       position: true,
       branches: { include: { branch: true } },
       ManagementBaseSalary: true,
-      HoPayrollConfig: true,      // new model — per-member standing HO allowances
+      HoPayrollConfig: true,
     },
     orderBy: [{ position: { rank: "asc" } }, { nameWithInitials: "asc" }],
   });
@@ -69,14 +75,55 @@ async function getOrcCommission(empNo: string, startDate: Date, endDate: Date): 
 }
 
 /**
+ * Fetch the total investment volume achieved by a member in the month
+ * (counting as FA — i.e. investments where faId = memberId).
+ * Renewals contribute 25% of their amount.
+ * Used for management staff personal commission calculation.
+ */
+async function getVolumeAchieved(memberId: number, startDate: Date, endDate: Date): Promise<number> {
+  const investments = await prisma.investment.findMany({
+    where: {
+      faId: memberId,
+      investmentDate: { gte: startDate, lt: endDate },
+      status: "Active",
+    },
+    select: { amount: true, renewedFromId: true },
+  });
+  return investments.reduce((sum, inv) => {
+    // Investments that have a parent (renewedFromId != null) are renewals → count 25%
+    const isRenewal = inv.renewedFromId !== null;
+    const contribution = isRenewal ? Number(inv.amount) * 0.25 : Number(inv.amount);
+    return sum + contribution;
+  }, 0);
+}
+
+/**
+ * Compute management staff personal commission from their volume.
+ *   volume >= 500K → 10% of volume
+ *   volume <  500K → 7%  of volume
+ * Commission is earned on ALL volume (no threshold gate — even 1 LKR earns 7%).
+ * The 15K flat incentive is separate and only awarded when volume >= 500K.
+ */
+function calcMgmtPersonalCommission(volume: number): number {
+  if (volume <= 0) return 0;
+  const rate = volume >= MGMT_PERSONAL_INCENTIVE_THRESHOLD ? MGMT_COMM_RATE_HIGH : MGMT_COMM_RATE_LOW;
+  return volume * rate;
+}
+
+/**
  * Builds an HoSalaryConfig by merging the member's stored HoPayrollConfig
  * (or ManagementBaseSalary fallback) with any per-run overrides.
  */
 function buildHoConfig(member: any, overrides: HoPayrollOverrides = {}): HoSalaryConfig {
-  const stored = member.HoPayrollConfig?.[0] ?? null;
-  const baseFallback = member.ManagementBaseSalary?.[0]
-    ? Number(member.ManagementBaseSalary[0].baseSalary)
-    : 0;
+  // HoPayrollConfig has @unique on memberId → Prisma may generate it as either
+  // a single object or an array relation depending on schema generation.
+  // Normalise to a single object regardless.
+  const rawCfg = member.HoPayrollConfig;
+  const stored = Array.isArray(rawCfg) ? (rawCfg[0] ?? null) : (rawCfg ?? null);
+
+  const rawBase = member.ManagementBaseSalary;
+  const baseRow = Array.isArray(rawBase) ? (rawBase[0] ?? null) : (rawBase ?? null);
+  const baseFallback = baseRow ? Number(baseRow.baseSalary) : 0;
 
   return {
     basicSalary:
@@ -93,11 +140,11 @@ function buildHoConfig(member: any, overrides: HoPayrollOverrides = {}): HoSalar
     attendanceAllowance:
       overrides.attendanceAllowance ?? (stored ? Number(stored.attendanceAllowance) : 0),
     loanInstalments:
-      overrides.loanInstalments ?? (stored ? Number(stored.loanInstalments) : 0),
+      overrides.loanInstalments ?? (stored ? Number((stored as any).loanInstalments ?? 0) : 0),
     festivalAdvance:
-      overrides.festivalAdvance ?? (stored ? Number(stored.festivalAdvance) : 0),
+      overrides.festivalAdvance ?? (stored ? Number((stored as any).festivalAdvance ?? 0) : 0),
     merchandiseDeduction:
-      overrides.merchandiseDeduction ?? (stored ? Number(stored.merchandiseDeduction) : 0),
+      overrides.merchandiseDeduction ?? (stored ? Number((stored as any).merchandiseDeduction ?? 0) : 0),
     epfEmployeeRate: DEFAULT_EPF_EMPLOYEE_RATE,
     epfEmployerRate: DEFAULT_EPF_EMPLOYER_RATE,
     etfEmployerRate: DEFAULT_ETF_EMPLOYER_RATE,
@@ -107,17 +154,14 @@ function buildHoConfig(member: any, overrides: HoPayrollOverrides = {}): HoSalar
 
 // ─── HoPayrollConfig CRUD ─────────────────────────────────────────────────────
 
-/**
- * Fetch standing HO allowance config for all management members.
- * Used by the "Configure Allowances" page.
- */
 export async function getHoPayrollConfigs() {
   const members = await getHoMembers();
   return members.map((m) => {
-    const cfg = m.HoPayrollConfig?.[0] ?? null;
-    const baseFallback = m.ManagementBaseSalary?.[0]
-      ? Number(m.ManagementBaseSalary[0].baseSalary)
-      : 0;
+    const rawCfg = m.HoPayrollConfig;
+    const cfg = Array.isArray(rawCfg) ? (rawCfg[0] ?? null) : (rawCfg ?? null);
+    const rawBase = m.ManagementBaseSalary;
+    const baseRow = Array.isArray(rawBase) ? (rawBase[0] ?? null) : (rawBase ?? null);
+    const baseFallback = baseRow ? Number(baseRow.baseSalary) : 0;
     return {
       memberId: m.id,
       name: m.nameWithInitials ?? m.empNo,
@@ -137,9 +181,6 @@ export async function getHoPayrollConfigs() {
   });
 }
 
-/**
- * Upsert the standing HO salary/allowance config for a single member.
- */
 export async function upsertHoPayrollConfig(
   memberId: number,
   data: {
@@ -157,7 +198,6 @@ export async function upsertHoPayrollConfig(
     update: { ...data },
   });
 
-  // Keep ManagementBaseSalary in sync so legacy paths still read correctly
   await prisma.managementBaseSalary.upsert({
     where: { memberId },
     create: { memberId, baseSalary: data.basicSalary },
@@ -173,10 +213,6 @@ export async function upsertHoPayrollConfig(
 export async function getHoPayrollPreview(
   year: number,
   month: number,
-  /**
-   * Per-member overrides for this specific payroll run (leavesTaken, one-off
-   * deductions, etc.). Keys are memberId.
-   */
   overridesMap: Record<number, HoPayrollOverrides> = {},
 ) {
   const startDate = new Date(Date.UTC(year, month - 1, 1));
@@ -194,11 +230,12 @@ export async function getHoPayrollPreview(
     members.map(async (member) => {
       const existing = existingBySalaryMemberId.get(member.id) ?? null;
       const alreadyProcessed = !!existing;
+      const isManagementStaff = !!member.position?.isManagement;
+      // ORC goes to BM-rank and above who are NOT management staff
+      const receivesOrc = !isManagementStaff;
 
       const memberOverrides = overridesMap[member.id] ?? {};
 
-      // When already processed, seed overrides from the saved record so the
-      // preview stays consistent with what was committed.
       const effectiveOverrides: HoPayrollOverrides = alreadyProcessed
         ? {
             basicSalary: memberOverrides.basicSalary ?? Number(existing!.baseSalary),
@@ -217,14 +254,35 @@ export async function getHoPayrollPreview(
       const hoConfig = buildHoConfig(member, effectiveOverrides);
       const leavesTaken = effectiveOverrides.leavesTaken ?? 0;
 
-      const orcEarned = await getOrcCommission(member.empNo, startDate, endDate);
+      // ORC — only for non-management permanent BM/RM/ZM/AGM/COO/GM
+      const orcEarned = receivesOrc
+        ? await getOrcCommission(member.empNo, startDate, endDate)
+        : 0;
+
+      // Personal commission & incentive — management staff only.
+      // Commission: 7% of volume always; 10% when volume >= 500K.
+      // Flat incentive: 15K only when volume >= 500K.
+      let personalCommission = 0;
+      let personalIncentive = 0;
+      let volumeAchieved = 0;
+      if (isManagementStaff) {
+        volumeAchieved = await getVolumeAchieved(member.id, startDate, endDate);
+        personalCommission = calcMgmtPersonalCommission(volumeAchieved);
+        if (volumeAchieved >= MGMT_PERSONAL_INCENTIVE_THRESHOLD) {
+          personalIncentive = MGMT_PERSONAL_INCENTIVE_AMOUNT;
+        }
+      }
 
       const breakdown = calculateHoPayroll(hoConfig, leavesTaken, orcEarned);
 
-      const { totalDeducted: advanceDeducted, deductionDetails, outstandingRemaining, outstandingTypes } =
-        await previewAdvanceDeductions(member.id, year, month, breakdown.netPay);
+      // Add personal incentive + personal commission to gross/net
+      const totalGross = breakdown.grossPay + personalIncentive + personalCommission;
+      const baseNetPay = totalGross - breakdown.totalDeductions;
 
-      const netPay = breakdown.netPay - advanceDeducted;
+      const { totalDeducted: advanceDeducted, deductionDetails, outstandingRemaining, outstandingTypes } =
+        await previewAdvanceDeductions(member.id, year, month, baseNetPay);
+
+      const netPay = baseNetPay - advanceDeducted;
 
       return {
         memberId: member.id,
@@ -235,9 +293,11 @@ export async function getHoPayrollPreview(
           member.branches.find((b) => b.isPrimary)?.branch?.name ??
           member.branches[0]?.branch?.name ??
           "—",
+        isManagementStaff,
+        receivesOrc,
         baseSalaryConfigured: hoConfig.basicSalary > 0,
 
-        // Earnings breakdown
+        // Allowance config (editable per-run)
         basicSalary: breakdown.basicSalary,
         fixedAllowance: breakdown.fixedAllowance,
         vehicleAllowance: breakdown.vehicleAllowance,
@@ -246,8 +306,14 @@ export async function getHoPayrollPreview(
         attendanceAllowance: breakdown.attendanceAllowance,
         attendanceAllowanceHit: breakdown.attendanceAllowanceHit,
         leavesTaken,
+
+        // Commission / incentive
         orcEarned: breakdown.orcEarned,
-        grossPay: breakdown.grossPay,
+        personalCommission,
+        personalIncentive,
+        volumeAchieved,
+
+        grossPay: totalGross,
 
         // Deductions
         epfDeduction: breakdown.epfEmployee,
@@ -255,7 +321,7 @@ export async function getHoPayrollPreview(
         festivalAdvance: breakdown.festivalAdvance,
         merchandiseDeduction: breakdown.merchandiseDeduction,
 
-        // Employer statutory (display only)
+        // Employer statutory
         epfEmployer: breakdown.epfEmployer,
         etfEmployer: breakdown.etfEmployer,
 
@@ -302,7 +368,6 @@ export async function runHoPayroll(
   for (const member of members) {
     const existing = existingByMemberId.get(member.id) ?? null;
 
-    // PAID rows are never overwritten — money already disbursed.
     if ((existing as any)?.status === "PAID") {
       skipped++;
       continue;
@@ -316,9 +381,26 @@ export async function runHoPayroll(
       const memberOverrides = overridesMap[member.id] ?? {};
       const hoConfig = buildHoConfig(member, memberOverrides);
       const leavesTaken = memberOverrides.leavesTaken ?? 0;
-      const orcEarned = await getOrcCommission(member.empNo, startDate, endDate);
+      const isManagementStaff = !!member.position?.isManagement;
+      const receivesOrc = !isManagementStaff;
+
+      const orcEarned = receivesOrc
+        ? await getOrcCommission(member.empNo, startDate, endDate)
+        : 0;
+
+      let personalCommission = 0;
+      let personalIncentive = 0;
+      if (isManagementStaff) {
+        const vol = await getVolumeAchieved(member.id, startDate, endDate);
+        personalCommission = calcMgmtPersonalCommission(vol);
+        if (vol >= MGMT_PERSONAL_INCENTIVE_THRESHOLD) {
+          personalIncentive = MGMT_PERSONAL_INCENTIVE_AMOUNT;
+        }
+      }
 
       const breakdown = calculateHoPayroll(hoConfig, leavesTaken, orcEarned);
+      const totalGross = breakdown.grossPay + personalIncentive + personalCommission;
+      const baseNetPay = totalGross - breakdown.totalDeductions;
 
       await prisma.$transaction(async (tx) => {
         const { totalDeducted } = await applyAdvanceDeductions(
@@ -326,25 +408,24 @@ export async function runHoPayroll(
           member.id,
           year,
           month,
-          breakdown.netPay,
+          baseNetPay,
         );
-        const finalNetPay = breakdown.netPay - totalDeducted;
+        const finalNetPay = baseNetPay - totalDeducted;
 
         await tx.managementSalary.upsert({
           where: { memberId_month: { memberId: member.id, month: monthDate } },
           create: {
             memberId: member.id,
             month: monthDate,
-            // Core fields (always present)
             baseSalary: hoConfig.basicSalary,
-            personalCommissionEarned: 0,   // HO track has no personal commission
+            personalCommissionEarned: personalCommission,
+            personalIncentive,
             orcEarned: breakdown.orcEarned,
             advanceDeduction: totalDeducted,
             epfDeduction: breakdown.epfEmployee,
-            grossPay: breakdown.grossPay,
+            grossPay: totalGross,
             netPay: finalNetPay,
             status: "PENDING",
-            // Extended HO detail fields
             fixedAllowance: hoConfig.fixedAllowance,
             vehicleAllowance: hoConfig.vehicleAllowance,
             fuelAllowance: hoConfig.fuelAllowance,
@@ -359,10 +440,12 @@ export async function runHoPayroll(
           },
           update: {
             baseSalary: hoConfig.basicSalary,
+            personalCommissionEarned: personalCommission,
+            personalIncentive,
             orcEarned: breakdown.orcEarned,
             advanceDeduction: totalDeducted,
             epfDeduction: breakdown.epfEmployee,
-            grossPay: breakdown.grossPay,
+            grossPay: totalGross,
             netPay: finalNetPay,
             fixedAllowance: hoConfig.fixedAllowance,
             vehicleAllowance: hoConfig.vehicleAllowance,
@@ -411,23 +494,24 @@ export async function getHoPayrollHistory(memberId: number) {
 }
 
 // ─── Legacy compat exports ────────────────────────────────────────────────────
-// These keep the existing "base salary" admin page working without changes.
 
 export async function getManagementBaseSalaries() {
   const members = await getHoMembers();
-  return members.map((m) => ({
-    memberId: m.id,
-    name: m.nameWithInitials ?? m.empNo,
-    empNo: m.empNo,
-    position: m.position?.title ?? "—",
-    primaryBranch:
-      m.branches.find((b) => b.isPrimary)?.branch?.name ??
-      m.branches[0]?.branch?.name ??
-      "—",
-    baseSalary: m.ManagementBaseSalary?.[0]
-      ? Number(m.ManagementBaseSalary[0].baseSalary)
-      : 0,
-  }));
+  return members.map((m) => {
+    const rawBase = m.ManagementBaseSalary;
+    const baseRow = Array.isArray(rawBase) ? (rawBase[0] ?? null) : (rawBase ?? null);
+    return {
+      memberId: m.id,
+      name: m.nameWithInitials ?? m.empNo,
+      empNo: m.empNo,
+      position: m.position?.title ?? "—",
+      primaryBranch:
+        m.branches.find((b) => b.isPrimary)?.branch?.name ??
+        m.branches[0]?.branch?.name ??
+        "—",
+      baseSalary: baseRow ? Number(baseRow.baseSalary) : 0,
+    };
+  });
 }
 
 export async function upsertManagementBaseSalary(memberId: number, baseSalary: number) {
