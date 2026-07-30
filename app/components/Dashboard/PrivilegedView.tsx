@@ -112,9 +112,10 @@ export const PrivilegedView = ({ data, userName, userRole, achieved, target, per
           <FloatingKpiCard
             icon={<BarChart2 className="w-5 h-5" />}
             title="Efficiency Rate"
-            value="16%"
+            value={`${percentage}%`}
             subValue="Overall performance target"
-            trend="neutral"
+            trend={percentage >= 50 ? "up" : "neutral"}
+            trendValue={`Rs. ${(Math.floor(achieved / 10000) / 100).toFixed(1)}M / 500M`}
           />
         </div>
 

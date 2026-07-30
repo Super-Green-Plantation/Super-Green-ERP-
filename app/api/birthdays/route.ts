@@ -7,6 +7,7 @@ export async function GET() {
       nameWithInitials: true,
       dob: true,
       phone: true,
+      isActive: true,
       position: { select: { title: true } },
       branches: {
         select: {

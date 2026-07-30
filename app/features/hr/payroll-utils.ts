@@ -22,8 +22,8 @@ export type ActiveTeamCounts = {
 export type HoSalaryConfig = {
   basicSalary: number;
   fixedAllowance: number;
-  vehicleAllowance: number;
-  fuelAllowance: number;
+  vehicleAllowance: number;        // flat LKR; from PositionSalary or per-member override
+  fuelAllowance: number;           // flat LKR; configured per member
   channelOperation: number;        // channel operation & incentive bonus
   attendanceAllowance: number;     // awarded on perfect (≤ 1.5 leaves) attendance
   // ORC is pre-computed from Commission records and passed in externally.
@@ -46,8 +46,8 @@ export type HoPayrollBreakdown = {
   // Earnings
   basicSalary: number;
   fixedAllowance: number;
-  vehicleAllowance: number;
-  fuelAllowance: number;
+  vehicleAllowance: number;        // flat LKR amount
+  fuelAllowance: number;           // flat LKR amount
   channelOperation: number;
   incentive: number;               // channelOperation alias kept for schema compat
   attendanceAllowance: number;
@@ -226,6 +226,12 @@ export function calculateHoPayroll(
   const leaves = safe(leavesTaken);
   const orc = safe(orcEarned);
 
+  const basic = safe(c.basicSalary);
+
+  // Vehicle and fuel are flat LKR amounts from config
+  const vehicleAllowance = safe(c.vehicleAllowance);
+  const fuelAllowance = safe(c.fuelAllowance);
+
   // Attendance allowance: awarded when leaves ≤ threshold
   const maxLeaves = safe(c.maxLeavesWithoutDeduction) || 1.5;
   const attendanceAllowanceHit = leaves <= maxLeaves;
@@ -233,16 +239,16 @@ export function calculateHoPayroll(
 
   // Gross earnings
   const grossPay =
-    safe(c.basicSalary) +
+    basic +
     safe(c.fixedAllowance) +
-    safe(c.vehicleAllowance) +
-    safe(c.fuelAllowance) +
+    vehicleAllowance +
+    fuelAllowance +
     safe(c.channelOperation) +
     attendanceAllowance +
     orc;
 
   // EPF deducted from basic salary only
-  const epfEmployee = safe(c.basicSalary) * safe(c.epfEmployeeRate);
+  const epfEmployee = basic * safe(c.epfEmployeeRate);
 
   // Other deductions
   const loanInstalments = safe(c.loanInstalments);
@@ -251,16 +257,16 @@ export function calculateHoPayroll(
   const totalDeductions = epfEmployee + loanInstalments + festivalAdvance + merchandiseDeduction;
 
   // Employer statutory (non-deductible from netPay, reported separately)
-  const epfEmployer = safe(c.basicSalary) * safe(c.epfEmployerRate);
-  const etfEmployer = safe(c.basicSalary) * safe(c.etfEmployerRate);
+  const epfEmployer = basic * safe(c.epfEmployerRate);
+  const etfEmployer = basic * safe(c.etfEmployerRate);
 
   const netPay = grossPay - totalDeductions;
 
   return {
-    basicSalary: safe(c.basicSalary),
+    basicSalary: basic,
     fixedAllowance: safe(c.fixedAllowance),
-    vehicleAllowance: safe(c.vehicleAllowance),
-    fuelAllowance: safe(c.fuelAllowance),
+    vehicleAllowance,
+    fuelAllowance,
     channelOperation: safe(c.channelOperation),
     incentive: safe(c.channelOperation), // alias
     attendanceAllowance,
@@ -571,5 +577,161 @@ export function calculatePayroll(
 
     grossPay: bd.grossPay,
     netPay: bd.netPay,
+  };
+}
+// ─── PERMANENT BM / RM / ZM SALARY CALC ─────────────────────────────────────
+
+/**
+ * Basic salary achievement thresholds by tenure month.
+ * Month 1–6 have stepped requirements; month 7+ requires 100%.
+ * Same ramp applies to all permanent BM/RM/ZM/AGM ranks.
+ */
+const BASIC_SALARY_THRESHOLDS: Record<number, number> = {
+  1: 0.25,
+  2: 0.35,
+  3: 0.45,
+  4: 0.60,
+  5: 0.70,
+  6: 0.80,
+};
+const BASIC_SALARY_THRESHOLD_AFTER_6 = 1.00;
+
+export function getBasicSalaryThreshold(tenureMonth: number): number {
+  if (tenureMonth <= 0) return BASIC_SALARY_THRESHOLDS[1];
+  if (tenureMonth >= 7) return BASIC_SALARY_THRESHOLD_AFTER_6;
+  return BASIC_SALARY_THRESHOLDS[tenureMonth] ?? BASIC_SALARY_THRESHOLD_AFTER_6;
+}
+
+export type PermBmSalaryConfig = {
+  // From PositionSalary
+  basicSalary: number;           // basicSalaryPermanent
+  monthlyTarget: number;         // PositionSalary.monthlyTarget
+  incentive75Amount: number;     // incentivePartialAmount (at 75% target)
+  incentive100Amount: number;    // incentiveAmount (at 100% target)
+  vehicleFuelAmount: number;     // allowanceAmount (vehicle+fuel combined)
+  vehicleFuelThresholdPct: number; // allowanceThresholdPermanent (0.50)
+  vehicleFuelUnconditional: boolean; // true for RM/ZM/AGM months 1–4
+  // Statutory
+  epfEmployeeRate: number;
+  epfEmployerRate: number;
+  etfEmployerRate: number;
+};
+
+export type PermBmPayrollBreakdown = {
+  // Inputs
+  volumeAchieved: number;
+  monthlyTarget: number;
+  achievementPct: number;
+  tenureMonth: number;
+  basicSalaryThresholdPct: number;
+
+  // Basic salary
+  basicSalaryHit: boolean;
+  basicSalary: number;           // 0 if threshold not met
+
+  // Incentives — mutually exclusive: 100% wins over 75%
+  incentive100Hit: boolean;
+  incentive100Earned: number;
+  incentive75Hit: boolean;       // only true when 75% ≤ achievement < 100%
+  incentive75Earned: number;
+
+  // Vehicle + fuel (combined)
+  vehicleFuelHit: boolean;
+  vehicleFuelEarned: number;
+
+  // ORC passed in externally
+  orcEarned: number;
+
+  // Statutory (EPF on basic only)
+  epfEmployee: number;
+  epfEmployer: number;
+  etfEmployer: number;
+
+  grossPay: number;
+  totalDeductions: number;
+  netPay: number;
+};
+
+/**
+ * Calculates salary for permanent BM / RM / ZM / AGM (HO track, volume-gated).
+ *
+ * Rules:
+ *  - Basic salary: released when achievementPct >= getBasicSalaryThreshold(tenureMonth)
+ *  - 100% incentive: achievementPct >= 1.0  → earns incentive100Amount ONLY
+ *  - 75% incentive:  achievementPct >= 0.75 AND < 1.0 → earns incentive75Amount ONLY
+ *    (100% and 75% are mutually exclusive — 100% winner takes all)
+ *  - Vehicle+Fuel: achievementPct >= vehicleFuelThresholdPct (0.50),
+ *    OR unconditional when vehicleFuelUnconditional=true (RM/ZM/AGM, months 1–4)
+ *  - EPF computed on basic salary only (same as HO fixed-salary track)
+ *  - ORC passed in pre-computed (from Commission rows, type=UPLINE)
+ *  - No personal commission on this track (commission is via ORC hierarchy)
+ */
+export function calculatePermBmPayroll(
+  config: PermBmSalaryConfig,
+  volumeAchieved: number,
+  tenureMonth: number,
+  orcEarned: number = 0,
+): PermBmPayrollBreakdown {
+  const vol = safe(volumeAchieved);
+  const target = safe(config.monthlyTarget);
+  const orc = safe(orcEarned);
+  const achievementPct = target > 0 ? vol / target : 0;
+
+  // ── Basic salary ───────────────────────────────────────────────────────────
+  const basicThresholdPct = getBasicSalaryThreshold(tenureMonth);
+  const basicSalaryHit = target > 0 && achievementPct >= basicThresholdPct;
+  const basicSalary = basicSalaryHit ? safe(config.basicSalary) : 0;
+
+  // ── Incentives (mutually exclusive) ───────────────────────────────────────
+  const incentive100Hit = target > 0 && achievementPct >= 1.0;
+  const incentive100Earned = incentive100Hit ? safe(config.incentive100Amount) : 0;
+
+  // 75% tier: only when achievement >= 75% AND strictly < 100%
+  const incentive75Hit = !incentive100Hit && target > 0 && achievementPct >= 0.75;
+  const incentive75Earned = incentive75Hit ? safe(config.incentive75Amount) : 0;
+
+  // ── Vehicle + fuel ─────────────────────────────────────────────────────────
+  const vehicleFuelHit =
+    config.vehicleFuelUnconditional ||
+    (target > 0 && achievementPct >= safe(config.vehicleFuelThresholdPct));
+  const vehicleFuelEarned = vehicleFuelHit ? safe(config.vehicleFuelAmount) : 0;
+
+  // ── Gross ──────────────────────────────────────────────────────────────────
+  const grossPay =
+    basicSalary +
+    incentive75Earned +
+    incentive100Earned +
+    vehicleFuelEarned +
+    orc;
+
+  // ── Statutory (EPF on basic salary only) ──────────────────────────────────
+  const epfEmployee = basicSalary * safe(config.epfEmployeeRate);
+  const epfEmployer = basicSalary * safe(config.epfEmployerRate);
+  const etfEmployer = basicSalary * safe(config.etfEmployerRate);
+
+  const totalDeductions = epfEmployee;
+  const netPay = grossPay - totalDeductions;
+
+  return {
+    volumeAchieved: vol,
+    monthlyTarget: target,
+    achievementPct,
+    tenureMonth,
+    basicSalaryThresholdPct: basicThresholdPct,
+    basicSalaryHit,
+    basicSalary,
+    incentive100Hit,
+    incentive100Earned,
+    incentive75Hit,
+    incentive75Earned,
+    vehicleFuelHit,
+    vehicleFuelEarned,
+    orcEarned: orc,
+    epfEmployee,
+    epfEmployer,
+    etfEmployer,
+    grossPay,
+    totalDeductions,
+    netPay,
   };
 }
