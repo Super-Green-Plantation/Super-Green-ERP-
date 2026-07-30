@@ -5,7 +5,9 @@ import {
   Loader2, Play, RefreshCw, AlertTriangle, CheckCircle2,
   ChevronDown, TrendingUp, Banknote, Car, Percent, Users,
   TicketSlash,
-  FileSpreadsheet
+  FileSpreadsheet,
+  FileText,
+  ReceiptText
 } from "lucide-react";
 import { getBranches } from "@/app/features/branches/actions";
 import { toast } from "sonner";
@@ -13,6 +15,7 @@ import { getPayrollPreview, runMonthlyPayroll } from "../payroll-action";
 import Heading from "@/app/components/Heading";
 import Link from "next/link";
 import { exportPayrollToExcel } from "./exportPayrollToExcel";
+import { downloadPayrollReceiptsPDF, downloadPayrollSummaryPDF } from "./exportPayrollToPDF";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -209,13 +212,48 @@ export default function PayrollPage() {
           Advance
         </Link>
 
-        <button
-          onClick={() => exportPayrollToExcel(preview, branches.find(b => b.id === selectedBranchId)?.name ?? "Branch", months[month - 1], year)}
-          className="flex items-center gap-2 px-6 py-3 bg-card border border-border hover:bg-muted text-foreground text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-sm active:scale-95"
-        >
-          <FileSpreadsheet className="w-4 h-4" />
-          Export Excel
-        </button>
+       {/* ── existing Export Excel button ── */}
+<button
+  onClick={() => exportPayrollToExcel(preview, branches.find(b => b.id === selectedBranchId)?.name ?? "Branch", months[month - 1], year)}
+  className="flex items-center gap-2 px-6 py-3 bg-card border border-border hover:bg-muted text-foreground text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-sm active:scale-95"
+>
+  <FileSpreadsheet className="w-4 h-4" />
+  Export Excel
+</button>
+
+{/* ── NEW: Batch Summary PDF ── */}
+<button
+  onClick={() =>
+    downloadPayrollSummaryPDF(
+      preview,
+      branches.find((b) => b.id === selectedBranchId)?.name ?? "Branch",
+      month,
+      year,
+    )
+  }
+  disabled={preview.length === 0}
+  className="flex items-center gap-2 px-6 py-3 bg-card border border-border hover:bg-muted text-foreground text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-40"
+>
+  <FileText className="w-4 h-4" />
+  Batch PDF
+</button>
+
+{/* ── NEW: Individual FA receipts PDF (one per employee) ── */}
+<button
+  onClick={() =>
+    downloadPayrollReceiptsPDF(
+      preview,
+      branches.find((b) => b.id === selectedBranchId)?.name ?? "Branch",
+      month,
+      year,
+    )
+  }
+  disabled={preview.length === 0}
+  className="flex items-center gap-2 px-6 py-3 bg-primary/10 border border-primary/20 hover:bg-primary/20 text-primary text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-40"
+>
+  <ReceiptText className="w-4 h-4" />
+  Pay Receipts PDF
+</button>
 
       </div>
 

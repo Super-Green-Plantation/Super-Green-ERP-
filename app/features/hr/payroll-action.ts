@@ -631,10 +631,55 @@ export async function runMonthlyPayroll(
 }
 
 // ─── getPayrollHistory ────────────────────────────────────────────────────────
+// Drop-in replacement for the existing function in payroll-action.ts
+// Now selects every field needed by both FAPaySheet and HOPaySheet.
 
 export async function getPayrollHistory(memberId: number) {
   return prisma.monthlyPayroll.findMany({
     where: { memberId },
     orderBy: [{ year: "desc" }, { month: "desc" }],
+    select: {
+      id: true,
+      year: true,
+      month: true,
+      payrollCategory: true,
+
+      // Performance / Marketing
+      volumeAchieved: true,
+      monthlyTarget: true,
+      targetBudgetSalary: true,
+      incentiveEarned: true,
+      incentivePartialEarned: true,
+      excessCommission: true,
+      excessEarned: true,
+      vehicleEarned: true,
+      activationAllowanceEarned: true,
+      commissionEarned: true,
+      orcEarned: true,
+
+      // Status flags
+      incentiveHit: true,
+      incentivePartialHit: true,
+      vehicleHit: true,
+      tenureMonthCount: true,
+
+      // HO fields
+      basicSalaryPermanent: true,
+      fixedAllowance: true,
+      fuelAllowance: true,
+      channelOperation: true,
+      attendanceAllowance: true,
+      loanInstalments: true,
+      festivalAdvance: true,
+      merchandiseDeduction: true,
+
+      // Common
+      grossPay: true,
+      netPay: true,
+      epfDeduction: true,
+      epfEmployer: true,
+      etfEmployer: true,
+      advanceDeducted: true,
+    },
   });
 }
