@@ -50,6 +50,9 @@ export default function RootLayout({
         <Analytics />
         <Toast>{children}</Toast>
         <SupportButton />
+        <span className="fixed top-2 right-3 text-xs text-muted-foreground opacity-50 select-none">
+  v{process.env.NEXT_PUBLIC_APP_VERSION}
+</span>
       </body>
     </html>
   );

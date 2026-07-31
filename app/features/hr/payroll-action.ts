@@ -318,32 +318,32 @@ export async function getPayrollPreview(
 
       const hoConfig = payrollCategory === "HEAD_OFFICE"
         ? {
-            basicSalary: mgtBaseSalary,
-            fixedAllowance: 0,
-            vehicleAllowance: 0,
-            fuelAllowance: 0,
-            channelOperation: 0,
-            attendanceAllowance: 0,
-            loanInstalments: 0,
-            festivalAdvance: 0,
-            merchandiseDeduction: 0,
-            epfEmployeeRate: 0.08,
-            epfEmployerRate: 0.12,
-            etfEmployerRate: 0.03,
-            maxLeavesWithoutDeduction: 1.5,
-          }
+          basicSalary: mgtBaseSalary,
+          fixedAllowance: 0,
+          vehicleAllowance: 0,
+          fuelAllowance: 0,
+          channelOperation: 0,
+          attendanceAllowance: 0,
+          loanInstalments: 0,
+          festivalAdvance: 0,
+          merchandiseDeduction: 0,
+          epfEmployeeRate: 0.08,
+          epfEmployerRate: 0.12,
+          etfEmployerRate: 0.03,
+          maxLeavesWithoutDeduction: 1.5,
+        }
         : null;
 
       const mktConfig = payrollCategory === "MARKETING"
         ? buildMktConfig(
-            positionTargetData,
-            tenureMonthCount,
-            Number(positionTargetRow?.excessRate ?? 0.005),
-            (member as any).position?.salary ?? null,
-            // Pass Position.targetBudgetAmount to gate/cap the target budget salary.
-            // Only FA has this non-zero; TL/BM/RM etc. are 0 → no target budget.
-            Number((member as any).position?.targetBudgetAmount ?? 0),
-          )
+          positionTargetData,
+          tenureMonthCount,
+          Number(positionTargetRow?.excessRate ?? 0.005),
+          (member as any).position?.salary ?? null,
+          // Pass Position.targetBudgetAmount to gate/cap the target budget salary.
+          // Only FA has this non-zero; TL/BM/RM etc. are 0 → no target budget.
+          Number((member as any).position?.targetBudgetAmount ?? 0),
+        )
         : null;
 
       let breakdown = null;
@@ -385,6 +385,7 @@ export async function getPayrollPreview(
         memberId: member.id,
         name: member.nameWithInitials ?? member.name,
         empNo: member.empNo,
+        dateOfJoin: member.dateOfJoin ?? null, 
         position: member.position?.title ?? "—",
         status: member.status,
         payrollCategory,
@@ -510,30 +511,30 @@ export async function runMonthlyPayroll(
 
       const hoConfig = payrollCategory === "HEAD_OFFICE"
         ? {
-            basicSalary: mgtBaseSalary,
-            fixedAllowance: 0,
-            vehicleAllowance: 0,
-            fuelAllowance: 0,
-            channelOperation: 0,
-            attendanceAllowance: 0,
-            loanInstalments: 0,
-            festivalAdvance: 0,
-            merchandiseDeduction: 0,
-            epfEmployeeRate: 0.08,
-            epfEmployerRate: 0.12,
-            etfEmployerRate: 0.03,
-            maxLeavesWithoutDeduction: 1.5,
-          }
+          basicSalary: mgtBaseSalary,
+          fixedAllowance: 0,
+          vehicleAllowance: 0,
+          fuelAllowance: 0,
+          channelOperation: 0,
+          attendanceAllowance: 0,
+          loanInstalments: 0,
+          festivalAdvance: 0,
+          merchandiseDeduction: 0,
+          epfEmployeeRate: 0.08,
+          epfEmployerRate: 0.12,
+          etfEmployerRate: 0.03,
+          maxLeavesWithoutDeduction: 1.5,
+        }
         : null;
 
       const mktConfig = payrollCategory === "MARKETING"
         ? buildMktConfig(
-            positionTargetData,
-            tenureMonthCount,
-            Number(positionTargetRow?.excessRate ?? 0.005),
-            (member as any).position?.salary ?? null,
-            Number((member as any).position?.targetBudgetAmount ?? 0),
-          )
+          positionTargetData,
+          tenureMonthCount,
+          Number(positionTargetRow?.excessRate ?? 0.005),
+          (member as any).position?.salary ?? null,
+          Number((member as any).position?.targetBudgetAmount ?? 0),
+        )
         : null;
 
       if (payrollCategory === "HEAD_OFFICE" && !hoConfig) {

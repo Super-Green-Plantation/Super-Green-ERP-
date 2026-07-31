@@ -4,10 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import {
   Loader2, Play, RefreshCw, AlertTriangle, CheckCircle2,
   ChevronDown, TrendingUp, Banknote, Car, Percent, Users,
-  TicketSlash,
-  FileSpreadsheet,
-  FileText,
-  ReceiptText
+  TicketSlash, FileSpreadsheet, Download,
 } from "lucide-react";
 import { getBranches } from "@/app/features/branches/actions";
 import { toast } from "sonner";
@@ -15,7 +12,7 @@ import { getPayrollPreview, runMonthlyPayroll } from "../payroll-action";
 import Heading from "@/app/components/Heading";
 import Link from "next/link";
 import { exportPayrollToExcel } from "./exportPayrollToExcel";
-import { downloadPayrollReceiptsPDF, downloadPayrollSummaryPDF } from "./exportPayrollToPDF";
+import { generateMemberPayslipPDF } from "@/app/pdf/generateMemberPayslipPDF";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -212,48 +209,13 @@ export default function PayrollPage() {
           Advance
         </Link>
 
-       {/* ── existing Export Excel button ── */}
-<button
-  onClick={() => exportPayrollToExcel(preview, branches.find(b => b.id === selectedBranchId)?.name ?? "Branch", months[month - 1], year)}
-  className="flex items-center gap-2 px-6 py-3 bg-card border border-border hover:bg-muted text-foreground text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-sm active:scale-95"
->
-  <FileSpreadsheet className="w-4 h-4" />
-  Export Excel
-</button>
-
-{/* ── NEW: Batch Summary PDF ── */}
-<button
-  onClick={() =>
-    downloadPayrollSummaryPDF(
-      preview,
-      branches.find((b) => b.id === selectedBranchId)?.name ?? "Branch",
-      month,
-      year,
-    )
-  }
-  disabled={preview.length === 0}
-  className="flex items-center gap-2 px-6 py-3 bg-card border border-border hover:bg-muted text-foreground text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-40"
->
-  <FileText className="w-4 h-4" />
-  Batch PDF
-</button>
-
-{/* ── NEW: Individual FA receipts PDF (one per employee) ── */}
-<button
-  onClick={() =>
-    downloadPayrollReceiptsPDF(
-      preview,
-      branches.find((b) => b.id === selectedBranchId)?.name ?? "Branch",
-      month,
-      year,
-    )
-  }
-  disabled={preview.length === 0}
-  className="flex items-center gap-2 px-6 py-3 bg-primary/10 border border-primary/20 hover:bg-primary/20 text-primary text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-40"
->
-  <ReceiptText className="w-4 h-4" />
-  Pay Receipts PDF
-</button>
+        <button
+          onClick={() => exportPayrollToExcel(preview, branches.find(b => b.id === selectedBranchId)?.name ?? "Branch", months[month - 1], year)}
+          className="flex items-center gap-2 px-6 py-3 bg-card border border-border hover:bg-muted text-foreground text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-sm active:scale-95"
+        >
+          <FileSpreadsheet className="w-4 h-4" />
+          Export Excel
+        </button>
 
       </div>
 
@@ -328,6 +290,7 @@ export default function PayrollPage() {
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Total Deduction</th>
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Net Pay</th>
                   <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Status</th>
+                  <th className="px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Payslip</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -473,6 +436,63 @@ export default function PayrollPage() {
                           Wait
                         </span>
                       )}
+                    </td>
+
+                    {/* ── Per-row payslip download ── */}
+                    <td className="px-4 py-4 text-center">
+                      <button
+                        disabled={!row.alreadyProcessed}
+                        title={row.alreadyProcessed ? "Download payslip PDF" : "Run payroll first"}
+                        onClick={() => {
+                          // Shape the preview row into the record format generateMemberPayslipPDF expects
+                          const payrollRecord = {
+                            year,
+                            month,
+                            payrollCategory: "MARKETING" as const,
+                            volumeAchieved:           row.volumeAchieved ?? 0,
+                            monthlyTarget:            row.breakdown?.monthlyTarget ?? 0,
+                            targetBudgetSalary:       row.breakdown?.targetBudgetSalary ?? 0,
+                            incentiveEarned:          row.breakdown?.incentiveEarned ?? 0,
+                            incentivePartialEarned:   row.breakdown?.incentivePartialEarned ?? 0,
+                            excessCommission:         row.breakdown?.excessCommission ?? 0,
+                            excessEarned:             row.breakdown?.excessEarned ?? 0,
+                            vehicleEarned:            row.breakdown?.vehicleEarned ?? 0,
+                            activationAllowanceEarned: row.breakdown?.teamActiveEarned ?? 0,
+                            commissionEarned:         row.personalCommissionEarned ?? 0,
+                            orcEarned:                row.orcEarned ?? 0,
+                            grossPay:                 row.breakdown?.grossPay ?? 0,
+                            netPay:                   row.breakdown?.netPay ?? 0,
+                            epfDeduction:             row.breakdown?.epfDeduction ?? 0,
+                            epfEmployer:              row.breakdown?.epfEmployer ?? 0,
+                            etfEmployer:              row.breakdown?.etfEmployer ?? 0,
+                            advanceDeducted:          row.advanceDeducted ?? 0,
+                            incentiveHit:             row.breakdown?.incentiveHit ?? false,
+                            incentivePartialHit:      row.breakdown?.incentivePartialHit ?? false,
+                            vehicleHit:               row.breakdown?.vehicleHit ?? false,
+                            tenureMonthCount:         row.tenureMonthCount ?? 0,
+                            // HO fields not needed for marketing rows
+                            basicSalaryPermanent: 0,
+                            fixedAllowance: 0,
+                            fuelAllowance: 0,
+                            channelOperation: 0,
+                            attendanceAllowance: 0,
+                            loanInstalments: 0,
+                            festivalAdvance: 0,
+                            merchandiseDeduction: 0,
+                          };
+                          const memberShape = {
+                            nameWithInitials: row.name,
+                            empNo:            row.empNo,
+                            dateOfJoin:       row.dateOfJoin ?? null, // add dateOfJoin to getPayrollPreview return object to populate this
+                            position:         { title: row.position },
+                            branches:         [{ branch: { name: branches.find((b) => b.id === selectedBranchId)?.name ?? "—" } }],
+                          };
+                          generateMemberPayslipPDF(payrollRecord, memberShape);
+                        }}
+                        className="p-2 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 transition-all active:scale-95 disabled:opacity-25 disabled:cursor-not-allowed disabled:hover:bg-primary/10"
+                      >
+                        <Download className="w-4 h-4" />
+                      </button>
                     </td>
                   </tr>
                 ))}
