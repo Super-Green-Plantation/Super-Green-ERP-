@@ -576,6 +576,8 @@ model Commission {
   createdAt    DateTime       @default(now())
   refNumber    String?        @unique
   branchId     Int
+  month        Int
+  year         Int
   Branch       Branch         @relation(fields: [branchId], references: [id])
   investment   Investment     @relation(fields: [investmentId], references: [id], onDelete: Cascade)
   member       Member         @relation(fields: [memberEmpNo], references: [empNo], onDelete: Cascade)
@@ -686,6 +688,7 @@ model Quotation {
   frequency         QuotationFrequency
   duration          Int
   premium           Float
+    pensionPayoutYears Int?
   retirementAge     Int?
   totalInvested     Float
   interestRate      Float

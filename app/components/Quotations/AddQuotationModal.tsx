@@ -9,15 +9,14 @@ import { createQuotation } from "@/app/features/quotations/actions";
 
 type PlanType = "CHILD" | "MARGE" | "PENSION";
 type PaymentFrequency = "MONTHLY" | "QUARTERLY" | "SEMI_ANNUAL" | "ANNUAL";
-type PlanDuration = number; // years
 
 interface PlanConfig {
   label: string;
-  payingTerm: number; // years
+  payingTerm: number;
   durations: number[];
   minPremium: Record<PaymentFrequency, number>;
   commissionRate: Record<PaymentFrequency, number>;
-  maturityRates: Record<PaymentFrequency, number>; // after full term
+  maturityRates: Record<PaymentFrequency, number>;
   earlyWithdrawalRates?: { afterYears: number; rate: number }[];
 }
 
@@ -25,27 +24,12 @@ interface PlanConfig {
 
 const PLANS: Record<PlanType, PlanConfig> = {
   CHILD: {
-    label: "Child Plan ( )",
+    label: "Child Plan (Ran Aswanu)",
     payingTerm: 3,
     durations: [6, 9, 12],
-    minPremium: {
-      MONTHLY: 15000,
-      QUARTERLY: 50000,
-      SEMI_ANNUAL: 100000,
-      ANNUAL: 200000,
-    },
-    commissionRate: {
-      MONTHLY: 2.5,
-      QUARTERLY: 5,
-      SEMI_ANNUAL: 7,
-      ANNUAL: 8,
-    },
-    maturityRates: {
-      MONTHLY: 15,
-      QUARTERLY: 18,
-      SEMI_ANNUAL: 21,
-      ANNUAL: 24,
-    },
+    minPremium: { MONTHLY: 15000, QUARTERLY: 50000, SEMI_ANNUAL: 100000, ANNUAL: 200000 },
+    commissionRate: { MONTHLY: 2.5, QUARTERLY: 5, SEMI_ANNUAL: 7, ANNUAL: 8 },
+    maturityRates: { MONTHLY: 15, QUARTERLY: 18, SEMI_ANNUAL: 21, ANNUAL: 24 },
     earlyWithdrawalRates: [
       { afterYears: 3, rate: 12 },
       { afterYears: 4, rate: 15 },
@@ -56,24 +40,9 @@ const PLANS: Record<PlanType, PlanConfig> = {
     label: "Marge Plan",
     payingTerm: 5,
     durations: [5, 10, 15],
-    minPremium: {
-      MONTHLY: 15000,
-      QUARTERLY: 50000,
-      SEMI_ANNUAL: 100000,
-      ANNUAL: 200000,
-    },
-    commissionRate: {
-      MONTHLY: 2.5,
-      QUARTERLY: 5,
-      SEMI_ANNUAL: 7,
-      ANNUAL: 8,
-    },
-    maturityRates: {
-      MONTHLY: 15,
-      QUARTERLY: 18,
-      SEMI_ANNUAL: 21,
-      ANNUAL: 24,
-    },
+    minPremium: { MONTHLY: 15000, QUARTERLY: 50000, SEMI_ANNUAL: 100000, ANNUAL: 200000 },
+    commissionRate: { MONTHLY: 2.5, QUARTERLY: 5, SEMI_ANNUAL: 7, ANNUAL: 8 },
+    maturityRates: { MONTHLY: 15, QUARTERLY: 18, SEMI_ANNUAL: 21, ANNUAL: 24 },
     earlyWithdrawalRates: [
       { afterYears: 4, rate: 12 },
       { afterYears: 5, rate: 15 },
@@ -84,32 +53,21 @@ const PLANS: Record<PlanType, PlanConfig> = {
     label: "Pension Plan",
     payingTerm: 10,
     durations: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-    minPremium: {
-      MONTHLY: 15000,
-      QUARTERLY: 50000,
-      SEMI_ANNUAL: 100000,
-      ANNUAL: 200000,
-    },
-    commissionRate: {
-      MONTHLY: 2.5,
-      QUARTERLY: 5,
-      SEMI_ANNUAL: 7,
-      ANNUAL: 8,
-    },
-    maturityRates: {
-      MONTHLY: 0, // calculated by duration
-      QUARTERLY: 0,
-      SEMI_ANNUAL: 0,
-      ANNUAL: 0,
-    },
+    minPremium: { MONTHLY: 15000, QUARTERLY: 50000, SEMI_ANNUAL: 100000, ANNUAL: 200000 },
+    commissionRate: { MONTHLY: 2.5, QUARTERLY: 5, SEMI_ANNUAL: 7, ANNUAL: 8 },
+    maturityRates: { MONTHLY: 0, QUARTERLY: 0, SEMI_ANNUAL: 0, ANNUAL: 0 },
   },
 };
 
 // Pension interest rates by duration
 const PENSION_RATES: Record<"monthly_quarterly" | "semi_annual_annual", Record<number, number>> = {
-  monthly_quarterly: { 1: 6, 2: 9, 3: 12, 4: 15, 5: 18, 6: 20, 7: 20, 8: 20, 9: 20, 10: 20 },
-  semi_annual_annual: { 1: 10, 2: 12, 3: 15, 4: 18, 5: 18, 6: 20, 7: 20, 8: 20, 9: 20, 10: 20 },
+  monthly_quarterly:   { 1: 6, 2: 9, 3: 12, 4: 15, 5: 18, 6: 20, 7: 20, 8: 20, 9: 20, 10: 20 },
+  semi_annual_annual:  { 1: 10, 2: 12, 3: 15, 4: 18, 5: 18, 6: 20, 7: 20, 8: 20, 9: 20, 10: 20 },
 };
+
+// Pension payout term options (years → months)
+const PENSION_PAYOUT_YEARS = [1, 2, 3, 5, 10] as const;
+type PensionPayoutYears = typeof PENSION_PAYOUT_YEARS[number];
 
 const RETIREMENT_AGES = [35, 40, 45, 50, 55];
 
@@ -121,26 +79,18 @@ const FREQ_LABELS: Record<PaymentFrequency, string> = {
 };
 
 const FREQ_PERIODS: Record<PaymentFrequency, number> = {
-  MONTHLY: 12,
-  QUARTERLY: 4,
-  SEMI_ANNUAL: 2,
-  ANNUAL: 1,
+  MONTHLY: 12, QUARTERLY: 4, SEMI_ANNUAL: 2, ANNUAL: 1,
 };
 
-const DOCUMENT_CHARGE = 500; // Rs. - fixed fee deducted from interest
+const DOCUMENT_CHARGE = 500;
 
 // ─── Calculation helpers ──────────────────────────────────────────────────────
 
-function getInterestRate(
-  planType: PlanType,
-  frequency: PaymentFrequency,
-  duration: number
-): number {
+function getInterestRate(planType: PlanType, frequency: PaymentFrequency, duration: number): number {
   if (planType === "PENSION") {
-    const key =
-      frequency === "MONTHLY" || frequency === "QUARTERLY"
-        ? "monthly_quarterly"
-        : "semi_annual_annual";
+    const key = frequency === "MONTHLY" || frequency === "QUARTERLY"
+      ? "monthly_quarterly"
+      : "semi_annual_annual";
     return PENSION_RATES[key][duration] ?? 20;
   }
   return PLANS[planType].maturityRates[frequency];
@@ -150,32 +100,38 @@ function calcQuotation(
   planType: PlanType,
   frequency: PaymentFrequency,
   premium: number,
-  duration: number
+  duration: number,
+  pensionPayoutYears: PensionPayoutYears,
 ) {
   const plan = PLANS[planType];
   const periodsPerYear = FREQ_PERIODS[frequency];
   const payingYears = planType === "PENSION" ? duration : plan.payingTerm;
   const totalPayments = payingYears * periodsPerYear;
-
-  // P = total capital invested (sum of all premiums)
   const totalInvested = premium * totalPayments;
-
-  // R = annual interest rate (%)
   const R = getInterestRate(planType, frequency, duration);
 
-  // T = full plan duration in years (paying term + holding period)
-  // For PENSION the duration IS the paying term, no separate holding phase
-  const T = duration;
+  let maturityAmount: number;
 
-  // Compound interest: A = P × (1 + R/100)^T
-  const maturityAmount = totalInvested * Math.pow(1 + R / 100, T);
+  if (planType === "PENSION") {
+    // Annuity FV — each payment compounds from when it's made until maturity
+    const rPerPeriod = R / 100 / periodsPerYear;
+    maturityAmount = premium * ((Math.pow(1 + rPerPeriod, totalPayments) - 1) / rPerPeriod);
+  } else {
+    // CHILD & MARGE — simple interest on total invested capital
+    // Per plan docs: "interest is paid on the invested amount"
+    maturityAmount = totalInvested * (1 + R / 100);
+  }
+
   const interestEarned = maturityAmount - totalInvested;
-
-  // Document charge deducted from interest
   const netInterestEarned = interestEarned - DOCUMENT_CHARGE;
   const netMaturityAmount = maturityAmount - DOCUMENT_CHARGE;
-
   const commission = (premium * plan.commissionRate[frequency]) / 100;
+
+  // Pension payout: maturity spread over chosen payout term
+  const pensionPayoutMonths = planType === "PENSION" ? pensionPayoutYears * 12 : null;
+  const pensionMonthlyPayout = planType === "PENSION" && pensionPayoutMonths
+    ? netMaturityAmount / pensionPayoutMonths
+    : null;
 
   return {
     totalPayments,
@@ -188,10 +144,9 @@ function calcQuotation(
     documentCharge: DOCUMENT_CHARGE,
     commissionPerPayment: commission,
     totalCommission: commission * totalPayments,
-    pensionMonthlyPayout:
-      planType === "PENSION" ? netMaturityAmount * 0.1 : null,
-    pensionPayoutMonths:
-      planType === "PENSION" ? 10 : null,
+    pensionMonthlyPayout,
+    pensionPayoutMonths,
+    pensionPayoutYears: planType === "PENSION" ? pensionPayoutYears : null,
   };
 }
 
@@ -210,6 +165,7 @@ const AddQuotationModal = ({ isOpen, onClose }: AddQuotationModalProps) => {
   const [duration, setDuration] = useState<number>(6);
   const [premium, setPremium] = useState<number>(15000);
   const [retirementAge, setRetirementAge] = useState<number>(55);
+  const [pensionPayoutYears, setPensionPayoutYears] = useState<PensionPayoutYears>(10);
   const [clientName, setClientName] = useState("");
   const [clientNic, setClientNic] = useState("");
   const [clientAge, setClientAge] = useState<number | "">("");
@@ -218,20 +174,20 @@ const AddQuotationModal = ({ isOpen, onClose }: AddQuotationModalProps) => {
   const plan = PLANS[planType];
   const minPremium = plan.minPremium[frequency];
 
-  // Reset duration when plan changes
+  // Reset duration & premium when plan changes
   useEffect(() => {
     setDuration(PLANS[planType].durations[0]);
     setPremium(PLANS[planType].minPremium[frequency]);
   }, [planType]);
 
-  // Update min premium on frequency change
+  // Bump premium to minimum on frequency change
   useEffect(() => {
     if (premium < plan.minPremium[frequency]) {
       setPremium(plan.minPremium[frequency]);
     }
   }, [frequency]);
 
-  const calc = calcQuotation(planType, frequency, premium, duration);
+  const calc = calcQuotation(planType, frequency, premium, duration, pensionPayoutYears);
 
   const addQuotationMutation = useMutation<unknown, Error, FormData>({
     mutationFn: (payload: FormData) => createQuotation(payload),
@@ -260,6 +216,7 @@ const AddQuotationModal = ({ isOpen, onClose }: AddQuotationModalProps) => {
     payload.append("clientNic", clientNic);
     payload.append("clientAge", String(clientAge));
     payload.append("retirementAge", planType === "PENSION" ? String(retirementAge) : "");
+    payload.append("pensionPayoutYears", planType === "PENSION" ? String(pensionPayoutYears) : "");
     payload.append("totalInvested", String(calc.totalInvested));
     payload.append("maturityAmount", String(calc.netMaturityAmount));
     payload.append("interestRate", String(calc.interestRate));
@@ -318,9 +275,7 @@ const AddQuotationModal = ({ isOpen, onClose }: AddQuotationModalProps) => {
             </div>
             <p className="text-xs text-muted-foreground/70 mt-1.5">
               Paying term: <span className="font-medium text-muted-foreground">{plan.payingTerm} years</span>
-              {planType !== "PENSION" && (
-                <> | Durations: {plan.durations.join(", ")} years</>
-              )}
+              {planType !== "PENSION" && <> | Durations: {plan.durations.join(", ")} years</>}
             </p>
           </div>
 
@@ -367,7 +322,7 @@ const AddQuotationModal = ({ isOpen, onClose }: AddQuotationModalProps) => {
             </div>
           </div>
 
-          {/* ── Plan Duration ── */}
+          {/* ── Plan Duration + Retirement Age / Payout Term ── */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
@@ -379,9 +334,7 @@ const AddQuotationModal = ({ isOpen, onClose }: AddQuotationModalProps) => {
                 className="w-full bg-muted/30 border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
               >
                 {plan.durations.map((d) => (
-                  <option key={d} value={d}>
-                    {d} Year{d > 1 ? "s" : ""}
-                  </option>
+                  <option key={d} value={d}>{d} Year{d > 1 ? "s" : ""}</option>
                 ))}
               </select>
             </div>
@@ -397,14 +350,44 @@ const AddQuotationModal = ({ isOpen, onClose }: AddQuotationModalProps) => {
                   className="w-full bg-muted/30 border border-border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 outline-none"
                 >
                   {RETIREMENT_AGES.map((a) => (
-                    <option key={a} value={a}>
-                      {a} years
-                    </option>
+                    <option key={a} value={a}>{a} years</option>
                   ))}
                 </select>
               </div>
             )}
           </div>
+
+          {/* ── Pension Payout Term (only for PENSION) ── */}
+          {planType === "PENSION" && (
+            <div>
+              <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                Pension Payout Term
+              </label>
+              <div className="grid grid-cols-5 gap-2">
+                {PENSION_PAYOUT_YEARS.map((y) => (
+                  <button
+                    key={y}
+                    type="button"
+                    onClick={() => setPensionPayoutYears(y)}
+                    className={`py-2 px-2 rounded-xl border text-sm font-semibold transition-all text-center ${
+                      pensionPayoutYears === y
+                        ? "bg-primary text-white border-primary shadow"
+                        : "bg-muted/30 text-muted-foreground border-border hover:border-primary"
+                    }`}
+                  >
+                    {y}Y
+                    <span className={`block text-xs font-normal ${pensionPayoutYears === y ? "text-primary-foreground/80" : "text-muted-foreground/60"}`}>
+                      {y * 12}mo
+                    </span>
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground/70 mt-1.5">
+                Maturity amount paid monthly over{" "}
+                <span className="font-medium text-muted-foreground">{pensionPayoutYears} year{pensionPayoutYears > 1 ? "s" : ""} ({pensionPayoutYears * 12} months)</span>
+              </p>
+            </div>
+          )}
 
           {/* ── Payment Frequency ── */}
           <div>
@@ -462,45 +445,25 @@ const AddQuotationModal = ({ isOpen, onClose }: AddQuotationModalProps) => {
               Quotation Summary
             </h3>
             <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
-              <SummaryRow
-                label="Plan"
-                value={`${PLANS[planType].label} | ${duration}Y`}
-              />
+              <SummaryRow label="Plan" value={`${PLANS[planType].label} | ${duration}Y`} />
               <SummaryRow label="Payment Frequency" value={FREQ_LABELS[frequency]} />
               <SummaryRow label="Premium" value={fmt(premium)} />
-              <SummaryRow
-                label="Total Payments"
-                value={`${calc.totalPayments} payments`}
-              />
+              <SummaryRow label="Total Payments" value={`${calc.totalPayments} payments`} />
               <SummaryRow label="Total Invested" value={fmt(calc.totalInvested)} />
-              <SummaryRow
-                label="Interest Rate"
-                value={`${calc.interestRate.toFixed(1)}%`}
-                highlight
-              />
+              <SummaryRow label="Interest Rate" value={`${calc.interestRate.toFixed(1)}%`} highlight />
               <SummaryRow label="Gross Interest Earned" value={fmt(calc.interestEarned)} highlight />
               <SummaryRow label="Document Charge" value={`- ${fmt(calc.documentCharge)}`} />
               <SummaryRow label="Net Interest Earned" value={fmt(calc.netInterestEarned)} highlight />
-              <SummaryRow
-                label="Net Maturity Amount"
-                value={fmt(calc.netMaturityAmount)}
-                big
-              />
+              <SummaryRow label="Net Maturity Amount" value={fmt(calc.netMaturityAmount)} big />
               {planType === "PENSION" && calc.pensionMonthlyPayout != null && (
                 <SummaryRow
-                  label="Monthly Pension Payout"
-                  value={`${fmt(calc.pensionMonthlyPayout)} × 10 months`}
+                  label={`Monthly Pension (${pensionPayoutYears}Y / ${pensionPayoutYears * 12} months)`}
+                  value={fmt(calc.pensionMonthlyPayout)}
                   highlight
                 />
               )}
-              <SummaryRow
-                label="Commission / Payment"
-                value={fmt(calc.commissionPerPayment)}
-              />
-              <SummaryRow
-                label="Total Commission"
-                value={fmt(calc.totalCommission)}
-              />
+              <SummaryRow label="Commission / Payment" value={fmt(calc.commissionPerPayment)} />
+              <SummaryRow label="Total Commission" value={fmt(calc.totalCommission)} />
             </div>
           </div>
 
@@ -556,15 +519,7 @@ const SummaryRow = ({
 }) => (
   <div className="flex flex-col">
     <span className="text-xs text-muted-foreground">{label}</span>
-    <span
-      className={`font-semibold ${
-        big
-          ? "text-primary text-base"
-          : highlight
-          ? "text-primary"
-          : "text-card-foreground"
-      }`}
-    >
+    <span className={`font-semibold ${big ? "text-primary text-base" : highlight ? "text-primary" : "text-card-foreground"}`}>
       {value}
     </span>
   </div>

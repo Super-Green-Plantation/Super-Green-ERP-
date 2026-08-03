@@ -1,8 +1,8 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-// ─── Logo loader ─────────────────────────────────────────────────────────────
-// Loads /public/logo.png as a base64 data-URL at runtime (browser only).
-// jsPDF.addImage() accepts a data-URL directly.
+
+// ─── Logo loader ──────────────────────────────────────────────────────────────
+
 async function loadLogoBase64(): Promise<string | null> {
   try {
     const res = await fetch("/logo.png");
@@ -19,9 +19,7 @@ async function loadLogoBase64(): Promise<string | null> {
   }
 }
 
-
-
-// - Types -
+// ─── Types ───────────────────────────────────────────────────────────────────
 
 type PlanType = "CHILD" | "MARGE" | "PENSION";
 type PaymentFrequency = "MONTHLY" | "QUARTERLY" | "SEMI_ANNUAL" | "ANNUAL";
@@ -36,6 +34,7 @@ export interface QuotationPDFData {
   duration: number;
   premium: number;
   retirementAge?: number | null;
+  pensionPayoutYears?: number | null;   // ← new
   totalInvested: number;
   interestRate: number;
   interestEarned: number;
@@ -48,21 +47,21 @@ export interface QuotationPDFData {
   advisorBranch?: string;
 }
 
-// - Brand Colors -
+// ─── Brand Colors ─────────────────────────────────────────────────────────────
 
 const C = {
-  green: [22, 101, 52] as [number, number, number],
+  green:      [22, 101, 52]   as [number, number, number],
   greenLight: [220, 252, 231] as [number, number, number],
-  greenMid: [74, 222, 128] as [number, number, number],
-  dark: [17, 24, 39] as [number, number, number],
-  mid: [75, 85, 99] as [number, number, number],
-  light: [156, 163, 175] as [number, number, number],
-  border: [229, 231, 235] as [number, number, number],
-  bg: [249, 250, 251] as [number, number, number],
-  white: [255, 255, 255] as [number, number, number],
+  greenMid:   [74, 222, 128]  as [number, number, number],
+  dark:       [17, 24, 39]    as [number, number, number],
+  mid:        [75, 85, 99]    as [number, number, number],
+  light:      [156, 163, 175] as [number, number, number],
+  border:     [229, 231, 235] as [number, number, number],
+  bg:         [249, 250, 251] as [number, number, number],
+  white:      [255, 255, 255] as [number, number, number],
 };
 
-// - Helpers -
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const lkr = (n: number) =>
   "Rs. " + n.toLocaleString("en-LK", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -77,10 +76,10 @@ const addOneMonth = (d: Date) => {
 };
 
 const FREQ_LABELS: Record<PaymentFrequency, string> = {
-  MONTHLY: "Monthly",
-  QUARTERLY: "Quarterly (Every 3 Months)",
+  MONTHLY:     "Monthly",
+  QUARTERLY:   "Quarterly (Every 3 Months)",
   SEMI_ANNUAL: "Semi-Annual (Every 6 Months)",
-  ANNUAL: "Annual (Yearly)",
+  ANNUAL:      "Annual (Yearly)",
 };
 
 const FREQ_PERIODS: Record<PaymentFrequency, number> = {
@@ -88,8 +87,8 @@ const FREQ_PERIODS: Record<PaymentFrequency, number> = {
 };
 
 const PLAN_LABELS: Record<PlanType, string> = {
-  CHILD: "Child Plan (Ran Aswanu)",
-  MARGE: "Marge Plan",
+  CHILD:   "Child Plan (Ran Aswanu)",
+  MARGE:   "Marge Plan",
   PENSION: "Pension Plan",
 };
 
@@ -99,7 +98,7 @@ function getPayingYears(planType: PlanType, duration: number) {
   return duration;
 }
 
-// - Plan Conditions -
+// ─── Plan Conditions (Page 2) ─────────────────────────────────────────────────
 
 const PLAN_CONDITIONS: Record<PlanType, { title: string; conditions: string[]; maturityRates: string[] }> = {
   CHILD: {
@@ -151,16 +150,16 @@ const PLAN_CONDITIONS: Record<PlanType, { title: string; conditions: string[]; m
       "If payments stop before completing 1 year: 2.5% interest on invested amount paid after the required pension year (monthly & quarterly plans).",
       "Monthly & Quarterly interest rates by duration: 1Y=6% | 2Y=9% | 3Y=12% | 4Y=15% | 5Y=18% | 6-10Y=20%.",
       "Semi-Annual & Annual interest rates by duration: 1Y=10% | 2Y=12% | 3Y=15% | 4Y=18% | 5Y=18% | 6-10Y=20%.",
-      "Upon maturity, 10% of the maturity amount is paid as a monthly pension until the full maturity amount is exhausted (10 months total).",
+      "Upon maturity, the pension amount is paid monthly over the selected payout term until the full maturity amount is exhausted.",
     ],
     maturityRates: [
-      "Pension payout: 10% of maturity amount paid each month for 10 months.",
-      "Commission rates - Monthly: 2.5% | Quarterly: 5% | Semi-Annual: 7% | Annual: 8%.",
+      "Pension payout: maturity amount divided equally across all payout months.",
+      
     ],
   },
 };
 
-// - Page 1: Quotation -
+// ─── Page 1: Quotation ────────────────────────────────────────────────────────
 
 function drawPage1(doc: jsPDF, data: QuotationPDFData, logo: string | null) {
   const pw = doc.internal.pageSize.getWidth();
@@ -169,30 +168,31 @@ function drawPage1(doc: jsPDF, data: QuotationPDFData, logo: string | null) {
   const payingYears = getPayingYears(data.planType, data.duration);
   const totalPayments = payingYears * FREQ_PERIODS[data.frequency];
 
+  // Pension payout calculations
+  const payoutYears = data.pensionPayoutYears ?? 10;
+  const payoutMonths = payoutYears * 12;
+  const monthlyPension = data.planType === "PENSION" ? data.maturityAmount / payoutMonths : null;
+
   // Header bar
   doc.setFillColor(...C.green);
   doc.rect(0, 0, pw, 28, "F");
 
-  // Logo — left side
-  const logoW = 22;
-  const logoH = 22;
-  const logoX = 8;
-  const logoY = 3;
+  // Logo
+  const logoW = 22, logoH = 22, logoX = 8, logoY = 3;
   if (logo) {
-    // White rounded background behind logo for contrast
     doc.setFillColor(...C.white);
     doc.roundedRect(logoX - 1, logoY - 1, logoW + 2, logoH + 2, 2, 2, "F");
     doc.addImage(logo, "PNG", logoX, logoY, logoW, logoH);
   }
 
-  // Title — offset right of logo
+  // Title
   const textStartX = logo ? logoX + logoW + 6 : 14;
   doc.setTextColor(...C.white);
   doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
   doc.text("INVESTMENT QUOTATION", textStartX, 13);
 
-  // Company name — right side
+  // Company
   doc.setFontSize(8.5);
   doc.setFont("helvetica", "bold");
   doc.text("Super Green Plantation (Pvt) Ltd.", pw - 8, 11, { align: "right" });
@@ -216,16 +216,13 @@ function drawPage1(doc: jsPDF, data: QuotationPDFData, logo: string | null) {
   doc.text(fmtDate(data.createdAt), 68, 40);
   doc.text(addOneMonth(data.createdAt), 130, 40);
 
-  // Two info boxes
-  const boxTop = 46;
-  const boxH = 36;
-  const colW = (pw - 30) / 2;
+  // Info boxes
+  const boxTop = 46, boxH = 36, colW = (pw - 30) / 2;
 
   const drawInfoBox = (x: number, headerLabel: string, name: string, lines: string[]) => {
     doc.setFillColor(...C.white);
     doc.setDrawColor(...C.border);
     doc.roundedRect(x, boxTop, colW, boxH, 2, 2, "FD");
-    // green header strip
     doc.setFillColor(...C.green);
     doc.roundedRect(x, boxTop, colW, 7, 2, 2, "F");
     doc.rect(x, boxTop + 3, colW, 4, "F");
@@ -233,37 +230,27 @@ function drawPage1(doc: jsPDF, data: QuotationPDFData, logo: string | null) {
     doc.setFont("helvetica", "bold");
     doc.setTextColor(...C.white);
     doc.text(headerLabel, x + 5, boxTop + 5.2);
-    // name
     doc.setFontSize(9);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(...C.dark);
     doc.text(name, x + 5, boxTop + 14);
-    // detail lines
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     doc.setTextColor(...C.mid);
     lines.forEach((line, i) => doc.text(line, x + 5, boxTop + 21 + i * 6.5));
   };
 
-  drawInfoBox(
-    14,
-    "QUOTATION FOR",
-    data.clientName,
-    [
-      `NIC : ${data.clientNic || "N/A"}`,
-      `Age : ${data.clientAge ? `${data.clientAge} yrs` : "N/A"}${data.planType === "PENSION" && data.retirementAge ? `  |  Retire @ ${data.retirementAge}` : ""}`,
-    ]
-  );
+  drawInfoBox(14, "QUOTATION FOR", data.clientName, [
+    `NIC : ${data.clientNic || "N/A"}`,
+    `Age : ${data.clientAge ? `${data.clientAge} yrs` : "N/A"}${
+      data.planType === "PENSION" && data.retirementAge ? `  |  Retire @ ${data.retirementAge}` : ""
+    }`,
+  ]);
 
-  drawInfoBox(
-    14 + colW + 2,
-    "PREPARED BY",
-    data.advisorName || "N/A",
-    [
-      `Emp No : ${data.advisorEmpNo || "N/A"}`,
-      `Branch : ${data.advisorBranch || "N/A"}`,
-    ]
-  );
+  drawInfoBox(14 + colW + 2, "PREPARED BY", data.advisorName || "N/A", [
+    `Emp No : ${data.advisorEmpNo || "N/A"}`,
+    `Branch : ${data.advisorBranch || "N/A"}`,
+  ]);
 
   let y = boxTop + boxH + 7;
 
@@ -277,12 +264,15 @@ function drawPage1(doc: jsPDF, data: QuotationPDFData, logo: string | null) {
   autoTable(doc, {
     startY: y,
     body: [
-      ["Plan Type", PLAN_LABELS[data.planType]],
-      ["Plan Duration", `${data.duration} Years`],
-      ["Paying Term", `${payingYears} Year${payingYears > 1 ? "s" : ""}`],
-      ["Payment Frequency", FREQ_LABELS[data.frequency]],
+      ["Plan Type",           PLAN_LABELS[data.planType]],
+      ["Plan Duration",       `${data.duration} Years`],
+      ["Paying Term",         `${payingYears} Year${payingYears > 1 ? "s" : ""}`],
+      ["Payment Frequency",   FREQ_LABELS[data.frequency]],
       ["Premium per Payment", lkr(data.premium)],
-      ["Total Payments", `${totalPayments} payments over ${payingYears} year${payingYears > 1 ? "s" : ""}`],
+      ["Total Payments",      `${totalPayments} payments over ${payingYears} year${payingYears > 1 ? "s" : ""}`],
+      ...(data.planType === "PENSION"
+        ? [["Pension Payout Term", `${payoutYears} Year${payoutYears > 1 ? "s" : ""} (${payoutMonths} months)`]]
+        : []),
     ],
     theme: "plain",
     styles: { fontSize: 8.5, cellPadding: { top: 3, bottom: 3, left: 5, right: 5 } },
@@ -305,16 +295,21 @@ function drawPage1(doc: jsPDF, data: QuotationPDFData, logo: string | null) {
   y += 3;
 
   const docCharge = data.documentCharge ?? 500;
-  const grossInterest = data.interestEarned + docCharge; // reverse to show gross
+  const grossInterest = data.interestEarned + docCharge;
+
   const finBody: [string, string][] = [
     ["Total Amount Invested", lkr(data.totalInvested)],
-    ["Annual Interest Rate", `${data.interestRate.toFixed(1)}%`],
+    ["Annual Interest Rate",  `${data.interestRate.toFixed(1)}%`],
     ["Gross Interest Earned", lkr(grossInterest)],
-    ["Document Charge", `- ${lkr(docCharge)}`],
-    ["Net Interest Earned", lkr(data.interestEarned)],
+    ["Document Charge",       `- ${lkr(docCharge)}`],
+    ["Net Interest Earned",   lkr(data.interestEarned)],
   ];
-  if (data.planType === "PENSION") {
-    finBody.push(["Monthly Pension Payout", `${lkr(data.maturityAmount * 0.1)} - 10 months`]);
+
+  if (data.planType === "PENSION" && monthlyPension != null) {
+    finBody.push([
+      `Monthly Pension Payout (${payoutYears}Y / ${payoutMonths} months)`,
+      lkr(monthlyPension),
+    ]);
   }
 
   autoTable(doc, {
@@ -327,9 +322,13 @@ function drawPage1(doc: jsPDF, data: QuotationPDFData, logo: string | null) {
       1: { textColor: C.dark },
     },
     didParseCell: (hook) => {
-      // Highlight document charge row in muted red
       if (hook.row.index === 3 && hook.column.index === 1) {
-        hook.cell.styles.textColor = [185, 28, 28]; // red-700
+        hook.cell.styles.textColor = [185, 28, 28];
+      }
+      // Highlight monthly pension row in green
+      if (data.planType === "PENSION" && hook.row.index === 5) {
+        hook.cell.styles.textColor = C.green;
+        hook.cell.styles.fontStyle = "bold";
       }
     },
     tableLineColor: C.border,
@@ -339,88 +338,89 @@ function drawPage1(doc: jsPDF, data: QuotationPDFData, logo: string | null) {
 
   y = (doc as any).lastAutoTable.finalY;
 
-  // Net Maturity highlight
+  // Net Maturity highlight bar
   doc.setFillColor(...C.greenLight);
-  doc.rect(14, y, pw - 28, 11, "F");
-  doc.setFontSize(14);
+  doc.rect(14, y, pw - 28, 9, "F");
+  doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...C.dark);
-  doc.text("Net Maturity Amount", 19, y + 7.5);
-  doc.text(lkr(data.maturityAmount), pw - 15, y + 7.5, { align: "right" });
-  y += 18;
+  doc.text("Net Maturity Amount", 19, y + 6);
+  doc.text(lkr(data.maturityAmount), pw - 15, y + 6, { align: "right" });
+  y += 8; // tight gap after maturity bar
 
   // Notes
   if (data.notes?.trim()) {
-    doc.setFontSize(8);
+    doc.setFontSize(7.5);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(...C.dark);
     doc.text("NOTES", 14, y);
-    y += 5;
+    y += 4;
     doc.setFont("helvetica", "normal");
     doc.setTextColor(...C.mid);
     const noteLines = doc.splitTextToSize(data.notes.trim(), pw - 28);
     doc.text(noteLines, 14, y);
-    y += noteLines.length * 4.8 + 5;
+    y += noteLines.length * 4.2 + 3;
   }
 
-  // Disclaimer box
+  // Disclaimer — font set before split, tight padding
+  doc.setFontSize(7.2);
+  doc.setFont("helvetica", "italic");
   const disclaimerText =
-    `This quotation is valid for 1 month from the date of issue - from ${fmtDate(data.createdAt)} to ${addOneMonth(data.createdAt)}. ` +
-    "All figures are estimates based on current plan rates and may be subject to change. " +
-    "This document does not constitute a binding contract. Plan terms and conditions are detailed on Page 2.";
-  const dLines = doc.splitTextToSize(disclaimerText, pw - 18);
-  const dH = dLines.length * 4.6 + 2;
+    `This quotation is valid for 1 month from the date of issue - from ${fmtDate(data.createdAt)} to ` +
+    `${addOneMonth(data.createdAt)}. All figures are estimates based on current plan rates and may be subject ` +
+    `to change. This document does not constitute a binding contract. Plan terms and conditions are detailed on Page 2.`;
+  const dLines = doc.splitTextToSize(disclaimerText, pw - 36);
+  const dH = dLines.length * 4.0 + 5; // 2.5 top + lines + 2.5 bottom
   doc.setFillColor(...C.greenLight);
   doc.setDrawColor(...C.greenMid);
   doc.roundedRect(14, y, pw - 28, dH, 2, 2, "FD");
-  doc.setFontSize(7.8);
-  doc.setFont("helvetica", "italic");
   doc.setTextColor(...C.green);
-  doc.text(dLines, 19, y + 7);
-  y += dH + 2;
+  doc.text(dLines, 19, y + 3.5, { lineHeightFactor: 1.05 });
+  y += dH + 3;
 
-  // Signatures - anchored near bottom
-  const sigH = 30;
-  const sigY = Math.max(y, pageH - sigH - 35);
-
+  // Separator line
+  const lX = 14, rX = pw / 2 + 4, lw = 75;
   doc.setDrawColor(...C.border);
-  doc.line(14, sigY, pw - 14, sigY);
+  doc.line(14, y, pw - 14, y);
+  y += 5;
 
-  const lX = 20;
-  const rX = pw / 2 + 8;
-  const lw = 72;
-
-  doc.setFontSize(8);
+  // Signature headings
+  doc.setFontSize(7.5);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...C.dark);
-  doc.text("CLIENT ACKNOWLEDGEMENT", lX, sigY + 7);
-  doc.text("ADVISOR CONFIRMATION", rX, sigY + 7);
+  doc.text("CLIENT ACKNOWLEDGEMENT", lX, y);
+  doc.text("ADVISOR CONFIRMATION", rX, y);
+  y += 6;
 
+  // Name + Date lines
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
+  doc.setFontSize(7.5);
   doc.setTextColor(...C.mid);
-  doc.text("Name : .............................................", lX, sigY + 15);
-  doc.text("Date : ......... / ......... / ................", lX, sigY + 22);
-  doc.text(`Name : ${data.advisorName || "..........................................."}`, rX, sigY + 15);
-  doc.text("Date : ......... / ......... / ................", rX, sigY + 22);
+  doc.text("Name : .............................................", lX, y);
+  doc.text(`Name : ${data.advisorName || "..........................................."}`, rX, y);
+  y += 5.5;
+  doc.text("Date : ......... / ......... / ................", lX, y);
+  doc.text("Date : ......... / ......... / ................", rX, y);
+  y += 9;
 
-  doc.setDrawColor(80, 80, 80);
-  doc.line(lX, sigY + 35, lX + lw, sigY + 35);
-  doc.line(rX, sigY + 35, rX + lw, sigY + 35);
+  // Signature lines
+  doc.setDrawColor(160, 160, 160);
+  doc.line(lX, y, lX + lw, y);
+  doc.line(rX, y, rX + lw, y);
+  y += 4;
 
-  doc.setFontSize(7.5);
+  doc.setFontSize(7);
   doc.setTextColor(...C.light);
-  doc.text("Signature of Client", lX, sigY + 40);
-  doc.text("Signature of Advisor", rX, sigY + 40);
+  doc.text("Signature of Client", lX, y);
+  doc.text("Signature of Advisor", rX, y);
 
-  // Footer
-  doc.setFontSize(7.5);
+  // Footer pinned to bottom
+  doc.setFontSize(7);
   doc.setTextColor(...C.light);
-  // Footer - was pageH - 5
-  doc.text("Super Green Plantation (Pvt) Ltd.  |  Page 1 of 2", pw / 2, pageH - 8, { align: "center" });
+  doc.text("Super Green Plantation (Pvt) Ltd.  |  Page 1 of 2", pw / 2, pageH - 3, { align: "center" });
 }
 
-// - Page 2: Plan Conditions -
+// ─── Page 2: Plan Conditions ──────────────────────────────────────────────────
 
 function drawPage2(doc: jsPDF, data: QuotationPDFData, logo: string | null) {
   const pw = doc.internal.pageSize.getWidth();
@@ -431,11 +431,7 @@ function drawPage2(doc: jsPDF, data: QuotationPDFData, logo: string | null) {
   doc.setFillColor(...C.green);
   doc.rect(0, 0, pw, 24, "F");
 
-  // Logo — left side
-  const p2LogoW = 18;
-  const p2LogoH = 18;
-  const p2LogoX = 8;
-  const p2LogoY = 3;
+  const p2LogoW = 18, p2LogoH = 18, p2LogoX = 8, p2LogoY = 3;
   if (logo) {
     doc.setFillColor(...C.white);
     doc.roundedRect(p2LogoX - 1, p2LogoY - 1, p2LogoW + 2, p2LogoH + 2, 2, 2, "F");
@@ -465,8 +461,6 @@ function drawPage2(doc: jsPDF, data: QuotationPDFData, logo: string | null) {
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...C.dark);
   doc.text("General Conditions", 14, y);
-
-  // green underline
   doc.setDrawColor(...C.green);
   doc.line(14, y + 1.5, 60, y + 1.5);
   y += 7;
@@ -501,39 +495,64 @@ function drawPage2(doc: jsPDF, data: QuotationPDFData, logo: string | null) {
     y += wrapped.length * 5 + 1.5;
   });
 
-  y += 5;
+  y += 8;
 
+  // ── Pension payout breakdown table ──
+  if (data.planType === "PENSION") {
+    const payoutYears = data.pensionPayoutYears ?? 10;
+    const payoutMonths = payoutYears * 12;
+    const monthlyPension = data.maturityAmount / payoutMonths;
 
+    doc.setFontSize(8.5);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(...C.dark);
+    doc.text("Your Pension Payout Breakdown", 14, y);
+    doc.setDrawColor(...C.green);
+    doc.line(14, y + 1.5, 80, y + 1.5);
+    y += 5;
 
-  // General disclaimer
-  const genDiscText =
-    "T & C Apply "
+    autoTable(doc, {
+      startY: y,
+      head: [["Payout Term", "Total Months", "Monthly Pension Amount", "Total Received"]],
+      body: [
+        [
+          `${payoutYears} Year${payoutYears > 1 ? "s" : ""}`,
+          `${payoutMonths} months`,
+          lkr(monthlyPension),
+          lkr(data.maturityAmount),
+        ],
+      ],
+      theme: "grid",
+      headStyles: {
+        fillColor: C.green,
+        textColor: C.white,
+        fontStyle: "bold",
+        fontSize: 8,
+      },
+      styles: { fontSize: 8, cellPadding: { top: 3, bottom: 3, left: 5, right: 5 } },
+      columnStyles: {
+        0: { cellWidth: 35 },
+        1: { cellWidth: 30 },
+        2: { fontStyle: "bold", textColor: C.green },
+        3: { fontStyle: "bold" },
+      },
+      margin: { left: 14, right: 14 },
+    });
 
-  const gdLines = doc.splitTextToSize(genDiscText, pw - 15);
-  const gdH = gdLines.length * 4.8 + 12;
-  // doc.setFillColor(...C.greenLight);
-  // doc.setDrawColor(...C.greenMid);
-  // doc.roundedRect(14, y, pw - 28, gdH, 2, 2, "FD");
-  // doc.setFontSize(8);
-  // doc.setFont("helvetica", "italic");
-  // doc.setTextColor(...C.green);
-  // doc.text(gdLines, 19, y + 8);
+    y = (doc as any).lastAutoTable.finalY + 8;
+  }
 
-  // --- Client Acceptance Section ---
-  y += gdH + 10; // Move cursor below the T&C box
-
-  // Acceptance Sentence
+  // Acceptance
+  y += 10;
   doc.setFontSize(9);
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(0, 0, 0); // Default black for readability
-
+  doc.setTextColor(0, 0, 0);
   doc.text("I hereby agree to the terms and conditions mentioned above.", 18, y);
 
-  // Signature Area
   y += 15;
   doc.setLineWidth(0.5);
-  doc.line(19, y, 80, y);          // Client Line
-  doc.line(pw - 80, y, pw - 19, y); // Date Line
+  doc.line(19, y, 80, y);
+  doc.line(pw - 80, y, pw - 19, y);
 
   y += 5;
   doc.setFontSize(8);
@@ -541,22 +560,14 @@ function drawPage2(doc: jsPDF, data: QuotationPDFData, logo: string | null) {
   doc.text("Authorized Client Signature", 19, y);
   doc.text("Date", pw - 80, y);
 
-
-
   // Footer
   doc.setFontSize(7.5);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...C.light);
   doc.text("Super Green Plantation (Pvt) Ltd.  |  Page 2 of 2", pw / 2, pageH - 5, { align: "center" });
-
-
-
-
 }
 
-
-
-// - Main Export -
+// ─── Main Export ──────────────────────────────────────────────────────────────
 
 export const generateQuotationPDF = async (data: QuotationPDFData) => {
   const logo = await loadLogoBase64();

@@ -16,6 +16,7 @@ export async function createQuotation(formData: FormData) {
   const clientNic = (formData.get("clientNic") as string) || null;
   const clientAge = formData.get("clientAge") ? Number(formData.get("clientAge")) : null;
   const retirementAge = formData.get("retirementAge") ? Number(formData.get("retirementAge")) : null;
+  const pensionPayoutYears = formData.get("pensionPayoutYears") ? Number(formData.get("pensionPayoutYears")) : null;
   const totalInvested = Number(formData.get("totalInvested"));
   const interestRate = Number(formData.get("interestRate"));
   const maturityAmount = Number(formData.get("maturityAmount"));
@@ -33,11 +34,12 @@ export async function createQuotation(formData: FormData) {
       clientNic,
       clientAge,
       retirementAge,
+      pensionPayoutYears,              
       totalInvested,
       interestRate,
-      interestEarned,                              // net (after doc charge)
-      netInterestEarned: interestEarned,           // same value, explicit field
-      netMaturityAmount: maturityAmount,           // net maturity (after doc charge)
+      interestEarned,
+      netInterestEarned: interestEarned,
+      netMaturityAmount: maturityAmount,
       maturityAmount,
       documentCharge,
       notes,
@@ -65,7 +67,6 @@ export async function getQuotations(page = 1, pageSize = 15) {
     prisma.quotation.count({ where: { createdByUserId: user.id } }),
   ]);
 
-  // Advisor info derived from the logged-in user's member profile
   const branch = user.member?.branches?.[0]?.branch;
   const advisor = {
     name: user.member?.nameWithInitials ?? user.name ?? "N/A",
@@ -93,7 +94,6 @@ export async function getCurrentAdvisorInfo() {
   const user = await getCurrentUserWithRole();
   if (!user) return null;
 
-  // If user has a linked member, return their details
   if (user.member) {
     const branch = user.member.branches?.[0]?.branch;
     return {
@@ -103,7 +103,6 @@ export async function getCurrentAdvisorInfo() {
     };
   }
 
-  // Fallback for admin/non-member users
   return {
     name: user.name ?? user.email ?? "N/A",
     empNo: "N/A",
