@@ -8,8 +8,6 @@ import { PERMISSIONS } from "@/lib/auth/permissions";
 import { revalidatePath } from "next/cache";
 import { ItemCondition, InventoryCompany } from "@prisma/client";
 
-// Re-export the enum so client components can import it from one place
-export { InventoryCompany };
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS
