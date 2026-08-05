@@ -22,18 +22,26 @@ export type NomineeMode = "existing" | "new" | "none";
 export type BeneficiaryFields = {
   fullName: string; nic: string; phone: string;
   bankName: string; bankBranch: string; accountNo: string; relationship: string;
+  // ── new photo fields ──
+  bankBookPhotoUrl: string | null;
+  idCopyUrl: string | null;
 };
 export type NomineeFields = {
   fullName: string; nic: string;
   contact: string;
   permanentAddress: string; postalAddress: string;
+  // ── new photo field ──
+  idCopyUrl: string | null;
 };
 
 export const EMPTY_BENEFICIARY: BeneficiaryFields = {
   fullName: "", nic: "", phone: "", bankName: "", bankBranch: "", accountNo: "", relationship: "",
+  bankBookPhotoUrl: null,
+  idCopyUrl: null,
 };
 export const EMPTY_NOMINEE: NomineeFields = {
   fullName: "", nic: "", contact: "", permanentAddress: "", postalAddress: "",
+  idCopyUrl: null,
 };
 
 export function beneficiaryFromRecord(b: any): BeneficiaryFields {
@@ -41,12 +49,15 @@ export function beneficiaryFromRecord(b: any): BeneficiaryFields {
     fullName: b.fullName ?? "", nic: b.nic ?? "", phone: b.phone ?? "",
     bankName: b.bankName ?? "", bankBranch: b.bankBranch ?? "",
     accountNo: b.accountNo ?? "", relationship: b.relationship ?? "",
+    bankBookPhotoUrl: b.bankBookPhotoUrl ?? null,
+    idCopyUrl: b.idCopyUrl ?? null,
   };
 }
 export function nomineeFromRecord(n: any): NomineeFields {
   return {
     fullName: n.fullName ?? "", nic: n.nic ?? "", contact: n.contact ?? "",
     permanentAddress: n.permanentAddress ?? "", postalAddress: n.postalAddress ?? "",
+    idCopyUrl: n.idCopyUrl ?? null,
   };
 }
 export function isEqual<T extends object>(a: T, b: T) {

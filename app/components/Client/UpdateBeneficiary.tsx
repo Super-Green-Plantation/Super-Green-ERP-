@@ -1,23 +1,127 @@
-import { inputClass, labelClass } from '@/app/const/inputStyles';
-import { updateBeneficiary } from '@/app/features/clients/actions';
-import { useQueryClient } from '@tanstack/react-query';
-import { Landmark, X } from 'lucide-react';
-import { useParams } from 'next/navigation';
-import React, { useState } from 'react';
-import { toast } from 'sonner';
-import { updateBeneficiarySchema } from '@/lib/validations/client.schema';
+"use client";
+
+import { inputClass, labelClass } from "@/app/const/inputStyles";
+import { updateBeneficiary } from "@/app/features/clients/actions";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  Landmark,
+  X,
+  UploadCloud,
+  Loader2,
+  CheckCircle2,
+  Eye,
+} from "lucide-react";
+import { useParams } from "next/navigation";
+import React, { useState, useRef } from "react";
+import { toast } from "sonner";
+import { updateBeneficiarySchema } from "@/lib/validations/client.schema";
+import { createClient } from "@/lib/supabase/client";
+
+const BUCKET = "kyc-documents";
 
 const FieldError = ({ message }: { message?: string }) =>
   message ? (
-    <p className="mt-1 ml-1 text-[10px] font-bold text-red-500 tracking-wide">{message}</p>
+    <p className="mt-1 ml-1 text-[10px] font-bold text-red-500 tracking-wide">
+      {message}
+    </p>
   ) : null;
+
+async function uploadToSupabase(key: string, file: File): Promise<string> {
+  const supabase = createClient();
+  const ext = file.name.split(".").pop();
+  const path = `${key}/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+
+  const { error } = await supabase.storage
+    .from(BUCKET)
+    .upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
+
+  if (error) throw new Error(`Upload failed for ${key}: ${error.message}`);
+
+  const { data } = supabase.storage.from(BUCKET).getPublicUrl(path);
+  return data.publicUrl;
+}
+
+// ─── Photo Upload Field ───────────────────────────────────────────────────────
+
+interface PhotoUploadFieldProps {
+  label: string;
+  fieldKey: string;
+  existingUrl?: string | null;
+  file: File | null;
+  uploading: boolean;
+  onFileChange: (key: string, file: File | null) => void;
+}
+
+const PhotoUploadField = ({
+  label,
+  fieldKey,
+  existingUrl,
+  file,
+  uploading,
+  onFileChange,
+}: PhotoUploadFieldProps) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const previewUrl = file ? URL.createObjectURL(file) : existingUrl;
+
+  return (
+    <div>
+      <label className={labelClass}>{label}</label>
+      <div
+        className="mt-1 flex items-center gap-3 p-3 border border-dashed border-border rounded-xl bg-muted/20 cursor-pointer hover:bg-muted/40 transition-colors"
+        onClick={() => inputRef.current?.click()}
+      >
+        {uploading ? (
+          <Loader2 className="w-4 h-4 text-muted-foreground animate-spin shrink-0" />
+        ) : previewUrl ? (
+          <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+        ) : (
+          <UploadCloud className="w-4 h-4 text-muted-foreground shrink-0" />
+        )}
+
+        <span className="text-xs text-muted-foreground truncate flex-1">
+          {file
+            ? file.name
+            : existingUrl
+            ? "Uploaded — click to replace"
+            : "Click to upload (JPG, PNG, PDF)"}
+        </span>
+
+        {previewUrl && !uploading && (
+          <a
+            href={previewUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="p-1 hover:bg-muted rounded-md transition-colors"
+            title="Preview"
+          >
+            <Eye className="w-3.5 h-3.5 text-muted-foreground" />
+          </a>
+        )}
+      </div>
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*,application/pdf"
+        className="hidden"
+        onChange={(e) => onFileChange(fieldKey, e.target.files?.[0] ?? null)}
+      />
+    </div>
+  );
+};
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 interface UpdateBeneficiaryModalProps {
   onClose: () => void;
   initialData: any;
 }
 
-const UpdateBeneficiary = ({ onClose, initialData }: UpdateBeneficiaryModalProps) => {
+const UpdateBeneficiary = ({
+  onClose,
+  initialData,
+}: UpdateBeneficiaryModalProps) => {
   const [formData, setFormData] = useState<any>({
     beneficiary: {
       id: null,
@@ -28,11 +132,19 @@ const UpdateBeneficiary = ({ onClose, initialData }: UpdateBeneficiaryModalProps
       bankBranch: "",
       nic: "",
       phone: "",
+      bankBookPhotoUrl: null,
+      idCopyUrl: null,
       ...initialData,
     },
   });
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [photoFiles, setPhotoFiles] = useState<Record<string, File | null>>({
+    bankBookPhotoUrl: null,
+    idCopyUrl: null,
+  });
+  const [uploading, setUploading] = useState(false);
+
   const queryClient = useQueryClient();
   const { id } = useParams();
 
@@ -46,6 +158,10 @@ const UpdateBeneficiary = ({ onClose, initialData }: UpdateBeneficiaryModalProps
       setFormData((prev: any) => ({ ...prev, [field]: value }));
     }
     setFieldErrors((prev) => ({ ...prev, [field]: "" }));
+  };
+
+  const handleFileChange = (key: string, file: File | null) => {
+    setPhotoFiles((prev) => ({ ...prev, [key]: file }));
   };
 
   const errClass = (field: string) =>
@@ -66,10 +182,38 @@ const UpdateBeneficiary = ({ onClose, initialData }: UpdateBeneficiaryModalProps
       return;
     }
 
-    await updateBeneficiary(formData.beneficiary);
-    queryClient.invalidateQueries({ queryKey: ["client", Number(id)] });
-    toast.success("Beneficiary updated successfully.");
-    onClose();
+    try {
+      setUploading(true);
+
+      // Upload any pending photo files
+      const photoUrls: Record<string, string | null> = {
+        bankBookPhotoUrl: formData.beneficiary.bankBookPhotoUrl ?? null,
+        idCopyUrl: formData.beneficiary.idCopyUrl ?? null,
+      };
+
+      for (const [key, file] of Object.entries(photoFiles)) {
+        if (file) {
+          const url = await uploadToSupabase(
+            `beneficiary/${formData.beneficiary.id}/${key}`,
+            file
+          );
+          photoUrls[key] = url;
+        }
+      }
+
+      await updateBeneficiary({
+        ...formData.beneficiary,
+        ...photoUrls,
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["client", Number(id)] });
+      toast.success("Beneficiary updated successfully.");
+      onClose();
+    } catch (err: any) {
+      toast.error(err?.message ?? "Failed to save. Please try again.");
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -105,13 +249,15 @@ const UpdateBeneficiary = ({ onClose, initialData }: UpdateBeneficiaryModalProps
 
         {/* Form Content */}
         <form onSubmit={handleSubmit}>
-          <div className="p-6 space-y-6">
+          <div className="p-6 space-y-6 max-h-[70vh] overflow-y-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="md:col-span-2">
                 <label className={labelClass}>Beneficiary Name *</label>
                 <input
                   value={formData.beneficiary.fullName}
-                  onChange={(e) => handleChange("beneficiary", "fullName", e.target.value)}
+                  onChange={(e) =>
+                    handleChange("beneficiary", "fullName", e.target.value)
+                  }
                   className={errClass("fullName")}
                   placeholder="Enter full name"
                 />
@@ -122,7 +268,9 @@ const UpdateBeneficiary = ({ onClose, initialData }: UpdateBeneficiaryModalProps
                 <label className={labelClass}>Beneficiary NIC</label>
                 <input
                   value={formData.beneficiary.nic}
-                  onChange={(e) => handleChange("beneficiary", "nic", e.target.value)}
+                  onChange={(e) =>
+                    handleChange("beneficiary", "nic", e.target.value)
+                  }
                   className={errClass("nic")}
                   placeholder="000000000V or 200000000000"
                 />
@@ -133,7 +281,9 @@ const UpdateBeneficiary = ({ onClose, initialData }: UpdateBeneficiaryModalProps
                 <label className={labelClass}>Relationship</label>
                 <input
                   value={formData.beneficiary.relationship}
-                  onChange={(e) => handleChange("beneficiary", "relationship", e.target.value)}
+                  onChange={(e) =>
+                    handleChange("beneficiary", "relationship", e.target.value)
+                  }
                   className={inputClass}
                   placeholder="e.g. Spouse"
                 />
@@ -143,7 +293,9 @@ const UpdateBeneficiary = ({ onClose, initialData }: UpdateBeneficiaryModalProps
                 <label className={labelClass}>Bank Name *</label>
                 <input
                   value={formData.beneficiary.bankName}
-                  onChange={(e) => handleChange("beneficiary", "bankName", e.target.value)}
+                  onChange={(e) =>
+                    handleChange("beneficiary", "bankName", e.target.value)
+                  }
                   className={errClass("bankName")}
                   placeholder="Bank Name"
                 />
@@ -154,7 +306,9 @@ const UpdateBeneficiary = ({ onClose, initialData }: UpdateBeneficiaryModalProps
                 <label className={labelClass}>Account Number *</label>
                 <input
                   value={formData.beneficiary.accountNo}
-                  onChange={(e) => handleChange("beneficiary", "accountNo", e.target.value)}
+                  onChange={(e) =>
+                    handleChange("beneficiary", "accountNo", e.target.value)
+                  }
                   className={errClass("accountNo")}
                   placeholder="0000 0000 0000"
                 />
@@ -165,7 +319,9 @@ const UpdateBeneficiary = ({ onClose, initialData }: UpdateBeneficiaryModalProps
                 <label className={labelClass}>Bank Branch</label>
                 <input
                   value={formData.beneficiary.bankBranch}
-                  onChange={(e) => handleChange("beneficiary", "bankBranch", e.target.value)}
+                  onChange={(e) =>
+                    handleChange("beneficiary", "bankBranch", e.target.value)
+                  }
                   className={inputClass}
                   placeholder="Branch name/code"
                 />
@@ -175,10 +331,38 @@ const UpdateBeneficiary = ({ onClose, initialData }: UpdateBeneficiaryModalProps
                 <label className={labelClass}>Phone</label>
                 <input
                   value={formData.beneficiary.phone}
-                  onChange={(e) => handleChange("beneficiary", "phone", e.target.value)}
+                  onChange={(e) =>
+                    handleChange("beneficiary", "phone", e.target.value)
+                  }
                   className={inputClass}
                   placeholder="07XXXXXXXX"
                 />
+              </div>
+
+              {/* ── Photo Uploads ── */}
+              <div className="md:col-span-2 pt-2 border-t border-border">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-4">
+                  Documents
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <PhotoUploadField
+                    label="Bank Book Photo"
+                    fieldKey="bankBookPhotoUrl"
+                    existingUrl={formData.beneficiary.bankBookPhotoUrl}
+                    file={photoFiles.bankBookPhotoUrl}
+                    uploading={uploading && !!photoFiles.bankBookPhotoUrl}
+                    onFileChange={handleFileChange}
+                  />
+
+                  <PhotoUploadField
+                    label="Beneficiary ID Copy"
+                    fieldKey="idCopyUrl"
+                    existingUrl={formData.beneficiary.idCopyUrl}
+                    file={photoFiles.idCopyUrl}
+                    uploading={uploading && !!photoFiles.idCopyUrl}
+                    onFileChange={handleFileChange}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -194,9 +378,11 @@ const UpdateBeneficiary = ({ onClose, initialData }: UpdateBeneficiaryModalProps
             </button>
             <button
               type="submit"
-              className="px-8 py-2.5 bg-primary text-primary-foreground rounded-xl text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20"
+              disabled={uploading}
+              className="px-8 py-2.5 bg-primary text-primary-foreground rounded-xl text-xs font-bold uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-primary/20 disabled:opacity-60 flex items-center gap-2"
             >
-              Save Changes
+              {uploading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              {uploading ? "Saving..." : "Save Changes"}
             </button>
           </div>
         </form>

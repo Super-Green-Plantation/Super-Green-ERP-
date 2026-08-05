@@ -539,19 +539,21 @@ model Client {
 }
 
 model Beneficiary {
-  id           Int          @id @default(autoincrement())
-  fullName     String
-  nic          String?
-  phone        String
-  bankName     String
-  bankBranch   String
-  accountNo    String
-  relationship String
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
-  clientId     Int
-  client       Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  investments  Investment[]
+  id               Int          @id @default(autoincrement())
+  fullName         String
+  nic              String?
+  phone            String
+  bankName         String
+  bankBranch       String
+  accountNo        String
+  relationship     String
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  clientId         Int
+  bankBookPhotoUrl String?
+  idCopyUrl        String?
+  client           Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  investments      Investment[]
 }
 
 model Nominee {
@@ -563,6 +565,7 @@ model Nominee {
   updatedAt        DateTime     @updatedAt
   clientId         Int
   nic              String?
+  idCopyUrl        String?
   investments      Investment[]
   client           Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
 }
@@ -680,28 +683,28 @@ model ActivityLog {
 }
 
 model Quotation {
-  id                String             @id @default(cuid())
-  clientName        String
-  clientNic         String?
-  clientAge         Int?
-  planType          QuotationPlanType
-  frequency         QuotationFrequency
-  duration          Int
-  premium           Float
-    pensionPayoutYears Int?
-  retirementAge     Int?
-  totalInvested     Float
-  interestRate      Float
-  interestEarned    Float
-  maturityAmount    Float
-  notes             String?
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-  createdByUserId   String             @db.Uuid
-  documentCharge    Float              @default(500)
-  netInterestEarned Float
-  netMaturityAmount Float
-  createdBy         User               @relation(fields: [createdByUserId], references: [id])
+  id                 String             @id @default(cuid())
+  clientName         String
+  clientNic          String?
+  clientAge          Int?
+  planType           QuotationPlanType
+  frequency          QuotationFrequency
+  duration           Int
+  premium            Float
+  retirementAge      Int?
+  totalInvested      Float
+  interestRate       Float
+  interestEarned     Float
+  maturityAmount     Float
+  notes              String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  createdByUserId    String             @db.Uuid
+  documentCharge     Float              @default(500)
+  netInterestEarned  Float
+  netMaturityAmount  Float
+  pensionPayoutYears Int?
+  createdBy          User               @relation(fields: [createdByUserId], references: [id])
 
   @@index([createdByUserId])
   @@index([planType])
@@ -719,7 +722,7 @@ model InventoryCategory {
 
 model InventoryItem {
   id                Int               @id @default(autoincrement())
-  branchId          Int
+  branchId          Int?
   categoryId        Int
   name              String
   itemCode          String            @unique
@@ -728,11 +731,13 @@ model InventoryItem {
   notes             String?
   createdAt         DateTime          @default(now()) @db.Timestamptz(6)
   updatedAt         DateTime          @default(now()) @db.Timestamptz(6)
-  Branch            Branch            @relation(fields: [branchId], references: [id], onUpdate: NoAction)
+  company           InventoryCompany  @default(SGP)
+  Branch            Branch?           @relation(fields: [branchId], references: [id], onDelete: Restrict, onUpdate: NoAction)
   InventoryCategory InventoryCategory @relation(fields: [categoryId], references: [id], onUpdate: NoAction)
 
   @@index([branchId])
   @@index([categoryId])
+  @@index([company])
 }
 
 enum ApprovalStatus {
@@ -801,6 +806,7 @@ enum Channel {
   Chanel_02
   Micro
   Chanel_03
+  Chanel_04
 }
 
 enum InvStatus {
@@ -879,4 +885,9 @@ enum ItemCondition {
   GOOD
   FAIR
   DAMAGED
+}
+
+enum InventoryCompany {
+  SGP
+  MICRO_CREDIT
 }

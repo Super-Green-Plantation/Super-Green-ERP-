@@ -3,7 +3,7 @@
 // app/features/inventory/page.tsx
 
 import { useEffect, useState, useCallback } from "react";
-import { Package, Plus, Search, Pencil, Trash2, Filter } from "lucide-react";
+import { Package, Plus, Search, Pencil, Trash2, Filter, Building2 } from "lucide-react";
 
 import { getBranches } from "@/app/features/branches/actions";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
@@ -11,7 +11,7 @@ import { UserAvatar } from "@/app/components/Dashboard/UserAvatar";
 import InventoryModal, {
   InventoryModalItem,
 } from "@/app/components/Inventory/InventoryModal";
-import { ItemCondition } from "@prisma/client";
+import { ItemCondition, InventoryCompany } from "@prisma/client";
 import { toast } from "sonner";
 import { deleteInventoryItem, getInventoryItems } from "./inventory-actions";
 
@@ -24,8 +24,14 @@ const conditionBadge: Record<ItemCondition, string> = {
   DAMAGED: "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400",
 };
 
+const COMPANIES: { value: InventoryCompany; label: string; short: string }[] = [
+  { value: "SGP", label: "Super Green Plantation", short: "SGP" },
+  { value: "MICRO_CREDIT", label: "Micro Credit", short: "Micro Credit" },
+];
+
 export default function InventoryPage() {
   const [branches, setBranches] = useState<Branch[]>([]);
+  const [selectedCompany, setSelectedCompany] = useState<InventoryCompany>("SGP");
   const [selectedBranchId, setSelectedBranchId] = useState<number | null>(null);
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(false);
@@ -53,14 +59,30 @@ export default function InventoryPage() {
     });
   }, []);
 
-  // Load items whenever branch changes
+  // When company switches, reset branch selection for SGP
+  const handleCompanyChange = (company: InventoryCompany) => {
+    setSelectedCompany(company);
+    setSearchQuery("");
+    setConditionFilter("ALL");
+    if (company === "SGP" && branches.length > 0) {
+      setSelectedBranchId(branches[0].id);
+    } else {
+      setSelectedBranchId(null);
+    }
+  };
+
+  // Load items whenever company or branch changes
   const loadItems = useCallback(() => {
-    if (!selectedBranchId) return;
+    // For SGP, wait until a branch is selected
+    if (selectedCompany === "SGP" && !selectedBranchId) return;
     setLoading(true);
-    getInventoryItems(selectedBranchId)
+    getInventoryItems({
+      company: selectedCompany,
+      branchId: selectedCompany === "SGP" ? selectedBranchId ?? undefined : undefined,
+    })
       .then(setItems)
       .finally(() => setLoading(false));
-  }, [selectedBranchId]);
+  }, [selectedCompany, selectedBranchId]);
 
   useEffect(() => {
     loadItems();
@@ -77,15 +99,16 @@ export default function InventoryPage() {
   const openEdit = (item: Item) => {
     setEditingItem({
       id: item.id,
+      company: item.company,
       name: item.name,
       quantity: item.quantity,
       condition: item.condition,
       notes: item.notes ?? null,
       categoryId: item.categoryId,
-      branchId: item.branchId,
+      branchId: item.branchId ?? null,
       itemCode: item.itemCode,
       InventoryCategory: { name: item.InventoryCategory.name },
-      Branch: { name: item.Branch.name },
+      Branch: item.Branch ? { name: item.Branch.name } : null,
     });
     setModalMode("edit");
     setModalOpen(true);
@@ -119,6 +142,7 @@ export default function InventoryPage() {
   const totalQty = filtered.reduce((sum, i) => sum + i.quantity, 0);
   const displayName = dbUser?.name ?? "Admin User";
   const displayRole = dbUser?.role ?? "ADMIN";
+  const isMC = selectedCompany === "MICRO_CREDIT";
 
   return (
     <>
@@ -154,6 +178,24 @@ export default function InventoryPage() {
           </div>
         </div>
 
+        {/* Company Toggle */}
+        <div className="flex items-center gap-2 mb-5 p-1 bg-gray-100 dark:bg-gray-800/60 rounded-xl w-fit">
+          {COMPANIES.map((c) => (
+            <button
+              key={c.value}
+              onClick={() => handleCompanyChange(c.value)}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-xs transition-all whitespace-nowrap ${
+                selectedCompany === c.value
+                  ? "bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm border border-gray-200 dark:border-gray-700"
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+              }`}
+            >
+              <Building2 className="w-3.5 h-3.5 shrink-0" />
+              {c.short}
+            </button>
+          ))}
+        </div>
+
         {/* Toolbar */}
         <div className="flex flex-wrap items-center gap-2 mb-5">
           <button
@@ -179,24 +221,35 @@ export default function InventoryPage() {
           </div>
         </div>
 
-        {/* Branch Tabs */}
-        <div className="w-full overflow-x-auto no-scrollbar pb-1 mb-5">
-          <div className="flex items-center gap-2 min-w-max">
-            {branches.map((b) => (
-              <button
-                key={b.id}
-                onClick={() => setSelectedBranchId(b.id)}
-                className={`px-4 py-2 rounded-xl transition-all font-semibold whitespace-nowrap text-sm ${
-                  selectedBranchId === b.id
-                    ? "bg-[#0f5132] text-white shadow-md shadow-green-900/20"
-                    : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
-                }`}
-              >
-                {b.name}
-              </button>
-            ))}
+        {/* Branch Tabs — only shown for SGP */}
+        {!isMC && (
+          <div className="w-full overflow-x-auto no-scrollbar pb-1 mb-5">
+            <div className="flex items-center gap-2 min-w-max">
+              {branches.map((b) => (
+                <button
+                  key={b.id}
+                  onClick={() => setSelectedBranchId(b.id)}
+                  className={`px-4 py-2 rounded-xl transition-all font-semibold whitespace-nowrap text-sm ${
+                    selectedBranchId === b.id
+                      ? "bg-[#0f5132] text-white shadow-md shadow-green-900/20"
+                      : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+                  }`}
+                >
+                  {b.name}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* MC label — shown instead of branch tabs */}
+        {isMC && (
+          <div className="flex items-center gap-2 mb-5">
+            <span className="px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 text-xs font-bold border border-blue-100 dark:border-blue-800/40">
+              Micro Credit — All Items
+            </span>
+          </div>
+        )}
 
         {/* Search */}
         <div className="relative w-full border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-900 shadow-sm flex items-center mb-5">
@@ -234,7 +287,16 @@ export default function InventoryPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100 dark:border-gray-800">
-                  {["Item Code", "Name", "Category", "Qty", "Condition", "Notes", ""].map((h) => (
+                  {[
+                    "Item Code",
+                    "Name",
+                    "Category",
+                    ...(isMC ? [] : ["Branch"]),
+                    "Qty",
+                    "Condition",
+                    "Notes",
+                    "",
+                  ].map((h) => (
                     <th
                       key={h}
                       className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400 whitespace-nowrap"
@@ -259,6 +321,12 @@ export default function InventoryPage() {
                     <td className="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">
                       {item.InventoryCategory.name}
                     </td>
+                    {/* Branch column only for SGP */}
+                    {!isMC && (
+                      <td className="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                        {item.Branch?.name ?? "—"}
+                      </td>
+                    )}
                     <td className="px-4 py-3 font-bold text-gray-900 dark:text-gray-100">
                       {item.quantity}
                     </td>
@@ -302,6 +370,8 @@ export default function InventoryPage() {
         <InventoryModal
           mode={modalMode}
           initialData={editingItem ?? undefined}
+          defaultCompany={selectedCompany}
+          defaultBranchId={selectedCompany === "SGP" ? selectedBranchId : null}
           onClose={() => setModalOpen(false)}
           onSuccess={loadItems}
         />

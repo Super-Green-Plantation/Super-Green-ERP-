@@ -1,8 +1,67 @@
 "use client";
 
-import { Pencil, Check } from "lucide-react";
+import { useRef } from "react";
+import { Pencil, Check, UploadCloud, CheckCircle2, Eye } from "lucide-react";
 import { Field } from "./ui";
 import { isEqual, NomineeFields } from "./types";
+
+// ─── Inline photo upload widget ───────────────────────────────────────────────
+
+function PhotoField({
+  label,
+  file,
+  existingUrl,
+  onFileChange,
+}: {
+  label: string;
+  file: File | null;
+  existingUrl: string | null;
+  onFileChange: (file: File | null) => void;
+}) {
+  const ref = useRef<HTMLInputElement>(null);
+  const previewUrl = file ? URL.createObjectURL(file) : existingUrl;
+
+  return (
+    <div>
+      <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+        {label}
+      </label>
+      <div
+        className="flex items-center gap-3 px-3 py-2.5 border border-dashed border-border rounded-md bg-card cursor-pointer hover:bg-muted/30 transition-colors"
+        onClick={() => ref.current?.click()}
+      >
+        {previewUrl ? (
+          <CheckCircle2 className="w-4 h-4 text-purple-500 shrink-0" />
+        ) : (
+          <UploadCloud className="w-4 h-4 text-muted-foreground shrink-0" />
+        )}
+        <span className="text-xs text-muted-foreground truncate flex-1">
+          {file ? file.name : existingUrl ? "Uploaded — click to replace" : "Click to upload (JPG, PNG, PDF)"}
+        </span>
+        {previewUrl && (
+          <a
+            href={previewUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={e => e.stopPropagation()}
+            className="p-1 hover:bg-muted rounded transition-colors shrink-0"
+          >
+            <Eye className="w-3.5 h-3.5 text-muted-foreground" />
+          </a>
+        )}
+      </div>
+      <input
+        ref={ref}
+        type="file"
+        accept="image/*,application/pdf"
+        className="hidden"
+        onChange={e => onFileChange(e.target.files?.[0] ?? null)}
+      />
+    </div>
+  );
+}
+
+// ─── Main panel ──────────────────────────────────────────────────────────────
 
 export default function NomineePanel({
   mode,
@@ -11,8 +70,10 @@ export default function NomineePanel({
   label,
   fields,
   originalFields,
+  idCopyFile,
   onSelect,
   onFieldChange,
+  onIdCopyFileChange,
   onClear,
 }: {
   mode: "existing" | "new" | "none";
@@ -21,8 +82,11 @@ export default function NomineePanel({
   label: string | null;
   fields: NomineeFields;
   originalFields: NomineeFields | null;
+  /** Staged file for the nominee ID copy */
+  idCopyFile: File | null;
   onSelect: (n: any) => void;
   onFieldChange: (updater: (p: NomineeFields) => NomineeFields) => void;
+  onIdCopyFileChange: (file: File | null) => void;
   onClear: () => void;
 }) {
   return (
@@ -64,7 +128,7 @@ export default function NomineePanel({
           {label && (
             <div className="p-3 bg-muted/30 rounded-lg border border-primary/20 flex justify-between items-center mb-2">
               <div className="flex items-center gap-2">
-                <Pencil className="w-[18px] h-[18px] text-primary" />
+                <Pencil className="w-4.5 h-4.5 text-primary" />
                 <span className="text-[11px] font-bold text-foreground">
                   Editing: <span className="uppercase">{label}</span>
                 </span>
@@ -98,7 +162,7 @@ export default function NomineePanel({
               <textarea
                 value={fields.permanentAddress}
                 onChange={e => onFieldChange(p => ({ ...p, permanentAddress: e.target.value }))}
-                className="w-full px-3 py-2.5 text-sm font-semibold bg-card border border-border rounded-md outline-none focus:border-[#0f5132] focus:ring-1 focus:ring-[#0f5132] transition-all resize-y min-h-[80px]"
+                className="w-full px-3 py-2.5 text-sm font-semibold bg-card border border-border rounded-md outline-none focus:border-[#0f5132] focus:ring-1 focus:ring-[#0f5132] transition-all resize-y min-h-20"
               />
             </div>
             <div>
@@ -106,7 +170,20 @@ export default function NomineePanel({
               <textarea
                 value={fields.postalAddress}
                 onChange={e => onFieldChange(p => ({ ...p, postalAddress: e.target.value }))}
-                className="w-full px-3 py-2.5 text-sm font-semibold bg-card border border-border rounded-md outline-none focus:border-[#0f5132] focus:ring-1 focus:ring-[#0f5132] transition-all resize-y min-h-[80px]"
+                className="w-full px-3 py-2.5 text-sm font-semibold bg-card border border-border rounded-md outline-none focus:border-[#0f5132] focus:ring-1 focus:ring-[#0f5132] transition-all resize-y min-h-20"
+              />
+            </div>
+
+            {/* ── Document upload ── */}
+            <div className="pt-3 border-t border-border space-y-3">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                Documents
+              </p>
+              <PhotoField
+                label="Nominee ID Copy"
+                file={idCopyFile}
+                existingUrl={fields.idCopyUrl}
+                onFileChange={onIdCopyFileChange}
               />
             </div>
           </div>

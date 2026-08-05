@@ -807,25 +807,27 @@ export async function searchClients(query: string) {
   return client;
 }
 
+// ─── PATCH for app/features/clients/actions.ts ───────────────────────────────
+// Replace the existing updateBeneficiary and updateNominee functions with these.
+
 export async function updateBeneficiary(data: any) {
   try {
-    console.log(data);
-
     const updatedBeneficiary = await prisma.beneficiary.update({
       where: { id: data.id },
       data: {
-        fullName: data.fullName,
-        relationship: data.relationship || "",
-        bankName: data.bankName || "",
-        bankBranch: data.bankBranch || "",
-        accountNo: data.accountNo || "",
-        nic: data.nic || null,
-        phone: data.phone || "",
+        fullName:         data.fullName,
+        relationship:     data.relationship     || "",
+        bankName:         data.bankName         || "",
+        bankBranch:       data.bankBranch       || "",
+        accountNo:        data.accountNo        || "",
+        nic:              data.nic              || null,
+        phone:            data.phone            || "",
+        bankBookPhotoUrl: data.bankBookPhotoUrl ?? null,  // ← new
+        idCopyUrl:        data.idCopyUrl        ?? null,  // ← new
       },
-    })
+    });
 
     return updatedBeneficiary;
-
   } catch (err) {
     console.error("Error updating beneficiary:", err);
     return { success: false, error: "Failed to update beneficiary" };
@@ -833,25 +835,23 @@ export async function updateBeneficiary(data: any) {
 }
 
 export async function updateNominee(data: any) {
-
   try {
     const updatedNominee = await prisma.nominee.update({
       where: { id: data.id },
       data: {
-        fullName: data.fullName,
+        fullName:         data.fullName,
         permanentAddress: data.permanentAddress || "",
-        postalAddress: data.postalAddress || null,
+        postalAddress:    data.postalAddress    || null,
+        idCopyUrl:        data.idCopyUrl        ?? null,  // ← new
       },
     });
 
     return updatedNominee;
-
   } catch (err) {
     console.error("Error updating nominee:", err);
     return { success: false, error: "Failed to update nominee" };
   }
 }
-
 export async function deleteBeneficiaryAction(id: number) {
   try {
     await prisma.beneficiary.delete({

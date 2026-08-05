@@ -17,12 +17,24 @@ const Page = () => {
   const [resetKey, setResetKey] = useState(0);
   const [lockedClient, setLockedClient] = useState<LockedClient | null>(null);
 
+  // KYC identity + paperwork docs (existing ref, unchanged)
   const pendingFilesRef = useRef<Record<string, File | null>>({
     idFront: null,
     idBack: null,
     paymentSlip: null,
     proposal: null,
     agreement: null,
+  });
+
+  // Beneficiary photo files
+  const beneficiaryPhotosRef = useRef<Record<string, File | null>>({
+    bankBookPhotoUrl: null,
+    idCopyUrl: null,
+  });
+
+  // Nominee photo file
+  const nomineePhotosRef = useRef<Record<string, File | null>>({
+    idCopyUrl: null,
   });
 
   const handleLockClient = (client: LockedClient) => {
@@ -112,14 +124,22 @@ const Page = () => {
           {/* Right Column */}
           <div className="lg:col-span-1 space-y-6">
             {/* <AdvisorHierarchy /> */}
-            <BeneficiaryDetails lockedClient={null} />
-            <NomineeDetails lockedClient={null} />
+            <BeneficiaryDetails
+              lockedClient={null}
+              beneficiaryPhotosRef={beneficiaryPhotosRef}
+            />
+            <NomineeDetails
+              lockedClient={null}
+              nomineePhotosRef={nomineePhotosRef}
+            />
           </div>
         </div>
 
         <div className="flex justify-end pt-4">
           <SubmitButton
             pendingFilesRef={pendingFilesRef}
+            beneficiaryPhotosRef={beneficiaryPhotosRef}
+            nomineePhotosRef={nomineePhotosRef}
             lockedClient={null}
             onResetComplete={() => {
               setResetKey((p) => p + 1);

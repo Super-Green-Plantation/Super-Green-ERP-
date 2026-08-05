@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useFormContext } from "@/app/context/FormContext";
-import { Landmark, Check } from "lucide-react";
+import { Landmark, Check, UploadCloud, CheckCircle2, Eye } from "lucide-react";
 import { LockedClient } from "@/app/types/client";
 
 const FieldError = ({ message }: { message?: string }) =>
@@ -12,9 +12,62 @@ const FieldError = ({ message }: { message?: string }) =>
     </p>
   ) : null;
 
-type Props = { lockedClient: LockedClient | null };
+// ─── Photo upload widget ──────────────────────────────────────────────────────
 
-const BeneficiaryDetails = ({ lockedClient }: Props) => {
+function PhotoField({
+  label,
+  fieldKey,
+  photosRef,
+}: {
+  label: string;
+  fieldKey: string;
+  photosRef: React.MutableRefObject<Record<string, File | null>>;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
+
+  const handleChange = (file: File | null) => {
+    photosRef.current[fieldKey] = file;
+    setFileName(file?.name ?? null);
+  };
+
+  return (
+    <div>
+      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-2 ml-1 block">
+        {label}
+      </label>
+      <div
+        className="flex items-center gap-3 px-4 py-3 border border-dashed border-border/50 rounded-lg bg-background/50 cursor-pointer hover:bg-background transition-colors"
+        onClick={() => inputRef.current?.click()}
+      >
+        {fileName ? (
+          <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+        ) : (
+          <UploadCloud className="w-4 h-4 text-muted-foreground/40 shrink-0" />
+        )}
+        <span className="text-sm text-muted-foreground/50 truncate flex-1 font-medium">
+          {fileName ?? "Click to upload (JPG, PNG, PDF)"}
+        </span>
+      </div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*,application/pdf"
+        className="hidden"
+        onChange={(e) => handleChange(e.target.files?.[0] ?? null)}
+      />
+    </div>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
+
+type Props = {
+  lockedClient: LockedClient | null;
+  beneficiaryPhotosRef: React.MutableRefObject<Record<string, File | null>>;
+};
+
+const BeneficiaryDetails = ({ lockedClient, beneficiaryPhotosRef }: Props) => {
   const { form } = useFormContext();
   const { register, watch, setValue, formState: { errors } } = form;
 
@@ -22,9 +75,7 @@ const BeneficiaryDetails = ({ lockedClient }: Props) => {
   const beneficiaryName = watch("beneficiary.fullName");
   const hasBeneficiary = !!beneficiaryName?.trim();
 
-  // For existing client: which saved beneficiary did the user pick?
   const [selectedBeneficiaryId, setSelectedBeneficiaryId] = useState<number | null>(null);
-  // "pick" = showing the list, "edit" = editing/adding a new one
   const [existingMode, setExistingMode] = useState<"pick" | "edit">("pick");
 
   const inputClass = (hasError?: boolean) =>
@@ -34,10 +85,8 @@ const BeneficiaryDetails = ({ lockedClient }: Props) => {
   const labelClass =
     "text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-2 ml-1 block";
 
-  // Populate form fields from a saved beneficiary record
   const handleSelectExisting = (b: any) => {
     setSelectedBeneficiaryId(b.id);
-    // Store the id so SubmitButton can pass it as beneficiaryId
     setValue("beneficiary._existingId", b.id);
     setValue("beneficiary.fullName", b.fullName ?? "");
     setValue("beneficiary.nic", b.nic ?? "");
@@ -46,6 +95,8 @@ const BeneficiaryDetails = ({ lockedClient }: Props) => {
     setValue("beneficiary.bankBranch", b.bankBranch ?? "");
     setValue("beneficiary.accountNo", b.accountNo ?? "");
     setValue("beneficiary.relationship", b.relationship ?? "");
+    // Clear any staged photos when switching records
+    beneficiaryPhotosRef.current = { bankBookPhotoUrl: null, idCopyUrl: null };
     setExistingMode("edit");
   };
 
@@ -59,6 +110,7 @@ const BeneficiaryDetails = ({ lockedClient }: Props) => {
     setValue("beneficiary.bankBranch", "");
     setValue("beneficiary.accountNo", "");
     setValue("beneficiary.relationship", "");
+    beneficiaryPhotosRef.current = { bankBookPhotoUrl: null, idCopyUrl: null };
     setExistingMode("pick");
   };
 
@@ -113,7 +165,6 @@ const BeneficiaryDetails = ({ lockedClient }: Props) => {
               </p>
             )}
 
-            {/* Option to add a fresh one instead */}
             <button
               type="button"
               onClick={() => setExistingMode("edit")}
@@ -124,7 +175,7 @@ const BeneficiaryDetails = ({ lockedClient }: Props) => {
           </>
         )}
 
-        {/* ── Existing client, edit mode: show fields (pre-filled or blank) ── */}
+        {/* ── Existing client, edit mode ── */}
         {lockedClient && existingMode === "edit" && (
           <div className="space-y-4">
             {selectedBeneficiaryId && (
@@ -168,7 +219,6 @@ const BeneficiaryDetails = ({ lockedClient }: Props) => {
     return (
       <div className="space-y-4">
         {lockedClient && (
-          // Full Name field for existing-client edit mode
           <div>
             <label className={labelClass}>Full Name</label>
             <input
@@ -250,6 +300,25 @@ const BeneficiaryDetails = ({ lockedClient }: Props) => {
             {...register("beneficiary.relationship")}
             className={inputClass()}
           />
+        </div>
+
+        {/* ── Document uploads ── */}
+        <div className="pt-3 border-t border-border/30 space-y-3">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
+            Documents
+          </p>
+          <div className="grid sm:grid-cols-2 grid-cols-1 gap-3">
+            <PhotoField
+              label="Bank Book Photo"
+              fieldKey="bankBookPhotoUrl"
+              photosRef={beneficiaryPhotosRef}
+            />
+            <PhotoField
+              label="Beneficiary ID Copy"
+              fieldKey="idCopyUrl"
+              photosRef={beneficiaryPhotosRef}
+            />
+          </div>
         </div>
       </div>
     );

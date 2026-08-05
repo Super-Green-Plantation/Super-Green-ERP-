@@ -534,19 +534,9 @@ export async function updateInvestment({
   zmId?: number | null;
   agmId?: number | null;
   ccoId?: number | null;
-}): Promise<{ success: boolean; error?: string }> {
+}): Promise<{ success: boolean; error?: string; investment?: { beneficiaryId: number | null; nomineeId: number | null } }> {
 
   console.log("hierarchy received:", { faId, fmId, bmId, rmId, zmId, agmId, ccoId });
-
-  // ── Server-side Zod validation ────────────────────────────────────────────
-  // const parsed = updateInvestmentSchema.safeParse({
-  //   investmentId, planId, amount, investmentDate, investmentRates,
-  //   beneficiaryId, nomineeId, proposalFormNo,
-  // });
-  // if (!parsed.success) {
-  //   const firstMessage = parsed.error.issues[0]?.message ?? "Validation failed";
-  //   return { success: false, error: firstMessage };
-  // }
 
   try {
     return await prisma.$transaction(async (tx) => {
@@ -625,7 +615,6 @@ export async function updateInvestment({
         const dateChanged = oldYear !== newYear || oldMonth !== newMonth;
 
         if (dateChanged) {
-          // Date changed — decrement everything from old month, increment everything in new month
           await Promise.all(oldMembers.map(memberId =>
             tx.monthlyPayroll.updateMany({
               where: { memberId, year: oldYear, month: oldMonth },
@@ -640,11 +629,9 @@ export async function updateInvestment({
             })
           ));
         } else {
-          // Same month — only touch members that actually changed
           const removed = oldMembers.filter(id => !newMembers.includes(id));
           const added = newMembers.filter(id => !oldMembers.includes(id));
 
-          // Amount changed but same members — need to adjust the delta
           const amountChanged = oldInv.amount !== amount;
           const staying = oldMembers.filter(id => newMembers.includes(id));
 
@@ -662,7 +649,6 @@ export async function updateInvestment({
             })
           ));
 
-          // If amount changed, adjust delta for members that stayed
           if (amountChanged && staying.length > 0) {
             const delta = amount - oldInv.amount;
             await Promise.all(staying.map(memberId =>
@@ -674,7 +660,14 @@ export async function updateInvestment({
           }
         }
       }
-      return { success: true };
+
+      return {
+        success: true,
+        investment: {
+          beneficiaryId: updated.beneficiaryId,
+          nomineeId: updated.nomineeId,
+        },
+      };
     });
   } catch (e: any) {
     return { success: false, error: e.message };

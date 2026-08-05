@@ -20,7 +20,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { getFinancialPlans } from "@/app/features/financial_plans/actions";
-import { getClients } from "@/app/features/clients/actions";
+import { getClients, updateBeneficiary, updateNominee } from "@/app/features/clients/actions";
 import {
   createInvestmentForExistingClient,
   updateInvestment,
@@ -105,6 +105,20 @@ export default function CreateInvestmentForm({
       return { ...prev, [key]: file ? URL.createObjectURL(file) : null };
     });
   };
+
+  // ---- Beneficiary photo files ----
+  const [beneficiaryPhotoFiles, setBeneficiaryPhotoFiles] = useState<{
+    bankBookPhotoUrl: File | null;
+    idCopyUrl: File | null;
+  }>({ bankBookPhotoUrl: null, idCopyUrl: null });
+
+  const handleBeneficiaryPhotoChange = (
+    key: "bankBookPhotoUrl" | "idCopyUrl",
+    file: File | null
+  ) => setBeneficiaryPhotoFiles(prev => ({ ...prev, [key]: file }));
+
+  // ---- Nominee ID copy file ----
+  const [nomineeIdCopyFile, setNomineeIdCopyFile] = useState<File | null>(null);
 
   const { data: userData } = useSessionUser();
   const isManager = userData && ["ADMIN", "HR", "DEV"].includes(userData.role);
@@ -285,6 +299,8 @@ export default function CreateInvestmentForm({
       setOriginalBeneficiary(null);
       setBeneficiaryLabel(null);
     }
+    // Reset staged photo files whenever mode changes
+    setBeneficiaryPhotoFiles({ bankBookPhotoUrl: null, idCopyUrl: null });
   };
 
   const handleNomineeModeChange = (mode: NomineeMode) => {
@@ -300,6 +316,8 @@ export default function CreateInvestmentForm({
       setOriginalNominee(null);
       setNomineeLabel(null);
     }
+    // Reset staged photo file whenever mode changes
+    setNomineeIdCopyFile(null);
   };
 
   // Selecting a beneficiary card: populate fields + take snapshot
@@ -309,6 +327,8 @@ export default function CreateInvestmentForm({
     setBeneficiaryFields(fields);
     setOriginalBeneficiary(fields);
     setBeneficiaryLabel(b.fullName);
+    // Clear staged photos when switching to a different saved record
+    setBeneficiaryPhotoFiles({ bankBookPhotoUrl: null, idCopyUrl: null });
   };
 
   const handleNomineeSelect = (n: any) => {
@@ -317,6 +337,7 @@ export default function CreateInvestmentForm({
     setNomineeFields(fields);
     setOriginalNominee(fields);
     setNomineeLabel(n.fullName);
+    setNomineeIdCopyFile(null);
   };
 
   const handleClientSelect = (client: any | null) => {
@@ -330,6 +351,7 @@ export default function CreateInvestmentForm({
     setBeneficiaryLabel(null);
     setOriginalBeneficiary(null);
     setBeneficiaryFields(EMPTY_BENEFICIARY);
+    setBeneficiaryPhotoFiles({ bankBookPhotoUrl: null, idCopyUrl: null });
   };
 
   const handleNomineeClear = () => {
@@ -337,6 +359,33 @@ export default function CreateInvestmentForm({
     setNomineeLabel(null);
     setOriginalNominee(null);
     setNomineeFields(EMPTY_NOMINEE);
+    setNomineeIdCopyFile(null);
+  };
+
+  // ---- Photo upload helpers ----
+
+  const uploadBeneficiaryPhotos = async (beneficiaryId: number) => {
+    const hasBeneficiaryPhotos = Object.values(beneficiaryPhotoFiles).some(Boolean);
+    if (!hasBeneficiaryPhotos) return;
+    const photoUrls: { bankBookPhotoUrl?: string | null; idCopyUrl?: string | null } = {};
+    await Promise.all(
+      (Object.entries(beneficiaryPhotoFiles) as [string, File | null][]).map(
+        async ([key, file]) => {
+          if (!file) return;
+          photoUrls[key as keyof typeof photoUrls] = await uploadToSupabase(
+            `beneficiary/${beneficiaryId}/${key}`,
+            file
+          );
+        }
+      )
+    );
+    await updateBeneficiary({ id: beneficiaryId, ...photoUrls });
+  };
+
+  const uploadNomineePhoto = async (nomineeId: number) => {
+    if (!nomineeIdCopyFile) return;
+    const url = await uploadToSupabase(`nominee/${nomineeId}/idCopyUrl`, nomineeIdCopyFile);
+    await updateNominee({ id: nomineeId, idCopyUrl: url });
   };
 
   // ---- submit logic ----
@@ -407,6 +456,24 @@ export default function CreateInvestmentForm({
           ...hierarchy,
         });
         if (!res.success) { toast.error(res.error ?? "Update failed"); return; }
+
+        // Upload photos for whichever beneficiary/nominee record was resolved.
+        // res.investment carries the final IDs written by the action.
+        const resolvedBeneficiaryId = res.investment?.beneficiaryId ?? beneficiaryId;
+        const resolvedNomineeId = res.investment?.nomineeId ?? nomineeId;
+
+        const photoUploads: Promise<void>[] = [];
+        if (resolvedBeneficiaryId) photoUploads.push(uploadBeneficiaryPhotos(resolvedBeneficiaryId));
+        if (resolvedNomineeId) photoUploads.push(uploadNomineePhoto(resolvedNomineeId));
+        if (photoUploads.length) {
+          try {
+            await Promise.all(photoUploads);
+          } catch (err) {
+            console.error("Photo upload error (edit):", err);
+            toast.warning("Investment updated but some photos failed to upload.");
+          }
+        }
+
         toast.success("Investment updated successfully");
       } else {
         const res = await createInvestmentForExistingClient({
@@ -451,6 +518,24 @@ export default function CreateInvestmentForm({
             toast.warning("Investment created but some documents failed to upload.");
           } finally {
             toast.dismiss("inv-doc-upload");
+          }
+        }
+
+        // ── Upload beneficiary / nominee photos ───────────────────────────
+        // res.investment carries the final beneficiaryId / nomineeId written
+        // by the action (whether reused or newly created via newBeneficiary).
+        const finalBeneficiaryId = res.investment?.beneficiaryId;
+        const finalNomineeId = res.investment?.nomineeId;
+
+        const photoUploads: Promise<void>[] = [];
+        if (finalBeneficiaryId) photoUploads.push(uploadBeneficiaryPhotos(finalBeneficiaryId));
+        if (finalNomineeId) photoUploads.push(uploadNomineePhoto(finalNomineeId));
+        if (photoUploads.length) {
+          try {
+            await Promise.all(photoUploads);
+          } catch (err) {
+            console.error("Photo upload error (create):", err);
+            toast.warning("Investment created but some photos failed to upload.");
           }
         }
 
@@ -608,8 +693,10 @@ export default function CreateInvestmentForm({
                       label={beneficiaryLabel}
                       fields={beneficiaryFields}
                       originalFields={originalBeneficiary}
+                      photoFiles={beneficiaryPhotoFiles}
                       onSelect={handleBeneficiarySelect}
                       onFieldChange={updater => setBeneficiaryFields(updater)}
+                      onPhotoFileChange={handleBeneficiaryPhotoChange}
                       onClear={handleBeneficiaryClear}
                     />
                   )}
@@ -634,8 +721,10 @@ export default function CreateInvestmentForm({
                       label={nomineeLabel}
                       fields={nomineeFields}
                       originalFields={originalNominee}
+                      idCopyFile={nomineeIdCopyFile}
                       onSelect={handleNomineeSelect}
                       onFieldChange={updater => setNomineeFields(updater)}
+                      onIdCopyFileChange={setNomineeIdCopyFile}
                       onClear={handleNomineeClear}
                     />
                   )}

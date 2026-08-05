@@ -1,6 +1,6 @@
 "use client";
 
-// app/features/inventory/[id]/edit/page.tsx
+// app/features/inventory/edit/page.tsx
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -28,7 +28,7 @@ export default function EditInventoryItemPage() {
   });
 
   useEffect(() => {
-    getInventoryItemById(Number(id)).then((data:any) => {
+    getInventoryItemById(Number(id)).then((data: any) => {
       if (data) {
         setItem(data);
         setForm({
@@ -42,9 +42,10 @@ export default function EditInventoryItemPage() {
     });
   }, [id]);
 
-  const set = (field: keyof typeof form) => (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) => setForm((prev) => ({ ...prev, [field]: e.target.value }));
+  const set =
+    (field: keyof typeof form) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
+      setForm((prev) => ({ ...prev, [field]: e.target.value }));
 
   const handleSubmit = async () => {
     if (!form.name.trim()) {
@@ -75,9 +76,7 @@ export default function EditInventoryItemPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest animate-pulse">
-          Loading…
-        </p>
+        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest animate-pulse">Loading…</p>
       </div>
     );
   }
@@ -86,10 +85,7 @@ export default function EditInventoryItemPage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-3">
         <p className="text-sm font-semibold text-gray-500">Item not found.</p>
-        <Link
-          href="/features/inventory"
-          className="text-xs font-bold text-[#0f5132] hover:underline"
-        >
+        <Link href="/features/inventory" className="text-xs font-bold text-[#0f5132] hover:underline">
           ← Back to Inventory
         </Link>
       </div>
@@ -112,23 +108,27 @@ export default function EditInventoryItemPage() {
             <Package className="w-5 h-5 text-[#0f5132] dark:text-emerald-400" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">
-              Edit Inventory Item
-            </h1>
-            <p className="text-xs font-mono text-gray-400 mt-0.5">
-              {item.itemCode}
-            </p>
+            <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">Edit Inventory Item</h1>
+            <p className="text-xs font-mono text-gray-400 mt-0.5">{item.itemCode}</p>
           </div>
         </div>
 
-        {/* Read-only info */}
+        {/* Read-only info — handles nullable Branch for MC items */}
         <div className="grid grid-cols-2 gap-4 mb-6 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-xl">
           <div>
-            <p className={labelClass}>Branch</p>
+            <p className={labelClass}>Company</p>
             <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-              {item.Branch.name}
+              {item.company === "MICRO_CREDIT" ? "Micro Credit" : "SGP"}
             </p>
           </div>
+          {item.Branch ? (
+            <div>
+              <p className={labelClass}>Branch</p>
+              <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">{item.Branch.name}</p>
+            </div>
+          ) : (
+            <div /> /* empty cell to keep grid aligned */
+          )}
           <div>
             <p className={labelClass}>Category</p>
             <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
@@ -141,33 +141,18 @@ export default function EditInventoryItemPage() {
           {/* Name */}
           <div>
             <label className={labelClass}>Item Name *</label>
-            <input
-              type="text"
-              value={form.name}
-              onChange={set("name")}
-              className={inputClass}
-            />
+            <input type="text" value={form.name} onChange={set("name")} className={inputClass} />
           </div>
 
           {/* Quantity + Condition */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={labelClass}>Quantity *</label>
-              <input
-                type="number"
-                min={1}
-                value={form.quantity}
-                onChange={set("quantity")}
-                className={inputClass}
-              />
+              <input type="number" min={1} value={form.quantity} onChange={set("quantity")} className={inputClass} />
             </div>
             <div>
               <label className={labelClass}>Condition *</label>
-              <select
-                value={form.condition}
-                onChange={set("condition")}
-                className={inputClass}
-              >
+              <select value={form.condition} onChange={set("condition")} className={inputClass}>
                 <option value="GOOD">Good</option>
                 <option value="FAIR">Fair</option>
                 <option value="DAMAGED">Damaged</option>

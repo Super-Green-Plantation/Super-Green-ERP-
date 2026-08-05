@@ -117,9 +117,22 @@ function calcQuotation(
     const rPerPeriod = R / 100 / periodsPerYear;
     maturityAmount = premium * ((Math.pow(1 + rPerPeriod, totalPayments) - 1) / rPerPeriod);
   } else {
-    // CHILD & MARGE — simple interest on total invested capital
-    // Per plan docs: "interest is paid on the invested amount"
-    maturityAmount = totalInvested * (1 + R / 100);
+    // CHILD & MARGE — annual compound interest
+    // Paying period: each year deposits accumulate then interest compounds on the full balance
+    // Holding period: no new deposits, interest continues to compound on the running balance
+    // Formula per year: balance = (balance + annualDeposit) × (1 + R/100)  [paying]
+    //                   balance = balance × (1 + R/100)                     [holding]
+    const annualDeposit = premium * periodsPerYear;
+    const holdingYears = duration - plan.payingTerm;
+    const rate = R / 100;
+    let balance = 0;
+    for (let y = 0; y < plan.payingTerm; y++) {
+      balance = (balance + annualDeposit) * (1 + rate);
+    }
+    for (let y = 0; y < holdingYears; y++) {
+      balance = balance * (1 + rate);
+    }
+    maturityAmount = balance;
   }
 
   const interestEarned = maturityAmount - totalInvested;
@@ -421,10 +434,10 @@ const AddQuotationModal = ({ isOpen, onClose }: AddQuotationModalProps) => {
               Premium Amount (Rs.)
             </label>
             <input
-              type="number"
+              type="float"
+              step="any"
               required
               min={minPremium}
-              step={1000}
               value={premium}
               onChange={(e) => setPremium(Number(e.target.value))}
               className={`w-full bg-muted/30 border rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/50 outline-none ${

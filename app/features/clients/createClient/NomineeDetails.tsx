@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useFormContext } from "@/app/context/FormContext";
-import { Users, Check } from "lucide-react";
+import { Users, Check, UploadCloud, CheckCircle2 } from "lucide-react";
 import { LockedClient } from "@/app/types/client";
 
 const FieldError = ({ message }: { message?: string }) =>
@@ -12,9 +12,62 @@ const FieldError = ({ message }: { message?: string }) =>
     </p>
   ) : null;
 
-type Props = { lockedClient: LockedClient | null };
+// ─── Photo upload widget ──────────────────────────────────────────────────────
 
-const NomineeDetails = ({ lockedClient }: Props) => {
+function PhotoField({
+  label,
+  fieldKey,
+  photosRef,
+}: {
+  label: string;
+  fieldKey: string;
+  photosRef: React.MutableRefObject<Record<string, File | null>>;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
+
+  const handleChange = (file: File | null) => {
+    photosRef.current[fieldKey] = file;
+    setFileName(file?.name ?? null);
+  };
+
+  return (
+    <div>
+      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-2 ml-1 block">
+        {label}
+      </label>
+      <div
+        className="flex items-center gap-3 px-4 py-3 border border-dashed border-border/50 rounded-lg bg-background/50 cursor-pointer hover:bg-background transition-colors"
+        onClick={() => inputRef.current?.click()}
+      >
+        {fileName ? (
+          <CheckCircle2 className="w-4 h-4 text-purple-500 shrink-0" />
+        ) : (
+          <UploadCloud className="w-4 h-4 text-muted-foreground/40 shrink-0" />
+        )}
+        <span className="text-sm text-muted-foreground/50 truncate flex-1 font-medium">
+          {fileName ?? "Click to upload (JPG, PNG, PDF)"}
+        </span>
+      </div>
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*,application/pdf"
+        className="hidden"
+        onChange={(e) => handleChange(e.target.files?.[0] ?? null)}
+      />
+    </div>
+  );
+}
+
+// ─── Main component ───────────────────────────────────────────────────────────
+
+type Props = {
+  lockedClient: LockedClient | null;
+  nomineePhotosRef: React.MutableRefObject<Record<string, File | null>>;
+};
+
+const NomineeDetails = ({ lockedClient, nomineePhotosRef }: Props) => {
   const { form } = useFormContext();
   const { register, watch, setValue, formState: { errors } } = form;
 
@@ -39,6 +92,8 @@ const NomineeDetails = ({ lockedClient }: Props) => {
     setValue("nominee.nic", n.nic ?? "");
     setValue("nominee.permanentAddress", n.permanentAddress ?? "");
     setValue("nominee.postalAddress", n.postalAddress ?? "");
+    // Clear staged photo when switching records
+    nomineePhotosRef.current = { idCopyUrl: null };
     setExistingMode("edit");
   };
 
@@ -49,6 +104,7 @@ const NomineeDetails = ({ lockedClient }: Props) => {
     setValue("nominee.nic", "");
     setValue("nominee.permanentAddress", "");
     setValue("nominee.postalAddress", "");
+    nomineePhotosRef.current = { idCopyUrl: null };
     setExistingMode("pick");
   };
 
@@ -200,6 +256,18 @@ const NomineeDetails = ({ lockedClient }: Props) => {
             rows={2}
             {...register("nominee.postalAddress")}
             className={inputClass()}
+          />
+        </div>
+
+        {/* ── Document upload ── */}
+        <div className="pt-3 border-t border-border/30 space-y-3">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">
+            Documents
+          </p>
+          <PhotoField
+            label="Nominee ID Copy"
+            fieldKey="idCopyUrl"
+            photosRef={nomineePhotosRef}
           />
         </div>
       </div>

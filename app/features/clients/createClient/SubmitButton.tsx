@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { saveClient } from "../actions";
+import { updateBeneficiary, updateNominee } from "@/app/features/clients/actions";
 import { createInvestmentForExistingClient } from "@/app/features/investments/actions";
 import { createClient } from "@/lib/supabase/client";
 import { LockedClient } from "@/app/types/client";
@@ -34,17 +35,21 @@ const uploadToSupabase = async (key: string, file: File): Promise<string> => {
 
 export const SubmitButton = ({
   pendingFilesRef,
+  beneficiaryPhotosRef,
+  nomineePhotosRef,
   lockedClient,
   onResetComplete,
 }: {
   pendingFilesRef: PendingFilesRef;
+  beneficiaryPhotosRef: PendingFilesRef;
+  nomineePhotosRef: PendingFilesRef;
   lockedClient: LockedClient | null;
   onResetComplete: () => void;
 }) => {
   const { form } = useFormContext();
   const [loading, setLoading] = useState(false);
   const [dbUser, setDbUser] = useState<DbUser | null>(null);
-  const { reset } = form;  
+  const { reset } = form;
 
   useEffect(() => {
     fetch("/api/me")
@@ -52,17 +57,29 @@ export const SubmitButton = ({
       .then(({ dbUser }) => setDbUser(dbUser));
   }, []);
 
+  // ── Upload helper ─────────────────────────────────────────────────────────
+  const uploadPhotos = async (
+    filesRef: PendingFilesRef,
+    keyPrefix: string
+  ): Promise<Record<string, string | null>> => {
+    const results: Record<string, string | null> = {};
+    await Promise.all(
+      Object.entries(filesRef.current).map(async ([key, file]) => {
+        if (!file) return;
+        results[key] = await uploadToSupabase(`${keyPrefix}/${key}`, file);
+      })
+    );
+    return results;
+  };
+
   // ── PATH A: existing client — only create the investment ─────────────────
   const handleExistingClientSubmit = async () => {
-  
-
     setLoading(true);
     try {
       const data = form.getValues();
       const beneficiary = data.beneficiary;
       const nominee = data.nominee;
 
-      // Resolve beneficiary: existing id (unchanged) or new record
       const existingBeneficiaryId: number | undefined =
         (beneficiary as any)?._existingId;
       const newBeneficiary =
@@ -78,7 +95,6 @@ export const SubmitButton = ({
             }
           : null;
 
-      // Resolve nominee: existing id (unchanged) or new record
       const existingNomineeId: number | undefined =
         (nominee as any)?._existingId;
       const newNominee =
@@ -120,6 +136,37 @@ export const SubmitButton = ({
         return;
       }
 
+      // ── Upload beneficiary photos ────────────────────────────────────────
+      const finalBeneficiaryId = res.investment?.beneficiaryId;
+      const finalNomineeId = res.investment?.nomineeId;
+
+      const photoUploads: Promise<void>[] = [];
+
+      if (finalBeneficiaryId && Object.values(beneficiaryPhotosRef.current).some(Boolean)) {
+        photoUploads.push(
+          uploadPhotos(beneficiaryPhotosRef, `beneficiary/${finalBeneficiaryId}`)
+            .then((urls) => updateBeneficiary({ id: finalBeneficiaryId, ...urls }))
+            .then(() => void 0)
+        );
+      }
+
+      if (finalNomineeId && Object.values(nomineePhotosRef.current).some(Boolean)) {
+        photoUploads.push(
+          uploadPhotos(nomineePhotosRef, `nominee/${finalNomineeId}`)
+            .then((urls) => updateNominee({ id: finalNomineeId, ...urls }))
+            .then(() => void 0)
+        );
+      }
+
+      if (photoUploads.length) {
+        try {
+          await Promise.all(photoUploads);
+        } catch (err) {
+          console.error("Photo upload error:", err);
+          toast.warning("Investment created but some photos failed to upload.");
+        }
+      }
+
       toast.success("Investment created successfully!");
       reset(defaultValues);
       onResetComplete();
@@ -155,7 +202,7 @@ export const SubmitButton = ({
 
     setLoading(true);
     try {
-      // Upload documents
+      // ── Upload KYC documents ─────────────────────────────────────────────
       const pendingFiles = pendingFilesRef.current;
       const hasFiles = Object.values(pendingFiles).some(Boolean);
 
@@ -189,10 +236,44 @@ export const SubmitButton = ({
         return;
       }
 
+      // ── Upload beneficiary / nominee photos after client is saved ────────
+      // saveClient returns the created beneficiaryId / nomineeId
+      const createdBeneficiaryId = (res as any).beneficiaryId;
+      const createdNomineeId = (res as any).nomineeId;
+
+      const photoUploads: Promise<void>[] = [];
+
+      if (createdBeneficiaryId && Object.values(beneficiaryPhotosRef.current).some(Boolean)) {
+        photoUploads.push(
+          uploadPhotos(beneficiaryPhotosRef, `beneficiary/${createdBeneficiaryId}`)
+            .then((urls) => updateBeneficiary({ id: createdBeneficiaryId, ...urls }))
+            .then(() => void 0)
+        );
+      }
+
+      if (createdNomineeId && Object.values(nomineePhotosRef.current).some(Boolean)) {
+        photoUploads.push(
+          uploadPhotos(nomineePhotosRef, `nominee/${createdNomineeId}`)
+            .then((urls) => updateNominee({ id: createdNomineeId, ...urls }))
+            .then(() => void 0)
+        );
+      }
+
+      if (photoUploads.length) {
+        try {
+          await Promise.all(photoUploads);
+        } catch (err) {
+          console.error("Photo upload error:", err);
+          toast.warning("Client saved but some photos failed to upload.");
+        }
+      }
+
       toast.success("Client saved successfully!");
       reset(defaultValues);
       onResetComplete();
       pendingFilesRef.current = {};
+      beneficiaryPhotosRef.current = { bankBookPhotoUrl: null, idCopyUrl: null };
+      nomineePhotosRef.current = { idCopyUrl: null };
     } catch (err) {
       console.error(err);
       toast.error("Something went wrong, please try again.");
@@ -237,8 +318,6 @@ export const SubmitButton = ({
           label
         )}
       </button>
-
-      
     </div>
   );
 };

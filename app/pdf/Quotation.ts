@@ -98,6 +98,40 @@ function getPayingYears(planType: PlanType, duration: number) {
   return duration;
 }
 
+
+
+function generateYearlyBreakdown(data: QuotationPDFData) {
+  const periodsPerYear = FREQ_PERIODS[data.frequency];
+  const annualDeposit = data.premium * periodsPerYear;
+  const payingYears = getPayingYears(data.planType, data.duration);
+  const rate = data.interestRate / 100;
+
+  const rows = [];
+  let cumulativeInvested = 0;
+  let runningBalance = 0;
+
+  for (let year = 1; year <= data.duration; year++) {
+    // Add annual contribution during paying years
+    if (year <= payingYears) {
+      cumulativeInvested += annualDeposit;
+      runningBalance += annualDeposit;
+    }
+
+    // Calculate compound interest for the year
+    const interestForYear = runningBalance * rate;
+    runningBalance += interestForYear;
+
+    rows.push([
+      `Y${year}`,
+      lkr(cumulativeInvested),
+      lkr(interestForYear),
+      lkr(runningBalance),
+    ]);
+  }
+
+  return rows;
+}
+
 // ─── Plan Conditions (Page 2) ─────────────────────────────────────────────────
 
 const PLAN_CONDITIONS: Record<PlanType, { title: string; conditions: string[]; maturityRates: string[] }> = {
@@ -542,6 +576,51 @@ function drawPage2(doc: jsPDF, data: QuotationPDFData, logo: string | null) {
     y = (doc as any).lastAutoTable.finalY + 8;
   }
 
+
+  // ─── Year-by-Year Breakdown Table ──────────────────────────────────────────────
+
+doc.setFontSize(8.5);
+doc.setFont("helvetica", "bold");
+doc.setTextColor(...C.dark);
+doc.text("Year-by-Year Growth Schedule", 14, y);
+doc.setDrawColor(...C.green);
+doc.line(14, y + 1.5, 70, y + 1.5);
+y += 5;
+
+const yearlyRows = generateYearlyBreakdown(data);
+
+autoTable(doc, {
+  startY: y,
+  head: [
+    [
+      { content: "Year", styles: { halign: "left" } },
+      { content: "Cumulative Invested", styles: { halign: "right" } },
+      { content: "Interest Earned", styles: { halign: "right" } },
+      { content: "Total Balance", styles: { halign: "right" } },
+    ],
+  ],
+  body: yearlyRows,
+  theme: "striped",
+  headStyles: {
+    fillColor: C.green,
+    textColor: C.white,
+    fontStyle: "bold",
+    fontSize: 8,
+  },
+  styles: {
+    fontSize: 8,
+    cellPadding: { top: 2.5, bottom: 2.5, left: 4, right: 4 },
+  },
+  columnStyles: {
+    0: { fontStyle: "bold", halign: "left", cellWidth: 20 },
+    1: { halign: "right", cellWidth: 50 },
+    2: { halign: "right", cellWidth: 50, textColor: C.green },
+    3: { halign: "right", fontStyle: "bold" },
+  },
+  margin: { left: 14, right: 14 },
+});
+
+y = (doc as any).lastAutoTable.finalY + 8;
   // Acceptance
   y += 10;
   doc.setFontSize(9);
