@@ -431,7 +431,7 @@ const CompanyHeader = ({
       <View style={{ flex: 1 }}>
         <Text style={S.companyName}>Super Green Plantation (Pvt) Ltd.</Text>
         <Text style={S.companyMeta}>
-          {"598/M, Hirimbura Road, Karapitiya, Galle  ·  Hotline: 076 805 9312 / 0912240814"}
+          {"598/M, Hirimbura Road, Karapitiya, Galle  ·  Hotline: 0912240814"}
         </Text>
         <Text style={S.companyMeta}>
           {"supergreenplantationsgp@gmail.com  ·  Reg. No: PV 00326975"}

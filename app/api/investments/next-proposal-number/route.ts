@@ -1,17 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-/**
- * GET /api/investments/next-proposal-number
- *
- * Returns the next projected proposal form number in the format SG/YY/MM/NNN.
- * The sequence is GLOBAL and never resets (no per-month reset).
- * Base starting number is 500.
- *
- * This is a PREVIEW only — the number is NOT reserved.
- * The actual reservation happens atomically inside the DB transaction
- * when the investment is created.
- */
+
 export async function GET() {
   try {
     const nextNumber = await getNextProposalSequenceNumber();
