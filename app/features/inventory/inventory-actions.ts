@@ -8,33 +8,28 @@ import { PERMISSIONS } from "@/lib/auth/permissions";
 import { revalidatePath } from "next/cache";
 import { ItemCondition, InventoryCompany } from "@prisma/client";
 
-
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Generate next item code for a category + company (+ optional branch).
- *
- * Format:
- *   SGP items  →  SGP/{YY}/{ABBREVIATION}/{serial 3-padded}   e.g. SGP/26/CCH/001
- *   MC items   →   MC/{YY}/{ABBREVIATION}/{serial 3-padded}   e.g.  MC/26/CCH/001
- *
- * Serial is scoped to company + category (not branch), so codes stay unique
- * across branches for the same company.
+ * SGP items:       SGP/{YY}/{ABBR}/{serial}   e.g. SGP/26/CCH/001
+ * Micro Credit:    MC/{YY}/{ABBR}/{serial}    e.g. MC/26/CCH/001
  */
 async function generateItemCode(
   abbreviation: string,
-  company: InventoryCompany
+  company: InventoryCompany,
+  branchId: number | null
 ): Promise<string> {
-  const year = new Date().getFullYear().toString().slice(-2); // "26"
-  const companyPrefix = company === "MICRO_CREDIT" ? "MC" : "SGP";
-  const prefix = `${companyPrefix}/${year}/${abbreviation}/`;
+  const yy     = new Date().getFullYear().toString().slice(-2);
+  const prefix = company === "SGP"
+    ? `SGP/${yy}/${abbreviation}/`
+    : `MC/${yy}/${abbreviation}/`;
 
   const existing = await prisma.inventoryItem.count({
     where: {
       itemCode: { startsWith: prefix },
-      company,
+      ...(branchId !== null ? { branchId } : { company }),
     },
   });
 
@@ -59,30 +54,59 @@ export async function createInventoryCategory(data: {
   await requirePermission(PERMISSIONS.CREATE_EMPLOYEES);
   return prisma.inventoryCategory.create({
     data: {
-      name: data.name,
+      name:         data.name,
       abbreviation: data.abbreviation.toUpperCase(),
     },
   });
+}
+
+export async function updateInventoryCategory(
+  id: number,
+  data: { name?: string; abbreviation?: string }
+) {
+  await requirePermission(PERMISSIONS.UPDATE_EMPLOYEES);
+  return prisma.inventoryCategory.update({
+    where: { id },
+    data: {
+      ...(data.name         !== undefined && { name:         data.name }),
+      ...(data.abbreviation !== undefined && { abbreviation: data.abbreviation.toUpperCase() }),
+      updatedAt: new Date(),
+    },
+  });
+}
+
+export async function deleteInventoryCategory(id: number) {
+  await requirePermission(PERMISSIONS.DELETE_EMPLOYEES);
+  const count = await prisma.inventoryItem.count({ where: { categoryId: id } });
+  if (count > 0) {
+    throw new Error(
+      `Cannot delete — ${count} item${count > 1 ? "s" : ""} still use this category.`
+    );
+  }
+  await prisma.inventoryCategory.delete({ where: { id } });
+  return { success: true };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ITEMS — READ
 // ─────────────────────────────────────────────────────────────────────────────
 
-export async function getInventoryItems(filters?: {
-  company?: InventoryCompany;
+export async function getInventoryItems(params: {
+  company:  InventoryCompany;
   branchId?: number;
 }) {
+  const { company, branchId } = params;
+
   return prisma.inventoryItem.findMany({
     where: {
-      ...(filters?.company ? { company: filters.company } : {}),
-      ...(filters?.branchId ? { branchId: filters.branchId } : {}),
+      company,
+      ...(branchId !== undefined ? { branchId } : {}),
     },
     include: {
       InventoryCategory: true,
       Branch: { select: { id: true, name: true } },
     },
-    orderBy: [{ branchId: "asc" }, { itemCode: "asc" }],
+    orderBy: [{ itemCode: "asc" }],
   });
 }
 
@@ -101,39 +125,38 @@ export async function getInventoryItemById(id: number) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type CreateInventoryItemInput = {
-  company: InventoryCompany;
-  branchId?: number; // required for SGP, omitted for MICRO_CREDIT
+  company:    InventoryCompany;
+  branchId:   number | null;      // null for Micro Credit
   categoryId: number;
-  name: string;
-  quantity: number;
-  condition: ItemCondition;
-  notes?: string;
+  name:       string;
+  quantity:   number;
+  condition:  ItemCondition;
+  notes?:     string;
 };
 
 export async function createInventoryItem(data: CreateInventoryItemInput) {
   await requirePermission(PERMISSIONS.CREATE_EMPLOYEES);
 
-  // Validate: SGP items must have a branch
-  if (data.company === "SGP" && !data.branchId) {
-    throw new Error("SGP inventory items must be assigned to a branch.");
-  }
-
   const category = await prisma.inventoryCategory.findUniqueOrThrow({
     where: { id: data.categoryId },
   });
 
-  const itemCode = await generateItemCode(category.abbreviation, data.company);
+  const itemCode = await generateItemCode(
+    category.abbreviation,
+    data.company,
+    data.branchId
+  );
 
   const item = await prisma.inventoryItem.create({
     data: {
-      company: data.company,
-      branchId: data.branchId ?? null,
+      company:    data.company,
+      branchId:   data.branchId,
       categoryId: data.categoryId,
-      name: data.name,
+      name:       data.name,
       itemCode,
-      quantity: data.quantity,
-      condition: data.condition,
-      notes: data.notes ?? null,
+      quantity:   data.quantity,
+      condition:  data.condition,
+      notes:      data.notes ?? null,
     },
     include: {
       InventoryCategory: true,
@@ -146,10 +169,10 @@ export async function createInventoryItem(data: CreateInventoryItemInput) {
 }
 
 export type UpdateInventoryItemInput = {
-  name?: string;
-  quantity?: number;
+  name?:      string;
+  quantity?:  number;
   condition?: ItemCondition;
-  notes?: string;
+  notes?:     string;
 };
 
 export async function updateInventoryItem(
@@ -161,10 +184,11 @@ export async function updateInventoryItem(
   const item = await prisma.inventoryItem.update({
     where: { id },
     data: {
-      ...(data.name !== undefined && { name: data.name }),
-      ...(data.quantity !== undefined && { quantity: data.quantity }),
+      ...(data.name      !== undefined && { name:      data.name }),
+      ...(data.quantity  !== undefined && { quantity:  data.quantity }),
       ...(data.condition !== undefined && { condition: data.condition }),
-      ...(data.notes !== undefined && { notes: data.notes }),
+      ...(data.notes     !== undefined && { notes:     data.notes }),
+      updatedAt: new Date(),
     },
     include: {
       InventoryCategory: true,
@@ -184,13 +208,13 @@ export async function deleteInventoryItem(id: number) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// SUMMARY — total items per branch/company (for dashboard use)
+// SUMMARY
 // ─────────────────────────────────────────────────────────────────────────────
 
 export async function getInventorySummaryByBranch() {
   const groups = await prisma.inventoryItem.groupBy({
-    by: ["branchId", "company"],
-    _sum: { quantity: true },
+    by: ["branchId"],
+    _sum:   { quantity: true },
     _count: { id: true },
   });
 
@@ -201,10 +225,9 @@ export async function getInventorySummaryByBranch() {
   const branchMap = new Map(branches.map((b) => [b.id, b.name]));
 
   return groups.map((g) => ({
-    company: g.company,
-    branchId: g.branchId,
-    branchName: g.branchId ? (branchMap.get(g.branchId) ?? "Unknown") : "—",
+    branchId:      g.branchId,
+    branchName:    g.branchId ? (branchMap.get(g.branchId) ?? "Unknown") : "Micro Credit",
     totalQuantity: g._sum.quantity ?? 0,
-    lineItems: g._count.id,
+    lineItems:     g._count.id,
   }));
 }

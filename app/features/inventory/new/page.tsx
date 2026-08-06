@@ -171,7 +171,7 @@ export default function NewInventoryItemPage() {
     try {
       const res = await createInventoryItem({
         company: form.company,
-        branchId: form.branchId ? Number(form.branchId) : undefined,
+        branchId: form.branchId ? Number(form.branchId) : null,
         categoryId: Number(form.categoryId),
         name: form.name.trim(),
         quantity: Math.max(1, Number(form.quantity)),

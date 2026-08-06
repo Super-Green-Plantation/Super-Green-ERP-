@@ -3,7 +3,7 @@
 // app/features/inventory/page.tsx
 
 import { useEffect, useState, useCallback } from "react";
-import { Package, Plus, Search, Pencil, Trash2, Filter, Building2 } from "lucide-react";
+import { Package, Plus, Search, Pencil, Trash2, Filter, Building2, Tags } from "lucide-react";
 import { ItemCondition, InventoryCompany } from "@prisma/client";
 import { toast } from "sonner";
 
@@ -11,6 +11,7 @@ import { getBranches } from "@/app/features/branches/actions";
 import { ThemeToggle } from "@/app/components/ThemeToggle";
 import { UserAvatar } from "@/app/components/Dashboard/UserAvatar";
 import InventoryModal, { InventoryModalItem } from "@/app/components/Inventory/InventoryModal";
+import CategoryModal from "@/app/components/Inventory/CategoryModal";
 import { deleteInventoryItem, getInventoryItems } from "./inventory-actions";
 
 type Item = Awaited<ReturnType<typeof getInventoryItems>>[number];
@@ -39,12 +40,15 @@ export default function InventoryPage() {
   const [dbUser,           setDbUser]           = useState<any>(null);
 
   // Modal
-  const [modalOpen,    setModalOpen]    = useState(false);
-  const [modalMode,    setModalMode]    = useState<"add" | "edit">("add");
-  const [editingItem,  setEditingItem]  = useState<InventoryModalItem | null>(null);
+  const [modalOpen,   setModalOpen]   = useState(false);
+  const [modalMode,   setModalMode]   = useState<"add" | "edit">("add");
+  const [editingItem, setEditingItem] = useState<InventoryModalItem | null>(null);
+  const [mounted,     setMounted]     = useState(false);
+  const [catModalOpen, setCatModalOpen] = useState(false);
 
   // ── Load user + branches once on mount ──────────────────────────────────────
   useEffect(() => {
+    setMounted(true);
     fetch("/api/me")
       .then((r) => r.json())
       .then(({ dbUser }) => setDbUser(dbUser))
@@ -53,7 +57,6 @@ export default function InventoryPage() {
     getBranches().then((data: any[]) => {
       const mapped: Branch[] = data.map((b) => ({ id: b.id, name: b.name }));
       setBranches(mapped);
-      // Set initial branch so SGP immediately has a valid selection
       if (mapped.length > 0) setSelectedBranchId(mapped[0].id);
     });
   }, []);
@@ -64,7 +67,6 @@ export default function InventoryPage() {
     setSearchQuery("");
     setConditionFilter("ALL");
     if (company === "SGP") {
-      // Re-select first branch (branches are already loaded)
       setSelectedBranchId((prev) => prev ?? (branches[0]?.id ?? null));
     } else {
       setSelectedBranchId(null);
@@ -73,13 +75,12 @@ export default function InventoryPage() {
 
   // ── Load items ───────────────────────────────────────────────────────────────
   const loadItems = useCallback(() => {
-    // Don't fire for SGP until a branch is actually selected
-    if (selectedCompany === "SGP" && !selectedBranchId) return;
+    if (selectedCompany === "SGP" && selectedBranchId === null) return;
 
     setLoading(true);
     getInventoryItems({
       company:  selectedCompany,
-      branchId: selectedCompany === "SGP" ? selectedBranchId ?? undefined : undefined,
+      branchId: selectedCompany === "SGP" ? (selectedBranchId ?? undefined) : undefined,
     })
       .then(setItems)
       .finally(() => setLoading(false));
@@ -204,6 +205,14 @@ export default function InventoryPage() {
             <Plus className="w-3.5 h-3.5" />
             Add Item
           </button>
+          <button
+            onClick={() => setCatModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold text-xs rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors shrink-0"
+          >
+            <Tags className="w-3.5 h-3.5" />
+            Categories
+          </button>
+
           <div className="flex items-center gap-1.5 px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
             <Filter className="w-3.5 h-3.5 text-gray-500" />
             <select
@@ -223,13 +232,9 @@ export default function InventoryPage() {
         {!isMC && (
           <div className="w-full overflow-x-auto no-scrollbar pb-1 mb-5">
             {branches.length === 0 ? (
-              // Skeleton while branches load
               <div className="flex items-center gap-2">
                 {[1, 2, 3].map((n) => (
-                  <div
-                    key={n}
-                    className="h-9 w-24 rounded-xl bg-gray-100 dark:bg-gray-800 animate-pulse"
-                  />
+                  <div key={n} className="h-9 w-24 rounded-xl bg-gray-100 dark:bg-gray-800 animate-pulse" />
                 ))}
               </div>
             ) : (
@@ -285,10 +290,7 @@ export default function InventoryPage() {
           <div className="flex flex-col items-center justify-center h-64 gap-3 text-gray-400">
             <Package className="w-10 h-10 opacity-30" />
             <p className="text-sm font-semibold">No items found</p>
-            <button
-              onClick={openAdd}
-              className="text-xs font-bold text-[#0f5132] dark:text-emerald-400 hover:underline"
-            >
+            <button onClick={openAdd} className="text-xs font-bold text-[#0f5132] dark:text-emerald-400 hover:underline">
               + Add the first item
             </button>
           </div>
@@ -298,10 +300,7 @@ export default function InventoryPage() {
               <thead>
                 <tr className="border-b border-gray-100 dark:border-gray-800">
                   {["Item Code", "Name", "Category", ...(isMC ? [] : ["Branch"]), "Qty", "Condition", "Notes", ""].map((h) => (
-                    <th
-                      key={h}
-                      className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400 whitespace-nowrap"
-                    >
+                    <th key={h} className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400 whitespace-nowrap">
                       {h}
                     </th>
                   ))}
@@ -310,31 +309,19 @@ export default function InventoryPage() {
               <tbody className="divide-y divide-gray-50 dark:divide-gray-800/60">
                 {filtered.map((item) => (
                   <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors">
-                    <td className="px-4 py-3 font-mono text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                      {item.itemCode}
-                    </td>
-                    <td className="px-4 py-3 font-semibold text-gray-900 dark:text-gray-100">
-                      {item.name}
-                    </td>
-                    <td className="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                      {item.InventoryCategory.name}
-                    </td>
+                    <td className="px-4 py-3 font-mono text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">{item.itemCode}</td>
+                    <td className="px-4 py-3 font-semibold text-gray-900 dark:text-gray-100">{item.name}</td>
+                    <td className="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">{item.InventoryCategory.name}</td>
                     {!isMC && (
-                      <td className="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                        {item.Branch?.name ?? "—"}
-                      </td>
+                      <td className="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">{item.Branch?.name ?? "—"}</td>
                     )}
-                    <td className="px-4 py-3 font-bold text-gray-900 dark:text-gray-100">
-                      {item.quantity}
-                    </td>
+                    <td className="px-4 py-3 font-bold text-gray-900 dark:text-gray-100">{item.quantity}</td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${conditionBadge[item.condition]}`}>
                         {item.condition}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs max-w-[200px] truncate">
-                      {item.notes ?? "—"}
-                    </td>
+                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs max-w-[200px] truncate">{item.notes ?? "—"}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2 justify-end">
                         <button
@@ -360,7 +347,11 @@ export default function InventoryPage() {
         )}
       </div>
 
-      {modalOpen && (
+      {mounted && catModalOpen && (
+        <CategoryModal onClose={() => setCatModalOpen(false)} />
+      )}
+
+      {mounted && modalOpen && (
         <InventoryModal
           mode={modalMode}
           initialData={editingItem ?? undefined}
