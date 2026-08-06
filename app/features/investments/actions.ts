@@ -55,7 +55,7 @@ async function getMaxProposalSequence(client: typeof prisma): Promise<number> {
  * proposal form number based on the current DB state.
  * If the supplied hint is already taken (race), silently increments.
  */
-async function generateProposalFormNoInTx(
+export async function generateProposalFormNoInTx(
   tx: any,
   hint?: string
 ): Promise<string> {

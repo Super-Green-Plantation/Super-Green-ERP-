@@ -10,6 +10,7 @@ import SignaturePad from "@/app/components/Client/SignaturePad";
 import { searchClients } from "../actions";
 import { Lock } from "lucide-react";
 import { LockedClient } from "@/app/types/client";
+import { useSessionUser } from "@/app/hooks/useSessionUser";
 
 const SRI_LANKA_NIC = /^(\d{9}[VXvx]|\d{12})$/;
 const SRI_LANKA_PHONE = /^\d{9,10}$/;
@@ -129,6 +130,16 @@ const ApplicantDetails = ({ lockedClient, onClientLock }: Props) => {
   const { register, watch, setValue, formState: { errors } } = form;
   const applicantErrors = errors.applicant as any;
 
+  const { data: userData } = useSessionUser();
+  const canEditProposalNo =
+    userData &&
+    (
+      ["ADMIN", "HR", "DEV"].includes(userData.role) ||
+      ["CHAIRMEN", "HR", "ACC", "PRO", "OPM"].includes(
+        (userData as any).member?.position?.title ?? ""
+      )
+    );
+
   const [branches, setBranches] = useState<Branch[]>([]);
   const [plans, setPlans] = useState<FinancialPlan[]>([]);
   const [investmentRates, setInvestmentRates] = useState<number[]>([]);
@@ -178,6 +189,18 @@ const ApplicantDetails = ({ lockedClient, onClientLock }: Props) => {
     () => () => { if (debounceRef.current) clearTimeout(debounceRef.current); },
     []
   );
+
+  // Fetch proposal form number preview
+  useEffect(() => {
+    if (lockedClient) return;
+    fetch("/api/investments/next-proposal-number")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.proposalFormNo) setValue("applicant.proposalFormNo", data.proposalFormNo);
+      })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lockedClient]);
 
   // Auto-fill rates from plan
   useEffect(() => {
@@ -445,14 +468,28 @@ const ApplicantDetails = ({ lockedClient, onClientLock }: Props) => {
 
           {/* ── Proposal form No — always shown ── */}
           <div className={lockedClient ? "" : ""}>
-            <label className={labelClass}>Proposal Form Number *</label>
+            <label className={`${labelClass} flex items-center gap-2`}>
+              Proposal Form Number
+              {!lockedClient && (
+                <span
+                  className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
+                    canEditProposalNo
+                      ? "bg-amber-500/15 text-amber-600"
+                      : "bg-primary/10 text-primary"
+                  }`}
+                >
+                  {canEditProposalNo ? "Editable" : "Auto"}
+                </span>
+              )}
+            </label>
             <input
               type="text"
-              {...register("applicant.proposalFormNo", {
-                required: "Proposal form number is required",
-                minLength: { value: 3, message: "Must be at least 3 characters" },
-              })}
-              className={inputClass(!!applicantErrors?.proposalFormNo)}
+              readOnly={!canEditProposalNo}
+              placeholder={!watch("applicant.proposalFormNo") ? "Generating..." : undefined}
+              {...register("applicant.proposalFormNo")}
+              className={`${inputClass(!!applicantErrors?.proposalFormNo)} ${
+                canEditProposalNo ? "" : "opacity-80 cursor-default select-all"
+              }`}
             />
             <FieldError message={applicantErrors?.proposalFormNo?.message} />
           </div>

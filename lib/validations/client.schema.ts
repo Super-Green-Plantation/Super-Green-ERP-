@@ -115,9 +115,8 @@ export const applicantSchema = z.object({
       message: "Investment amount must be a positive number",
     }),
   investmentDate: z.string().optional(),
-  proposalFormNo: z
-    .string()
-    .min(1, "Proposal form number must be at least 1 characters"),
+  // Read-only/auto-generated — no client-side validation needed.
+  proposalFormNo: z.string().optional(),
   idFront: z.string().optional(),
   idBack: z.string().optional(),
   paymentSlip: z.string().optional(),

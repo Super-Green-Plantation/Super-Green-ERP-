@@ -11,6 +11,7 @@ import { revalidatePath } from "next/cache";
 import crypto from "crypto"
 import nodemailer from "nodemailer";
 import { upsertActivationsForInvestment } from "../hr/salary/action";
+import { generateProposalFormNoInTx } from "../investments/actions";
 
 
 export async function getAccessibleClients(page = 1, pageSize = 10, searchText = "") {
@@ -360,6 +361,10 @@ export async function saveClient(
 
       const monthlyHarvest = months > 0 ? Math.round(totalHarvest / months) : 0;
 
+      const proposalFormNo = applicant.proposalFormNo
+        ? applicant.proposalFormNo
+        : await generateProposalFormNoInTx(tx);
+
       const createInvestment = await tx.investment.create({
         data: {
           clientId: createClient.id,
@@ -374,7 +379,7 @@ export async function saveClient(
           investmentRates,
           totalHarvest,
           monthlyHarvest,
-          proposalFormNo: applicant.proposalFormNo || null,
+          proposalFormNo,
           proposal: applicant.proposal,
           paymentSlip: applicant.paymentSlip,
           agreement: applicant.agreement,
