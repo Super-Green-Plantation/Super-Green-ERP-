@@ -54,8 +54,8 @@ export function buildAgreementNumber(
     branchCode: string,
     proposalFormNo: string | number
 ): string {
-    const d = new Date(investmentDate);
-    return `${d.getFullYear()}/${MONTHS[d.getMonth()]}/${branchCode}/${proposalFormNo}`;
+    // The proposal form number IS the agreement number.
+    return String(proposalFormNo);
 }
 
 // ── Sinhala month names ───────────────────────────────────────────────────────

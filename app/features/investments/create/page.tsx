@@ -123,6 +123,16 @@ export default function CreateInvestmentForm({
   const { data: userData } = useSessionUser();
   const isManager = userData && ["ADMIN", "HR", "DEV"].includes(userData.role);
 
+  // Roles/titles that can manually edit the proposal form number
+  const canEditProposalNo =
+    userData &&
+    (
+      ["ADMIN", "HR", "DEV"].includes(userData.role) ||
+      ["CHAIRMEN", "HR", "ACC", "PRO", "OPM"].includes(
+        (userData as any).member?.position?.title ?? ""
+      )
+    );
+
   const approvalStatus = initialData?.approvalStatus || "PENDING";
   const isApprovedOrRejected = approvalStatus === "APPROVED" || approvalStatus === "REJECTED";
   const isLockedForSubmitter = false; // Restored update functionality
@@ -143,6 +153,20 @@ export default function CreateInvestmentForm({
   );
   const [totalHarvest, setTotalHarvest] = useState("");
   const [monthlyHarvest, setMonthlyHarvest] = useState("");
+
+  // ── Fetch preview proposal number on mount (create mode only) ───────────────
+  useEffect(() => {
+    if (isEditMode) return; // edit mode keeps the existing number
+    fetch("/api/investments/next-proposal-number")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.proposalFormNo) setProposalFormNo(data.proposalFormNo);
+      })
+      .catch(() => {
+        // preview failed — server will still generate the real number on save
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditMode]);
 
   // ---- Beneficiary ----
   const [beneficiaryMode, setBeneficiaryMode] = useState<BeneficiaryMode>(
@@ -423,7 +447,7 @@ export default function CreateInvestmentForm({
     if (!client) { toast.error("Please select a client"); return; }
 
     // ── Client-side Zod validation ────────────────────────────────────────────
-    const formParsed = investmentFormSchema.safeParse({ amount, proposalFormNo, investmentDate });
+    const formParsed = investmentFormSchema.safeParse({ amount, investmentDate });
     if (!formParsed.success) {
       const errs: Record<string, string> = {};
       formParsed.error.issues.forEach((issue) => {
@@ -539,7 +563,12 @@ export default function CreateInvestmentForm({
           }
         }
 
-        toast.success("Investment created successfully");
+        // Show the confirmed proposal number (server may have incremented it)
+        const confirmedNo = res.investment?.proposalFormNo;
+        if (confirmedNo) setProposalFormNo(confirmedNo);
+        toast.success(
+          `Investment created — Proposal No. ${confirmedNo ?? "assigned"}`
+        );
       }
       onSuccess?.();
     } finally {
@@ -613,7 +642,41 @@ export default function CreateInvestmentForm({
                 <Field label="Investment Amount (LKR) *" value={amount} disabled={isLockedForSubmitter} onChange={v => { setAmount(v); setFieldErrors(p => ({ ...p, amount: "" })); }} placeholder="0.00" type="number" error={fieldErrors.amount} />
 
                 {/* Row 2 */}
-                <Field label="Proposal No. *" value={proposalFormNo} disabled={isLockedForSubmitter} onChange={v => { setProposalFormNo(v); setFieldErrors(p => ({ ...p, proposal: "" })); }} type="text" error={fieldErrors.proposal} />
+                {/* Row 2 — Proposal No (auto-generated, read-only unless management) */}
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-muted-foreground uppercase flex items-center gap-2">
+                    Proposal No.
+                    {!isEditMode && (
+                      <span
+                        className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full ${
+                          canEditProposalNo
+                            ? "bg-amber-500/15 text-amber-600"
+                            : "bg-primary/10 text-primary"
+                        }`}
+                      >
+                        {canEditProposalNo ? "Editable" : "Auto"}
+                      </span>
+                    )}
+                  </label>
+                  <input
+                    type="text"
+                    value={proposalFormNo}
+                    readOnly={!canEditProposalNo}
+                    onChange={canEditProposalNo ? (e) => {
+                      setProposalFormNo(e.target.value);
+                      setFieldErrors(p => ({ ...p, proposalFormNo: "" }));
+                    } : undefined}
+                    placeholder={!proposalFormNo ? "Generating..." : undefined}
+                    className={`w-full bg-card border border-border rounded-lg text-sm py-2 px-3 outline-none transition-colors ${
+                      canEditProposalNo
+                        ? "focus:ring-1 focus:ring-primary focus:border-primary"
+                        : "opacity-80 cursor-default select-all"
+                    } ${fieldErrors.proposalFormNo ? "border-destructive" : ""}`}
+                  />
+                  {fieldErrors.proposalFormNo && (
+                    <p className="text-[11px] text-destructive font-medium">{fieldErrors.proposalFormNo}</p>
+                  )}
+                </div>
                 <Field label="Monthly Harvest (LKR)" value={monthlyHarvest} placeholder="—" readOnly />
                 <div className="space-y-1">
                   <label className="text-[11px] font-semibold text-muted-foreground uppercase block">

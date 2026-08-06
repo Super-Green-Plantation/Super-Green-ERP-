@@ -12,9 +12,9 @@ export const createInvestmentSchema = z.object({
     .refine((val) => !isNaN(val) && val > 0, {
       message: "Investment amount must be a positive number",
     }),
-  proposalFormNo: z
-    .string()
-    .min(1, "Proposal form number must be at least 1 characters"),
+  // Optional — server auto-generates the canonical value inside a DB transaction.
+  // A client-supplied value is accepted for management overrides.
+  proposalFormNo: z.string().optional(),
 });
 
 // ─── Investment beneficiary fields ───────────────────────────────────────────
@@ -54,9 +54,8 @@ export const createInvestmentForExistingClientSchema = z.object({
     .refine((val) => !isNaN(val) && val > 0, {
       message: "Investment amount must be a positive number",
     }),
-  proposalFormNo: z
-    .string()
-    .min(1, "Proposal form number must be at least 1 characters"),
+  // Optional — server generates the canonical number atomically in $transaction.
+  proposalFormNo: z.string().optional(),
   investmentDate: z.date().optional(),
   investmentRates: z.array(z.number().min(0).max(100)).optional(),
   beneficiaryId: z.number().nullable().optional(),
@@ -99,9 +98,8 @@ export const investmentFormSchema = z.object({
     .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
       message: "Amount must be a positive number",
     }),
-  proposalFormNo: z
-    .string()
-    .min(1, "Proposal form number must be at least 1 characters"),
+  // Read-only/auto-generated — no client-side validation needed.
+  proposalFormNo: z.string().optional(),
   investmentDate: z
     .string()
     .min(1, "Investment date is required"),

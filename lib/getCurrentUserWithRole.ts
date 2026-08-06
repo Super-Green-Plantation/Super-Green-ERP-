@@ -18,6 +18,7 @@ export async function getCurrentUserWithRole() {
           branches: {
             include: { branch: true },
           },
+          position: true,
         },
       },
     },
