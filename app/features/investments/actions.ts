@@ -1147,7 +1147,7 @@ export async function approveInvestmentWithHierarchyLog(data: {
   ccoId?: number | null;
   reviewNote?: string;
   advisorId?: number | null;
-}): Promise<{ success: boolean; investment?: any; error?: string; commissionProcessed?: boolean; commissionError?: string }> {
+}): Promise<{ success: boolean; investment?: any; error?: string; commissionProcessed?: boolean; commissionError?: string; commissionReceipt?: any }> {
   try {
     const currentUser = await getCurrentUserWithRole();
     if (!currentUser) throw new Error("Not authorized");
@@ -1291,8 +1291,7 @@ export async function approveInvestmentWithHierarchyLog(data: {
     // can process manually from the Commissions page.
     let commissionError: string | undefined;
     let commissionProcessed = false;
-
-    console.log("data --------- ", data);
+    let commissionReceipt: any = undefined;
 
     if (data.faId) {
       try {
@@ -1330,7 +1329,6 @@ export async function approveInvestmentWithHierarchyLog(data: {
             .filter((e): e is string => !!e);
         }
 
-        // processCommissions is statically imported at the top of this file
         const commResult = await processCommissions({
           investmentId: data.investmentId,
           empNo: faMember.empNo,
@@ -1338,11 +1336,9 @@ export async function approveInvestmentWithHierarchyLog(data: {
           hierarchyEmpNos,
         });
 
-        console.log("commResult = ", commResult);
-
-
         if (commResult.success) {
           commissionProcessed = true;
+          commissionReceipt = commResult.receipt;
         } else {
           commissionError = commResult.error?.message ?? "Commission processing failed";
         }
@@ -1352,7 +1348,7 @@ export async function approveInvestmentWithHierarchyLog(data: {
       }
     }
 
-    return { success: true, investment: result, commissionProcessed, commissionError };
+    return { success: true, investment: result, commissionProcessed, commissionError, commissionReceipt };
   } catch (error: any) {
     console.error("approveInvestmentWithHierarchyLog error:", error);
     return { success: false, error: error.message };

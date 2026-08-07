@@ -296,7 +296,7 @@ export async function approveInvestmentWithHierarchyLog(data: {
   ccoId?: number | null;
   reviewNote?: string;
   advisorId?: number | null;
-}): Promise<{ success: boolean; investment?: any; error?: string; commissionProcessed?: boolean; commissionError?: string }> {
+}): Promise<{ success: boolean; investment?: any; error?: string; commissionProcessed?: boolean; commissionError?: string; commissionReceipt?: any }> {
   try {
     const currentUser = await getCurrentUserWithRole();
     if (!currentUser) throw new Error("Not authorized");
@@ -459,7 +459,7 @@ export async function approveInvestmentWithHierarchyLog(data: {
     ];
     const presentIds = orderedHierarchyIds.filter((h): h is { id: number; role: string } => !!h.id);
 
-    let commissionResult: { success: boolean; error?: string } = { success: false };
+    let commissionResult: { success: boolean; error?: string; receipt?: any } = { success: false };
 
     if (presentIds.length === 0) {
       commissionResult.error = "No hierarchy members on this investment — commissions skipped";
@@ -503,7 +503,7 @@ export async function approveInvestmentWithHierarchyLog(data: {
         console.log("[commission-auto] processCommissions result", JSON.stringify(res));
 
         if (res.success) {
-          commissionResult = { success: true };
+          commissionResult = { success: true, receipt: res.receipt };
         } else {
           commissionResult = { success: false, error: res.error?.message ?? "Commission processing failed" };
         }
@@ -518,6 +518,7 @@ export async function approveInvestmentWithHierarchyLog(data: {
       investment: result,
       commissionProcessed: commissionResult.success,
       commissionError: commissionResult.success ? undefined : commissionResult.error,
+      commissionReceipt: commissionResult.success ? commissionResult.receipt : undefined,
     };
   } catch (error: any) {
     console.error("approveInvestmentWithHierarchyLog error:", error);
