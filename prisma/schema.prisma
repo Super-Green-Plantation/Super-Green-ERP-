@@ -103,6 +103,8 @@ model Member {
   submittedAt            DateTime              @default(now())
   totalCommission        Float?
   payrollCategory        PayrollCategory?
+  lastInvestmentAt       DateTime?             @db.Timestamp(6)
+  autoDeactivatedAt      DateTime?             @db.Timestamp(6)
   activityLog            ActivityLog[]
   clientsAsAGM           Client[]              @relation("ClientAGM")
   clientsAsBM            Client[]              @relation("ClientBM")
@@ -820,6 +822,8 @@ enum CommissionType {
   PERSONAL
   UPLINE
   EXCESS
+  REVERSED
+  CHAIRMAN
 }
 
 enum ActivityAction {
