@@ -895,3 +895,23 @@ enum InventoryCompany {
   SGP
   MICRO_CREDIT
 }
+
+
+// 1. Add this enum alongside the other enums at the bottom of schema.prisma
+enum NotificationType {
+  INVESTMENT_MATURITY
+  EMPLOYEE_DEACTIVATION
+}
+
+// 2. Add this model alongside the other models
+model Notification {
+  id        Int              @id @default(autoincrement())
+  type      NotificationType
+  title     String
+  body      String
+  metadata  Json?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now()) @db.Timestamptz(6)
+
+  @@index([isRead, createdAt(sort: Desc)])
+}

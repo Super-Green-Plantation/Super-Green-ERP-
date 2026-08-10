@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Bell, Wallet, Users, Map, BarChart2 } from "lucide-react";
 import { ClientRegistrationChart } from "@/app/features/dashboard/chart";
 import { FloatingKpiCard } from "./FloatingKpiCard";
+import Heading from "../Heading";
 
 type ClientRegChartData = {
   year: number;
@@ -60,29 +61,14 @@ export const PrivilegedView = ({ data, userName, userRole, achieved, target, per
 
   return (
     <div className="w-full min-h-screen p-4 sm:p-8 flex flex-col gap-6 sm:gap-8  font-sans text-gray-900 dark:text-gray-100 transition-colors duration-300">
-      
-      {/* Top Navigation */}
-      <div className="flex items-center justify-between sm:justify-end gap-4 sm:gap-6 w-full mb-2 sm:mb-4">
-        <div className="flex items-center gap-3 sm:gap-4">
-          <button className="text-[#0f5132] dark:text-[#4ade80] hover:text-green-800 transition-colors">
-            <Bell className="w-5 h-5" />
-          </button>
-          <ThemeToggle />
-        </div>
-        <div className="h-6 w-px bg-gray-300 dark:bg-gray-800 hidden sm:block"></div>
-        <div className="flex items-center gap-3">
-          <div className="text-right flex flex-col justify-center">
-            <span className="text-sm font-bold leading-none text-gray-900 dark:text-gray-100">{userName}</span>
-            <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mt-1">{userRole}</span>
-          </div>
-          <div className="w-10 h-10 rounded-full overflow-hidden shadow-sm border border-gray-200 dark:border-gray-800">
-            <UserAvatar seed={userName} className="w-full h-full" />
-          </div>
-        </div>
-      </div>
+
+
 
       <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 flex flex-col gap-6 w-full mx-auto max-w-350">
-        
+        <Heading>
+          Dashboard
+        </Heading>
+
         {/* KPI Cards Row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           <FloatingKpiCard
@@ -121,12 +107,12 @@ export const PrivilegedView = ({ data, userName, userRole, achieved, target, per
 
         {/* Middle Section: Chart and Recent Activity */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
+
           {/* Chart Section */}
           <div className="lg:col-span-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm flex flex-col min-h-87.5">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
               <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">Branch Registrations</h2>
-              
+
             </div>
             <div className="flex-1 w-full">
               {chartData ? (

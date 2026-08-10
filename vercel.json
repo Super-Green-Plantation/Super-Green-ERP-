@@ -7,6 +7,14 @@
     {
       "path": "/api/cron/birthday-check",
       "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/api/cron/investment-maturity",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/employee-deactivation",
+      "schedule": "0 0 1 * *"
     }
   ]
 }

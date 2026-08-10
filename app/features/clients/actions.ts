@@ -899,3 +899,39 @@ export async function searchMembersByName(query: string) {
     take: 8,
   });
 }
+
+
+export async function getClientsByMonth(
+  year: number,
+  month: number, // 1-based
+  branchId?: number
+) {
+  try {
+    const start = new Date(year, month - 1, 1);
+    const end = new Date(year, month, 1); // exclusive upper bound
+
+    const where: any = {
+      createdAt: { gte: start, lt: end },
+    };
+
+    if (branchId) {
+      where.branchId = branchId;
+    }
+
+    const clients = await prisma.client.findMany({
+      where,
+      include: {
+        investments: { include: { plan: true } },
+        branch: true,
+        beneficiaries: true,
+        nominees: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return { clients, total: clients.length };
+  } catch (error) {
+    console.error("Error fetching clients by month:", error);
+    throw new Error("Failed to fetch clients by month");
+  }
+}

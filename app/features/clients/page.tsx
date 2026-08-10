@@ -8,7 +8,7 @@ import Loading from "@/app/components/Status/Loading";
 import { useClients } from "@/app/hooks/useClients";
 import { useQuery } from "@tanstack/react-query";
 import { getBranches } from "../branches/actions";
-import { searchClients, getClientsByBranch, getClients } from "./actions";
+import { searchClients, getClientsByBranch, getClients, getClientsByMonth } from "./actions";
 import { Search, X, ChevronDown, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
@@ -22,11 +22,31 @@ type ClientPage = {
   total: number;
 };
 
+const MONTHS = [
+  { value: "1", label: "January" },
+  { value: "2", label: "February" },
+  { value: "3", label: "March" },
+  { value: "4", label: "April" },
+  { value: "5", label: "May" },
+  { value: "6", label: "June" },
+  { value: "7", label: "July" },
+  { value: "8", label: "August" },
+  { value: "9", label: "September" },
+  { value: "10", label: "October" },
+  { value: "11", label: "November" },
+  { value: "12", label: "December" },
+];
+
+const currentYear = new Date().getFullYear();
+const YEARS = Array.from({ length: 5 }, (_, i) => currentYear - i);
+
 
 const Page = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchText, setSearchText] = useState("");
   const [branchId, setBranchId] = useState<string>("all");
+  const [selectedMonth, setSelectedMonth] = useState<string>("all");
+  const [selectedYear, setSelectedYear] = useState<string>(String(currentYear));
   const [userRole, setUserRole] = useState<string | null>(null);
 
 
@@ -36,12 +56,11 @@ const Page = () => {
   }
   useEffect(() => {
     getLoggedUserRole();
-
   }, []);
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchText, branchId]);
+  }, [searchText, branchId, selectedMonth, selectedYear]);
 
   const { data: branchData } = useQuery({
     queryKey: ["branches"],
@@ -58,15 +77,16 @@ const Page = () => {
     isError,
   } = useClients(currentPage);
 
-  const isFiltered = searchText.trim() !== "" || branchId !== "all";
+  const isMonthFiltered = selectedMonth !== "all";
+  const isFiltered = searchText.trim() !== "" || branchId !== "all" || isMonthFiltered;
 
 
-  // Secondary query — only active when search or branch filter is applied
+  // Secondary query — only active when search, branch, or month filter is applied
   const {
     data: filteredData,
     isFetching: isFilterFetching,
   } = useQuery<ClientPage>({
-    queryKey: ["clients-filtered", searchText, branchId, currentPage],
+    queryKey: ["clients-filtered", searchText, branchId, selectedMonth, selectedYear, currentPage],
     queryFn: async (): Promise<ClientPage> => {
       if (searchText.trim() !== "") {
         const client = await searchClients(searchText);
@@ -74,6 +94,18 @@ const Page = () => {
           clients: client ? [client] : [],
           totalPages: 1,
           total: client ? 1 : 0,
+        };
+      } else if (isMonthFiltered) {
+        const branchIdNum = branchId !== "all" ? Number(branchId) : undefined;
+        const res = await getClientsByMonth(
+          Number(selectedYear),
+          Number(selectedMonth),
+          branchIdNum
+        );
+        return {
+          clients: res.clients ?? [],
+          totalPages: 1,
+          total: res.total ?? 0,
         };
       } else {
         const res = await getClientsByBranch(Number(branchId));
@@ -110,6 +142,8 @@ const Page = () => {
   const handleClear = () => {
     setSearchText("");
     setBranchId("all");
+    setSelectedMonth("all");
+    setSelectedYear(String(currentYear));
     setCurrentPage(1);
   };
 
@@ -158,6 +192,41 @@ const Page = () => {
             )}
           </div>
         </div>
+
+        {/* Month filter */}
+        <div className="relative w-full md:w-44">
+          <select
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(e.target.value)}
+            className="w-full appearance-none pl-4 pr-10 py-3 bg-background border-2 border-teal-800 rounded-full text-sm font-semibold text-foreground outline-none cursor-pointer focus:ring-2 focus:ring-teal-600"
+          >
+            <option value="all">All Months</option>
+            {MONTHS.map((m) => (
+              <option key={m.value} value={m.value}>
+                {m.label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+        </div>
+
+        {/* Year filter — only visible when a month is selected */}
+        {isMonthFiltered && (
+          <div className="relative w-full md:w-32">
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+              className="w-full appearance-none pl-4 pr-10 py-3 bg-background border-2 border-teal-800 rounded-full text-sm font-semibold text-foreground outline-none cursor-pointer focus:ring-2 focus:ring-teal-600"
+            >
+              {YEARS.map((y) => (
+                <option key={y} value={String(y)}>
+                  {y}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          </div>
+        )}
 
         {canEdit && (
           <div className="relative w-full md:w-52">

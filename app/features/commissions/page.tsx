@@ -35,14 +35,14 @@ const Commission = () => {
         <Heading>
           Commission
         </Heading>
-        {canAdd && (
+        {/* {canAdd && (
           <Link
             href="/features/commissions/create"
             className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-primary hover:opacity-90 text-primary-foreground text-xs font-bold uppercase tracking-widest rounded-xl transition-all active:scale-95 mb-5"
           >
             <Plus className="w-4 h-4" /> Create Commission
           </Link>
-        )}
+        )} */}
 
       </div>
 

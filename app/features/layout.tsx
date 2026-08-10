@@ -1,5 +1,7 @@
 "use client";
 
+// app/features/layout.tsx
+
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "../components/SideBar/Sidebar";
@@ -8,7 +10,7 @@ import Toast from "../Toast";
 import { createClient } from "@/lib/supabase/client";
 import { useNavigationLoading } from "../hooks/useNavigationLoading";
 import Loading from "../components/Status/Loading";
-import { Menu } from "lucide-react";
+import { TopBar } from "../components/TopBar";
 
 export default function FeaturesLayout({
   children,
@@ -17,15 +19,17 @@ export default function FeaturesLayout({
 }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [role, setRole] = useState<string | null>(null);
+  const [userName, setUserName] = useState("");
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { loading: navigating, startLoading } = useNavigationLoading();
 
-
   useEffect(() => {
     const loadUser = async () => {
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
       if (!user) {
         router.push("/auth/signin");
@@ -36,6 +40,7 @@ export default function FeaturesLayout({
       const data = await res.json();
 
       setRole(data.role);
+      setUserName(data.dbUser?.name ?? "");
       setLoading(false);
     };
 
@@ -50,20 +55,12 @@ export default function FeaturesLayout({
 
   return (
     <>
+      {/* Sidebar overlay on mobile */}
       {!isCollapsed && (
         <div
           className="fixed inset-0 bg-black/40 z-40 md:hidden"
           onClick={() => setIsCollapsed(true)}
         />
-      )}
-
-      {isCollapsed && (
-        <button
-          onClick={() => setIsCollapsed(false)}
-          className="md:hidden fixed top-4 left-4 z-40 p-2 rounded-xl bg-sidebar-accent"
-        >
-          <Menu size={20} />
-        </button>
       )}
 
       <Sidebar
@@ -74,17 +71,29 @@ export default function FeaturesLayout({
         onNavigate={startLoading}
       />
 
+      {/* App-wide top bar */}
+      <TopBar
+        role={role}
+        userName={userName}
+        isCollapsed={isCollapsed}
+        onMenuClick={() => setIsCollapsed(false)}
+      />
+
       <main
         className={`
-        min-h-screen sm:pt-10 pt-8 p-4
-        transition-all duration-300
-        ${isCollapsed ? "md:ml-20" : "md:ml-60"}
-      `}
+          min-h-screen
+          pt-14
+          sm:pt-14
+          p-4
+          transition-all duration-300
+          ${isCollapsed ? "md:ml-20" : "md:ml-60"}
+        `}
       >
         <Providers>
           <Toast>{children}</Toast>
         </Providers>
       </main>
+
       {navigating && <Loading />}
     </>
   );

@@ -148,81 +148,56 @@ const Page = () => {
     <div className="max-w-[1400px] mx-auto min-h-screen p-3 sm:p-6 lg:p-8 font-sans transition-colors duration-300 w-full">
 
       {/* ── Top Header ── */}
-      <div className="flex items-center justify-between gap-3 mb-5">
-        {/* Left: Title + Tabs stacked */}
-        <div className="flex flex-col gap-1 min-w-0">
-          <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100 truncate">
-            {canEdit ? "Branch Management" : "Employee Management"}
-          </h1>
-          {canEdit && (
-            <div className="flex items-center gap-4 overflow-x-auto no-scrollbar">
-              <button
-                onClick={() => handleTabSwitch("employees")}
-                className={`text-sm font-bold whitespace-nowrap pb-0.5 transition-colors border-b-2 ${
-                  activeTab === "employees"
-                    ? "text-[#0f5132] dark:text-[#4ade80] border-[#0f5132] dark:border-[#4ade80]"
-                    : "text-gray-500 border-transparent hover:text-gray-700 dark:hover:text-gray-300"
-                }`}
-              >
-                Employees
-              </button>
-              <button
-                onClick={() => handleTabSwitch("network")}
-                className={`text-sm font-bold whitespace-nowrap pb-0.5 transition-colors border-b-2 ${
-                  activeTab === "network"
-                    ? "text-[#0f5132] dark:text-[#4ade80] border-[#0f5132] dark:border-[#4ade80]"
-                    : "text-gray-500 border-transparent hover:text-gray-700 dark:hover:text-gray-300"
-                }`}
-              >
-                Branches
-              </button>
-            </div>
-          )}
-        </div>
+      <div className="flex items-center justify-between gap-3 mb-6">
+        {/* Left: Title */}
+        <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100 truncate">
+          {canEdit ? "Branch Management" : "Employee Management"}
+        </h1>
 
-        {/* Right: Icons + User — always in one row */}
-        <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-          <button className="text-[#0f5132] dark:text-[#4ade80] hover:text-green-800 transition-colors">
-            <Bell className="w-5 h-5" />
-          </button>
-          <ThemeToggle />
-          <div className="hidden sm:block h-6 w-px bg-gray-300 dark:bg-gray-700" />
-          <div className="flex items-center gap-2">
-            <div className="text-right hidden sm:flex flex-col justify-center">
-              <span className="text-sm font-bold leading-none text-gray-900 dark:text-gray-100">{displayUserName}</span>
-              <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mt-1">{displayUserRole}</span>
-            </div>
-            <div className="w-9 h-9 rounded-full overflow-hidden shadow-sm border border-gray-200 dark:border-gray-800 shrink-0">
-              <UserAvatar seed={displayUserName} className="w-full h-full" />
-            </div>
-          </div>
-        </div>
+      
       </div>
 
-      {/* ── Action Buttons Row ── */}
+      {/* ── Toolbar: Tabs + Actions in one cohesive bar ── */}
       {canEdit && (
-        <div className="flex flex-wrap items-center gap-2 mb-5">
-          <button className="flex items-center gap-1.5 px-3 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold text-xs rounded-lg transition-colors hover:bg-gray-200 dark:hover:bg-gray-700 shrink-0">
-            <Calendar className="w-3.5 h-3.5" /> Date Range
-          </button>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-1.5 px-3 py-2 bg-[#0f5132] text-white font-semibold text-xs rounded-lg hover:bg-[#146c43] transition-colors shadow-sm shrink-0"
-          >
-            <Plus className="w-3.5 h-3.5" /> Add Branch
-          </button>
-          {activeTab === "network" ? (
-            <ExportButton
-              className="!rounded-lg !text-xs !py-2 !px-3 !bg-[#e0e7ff] !text-[#4338ca] dark:!bg-[#312e81] dark:!text-[#a5b4fc] hover:opacity-90 shrink-0"
-              data={networkBranches}
-              exportFn={generateBranchNetworkPDF}
-              label="Export"
-            />
-          ) : (
-            <div className="w-full sm:w-auto">
+        <div className="flex items-center justify-between gap-3 mb-5 border-b border-gray-200 dark:border-gray-800 pb-3">
+          {/* Left: Tabs */}
+          <div className="flex items-center gap-1">
+            {(["employees", "network"] as TabId[]).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => handleTabSwitch(tab)}
+                className={`px-4 py-2 rounded-lg text-sm font-bold capitalize transition-all ${
+                  activeTab === tab
+                    ? "bg-[#0f5132] text-white shadow-sm"
+                    : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-800 dark:hover:text-gray-200"
+                }`}
+              >
+                {tab === "employees" ? "Employees" : "Branches"}
+              </button>
+            ))}
+          </div>
+
+          {/* Right: Context actions */}
+          <div className="flex items-center gap-2 shrink-0">
+            {activeTab === "network" ? (
+              <>
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  className="flex items-center gap-1.5 px-3 py-2 bg-[#0f5132] text-white font-bold text-xs rounded-lg hover:bg-[#146c43] transition-colors shadow-sm"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Add Branch
+                </button>
+                <ExportButton
+                  className="!rounded-lg !text-xs !py-2 !px-3 !bg-gray-100 dark:!bg-gray-800 !text-gray-700 dark:!text-gray-300 hover:!bg-gray-200 dark:hover:!bg-gray-700 shrink-0"
+                  data={networkBranches}
+                  exportFn={generateBranchNetworkPDF}
+                  label="Export Report"
+                />
+              </>
+            ) : (
               <ProposalReportExport />
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
 
@@ -232,27 +207,43 @@ const Page = () => {
       {activeTab === "employees" && (
         <div className="space-y-4">
 
-          {/* Branch Selector — horizontally scrollable pill row */}
-          <div className="w-full overflow-x-auto no-scrollbar pb-1">
-            <div className="flex items-center gap-2 min-w-max">
-              {branch?.map((b) => (
-                <button
-                  key={b.id}
-                  onClick={() => setSelectedBranchId(b.id)}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-xl transition-all font-medium whitespace-nowrap text-sm ${
-                    selectedBranchId === b.id
-                      ? "bg-[#0f5132] text-white shadow-md shadow-green-900/20"
-                      : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
-                  }`}
-                >
-                  {b.name}
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
-                    selectedBranchId === b.id ? "bg-white/20 text-white" : "bg-gray-200 dark:bg-gray-700 text-gray-500"
-                  }`}>
-                    {b.members?.length || 0}
-                  </span>
-                </button>
-              ))}
+          {/* Branch Selector — scrollable pill row */}
+          <div className="w-full overflow-x-auto no-scrollbar">
+            <div className="flex items-center gap-2 min-w-max py-1">
+              {branch?.map((b) => {
+                const isActive = selectedBranchId === b.id;
+                const count = b.members?.length || 0;
+                const proposals = proposalMap.get(b.id) ?? 0;
+                return (
+                  <button
+                    key={b.id}
+                    onClick={() => setSelectedBranchId(b.id)}
+                    className={`group relative flex items-center gap-2.5 pl-4 pr-3 py-2.5 rounded-xl transition-all whitespace-nowrap ${
+                      isActive
+                        ? "bg-[#0f5132] text-white shadow-md shadow-green-900/20"
+                        : "bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-400 hover:border-[#0f5132]/40 hover:text-[#0f5132] dark:hover:text-[#4ade80]"
+                    }`}
+                  >
+                    <span className="text-sm font-bold">{b.name}</span>
+                    <span className={`flex items-center justify-center min-w-[22px] h-[22px] px-1.5 rounded-md text-[11px] font-bold tabular-nums ${
+                      isActive
+                        ? "bg-white/20 text-white"
+                        : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
+                    }`}>
+                      {count}
+                    </span>
+                    {proposals > 0 && (
+                      <span className={`flex items-center justify-center min-w-[22px] h-[22px] px-1.5 rounded-md text-[11px] font-bold tabular-nums ${
+                        isActive
+                          ? "bg-emerald-400/30 text-emerald-100"
+                          : "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
+                      }`} title={`${proposals} proposals this month`}>
+                        +{proposals}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
