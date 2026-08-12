@@ -564,7 +564,6 @@ export async function runMonthlyPayroll(
         basicSalaryPermanent: breakdown.basicSalaryPermanent,
         monthlyTarget: breakdown.monthlyTarget,
         incentiveEarned: breakdown.incentiveEarned,
-        fullTargetBonus: breakdown.fullTargetBonus,
         incentivePartialEarned: breakdown.incentivePartialEarned,
         vehicleEarned: breakdown.vehicleEarned,
         vehicleHit: breakdown.vehicleHit,
@@ -683,4 +682,65 @@ export async function getPayrollHistory(memberId: number) {
       advanceDeducted: true,
     },
   });
+}
+
+// ─── getAllPayrollExport ───────────────────────────────────────────────────────
+// Reads directly from MonthlyPayroll for the given month/year.
+// No live recalculation — exports exactly what was processed and saved.
+export async function getAllPayrollExport(year: number, month: number) {
+  "use server";
+
+  const records = await prisma.monthlyPayroll.findMany({
+    where: { year, month },
+    include: {
+      member: {
+        select: {
+          nameWithInitials: true,
+          empNo: true,
+          status: true,
+          branches: {
+            where: { isPrimary: true },
+            select: { branch: { select: { name: true } } },
+            take: 1,
+          },
+          position: { select: { title: true } },
+        },
+      },
+    },
+    orderBy: [
+      { member: { branches: { _count: "asc" } } },
+      { member: { empNo: "asc" } },
+    ],
+  });
+
+  return records.map((r) => ({
+    branch:        r.member.branches[0]?.branch?.name ?? "—",
+    empNo:         r.member.empNo,
+    name:          r.member.nameWithInitials ?? "—",
+    position:      r.member.position?.title ?? "—",
+    status:        r.member.status ?? "—",
+    payrollCategory: r.payrollCategory,
+    volumeAchieved:  Number(r.volumeAchieved),
+    basic:           Number(r.basicSalaryPermanent),
+    incentive:       Number(r.incentiveEarned),
+    targetBudget:    Number(r.targetBudgetSalary),
+    vehicle:         Number(r.vehicleEarned),
+    teamActive:      Number(r.teamActiveEarned),
+    fixedAllowance:  Number(r.fixedAllowance),
+    fuelAllowance:   Number(r.fuelAllowance),
+    attendanceAllowance: Number(r.attendanceAllowance),
+    channelOperation:    Number(r.channelOperation),
+    personalComm:    Number(r.commissionEarned),
+    orc:             Number(r.orcEarned),
+    excess:          Number(r.excessCommission),
+    grossPay:        Number(r.grossPay),
+    epfEmployee:     Number(r.epfDeduction),
+    epfEmployer:     Number(r.epfEmployer),
+    etf:             Number(r.etfEmployer),
+    loanInstalments: Number(r.loanInstalments),
+    festivalAdvance: Number(r.festivalAdvance),
+    merchandiseDeduction: Number(r.merchandiseDeduction),
+    advance:         Number(r.advanceDeducted),
+    netPay:          Number(r.netPay),
+  }));
 }

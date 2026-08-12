@@ -8,10 +8,11 @@ import {
 } from "lucide-react";
 import { getBranches } from "@/app/features/branches/actions";
 import { toast } from "sonner";
-import { getPayrollPreview, runMonthlyPayroll } from "../payroll-action";
+import { getPayrollPreview, runMonthlyPayroll, getAllPayrollExport } from "../payroll-action";
 import Heading from "@/app/components/Heading";
 import Link from "next/link";
 import { exportPayrollToExcel } from "./exportPayrollToExcel";
+import { exportAllPayrollToExcel } from "./exportAllPayrollToExcel";
 import { generateMemberPayslipPDF } from "@/app/pdf/generateMemberPayslipPDF";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -38,6 +39,7 @@ export default function PayrollPage() {
   const [volumes, setVolumes] = useState<Record<number, number>>({});
   const [loadingPreview, setLoadingPreview] = useState(false);
   const [running, setRunning] = useState(false);
+  const [exportingAll, setExportingAll] = useState(false);
 
   console.log(preview);
 
@@ -118,6 +120,24 @@ export default function PayrollPage() {
 
 
   // Derived stats
+  const handleExportAll = async () => {
+    setExportingAll(true);
+    try {
+      const rows = await getAllPayrollExport(year, month);
+      if (!rows || rows.length === 0) {
+        toast.error("No payroll data found for this month.");
+        return;
+      }
+      await exportAllPayrollToExcel(rows as any[], month, year);
+      toast.success(`Exported ${rows.length} employees across all branches.`);
+    } catch (err) {
+      console.error(err);
+      toast.error("Export failed. Please try again.");
+    } finally {
+      setExportingAll(false);
+    }
+  };
+
   const totalGross = preview.reduce((s, r) => s + (r.breakdown?.grossPay ?? 0), 0);
   const totalNet = preview.reduce((s, r) => s + (r.breakdown?.netPay ?? 0), 0);
   const totalEpfEmployee = preview.reduce((s, r) => s + (r.breakdown?.epfDeduction ?? 0), 0);
@@ -214,7 +234,19 @@ export default function PayrollPage() {
           className="flex items-center gap-2 px-6 py-3 bg-card border border-border hover:bg-muted text-foreground text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-sm active:scale-95"
         >
           <FileSpreadsheet className="w-4 h-4" />
-          Export Excel
+          Export Branch
+        </button>
+
+        <button
+          onClick={handleExportAll}
+          disabled={exportingAll}
+          className="flex items-center gap-2 px-6 py-3 bg-[#0f5132] hover:bg-[#146c43] text-white text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
+        >
+          {exportingAll
+            ? <Loader2 className="w-4 h-4 animate-spin" />
+            : <Download className="w-4 h-4" />
+          }
+          {exportingAll ? "Exporting…" : "Export All Branches"}
         </button>
 
       </div>
@@ -235,7 +267,7 @@ export default function PayrollPage() {
       )}
 
       {/* Summary Cards */}
-      {preview.length > 0 && (
+      {/* {preview.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           {[
             { label: "Total Gross", value: fmt(totalGross), icon: Banknote, color: "text-primary" },
@@ -253,7 +285,7 @@ export default function PayrollPage() {
             </div>
           ))}
         </div>
-      )}
+      )} */} 
 
       {/* Table */}
       <div >

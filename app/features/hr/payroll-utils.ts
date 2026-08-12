@@ -95,9 +95,13 @@ export type MarketingSalaryConfig = {
 
   // Two-part incentive (mutually exclusive by position type):
   //   basicIncentiveAmount — FA partial: 20K at hurdle. 0 for non-FA.
-  //   fullIncentiveAmount  — Non-FA full: bonusAmount at 100%. 0 for FA.
+  //   fullIncentiveAmount  — Non-FA full: bonusAmount at threshold. 0 for FA.
   basicIncentiveAmount: number;    // partialBonus (FA only, e.g. 20 000)
   fullIncentiveAmount: number;     // bonusAmount  (non-FA only, e.g. 22K TL / 30K BM)
+  // Threshold to unlock fullIncentive. Defaults to 1.0 (100%) for normal
+  // probation months. For after-6-month rows this is after6MonthIncentivePct
+  // (e.g. 0.45 for TL), allowing the bonus to fire below 100% of target.
+  fullIncentiveThresholdPct: number;
 
   // Excess commission
   excessCommissionRate: number;    // fraction applied to surplus volume (default 0.005 = 0.5%)
@@ -339,11 +343,15 @@ export function calculateMarketingPayroll(
     && vol >= basicIncentiveHurdle;
   const basicIncentive = basicIncentiveHit ? safe(config.basicIncentiveAmount) : 0;
 
-  // ── Full incentive — non-FA positions (bonusAmount at 100% of target) ─────
+  // ── Full incentive — non-FA positions (bonusAmount at threshold of target) ──
   // FA: fullIncentiveAmount = 0 (bonus comes from target budget salary instead).
-  // TL/BM/RM etc.: awarded when achievementPct >= 1.0.
+  // TL/BM/RM probation months: threshold = 1.0 (must hit 100%).
+  // After-6-month rows: threshold = after6MonthIncentivePct (e.g. 0.45 for TL).
   const fullIncentiveAmount = safe(config.fullIncentiveAmount);
-  const fullIncentiveHit = fullIncentiveAmount > 0 && target > 0 && achievementPct >= 1.0;
+  const fullIncentiveThreshold = safe(config.fullIncentiveThresholdPct) > 0
+    ? safe(config.fullIncentiveThresholdPct)
+    : 1.0;
+  const fullIncentiveHit = fullIncentiveAmount > 0 && target > 0 && achievementPct >= fullIncentiveThreshold;
   const fullIncentive = fullIncentiveHit ? fullIncentiveAmount : 0;
   const fullTargetBonus = 0;        // legacy — always 0
   const fullTargetBonusHit = false; // legacy — always false
@@ -439,6 +447,7 @@ export function calculatePayroll(
     targetBudgetMinPct?: number;
     basicIncentiveAmount?: number;
     fullIncentiveAmount?: number;
+    fullIncentiveThresholdPct?: number;
     hurdleRateProbation?: number;
     hurdleRatePermanent?: number;
     excessCommissionRate?: number;
@@ -517,6 +526,7 @@ export function calculatePayroll(
     targetBudgetMinPct: mktConfig.targetBudgetMinPct ?? 0.25,
     basicIncentiveAmount: mktConfig.basicIncentiveAmount ?? 0,
     fullIncentiveAmount: mktConfig.fullIncentiveAmount ?? 0,
+    fullIncentiveThresholdPct: mktConfig.fullIncentiveThresholdPct ?? 0,
     fullTargetBonusAmount: 0,
     hurdleRateProbation: mktConfig.hurdleRateProbation ?? 0.066,
     hurdleRatePermanent: mktConfig.hurdleRatePermanent ?? 0.20,
