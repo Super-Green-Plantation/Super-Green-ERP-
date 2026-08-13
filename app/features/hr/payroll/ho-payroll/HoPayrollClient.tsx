@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import {
   Loader2, Play, RefreshCw, ChevronDown, CheckCircle2,
-  AlertTriangle, Save, ChevronRight, Info, TrendingUp,
+  AlertTriangle, Save, ChevronRight, Info, TrendingUp, FileDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -14,8 +14,10 @@ import {
   rerunSingleMember,
   markManagementSalaryPaid,
   upsertHoPayrollConfig,
+  getHoPayrollExport,
   type HoPayrollOverrides,
 } from "../ho-payroll-action";
+import { exportHoPayrollToExcel } from "../exportHoPayrollToExcel";
 import Heading from "@/app/components/Heading";
 import React from "react";
 
@@ -72,6 +74,9 @@ type PreviewRow = {
   orcEarned: number;
   personalCommission: number;
   personalIncentive: number;
+  mgmtExcessCommission: number;
+  mgmtFaTarget: number;
+  mgmtFaAchievementPct: number;
   grossPay: number;
   epfDeduction: number;
   epfEmployer: number;
@@ -189,6 +194,86 @@ function PermBmPanel({ row }: { row: PreviewRow }) {
   );
 }
 
+// ─── Management FA breakdown panel ───────────────────────────────────────────
+
+function ManagementFaPanel({ row }: { row: PreviewRow }) {
+  const target     = row.mgmtFaTarget;
+  const vol        = row.volumeAchieved;
+  const achPct     = row.mgmtFaAchievementPct;
+  const hasAchieved = vol > 0;
+  const excessVol   = Math.max(0, vol - target);
+
+  return (
+    <div className="mt-3 rounded-xl border border-border bg-muted/20 p-4 flex flex-wrap gap-5">
+      {/* Volume vs target */}
+      <div className="flex flex-col gap-1 min-w-[180px]">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Volume / Target (FA Package)</p>
+        {hasAchieved ? (
+          <>
+            <p className="text-sm font-bold text-foreground">{fmt(vol)}</p>
+            <p className="text-xs text-muted-foreground">/ {fmt(target)}</p>
+            <div className="w-full bg-muted rounded-full h-1.5 mt-1">
+              <div
+                className={`h-1.5 rounded-full transition-all ${achPct >= 1 ? "bg-green-500" : achPct >= 0.5 ? "bg-amber-500" : "bg-blue-400"}`}
+                style={{ width: `${Math.min(achPct * 100, 100)}%` }}
+              />
+            </div>
+            <p className="text-[10px] font-bold text-muted-foreground">{fmtPct(achPct)} achieved</p>
+          </>
+        ) : (
+          <p className="text-sm text-muted-foreground/40 font-bold">No volume this month</p>
+        )}
+      </div>
+
+      {/* Excess commission */}
+      <div className="flex flex-col gap-1.5">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Excess Commission (0.5%)</p>
+        {row.mgmtExcessCommission > 0 ? (
+          <>
+            <p className="text-sm font-bold text-emerald-600">{fmt(row.mgmtExcessCommission)}</p>
+            <p className="text-[10px] text-muted-foreground">
+              on {fmt(excessVol)} surplus above {fmt(target)}
+            </p>
+            <span className="text-[9px] font-bold bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 px-1.5 py-0.5 rounded-full uppercase self-start">
+              ✓ Earned
+            </span>
+          </>
+        ) : (
+          <>
+            <p className="text-sm font-bold text-muted-foreground/40">—</p>
+            <p className="text-[10px] text-muted-foreground/60">
+              {hasAchieved ? `Need ${fmt(Math.max(0, target - vol))} more to exceed target` : "No volume recorded"}
+            </p>
+            <span className="text-[9px] font-bold bg-red-500/10 text-red-600 border border-red-500/20 px-1.5 py-0.5 rounded-full uppercase self-start">
+              ✗ Not earned
+            </span>
+          </>
+        )}
+      </div>
+
+      {/* Personal commission summary */}
+      <div className="flex flex-col gap-1.5">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Personal Commission</p>
+        <p className="text-sm font-bold text-primary">{row.personalCommission > 0 ? fmt(row.personalCommission) : "—"}</p>
+        {hasAchieved && (
+          <p className="text-[10px] text-muted-foreground">
+            {vol >= 500_000 ? "10%" : "7%"} of {fmt(vol)}
+          </p>
+        )}
+      </div>
+
+      {/* Flat incentive */}
+      {row.personalIncentive > 0 && (
+        <div className="flex flex-col gap-1.5">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Flat Incentive</p>
+          <p className="text-sm font-bold text-emerald-600">{fmt(row.personalIncentive)}</p>
+          <p className="text-[10px] text-muted-foreground">≥ 500K threshold</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function HoPayrollClient({
@@ -202,8 +287,9 @@ export default function HoPayrollClient({
   const [year, setYear]   = useState(initialYear);
   const [month, setMonth] = useState(initialMonth);
   const [overrides, setOverrides] = useState<Record<number, LocalOverrides>>({});
-  const [running, setRunning]     = useState(false);
-  const [payingId, setPayingId]   = useState<number | null>(null);
+  const [running, setRunning]         = useState(false);
+  const [exporting, setExporting]     = useState(false);
+  const [payingId, setPayingId]       = useState<number | null>(null);
   const [savingId, setSavingId]   = useState<number | null>(null);
   const [rerunningId, setRerunningId] = useState<number | null>(null);
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
@@ -257,6 +343,17 @@ export default function HoPayrollClient({
   const setField = useCallback((memberId: number, field: keyof LocalOverrides, value: number) => {
     setOverrides((prev) => ({ ...prev, [memberId]: { ...prev[memberId], [field]: value } }));
   }, []);
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const rows = await getHoPayrollExport(year, month);
+      if (rows.length === 0) { toast.warning("No processed HO payroll records found for this period."); return; }
+      exportHoPayrollToExcel(rows, month, year);
+      toast.success(`Exported ${rows.length} HO payroll records`);
+    } catch { toast.error("Export failed"); }
+    finally { setExporting(false); }
+  };
 
   const handleSearch = async () => { await refetch(); };
 
@@ -406,6 +503,7 @@ export default function HoPayrollClient({
                   <th className="text-right px-3 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">ORC</th>
                   <th className="text-right px-3 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">P.Incentive</th>
                   <th className="text-right px-3 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">P.Commission</th>
+                  <th className="text-right px-3 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Excess</th>
                   <th className="text-right px-3 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Gross</th>
                   <th className="text-right px-3 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">EPF (emp)</th>
                   <th className="text-right px-3 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">ETF</th>
@@ -562,13 +660,23 @@ export default function HoPayrollClient({
                         {/* Personal Commission — all non-management HO + management staff */}
                         <td className="px-3 py-4 text-right text-xs font-bold">
                           {row.isManagementStaff ? (
-                            // Management: volume-based 7%/10%
-                            row.personalCommission > 0 ? (
-                              <div className="flex flex-col items-end">
-                                <span className="text-primary">{fmtSmall(row.personalCommission)}</span>
-                                <span className="text-[9px] font-bold text-muted-foreground/60 uppercase">
-                                  {row.volumeAchieved >= 500000 ? "10%" : "7%"} of {(row.volumeAchieved / 1000).toFixed(0)}K
-                                </span>
+                            // Management: volume-based 7%/10% + excess commission
+                            row.personalCommission > 0 || row.mgmtExcessCommission > 0 ? (
+                              <div className="flex flex-col items-end gap-0.5">
+                                {row.personalCommission > 0 && (
+                                  <>
+                                    <span className="text-primary">{fmtSmall(row.personalCommission)}</span>
+                                    <span className="text-[9px] font-bold text-muted-foreground/60 uppercase">
+                                      {row.volumeAchieved >= 500000 ? "10%" : "7%"} of {(row.volumeAchieved / 1000).toFixed(0)}K
+                                    </span>
+                                  </>
+                                )}
+                                {/* {row.mgmtExcessCommission > 0 && (
+                                  <>
+                                    <span className="text-emerald-600">+{fmtSmall(row.mgmtExcessCommission)}</span>
+                                    <span className="text-[9px] font-bold text-emerald-500/80 uppercase">0.5% excess</span>
+                                  </>
+                                )} */}
                               </div>
                             ) : <span className="text-muted-foreground/40">—</span>
                           ) : (
@@ -577,6 +685,18 @@ export default function HoPayrollClient({
                               ? <span className="text-primary">{fmtSmall(row.personalCommission)}</span>
                               : <span className="text-muted-foreground/40">—</span>
                           )}
+                        </td>
+
+                        {/* Excess Commission — management staff only */}
+                        <td className="px-3 py-4 text-right text-xs font-bold">
+                          {row.isManagementStaff ? (
+                            row.mgmtExcessCommission > 0
+                              ? <div className="flex flex-col items-end">
+                                  <span className="text-emerald-600">{fmtSmall(row.mgmtExcessCommission)}</span>
+                                  <span className="text-[9px] font-bold text-emerald-500/80 uppercase">0.5%</span>
+                                </div>
+                              : <span className="text-muted-foreground/30">—</span>
+                          ) : <span className="text-muted-foreground/30">N/A</span>}
                         </td>
 
                         {/* Gross */}
@@ -635,9 +755,12 @@ export default function HoPayrollClient({
                       {/* Expanded panel */}
                       {isExpanded && (
                         <tr key={`${row.memberId}-expand`} className="bg-muted/10 border-b border-border">
-                          <td colSpan={16} className="px-8 py-5">
+                          <td colSpan={17} className="px-8 py-5">
                             {/* Perm BM: show achievement breakdown */}
                             {row.isPermBmTrack && <PermBmPanel row={row} />}
+
+                            {/* Management staff: show FA package breakdown */}
+                            {row.isManagementStaff && <ManagementFaPanel row={row} />}
 
                             {/* Fixed-salary HO: show editable allowance inputs */}
                             {!row.isPermBmTrack && (
@@ -707,7 +830,7 @@ export default function HoPayrollClient({
         </div>
       )}
 
-      {/* Run buttons */}
+      {/* Run + Export buttons */}
       {preview.length > 0 && (
         <div className="flex flex-col sm:flex-row gap-4 pt-2">
           <button onClick={() => handleRunPayroll(false)} disabled={running}
@@ -719,6 +842,11 @@ export default function HoPayrollClient({
             className="flex items-center justify-center gap-2 px-8 py-4 bg-destructive/10 text-destructive text-xs font-bold uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-95 border border-destructive/20 hover:bg-destructive/20">
             <RefreshCw className="w-5 h-5" />
             Force Re-run (unpaid only)
+          </button>
+          <button onClick={handleExport} disabled={exporting || running}
+            className="flex items-center justify-center gap-2 px-8 py-4 bg-card border border-border text-foreground text-xs font-bold uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-95 hover:bg-muted/40 disabled:opacity-50 shadow-sm">
+            {exporting ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileDown className="w-5 h-5" />}
+            Export Excel
           </button>
         </div>
       )}

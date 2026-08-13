@@ -49,6 +49,11 @@ function toPositionTargetData(target: any) {
     partialBonus: Number(target.partialBonus ?? 0),
     vehicleThresholdPct: Number(target.vehicleThresholdPct ?? 0),
     vehicleAmount: Number(target.vehicleAmount ?? 0),
+    // After-6-month rows set teamActiveBaseTarget/vehicleBaseTarget to the original
+    // probation targetAmount so thresholds aren't computed against the much larger
+    // after6MonthTarget. Probation rows don't set these so fall back to targetAmount.
+    teamActiveBaseTarget: Number(target.teamActiveBaseTarget ?? target.targetAmount ?? 0),
+    vehicleBaseTarget:    Number(target.vehicleBaseTarget    ?? target.targetAmount ?? 0),
     teamActiveThresholdPct: Number(target.teamActiveThresholdPct ?? 0),
     teamActiveAmount: Number(target.teamActiveAmount ?? 0),
     minActiveAdvisors: Number(target.minActiveAdvisors ?? 0),
@@ -190,6 +195,8 @@ function buildMktConfig(
       vehicleAmount: positionTargetData.vehicleAmount,
       teamActiveThresholdPct: positionTargetData.teamActiveThresholdPct,
       teamActiveAmount: positionTargetData.teamActiveAmount,
+      teamActiveBaseTarget: positionTargetData.teamActiveBaseTarget,
+      vehicleBaseTarget: positionTargetData.vehicleBaseTarget,
       minActiveAdvisors: positionTargetData.minActiveAdvisors,
       minActiveFMs: positionTargetData.minActiveFMs,
       minActiveBMs: positionTargetData.minActiveBMs,

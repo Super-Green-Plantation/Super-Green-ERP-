@@ -31,6 +31,10 @@ const MGMT_PERSONAL_INCENTIVE_AMOUNT = 15_000;
 const MGMT_COMM_RATE_HIGH = 0.10;
 const MGMT_COMM_RATE_LOW  = 0.07;
 
+// Management staff FA package: 1.5M target, 0.5% excess on surplus above target.
+const MGMT_FA_TARGET = 1_500_000;
+const MGMT_FA_EXCESS_RATE = 0.005;
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type HoPayrollOverrides = {
@@ -202,19 +206,23 @@ async function resolveMemberCommissions(member: any, startDate: Date, endDate: D
   let personalCommission = 0;
   let personalIncentive = 0;
   let volumeAchieved = 0;
+  let mgmtExcessCommission = 0;
 
   if (isManagementStaff) {
     // Management staff: volume-based commission (7%/10%) + 15K flat incentive at 500K+
     volumeAchieved = await getVolumeAchieved(member.id, startDate, endDate);
     personalCommission = calcMgmtPersonalCommission(volumeAchieved);
     if (volumeAchieved >= MGMT_PERSONAL_INCENTIVE_THRESHOLD) personalIncentive = MGMT_PERSONAL_INCENTIVE_AMOUNT;
+    // FA package: 0.5% excess commission on volume above 1.5M target
+    const surplus = Math.max(0, volumeAchieved - MGMT_FA_TARGET);
+    if (surplus > 0) mgmtExcessCommission = surplus * MGMT_FA_EXCESS_RATE;
   } else {
     // All non-management HO members (perm BM/RM/ZM/AGM/COO/GM):
     // fetch PERSONAL-type commissions directly from Commission rows.
     personalCommission = await getPersonalCommissionFromDb(member.empNo, startDate, endDate);
   }
 
-  return { isManagementStaff, isPermBmTrack, receivesOrc, orcEarned, personalCommission, personalIncentive, volumeAchieved };
+  return { isManagementStaff, isPermBmTrack, receivesOrc, orcEarned, personalCommission, personalIncentive, volumeAchieved, mgmtExcessCommission };
 }
 
 // ─── Salary payload builder ───────────────────────────────────────────────────
@@ -225,6 +233,7 @@ function buildSalaryPayload(
     hoBreakdown: ReturnType<typeof calculateHoPayroll>;
     personalCommission: number;
     personalIncentive: number;
+    mgmtExcessCommission: number;
     totalGross: number;
     finalNetPay: number;
     totalDeducted: number;
@@ -235,6 +244,7 @@ function buildSalaryPayload(
   },
 ) {
   const { hoConfig, hoBreakdown, personalCommission, personalIncentive,
+          mgmtExcessCommission,
           totalGross, finalNetPay, totalDeducted, leavesTaken,
           epfEmployer, etfEmployer, permBm } = args;
   return {
@@ -257,10 +267,11 @@ function buildSalaryPayload(
     merchandiseDeduction:    hoBreakdown.merchandiseDeduction,
     epfEmployer,
     etfEmployer,
-    // Perm BM breakdown (0/false for fixed-salary staff)
-    // Kept separate so it can be spread with `as any` — guards against stale Prisma client
-    // before `db pull` + `prisma generate` is re-run after the migration.
+    // Perm BM breakdown + management FA excess commission — kept separate so
+    // they can be spread with `as any`, guarding against a stale Prisma client
+    // before `db pull` + `prisma generate` is re-run after migrations.
     _permBmFields: {
+      mgmtExcessCommission,
       volumeAchieved:    permBm?.volumeAchieved    ?? 0,
       monthlyTarget:     permBm?.monthlyTarget      ?? 0,
       achievementPct:    permBm?.achievementPct     ?? 0,
@@ -289,7 +300,7 @@ async function computeMemberPayroll(
   const startDate = new Date(Date.UTC(year, month - 1, 1));
   const endDate   = new Date(Date.UTC(year, month, 1));
 
-  const { isManagementStaff, isPermBmTrack, orcEarned, personalCommission, personalIncentive, volumeAchieved } =
+  const { isManagementStaff, isPermBmTrack, orcEarned, personalCommission, personalIncentive, volumeAchieved, mgmtExcessCommission } =
     await resolveMemberCommissions(member, startDate, endDate);
 
   const rank         = member.position?.rank ?? 0;
@@ -357,7 +368,7 @@ async function computeMemberPayroll(
     // Fixed-salary HO track (management staff, COO, GM etc.)
     const hoConfig = buildHoConfig(member, overrides);
     hoBreakdown    = calculateHoPayroll(hoConfig, leavesTaken, orcEarned);
-    totalGross     = hoBreakdown.grossPay + personalIncentive + personalCommission;
+    totalGross     = hoBreakdown.grossPay + personalIncentive + personalCommission + mgmtExcessCommission;
     epfEmployee    = hoBreakdown.epfEmployee;
     epfEmployer    = hoBreakdown.epfEmployer;
     etfEmployer    = hoBreakdown.etfEmployer;
@@ -370,7 +381,7 @@ async function computeMemberPayroll(
 
   return {
     isManagementStaff, isPermBmTrack, rank, tenureMonth,
-    orcEarned, personalCommission, personalIncentive, volumeAchieved,
+    orcEarned, personalCommission, personalIncentive, volumeAchieved, mgmtExcessCommission,
     hoBreakdown, permBmBreakdown,
     totalGross, epfEmployee, epfEmployer, etfEmployer,
     baseNetPay, leavesTaken,
@@ -530,9 +541,15 @@ export async function getHoPayrollPreview(
         vehicleFuelHit:    pb?.vehicleFuelHit    ?? null,
         vehicleFuelEarned: pb?.vehicleFuelEarned ?? 0,
 
-        orcEarned:          computed.orcEarned,
-        personalCommission: computed.personalCommission,
-        personalIncentive:  computed.personalIncentive,
+        orcEarned:              computed.orcEarned,
+        personalCommission:     computed.personalCommission,
+        personalIncentive:      computed.personalIncentive,
+        mgmtExcessCommission:   computed.mgmtExcessCommission,
+        // Management FA package display fields
+        mgmtFaTarget:           MGMT_FA_TARGET,
+        mgmtFaAchievementPct:   computed.isManagementStaff && MGMT_FA_TARGET > 0
+          ? Math.min((computed.volumeAchieved) / MGMT_FA_TARGET, 999)
+          : 0,
 
         grossPay:     computed.totalGross,
         epfDeduction: computed.epfEmployee,
@@ -593,7 +610,8 @@ export async function runHoPayroll(
           hoConfig:       computed.hoConfig,
           hoBreakdown:    computed.hoBreakdown,
           personalCommission: computed.personalCommission,
-          personalIncentive:  computed.personalIncentive,
+          personalIncentive:    computed.personalIncentive,
+          mgmtExcessCommission: computed.mgmtExcessCommission,
           totalGross:     computed.totalGross,
           finalNetPay,
           totalDeducted,
@@ -649,8 +667,9 @@ export async function rerunSingleMember(
       const payload = buildSalaryPayload({
         hoConfig:       computed.hoConfig,
         hoBreakdown:    computed.hoBreakdown,
-        personalCommission: computed.personalCommission,
-        personalIncentive:  computed.personalIncentive,
+        personalCommission:   computed.personalCommission,
+        personalIncentive:    computed.personalIncentive,
+        mgmtExcessCommission: computed.mgmtExcessCommission,
         totalGross:     computed.totalGross,
         finalNetPay,
         totalDeducted,
@@ -716,4 +735,76 @@ export async function upsertManagementBaseSalary(memberId: number, baseSalary: n
   });
   revalidatePath("/features/hr/ho-payroll");
   return { success: true };
+}
+// ─── getHoPayrollExport ───────────────────────────────────────────────────────
+// Reads from ManagementSalary for the given month/year and joins member bank
+// details. No live recalculation — exports the saved payroll snapshot.
+
+export async function getHoPayrollExport(year: number, month: number) {
+  const monthDate = new Date(Date.UTC(year, month - 1, 1));
+
+  const records = await prisma.managementSalary.findMany({
+    where: { month: monthDate },
+    include: {
+      member: {
+        select: {
+          nameWithInitials: true,
+          empNo: true,
+          status: true,
+          bank: true,
+          bankBranch: true,
+          accNo: true,
+          position: { select: { title: true, rank: true } },
+          branches: {
+            where: { isPrimary: true },
+            select: { branch: { select: { name: true } } },
+            take: 1,
+          },
+        },
+      },
+    },
+    orderBy: { member: { empNo: "asc" } },
+  });
+
+  return records.map((r) => ({
+    branch:               r.member.branches[0]?.branch?.name ?? "—",
+    empNo:                r.member.empNo,
+    name:                 r.member.nameWithInitials ?? "—",
+    position:             r.member.position?.title ?? "—",
+    status:               r.member.status ?? "—",
+    bank:                 r.member.bank ?? "—",
+    bankBranch:           r.member.bankBranch ?? "—",
+    accNo:                r.member.accNo ?? "—",
+    isPermBm:             PERM_BM_RANKS.has(r.member.position?.rank ?? 0),
+    // Fixed-salary fields
+    basicSalary:          Number(r.baseSalary),
+    fixedAllowance:       Number((r as any).fixedAllowance ?? 0),
+    vehicleAllowance:     Number((r as any).vehicleAllowance ?? 0),
+    fuelAllowance:        Number((r as any).fuelAllowance ?? 0),
+    channelOperation:     Number((r as any).channelOperation ?? 0),
+    attendanceAllowance:  Number((r as any).attendanceAllowance ?? 0),
+    // Perm BM fields
+    incentive75Earned:    Number((r as any).incentive75Earned ?? 0),
+    incentive100Earned:   Number((r as any).incentive100Earned ?? 0),
+    vehicleFuelEarned:    Number((r as any).vehicleFuelEarned ?? 0),
+    volumeAchieved:       Number((r as any).volumeAchieved ?? 0),
+    monthlyTarget:        Number((r as any).monthlyTarget ?? 0),
+    // Shared earnings
+    orcEarned:            Number(r.orcEarned),
+    personalCommission:   Number(r.personalCommissionEarned),
+    personalIncentive:    Number((r as any).personalIncentive ?? 0),
+    mgmtExcessCommission: Number((r as any).mgmtExcessCommission ?? 0),
+    // Deductions
+    epfDeduction:         Number(r.epfDeduction),
+    epfEmployer:          Number((r as any).epfEmployer ?? 0),
+    etfEmployer:          Number((r as any).etfEmployer ?? 0),
+    loanInstalments:      Number((r as any).loanInstalments ?? 0),
+    festivalAdvance:      Number((r as any).festivalAdvance ?? 0),
+    merchandiseDeduction: Number((r as any).merchandiseDeduction ?? 0),
+    advanceDeducted:      Number(r.advanceDeduction),
+    // Totals
+    grossPay:             Number(r.grossPay),
+    netPay:               Number(r.netPay),
+    payrollStatus:        r.status,
+  }));
 }

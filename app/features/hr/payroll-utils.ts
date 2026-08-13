@@ -110,8 +110,10 @@ export type MarketingSalaryConfig = {
   // Additional sales commissions (pre-computed ORC + team-tier bonuses passed in externally)
   vehicleThresholdPct: number;
   vehicleAmount: number;
+  vehicleBaseTarget?: number;
   teamActiveThresholdPct: number;
   teamActiveAmount: number;
+  teamActiveBaseTarget?: number;
   minActiveAdvisors: number;
   minActiveFMs: number;
   minActiveBMs: number;
@@ -157,8 +159,10 @@ export type PositionTargetData = {
   partialBonus: number;
   vehicleThresholdPct: number;
   vehicleAmount: number;
+  vehicleBaseTarget?: number;
   teamActiveThresholdPct: number;
   teamActiveAmount: number;
+  teamActiveBaseTarget?: number;
   minActiveAdvisors: number;
   minActiveFMs: number;
   minActiveBMs: number;
@@ -364,12 +368,18 @@ export function calculateMarketingPayroll(
   const excessCommission = excessRate > 0 && target > 0 && surplus > 0 ? surplus * excessRate : 0;
 
   // ── Vehicle Allowance ─────────────────────────────────────────────────────
-  const vehicleThreshold = target * safe(config.vehicleThresholdPct);
+  // Use vehicleBaseTarget when set (after-6-month rows) so the threshold is
+  // computed against the original probation targetAmount, not after6MonthTarget.
+  const vehicleBase = safe(config.vehicleBaseTarget) || target;
+  const vehicleThreshold = vehicleBase * safe(config.vehicleThresholdPct);
   const vehicleHit = vehicleThreshold > 0 && vol >= vehicleThreshold;
   const vehicleEarned = vehicleHit ? safe(config.vehicleAmount) : 0;
 
   // ── Team Active Allowance ─────────────────────────────────────────────────
-  const teamThreshold = target * safe(config.teamActiveThresholdPct);
+  // Use teamActiveBaseTarget when set (after-6-month rows) so the threshold is
+  // computed against the original probation targetAmount, not after6MonthTarget.
+  const teamActiveBase = safe(config.teamActiveBaseTarget) || target;
+  const teamThreshold = teamActiveBase * safe(config.teamActiveThresholdPct);
   const volumeOk = teamThreshold > 0 && vol >= teamThreshold;
   let teamActiveHit = false;
   let teamActiveEarned = 0;

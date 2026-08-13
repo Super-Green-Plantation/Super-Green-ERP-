@@ -46,6 +46,13 @@ export function resolvePositionTarget(member: any, year: number, month: number) 
     // (e.g. 0.5 = 50% of 8M = 4M for BM after 6 months). Store as
     // partialThresholdPct so calculatePayroll's probation path handles it.
     partialThresholdPct: anyTarget.after6MonthIncentivePct ?? 0,
+    // Team active and vehicle thresholds (teamActiveThresholdPct, vehicleThresholdPct)
+    // were configured relative to the probation targetAmount (e.g. 500K/1M),
+    // NOT the after6MonthTarget (4M+). Store the original targetAmount so
+    // calculateMarketingPayroll can compute the correct absolute threshold.
+    // payroll-utils multiplies: teamActiveBaseTarget × teamActiveThresholdPct.
+    teamActiveBaseTarget: anyTarget.targetAmount,
+    vehicleBaseTarget:    anyTarget.targetAmount,
     // Do NOT alias bonusAmount → partialBonus here.
     // anyTarget.partialBonus is already spread above and is the correct value:
     //   FA:     partialBonus > 0  (e.g. 20 000)  → hasPartial=true → basicIncentive

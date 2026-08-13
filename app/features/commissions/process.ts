@@ -361,8 +361,31 @@ export async function processCommissions(data: {
       }
 
       // ── Personal commission ──────────────────────────────────────────────
+      // Rate decision is based on the advisor's TOTAL personal investment
+      // volume for the month (all investments where faId = advisor.id,
+      // including the current one), not the single investment amount.
+      // This ensures that if an FA's cumulative monthly volume crosses the
+      // 500K threshold, every investment in that month gets the higher rate.
+      const monthStart = new Date(Date.UTC(year, month - 1, 1));
+      const monthEnd   = new Date(Date.UTC(year, month, 1));
+
+      const monthlyInvestments = await tx.investment.findMany({
+        where: {
+          faId: advisor.id,
+          investmentDate: { gte: monthStart, lt: monthEnd },
+          status: "Active",
+        },
+        select: { amount: true, renewedFromId: true },
+      });
+      // Renewals count at 25% toward volume (consistent with payroll engine)
+      const totalMonthlyVolume = monthlyInvestments.reduce(
+        (s, inv) => s + (inv.renewedFromId ? Number(inv.amount) * 0.25 : Number(inv.amount)),
+        0,
+      );
+
       const commThreshold = Number(advisor.position.salary?.commThreshold ?? 500000);
-      const isHighRate    = investment.amount >= commThreshold;
+      // Use total monthly volume for the threshold decision, not per-investment amount
+      const isHighRate    = totalMonthlyVolume >= commThreshold;
       const isPermanentNonManagement = advisor.status === "PERMANENT" && !isManagement;
 
       const commRate = isPermanentNonManagement
