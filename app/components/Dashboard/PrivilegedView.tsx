@@ -7,24 +7,17 @@ import { Bell, Wallet, Users, Map, BarChart2 } from "lucide-react";
 import { ClientRegistrationChart } from "@/app/features/dashboard/chart";
 import { FloatingKpiCard } from "./FloatingKpiCard";
 import Heading from "../Heading";
-
-type ClientRegChartData = {
-  year: number;
-  month: number;
-  days: string[];
-  branches: {
-    branchId: number;
-    branchName: string;
-    daily: number[];
-    dailyAmount: number[];
-    total: number;
-    totalAmount: number;
-  }[];
-};
+import { MaturityPipeline } from "./MaturityPipeline";
+import { useMaturityPipeline } from "@/app/hooks/useMaturityPipeline";
+import { BranchKpiTable } from "./BranchKpiTable";
+import { CommissionLeaderboard } from "./CommissionLeaderboard";
+import { IncentiveForecast } from "./IncentiveForecast";
+import { PayrollBreakdown } from "./PayrollBreakdown";
 
 export const PrivilegedView = ({ data, userName, userRole, achieved, target, percentage, isMounted }: any) => {
 
-  const [chartData, setChartData] = useState<ClientRegChartData | null>(null);
+  const { data: maturityData, isLoading: maturityLoading } = useMaturityPipeline();
+
 
   const modules = [
     {
@@ -50,15 +43,6 @@ export const PrivilegedView = ({ data, userName, userRole, achieved, target, per
     }
   ];
 
-  const fetchChartData = async () => {
-    const result = await getClientRegistrationByBranch();
-    setChartData(result);
-  };
-
-  useEffect(() => {
-    fetchChartData();
-  }, []);
-
   return (
     <div className="w-full min-h-screen p-4 sm:p-8 flex flex-col gap-6 sm:gap-8  font-sans text-gray-900 dark:text-gray-100 transition-colors duration-300">
 
@@ -77,7 +61,7 @@ export const PrivilegedView = ({ data, userName, userRole, achieved, target, per
             value={`Rs. ${(Math.floor(achieved / 10000) / 100).toFixed(2)}M`}
             subValue="Real-time aggregation"
             trend="up"
-            trendValue="~+2.4%"
+            trendValue={data.momTrend ? `${data.momTrend > 0 ? '+' : ''}${data.momTrend}%` : "Stable"}
           />
           <FloatingKpiCard
             icon={<Users className="w-5 h-5" />}
@@ -115,8 +99,8 @@ export const PrivilegedView = ({ data, userName, userRole, achieved, target, per
 
             </div>
             <div className="flex-1 w-full">
-              {chartData ? (
-                <ClientRegistrationChart initialData={chartData} />
+              {data.initialChartData ? (
+                <ClientRegistrationChart initialData={data.initialChartData} />
               ) : (
                 <div className="h-full flex items-center justify-center">
                   <span className="text-xs text-gray-400">Loading chart...</span>
@@ -151,6 +135,29 @@ export const PrivilegedView = ({ data, userName, userRole, achieved, target, per
               ))}
             </div>
           </div>
+        </div>
+
+        {/* Branch KPI Section */}
+        <div className="mt-2">
+          <BranchKpiTable />
+        </div>
+
+        {/* Maturity Pipeline Section */}
+        <div className="mt-2">
+          {maturityLoading || !maturityData ? (
+             <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm flex flex-col justify-center items-center min-h-40">
+                <span className="text-xs text-gray-400">Loading pipeline...</span>
+             </div>
+          ) : (
+            <MaturityPipeline investments={maturityData} />
+          )}
+        </div>
+
+        {/* Commission, Incentive, & Payroll Section */}
+        <div className="mt-2 grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <CommissionLeaderboard />
+          <IncentiveForecast />
+          <PayrollBreakdown />
         </div>
 
         {/* Quick Access Section */}

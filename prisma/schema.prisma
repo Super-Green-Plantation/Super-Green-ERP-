@@ -849,6 +849,8 @@ enum Role {
   ADMIN
   HR
   DEV
+  ACC
+  CHAIRMAN
   BRANCH_MANAGER
   REGIONAL_MANAGER
   AGM
@@ -897,13 +899,11 @@ enum InventoryCompany {
 }
 
 
-// 1. Add this enum alongside the other enums at the bottom of schema.prisma
 enum NotificationType {
   INVESTMENT_MATURITY
   EMPLOYEE_DEACTIVATION
 }
 
-// 2. Add this model alongside the other models
 model Notification {
   id        Int              @id @default(autoincrement())
   type      NotificationType

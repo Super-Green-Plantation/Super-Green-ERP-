@@ -4,7 +4,7 @@ import { logout } from "@/app/auth/logout/action";
 import {
   BanknoteArrowUp, Calculator, ChevronLeft, ChevronRight,
   CircleUserRound, IdCardLanyard, Landmark, LayoutDashboard,
-  LogOut, Menu, Nfc, Package, Percent, ReceiptText, Target, User, Users, X,
+  LogOut, Menu, Nfc, Package, Percent, ReceiptText, Target, User, Users, X, Wallet,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -26,6 +26,7 @@ const links = [
   { name: "Inventory", href: "/features/inventory", icon: Package, role: ["ADMIN", "HR", "DEV"], },
   { name: "Targets", href: "/features/hr/targets", icon: Target, role: ["ADMIN", "HR", "DEV"] },
   { name: "Payroll", href: "/features/hr/payroll", icon: Nfc, role: ["ADMIN", "HR", "DEV"] },
+  { name: "Accounts", href: "/features/accounts", icon: Wallet, role: ["ADMIN", "HR", "DEV", "ACC", "CHAIRMAN"] },
   { name: "Financial Plans", href: "/features/financial_plans", icon: Landmark, role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "ZONAL_MANAGER", "AGM"] },
   { name: "Commissions", href: "/features/commissions", icon: Percent, role: ["ADMIN", "HR", "DEV"] },
   { name: "Investments", href: "/features/investments", icon: BanknoteArrowUp, role: ["ADMIN", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "ZONAL_MANAGER", "AGM"] },

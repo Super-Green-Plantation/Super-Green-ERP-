@@ -18,6 +18,9 @@ export async function getCurrentUserWithRole() {
           branches: {
             include: { branch: true },
           },
+          zones: {
+            include: { zone: true },
+          },
           position: true,
         },
       },

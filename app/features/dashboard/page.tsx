@@ -1,4 +1,5 @@
 "use client";
+import { ManagerialView } from "@/app/components/Dashboard/ManagerialView";
 import { PrivilegedView } from "@/app/components/Dashboard/PrivilegedView";
 import { RestrictedView } from "@/app/components/Dashboard/RestrictedView";
 import Error from "@/app/components/Status/Error";
@@ -10,12 +11,10 @@ const DashboardPage = () => {
   const { data, isLoading, isError } = useDashboard();
   const isMounted = useIsMounted();
    
-
   if (isLoading) return <Loading />;
   if (isError) return <Error />;
   if (!data) return null;
-
-  const target = 500000000;
+  const target = data.systemTarget || 500000000;
   const achieved = data.investmentSum._sum.amount || 0;
   const percentage = Math.min(Math.round((achieved / target) * 100), 100);
 
@@ -23,9 +22,24 @@ const DashboardPage = () => {
   const userRole = data.user?.role || "EMPLOYEE";
 
   const isPrivileged = ["ADMIN", "HR", "DEV"].includes(userRole);
+  const isManager = ["BRANCH_MANAGER", "REGIONAL_MANAGER", "ZONAL_MANAGER", "AGM"].includes(userRole);
+  const primaryBranchId = data.user?.member?.branches?.find((b: any) => b.isPrimary)?.branchId ?? null;
 
   if (isPrivileged) {
     return <PrivilegedView data={data} userName={userName} userRole={userRole} achieved={achieved} target={target} percentage={percentage} isMounted={isMounted} />;
+  }
+
+  if (isManager) {
+    return <ManagerialView 
+      data={data} 
+      userName={userName} 
+      userRole={userRole} 
+      achieved={achieved} 
+      target={target} 
+      percentage={percentage} 
+      isMounted={isMounted} 
+      branchId={primaryBranchId} 
+    />;
   }
 
   return <RestrictedView
