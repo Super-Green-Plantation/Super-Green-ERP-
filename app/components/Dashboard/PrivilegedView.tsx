@@ -14,7 +14,7 @@ import { CommissionLeaderboard } from "./CommissionLeaderboard";
 import { IncentiveForecast } from "./IncentiveForecast";
 import { PayrollBreakdown } from "./PayrollBreakdown";
 
-export const PrivilegedView = ({ data, userName, userRole, achieved, target, percentage, isMounted }: any) => {
+export const PrivilegedView = ({ data, userName, userRole, achieved, achievement, target, percentage, isMounted }: any) => {
 
   const { data: maturityData, isLoading: maturityLoading } = useMaturityPipeline();
 
@@ -81,11 +81,11 @@ export const PrivilegedView = ({ data, userName, userRole, achieved, target, per
           />
           <FloatingKpiCard
             icon={<BarChart2 className="w-5 h-5" />}
-            title="Efficiency Rate"
+            title="Total Achievement"
             value={`${percentage}%`}
-            subValue="Overall performance target"
+            subValue="Year-to-date achieved against annual target"
             trend={percentage >= 50 ? "up" : "neutral"}
-            trendValue={`Rs. ${(Math.floor(achieved / 10000) / 100).toFixed(1)}M / 500M`}
+            trendValue={`Rs. ${(achievement / 1000000).toFixed(1)}M / ${(target / 1000000).toFixed(1)}M`}
           />
         </div>
 

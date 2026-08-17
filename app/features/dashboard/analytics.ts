@@ -84,6 +84,7 @@ export async function getDashboardStats() {
     const firstDayThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const firstDayLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const lastDayLastMonth  = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+    const firstDayThisYear = new Date(now.getFullYear(), 0, 1);
 
     const [
       investmentSum,
@@ -98,6 +99,7 @@ export async function getDashboardStats() {
       heatmapDataRaw,
       thisMonthSum,
       lastMonthSum,
+      yearToDateInvestmentSum,
       positionTargetSum,
       initialChartData,
     ] = await Promise.all([
@@ -156,6 +158,10 @@ export async function getDashboardStats() {
         _sum: { amount: true },
         where: { investmentDate: { gte: firstDayLastMonth, lte: lastDayLastMonth } },
       }),
+      prisma.investment.aggregate({
+        _sum: { amount: true },
+        where: { investmentDate: { gte: firstDayThisYear } },
+      }),
       // System target = sum of all position monthly salary targets × 12
       prisma.positionSalary.aggregate({
         _sum: { monthlyTarget: true },
@@ -181,6 +187,7 @@ export async function getDashboardStats() {
 
     // Annual system target derived from all position salary monthly targets × 12
     const systemTarget = (positionTargetSum._sum.monthlyTarget ?? 0) * 12;
+    const yearToDateAchievement = yearToDateInvestmentSum._sum.amount ?? 0;
 
     return {
       totProfit,
@@ -195,6 +202,7 @@ export async function getDashboardStats() {
       heatmap,
       momTrend,
       systemTarget,
+      yearToDateAchievement,
       initialChartData
     };
   } catch (error) {
