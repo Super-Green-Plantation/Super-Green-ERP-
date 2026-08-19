@@ -192,19 +192,22 @@ const Sidebar = ({ role, loading, isCollapsed, setIsCollapsed, onNavigate }: Sid
                   if (isMobile) setIsCollapsed(true);
                 }}
                 className={`
-                  flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-bold
-                  transition-all duration-200 group
-                  ${isActive
+    flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-bold
+    transition-all duration-200 group
+    ${isActive
                     ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
                     : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                   }
-                `}
+  `}
               >
                 <div className="shrink-0">
-                  <Icon size={22} className={isActive ? "text-primary-foreground" : "group-hover:text-primary"} />
+                  <Icon
+                    size={22}
+                    className={isActive ? "text-primary-foreground" : "group-hover:text-primary"}
+                  />
                 </div>
                 {showLabels && (
-                  <span className="whitespace-nowrap group-hover:text-primary">
+                  <span className={`whitespace-nowrap ${!isActive ? "group-hover:text-primary" : ""}`}>
                     {link.name}
                   </span>
                 )}
