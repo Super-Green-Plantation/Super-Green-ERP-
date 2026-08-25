@@ -40,7 +40,7 @@ export const PrivilegedView = ({ data, userName, userRole, achieved, achievement
         <div className="mb-3 flex items-center justify-between"><div><h2 className="mt-1 text-lg">Business at a glance</h2></div><div className="hidden items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-[11px] font-semibold text-muted-foreground sm:flex"><CalendarDays size={14} /> {period}</div></div>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <FloatingKpiCard icon={<Wallet className="h-4 w-4" />} title="Investment capital" value={`Rs. ${(Math.floor(achieved / 10000) / 100).toFixed(2)}M`} subValue="Real-time aggregation" trend="up" trendValue={data.momTrend ? `${data.momTrend > 0 ? "+" : ""}${data.momTrend}%` : "Stable"} />
-          <FloatingKpiCard icon={<Users className="h-4 w-4" />} title="Active participants" value={data.totClients.toLocaleString()} subValue="Verified investors" trend="up" trendValue="+5" />
+          <FloatingKpiCard icon={<Users className="h-4 w-4" />} title="Active participants" value={data.totClients.toLocaleString()} subValue="Verified investors" trend="up" />
           <FloatingKpiCard icon={<Map className="h-4 w-4" />} title="Branch network" value={data.totMembers.toLocaleString()} subValue="Island-wide staff" trend="neutral" trendValue="Stable" />
           <FloatingKpiCard icon={<BarChart2 className="h-4 w-4" />} title="Total achievement" value={`${percentage}%`} subValue="Against annual target" trend={percentage >= 50 ? "up" : "neutral"} trendValue={`Rs. ${(achievement / 500000000).toFixed(1)}M / ${(target / 500000000).toFixed(1)}M`} />
         </div>

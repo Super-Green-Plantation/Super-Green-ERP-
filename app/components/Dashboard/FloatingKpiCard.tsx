@@ -1,3 +1,4 @@
+import { TrendingUp } from "lucide-react";
 import type { ReactNode } from "react";
 
 export function FloatingKpiCard({ icon, title, value, subValue, trend, trendValue }: { icon: ReactNode; title: string; value: string; subValue: string; trend: "up" | "down" | "neutral"; trendValue?: string }) {
@@ -12,7 +13,6 @@ export function FloatingKpiCard({ icon, title, value, subValue, trend, trendValu
       <div>
         <div className="mb-1.5 flex items-end gap-2">
           <p className="text-[27px] font-bold leading-none tracking-tight text-foreground">{value}</p>
-          {trendValue && <span className={`mb-0.5 rounded-md px-1.5 py-0.5 text-[10px] font-bold ${trendClass}`}>{trend === "up" ? "↗ " : ""}{trendValue}</span>}
         </div>
         <p className="text-[11px] font-medium text-muted-foreground">{subValue}</p>
       </div>
