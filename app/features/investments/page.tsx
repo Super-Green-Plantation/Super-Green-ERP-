@@ -197,14 +197,14 @@ export default function InvestmentsPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 p-4 md:p-8 min-h-screen">
+    <div className="mx-auto min-h-screen w-full max-w-[1480px] space-y-5 px-4 pb-10 pt-5 sm:px-7 sm:pt-8">
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border">
+      <div className="flex flex-col gap-4 border-b border-border/70 pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex items-center gap-4">
           <div>
-            <Heading>Investments</Heading>
-            <p className="text-sm font-bold text-foreground">{total} total investments</p>
+            <Heading className="mt-1">Investments</Heading>
+            <p className="mt-1 text-xs font-medium text-muted-foreground">{total} total investments across your portfolio</p>
           </div>
         </div>
         <div className="flex  items-stretch sm:items-center gap-3 w-full sm:w-auto">
@@ -234,7 +234,7 @@ export default function InvestmentsPage() {
                   toast.error("Failed to generate PDF", { id: toastId });
                 }
               }}
-              className="flex items-center justify-center gap-2 px-5 py-2.5 bg-muted hover:bg-muted/80 text-foreground border border-border text-xs font-bold uppercase tracking-widest rounded-xl transition-all active:scale-95"
+              className="flex items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2.5 text-xs font-bold tracking-wide text-foreground shadow-sm transition-all hover:bg-muted active:scale-95"
             >
               <Download className="w-4 h-4 text-primary" />
               <span>Export</span>
@@ -242,7 +242,7 @@ export default function InvestmentsPage() {
           )}
           <Link
             href="/features/clients/createClient"
-            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-primary hover:opacity-90 text-primary-foreground text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-lg active:scale-95"
+            className="flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold tracking-wide text-primary-foreground shadow-md shadow-primary/15 transition-all hover:brightness-105 active:scale-95"
           >
             New Investment
           </Link>
@@ -255,7 +255,7 @@ export default function InvestmentsPage() {
 
         {/* Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-card border border-border rounded-2xl p-5 space-y-1">
+          <div className="rounded-2xl border border-border/80 bg-card p-5 shadow-[0_10px_35px_rgba(34,43,72,0.05)]">
             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
               Total Invested
             </p>
@@ -280,7 +280,7 @@ export default function InvestmentsPage() {
               <p className="text-[10px] text-muted-foreground font-medium">records</p>
             </div>
 
-            <div className="bg-card border border-border rounded-2xl p-5 space-y-1">
+            <div className="rounded-2xl border border-border/80 bg-card p-5 shadow-[0_10px_35px_rgba(34,43,72,0.05)]">
               <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                 Proposals Filed
               </p>
@@ -299,12 +299,12 @@ export default function InvestmentsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-4 border-b border-border">
+      <div className="flex items-center gap-1 rounded-xl bg-muted/60 p-1">
         {["ALL", "PENDING", "APPROVED", "REJECTED"].map((tab) => (
           <button
             key={tab}
             onClick={() => { setActiveTab(tab); setCurrentPage(1); }}
-            className={`pb-3 px-1 text-sm font-bold border-b-2 transition-colors ${activeTab === tab ? "border-primary text-primary" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+            className={`rounded-lg px-4 py-2 text-xs font-bold transition-all ${activeTab === tab ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:bg-card hover:text-foreground"}`}
           >
             {tab.charAt(0) + tab.slice(1).toLowerCase()}
           </button>
@@ -312,9 +312,11 @@ export default function InvestmentsPage() {
       </div>
 
       {/* Search & Filter */}
-      <div className="flex flex-col md:flex-row gap-3 items-center">
+      <div className="rounded-2xl border border-border/70 bg-card/70 p-3 shadow-sm">
+        <div className="mb-2 hidden items-center justify-between px-1 sm:flex"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Find an investment</p>{isFiltered && <span className="text-[10px] font-semibold text-primary">Filters active</span>}</div>
+        <div className="flex flex-col items-center gap-2 md:flex-row">
 
-        <div className="flex lg:col-span-2 border-2 border-border rounded-full flex-1">
+        <div className="flex min-h-11 flex-1 items-center rounded-xl border border-border bg-background/70">
           <div className="relative flex-1 w-full">
             {isTableFetching ? (
               <Loader2 className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-primary animate-spin" />
@@ -326,7 +328,7 @@ export default function InvestmentsPage() {
               onChange={e => setSearchText(e.target.value)}
               type="text"
               placeholder="Search by NIC, Proposal No. or Ref No."
-              className="w-full bg-transparent border-none pl-11 pr-10 py-3 text-sm font-semibold text-foreground outline-none"
+              className="w-full border-none bg-transparent py-3 pl-10 pr-10 text-sm font-medium text-foreground outline-none placeholder:text-muted-foreground focus:ring-0"
             />
             {searchText && (
               <button
@@ -344,7 +346,7 @@ export default function InvestmentsPage() {
             <select
               value={branchId}
               onChange={e => setBranchId(e.target.value)}
-              className="w-full appearance-none pl-4 pr-10 py-3 bg-background border-2 border-border rounded-full text-sm font-semibold text-foreground outline-none cursor-pointer focus:ring-2 focus:ring-primary/50"
+              className="w-full appearance-none rounded-xl border border-border bg-background/70 py-3 pl-3.5 pr-10 text-xs font-semibold text-foreground outline-none transition-colors focus:border-primary/50 focus:ring-4 focus:ring-primary/10"
             >
               <option value="all">All Branches</option>
               {branchData?.map((branch: any) => (
@@ -358,7 +360,7 @@ export default function InvestmentsPage() {
             <select
               value={selectedMonth}
               onChange={e => { setSelectedMonth(e.target.value); setCurrentPage(1); }}
-              className="w-full appearance-none pl-4 pr-10 py-3 bg-background border-2 border-border rounded-full text-sm font-semibold text-foreground outline-none cursor-pointer focus:ring-2 focus:ring-primary/50"
+              className="w-full appearance-none rounded-xl border border-border bg-background/70 py-3 pl-3.5 pr-10 text-xs font-semibold text-foreground outline-none transition-colors focus:border-primary/50 focus:ring-4 focus:ring-primary/10"
             >
               <option value="all">All Time</option>
               {getMonthOptions().map(opt => (
@@ -374,16 +376,17 @@ export default function InvestmentsPage() {
         {isFiltered && (
           <button
             onClick={handleClear}
-            className="px-5 py-3 text-sm font-bold text-muted-foreground hover:text-foreground bg-muted hover:bg-muted/80 rounded-xl transition-colors whitespace-nowrap"
+            className="w-full rounded-xl border border-transparent px-4 py-3 text-xs font-bold text-muted-foreground transition-colors hover:border-border hover:bg-muted hover:text-foreground md:w-auto"
           >
             Clear
           </button>
         )}
+        </div>
       </div>
 
       {/* Table */}
       {investments.length === 0 && !isTableFetching ? (
-        <div className="bg-card rounded-2xl border border-border shadow-sm p-16 text-center">
+        <div className="rounded-2xl border border-border/70 bg-card p-16 text-center shadow-[0_10px_35px_rgba(34,43,72,0.05)]">
           <div className="p-4 bg-muted/30 rounded-2xl w-fit mx-auto mb-4">
             <Wallet className="w-10 h-10 text-muted-foreground/50" />
           </div>
@@ -403,18 +406,18 @@ export default function InvestmentsPage() {
           )}
         </div>
       ) : (
-        <div className="relative overflow-hidden">
+        <div className="relative overflow-hidden rounded-2xl border border-border/70 bg-card shadow-[0_10px_35px_rgba(34,43,72,0.05)]">
           {isTableFetching && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/50 rounded-xl backdrop-blur-sm">
+            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-background/60 backdrop-blur-sm">
               <Loader2 className="h-7 w-7 animate-spin text-primary" />
             </div>
           )}
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+<div className="overflow-x-auto">
+            <table className="w-full min-w-[1180px] text-left">
               <thead>
-                <tr className="bg-muted/50 border-b border-border">
+                <tr className="border-b border-border/70 bg-muted/35">
                   {["Proposal No.", "Client", "Plan", "Amount", "Inv. Date", "Maturity", "Advisor", "Status", "Actions"].map(h => (
-                    <th key={h} className={`px-5 py-4 text-[11px] font-extrabold uppercase tracking-widest text-muted-foreground ${h === "Actions" ? "text-center" : ""}`}>
+                    <th key={h} className={`px-5 py-3.5 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground ${h === "Actions" ? "text-center" : ""}`}>
                       {h}
                     </th>
                   ))}
@@ -422,7 +425,7 @@ export default function InvestmentsPage() {
               </thead>
               <tbody className="divide-y divide-border/60">
                 {investments.map((inv: any) => (
-                  <tr key={inv.id} className="hover:bg-muted/30 transition-colors group">
+                  <tr key={inv.id} className="group transition-colors hover:bg-primary/[0.025]">
                     <td className="px-5 py-4">
                       <span className="text-[11px] font-bold text-muted-foreground/80 font-mono tracking-tighter">
                         {inv.proposalFormNo ?? `#${inv.id}`}
@@ -463,7 +466,7 @@ export default function InvestmentsPage() {
                       {inv.advisor && <p className="text-[10px] text-primary font-bold">{inv.advisor.empNo}</p>}
                     </td>
                     <td className="px-5 py-4">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider
+                      <span className={`inline-flex items-center rounded-lg px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide
                         ${inv.approvalStatus === "APPROVED" ? "bg-green-500/10 text-green-600" :
                           inv.approvalStatus === "REJECTED" ? "bg-red-500/10 text-red-600" :
                             "bg-amber-500/10 text-amber-600"
@@ -498,7 +501,7 @@ export default function InvestmentsPage() {
               </tbody>
             </table>
           </div>
-          <div className="border-t border-border bg-muted/20">
+          <div className="border-t border-border/70 bg-muted/20">
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}

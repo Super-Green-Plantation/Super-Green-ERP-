@@ -145,31 +145,31 @@ const Page = () => {
   
   // ── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className="max-w-[1400px] mx-auto min-h-screen p-3 sm:p-6 lg:p-8 font-sans transition-colors duration-300 w-full">
+    <div className="mx-auto min-h-screen w-full max-w-[1480px] px-4 pb-10 pt-5 font-sans transition-colors duration-300 sm:px-7 sm:pt-8">
 
-      {/* ── Top Header ── */}
-      <div className="flex items-center justify-between gap-3 mb-6">
-        {/* Left: Title */}
-        <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100 truncate">
-          {canEdit ? "Branch Management" : "Employee Management"}
-        </h1>
-
-      
+      {/* ── Page Header ── */}
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="saas-eyebrow">People & operations</p>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground sm:text-[30px]">{canEdit ? "Branch management" : "Employee management"}</h1>
+          <p className="mt-1.5 max-w-xl text-xs leading-5 text-muted-foreground">Manage your team, review branch activity, and keep your network moving forward.</p>
+        </div>
+        <div className="hidden items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-[10px] font-semibold text-muted-foreground shadow-sm sm:flex"><Users className="h-3.5 w-3.5 text-primary" /> {branch?.length || 0} branches connected</div>
       </div>
 
       {/* ── Toolbar: Tabs + Actions in one cohesive bar ── */}
       {canEdit && (
-        <div className="flex items-center justify-between gap-3 mb-5 border-b border-gray-200 dark:border-gray-800 pb-3">
+        <div className="mb-5 flex flex-col gap-3 border-b border-border/70 pb-3 sm:flex-row sm:items-center sm:justify-between">
           {/* Left: Tabs */}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 rounded-xl bg-muted/60 p-1">
             {(["employees", "network"] as TabId[]).map((tab) => (
               <button
                 key={tab}
                 onClick={() => handleTabSwitch(tab)}
-                className={`px-4 py-2 rounded-lg text-sm font-bold capitalize transition-all ${
+                className={`rounded-lg px-4 py-2 text-xs font-bold capitalize transition-all ${
                   activeTab === tab
-                    ? "bg-[#0f5132] text-white shadow-sm"
-                    : "text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-800 dark:hover:text-gray-200"
+                    ? "bg-card text-primary shadow-sm ring-1 ring-border"
+                    : "text-muted-foreground hover:bg-card hover:text-foreground"
                 }`}
               >
                 {tab === "employees" ? "Employees" : "Branches"}
@@ -178,17 +178,17 @@ const Page = () => {
           </div>
 
           {/* Right: Context actions */}
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex shrink-0 items-center gap-2">
             {activeTab === "network" ? (
               <>
                 <button
                   onClick={() => setShowAddModal(true)}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-[#0f5132] text-white font-bold text-xs rounded-lg hover:bg-[#146c43] transition-colors shadow-sm"
+                  className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-bold text-primary-foreground shadow-md shadow-primary/15 transition-all hover:brightness-105"
                 >
                   <Plus className="w-3.5 h-3.5" /> Add Branch
                 </button>
                 <ExportButton
-                  className="!rounded-lg !text-xs !py-2 !px-3 !bg-gray-100 dark:!bg-gray-800 !text-gray-700 dark:!text-gray-300 hover:!bg-gray-200 dark:hover:!bg-gray-700 shrink-0"
+                  className="!shrink-0 !rounded-xl !border !border-border !bg-card !px-3 !py-2 !text-xs !text-foreground hover:!bg-muted"
                   data={networkBranches}
                   exportFn={generateBranchNetworkPDF}
                   label="Export Report"
@@ -208,7 +208,7 @@ const Page = () => {
         <div className="space-y-4">
 
           {/* Branch Selector — scrollable pill row */}
-          <div className="w-full overflow-x-auto no-scrollbar">
+          <div className="w-full overflow-x-auto no-scrollbar rounded-2xl border border-border/70 bg-card/60 p-2 shadow-sm">
             <div className="flex items-center gap-2 min-w-max py-1">
               {branch?.map((b) => {
                 const isActive = selectedBranchId === b.id;
@@ -220,15 +220,15 @@ const Page = () => {
                     onClick={() => setSelectedBranchId(b.id)}
                     className={`group relative flex items-center gap-2.5 pl-4 pr-3 py-2.5 rounded-xl transition-all whitespace-nowrap ${
                       isActive
-                        ? "bg-[#0f5132] text-white shadow-md shadow-green-900/20"
-                        : "bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-400 hover:border-[#0f5132]/40 hover:text-[#0f5132] dark:hover:text-[#4ade80]"
+                        ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
+                        : "border border-border bg-card text-muted-foreground hover:border-primary/40 hover:text-primary"
                     }`}
                   >
                     <span className="text-sm font-bold">{b.name}</span>
                     <span className={`flex items-center justify-center min-w-[22px] h-[22px] px-1.5 rounded-md text-[11px] font-bold tabular-nums ${
                       isActive
                         ? "bg-white/20 text-white"
-                        : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
+                        : "bg-muted text-muted-foreground"
                     }`}>
                       {count}
                     </span>
@@ -251,7 +251,7 @@ const Page = () => {
           {selectedBranchId && (
             <div className="space-y-3">
               <div className="flex gap-2 w-full">
-                <div className="relative flex-1 border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-900 shadow-sm flex items-center min-w-0">
+                <div className="relative flex min-w-0 flex-1 items-center rounded-xl border border-border bg-card shadow-sm">
                   <Search className="w-4 h-4 text-gray-400 ml-3 shrink-0" />
                   <input
                     value={searchText}
@@ -263,14 +263,14 @@ const Page = () => {
                 </div>
                 <button
                   onClick={() => { setSelectedEmp(null); setIsEmpModalOpen(true); }}
-                  className="shrink-0 flex items-center gap-1.5 px-3 sm:px-4 py-2.5 bg-[#20c997] hover:bg-[#1ba87e] text-white font-bold text-xs rounded-xl shadow-sm transition-colors"
+                  className="flex shrink-0 items-center gap-1.5 rounded-xl bg-primary px-3 py-2.5 text-xs font-bold text-primary-foreground shadow-md shadow-primary/15 transition-all hover:brightness-105 sm:px-4"
                 >
                   <UserPlus className="w-4 h-4" />
                   <span className="hidden sm:inline">ADD EMPLOYEE</span>
                 </button>
               </div>
 
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto rounded-2xl border border-border/70 bg-card shadow-[0_10px_35px_rgba(34,43,72,0.05)]">
                 <EmpTable
                   onEdit={(emp) => { setSelectedEmp(emp); setIsEmpModalOpen(true); }}
                   onRefresh={handleRefreshEmployees}
@@ -288,7 +288,7 @@ const Page = () => {
       ══════════════════════════════════════════════════════════════ */}
       {activeTab === "network" && (
         <div className="space-y-4">
-          <div className="relative w-full border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-900 shadow-sm flex items-center">
+          <div className="relative flex w-full items-center rounded-xl border border-border bg-card shadow-sm">
             <Search className="w-4 h-4 text-gray-400 ml-3 shrink-0" />
             <input
               type="text"
@@ -307,7 +307,7 @@ const Page = () => {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-sm p-3 sm:p-4">
+            <div className="overflow-x-auto rounded-2xl border border-border/70 bg-card p-3 shadow-[0_10px_35px_rgba(34,43,72,0.05)] sm:p-4">
               <BranchTable
                 data={networkBranches.filter(
                   (b) =>

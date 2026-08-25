@@ -49,16 +49,16 @@ const Page = () => {
   //    clean form as /features/investments/create
   if (lockedClient) {
     return (
-      <div className="max-w-5xl mx-auto sm:space-y-6 space-y-4 sm:p-4 md:p-8 min-h-screen">
+      <div className="mx-auto min-h-screen w-full max-w-[1120px] space-y-5 px-4 pb-10 pt-5 sm:px-7 sm:pt-8">
         {/* Page header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-border/50">
+        <div className="flex flex-col gap-4 border-b border-border/70 pb-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
             <Back />
             <div>
-              <h1 className="text-3xl sm:text-4xl font-black text-foreground tracking-tighter">
+              <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-[30px]">
                 Add Investment
               </h1>
-              <p className="text-sm text-muted-foreground font-semibold mt-1">
+              <p className="mt-1 text-xs font-medium text-muted-foreground">
                 Creating new investment for {lockedClient.fullName}
               </p>
             </div>
@@ -88,16 +88,16 @@ const Page = () => {
   // ── New-client registration flow ─────────────────────────────────────────
   return (
     <FormProvider>
-      <div className="max-w-7xl mx-auto sm:space-y-6 space-y-4 sm:p-4 md:p-8 min-h-screen">
+      <div className="mx-auto min-h-screen w-full max-w-[1280px] space-y-5 px-4 pb-10 pt-5 sm:px-7 sm:pt-8">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-8 border-b border-border/50">
+        <div className="flex flex-col gap-4 border-b border-border/70 pb-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
             <Back />
             <div>
-              <h1 className="text-3xl sm:text-4xl font-black text-foreground tracking-tighter">
+              <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-[30px]">
                 Register Client
               </h1>
-              <p className="text-sm text-muted-foreground font-semibold mt-1">
+              <p className="mt-1 text-xs font-medium text-muted-foreground">
                 Search for an existing client or register a new one
               </p>
             </div>
@@ -105,15 +105,15 @@ const Page = () => {
         </div>
 
         {/* Main Layout Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
           {/* Left Column */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="space-y-5 lg:col-span-2">
             <ApplicantDetails
               lockedClient={null}
               onClientLock={handleLockClient}
             />
 
-            <div className="bg-card/60 backdrop-blur-xl border border-border/50 rounded-xl p-6 shadow-sm">
+            <div className="rounded-2xl border border-border/70 bg-card p-5 shadow-[0_10px_35px_rgba(34,43,72,0.05)] sm:p-6">
               <DocumentUploadSection
                 key={resetKey}
                 pendingFilesRef={pendingFilesRef}
@@ -122,7 +122,7 @@ const Page = () => {
           </div>
 
           {/* Right Column */}
-          <div className="lg:col-span-1 space-y-6">
+          <div className="space-y-5 lg:col-span-1">
             {/* <AdvisorHierarchy /> */}
             <BeneficiaryDetails
               lockedClient={null}
@@ -135,7 +135,7 @@ const Page = () => {
           </div>
         </div>
 
-        <div className="flex justify-end pt-4">
+        <div className="flex justify-end border-t border-border/70 pt-5">
           <SubmitButton
             pendingFilesRef={pendingFilesRef}
             beneficiaryPhotosRef={beneficiaryPhotosRef}

@@ -108,7 +108,7 @@ const DuplicateBanner = ({
 
 const LockedField = ({ label, value }: { label: string; value: string }) => (
   <div>
-    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-2 ml-1 block">
+    <label className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground mb-2 ml-1 block">
       {label}
     </label>
     <div className="flex items-center gap-2 px-4 py-3 rounded-lg border border-muted bg-muted/40">
@@ -249,22 +249,22 @@ const ApplicantDetails = ({ lockedClient, onClientLock }: Props) => {
   };
 
   const inputClass = (hasError?: boolean) =>
-    `bg-background/50 border rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:bg-background outline-none transition-all w-full placeholder:text-muted-foreground/30 font-medium ${
+    `bg-background/60 border rounded-xl px-4 py-3 text-sm focus:ring-4 focus:ring-primary/10 focus:border-primary/50 focus:bg-card outline-none transition-all w-full placeholder:text-muted-foreground/40 font-medium ${
       hasError ? "border-red-400 focus:ring-red-400" : "border-border/50"
     }`;
   const labelClass =
-    "text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-2 ml-1 block";
+    "text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground mb-2 ml-1 block";
 
   return (
-    <div className="bg-card/60 backdrop-blur-xl rounded-xl border border-border/50 shadow-sm overflow-hidden text-card-foreground">
-      <div className="px-8 py-6 border-b border-border/30 flex items-center justify-between">
-        <h2 className="text-sm font-black uppercase tracking-[0.25em] text-foreground opacity-80">
+    <div className="rounded-2xl border border-border/70 bg-card shadow-[0_10px_35px_rgba(34,43,72,0.05)] overflow-hidden text-card-foreground">
+      <div className="flex items-center justify-between border-b border-border/70 px-5 py-4 sm:px-6">
+        <h2 className="text-sm font-bold tracking-tight text-foreground">
           Applicant Information
         </h2>
-        <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+        <span className="rounded-lg bg-primary/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-primary">Required details</span>
       </div>
 
-      <div className="p-3 space-y-5">
+      <div className="space-y-5 border-b border-border/70 bg-muted/15 p-5 sm:p-6">
         {/* ── Duplicate search — hidden once a client is locked ── */}
         {!lockedClient && (
           <div className="md:col-span-2">
@@ -303,8 +303,8 @@ const ApplicantDetails = ({ lockedClient, onClientLock }: Props) => {
         )}
       </div>
 
-      <div className="sm:p-8 p-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="p-5 sm:p-6">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
 
           {/* ── If client is locked, show read-only header fields ── */}
           {lockedClient ? (
@@ -509,7 +509,7 @@ const ApplicantDetails = ({ lockedClient, onClientLock }: Props) => {
               </h3>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
               <div>
                 <label className={labelClass}>Investment Amount *</label>
                 <input

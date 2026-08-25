@@ -147,47 +147,32 @@ export default function InventoryPage() {
 
   return (
     <>
-      <div className="max-w-[1400px] mx-auto min-h-screen p-3 sm:p-6 lg:p-8 font-sans transition-colors duration-300 w-full">
+      <div className="mx-auto min-h-screen w-full max-w-[1480px] space-y-5 px-4 pb-10 pt-5 font-sans transition-colors duration-300 sm:px-7 sm:pt-8">
 
         {/* ── Header ─────────────────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between gap-3 mb-6">
+        <div className="flex flex-col gap-4 border-b border-border/70 pb-5 sm:flex-row sm:items-end sm:justify-between">
           <div className="flex flex-col gap-1 min-w-0">
-            <h1 className="text-lg sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100 truncate">
+            <p className="saas-eyebrow">Operations workspace</p>
+            <h1 className="mt-1 truncate text-2xl font-bold tracking-tight text-foreground sm:text-[30px]">
               Inventory Management
             </h1>
-            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400">
+            <p className="mt-1 text-xs font-medium text-muted-foreground">
               {totalQty} units across {filtered.length} line items
             </p>
           </div>
-          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
-            <ThemeToggle />
-            <div className="hidden sm:block h-6 w-px bg-gray-300 dark:bg-gray-700" />
-            <div className="flex items-center gap-2">
-              <div className="text-right hidden sm:flex flex-col justify-center">
-                <span className="text-sm font-bold leading-none text-gray-900 dark:text-gray-100">
-                  {displayName}
-                </span>
-                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">
-                  {displayRole}
-                </span>
-              </div>
-              <div className="w-9 h-9 rounded-full overflow-hidden shadow-sm border border-gray-200 dark:border-gray-800 shrink-0">
-                <UserAvatar seed={displayName} className="w-full h-full" />
-              </div>
-            </div>
-          </div>
+          
         </div>
 
         {/* ── Company Toggle ──────────────────────────────────────────────────── */}
-        <div className="flex items-center gap-2 mb-5 p-1 bg-gray-100 dark:bg-gray-800/60 rounded-xl w-fit">
+        <div className="flex w-fit items-center gap-1 rounded-xl bg-muted/60 p-1">
           {COMPANIES.map((c) => (
             <button
               key={c.value}
               onClick={() => handleCompanyChange(c.value)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-semibold text-xs transition-all whitespace-nowrap ${
+              className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-bold transition-all whitespace-nowrap ${
                 selectedCompany === c.value
-                  ? "bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 shadow-sm border border-gray-200 dark:border-gray-700"
-                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                  ? "bg-card text-primary shadow-sm ring-1 ring-border"
+                  : "text-muted-foreground hover:bg-card hover:text-foreground"
               }`}
             >
               <Building2 className="w-3.5 h-3.5 shrink-0" />
@@ -197,40 +182,43 @@ export default function InventoryPage() {
         </div>
 
         {/* ── Toolbar ─────────────────────────────────────────────────────────── */}
-        <div className="flex flex-wrap items-center gap-2 mb-5">
+        <div className="flex flex-col gap-3 rounded-2xl border border-border/70 bg-card/70 p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={openAdd}
-            className="flex items-center gap-1.5 px-3 py-2 bg-[#0f5132] text-white font-semibold text-xs rounded-lg hover:bg-[#146c43] transition-colors shadow-sm shrink-0"
+            className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold tracking-wide text-primary-foreground shadow-md shadow-primary/15 transition-all hover:brightness-105"
           >
             <Plus className="w-3.5 h-3.5" />
             Add Item
           </button>
           <button
             onClick={() => setCatModalOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-2 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-semibold text-xs rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors shrink-0"
+            className="flex items-center gap-1.5 rounded-xl border border-border bg-card px-4 py-2.5 text-xs font-bold tracking-wide text-foreground shadow-sm transition-colors hover:bg-muted"
           >
             <Tags className="w-3.5 h-3.5" />
             Categories
           </button>
 
-          <div className="flex items-center gap-1.5 px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg">
+          </div>
+
+          <div className="flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2.5 shadow-sm">
             <Filter className="w-3.5 h-3.5 text-gray-500" />
             <select
               value={conditionFilter}
               onChange={(e) => setConditionFilter(e.target.value as any)}
-              className="bg-transparent text-xs font-semibold text-gray-700 dark:text-gray-300 outline-none cursor-pointer"
+              className="cursor-pointer bg-transparent text-xs font-semibold text-foreground outline-none"
             >
               <option value="ALL">All Conditions</option>
               <option value="GOOD">Good</option>
               <option value="FAIR">Fair</option>
               <option value="DAMAGED">Damaged</option>
             </select>
-          </div>
+                    </div>
         </div>
 
         {/* ── Branch Tabs (SGP only) ──────────────────────────────────────────── */}
         {!isMC && (
-          <div className="w-full overflow-x-auto no-scrollbar pb-1 mb-5">
+          <div className="w-full overflow-x-auto pb-1">
             {branches.length === 0 ? (
               <div className="flex items-center gap-2">
                 {[1, 2, 3].map((n) => (
@@ -238,15 +226,15 @@ export default function InventoryPage() {
                 ))}
               </div>
             ) : (
-              <div className="flex items-center gap-2 min-w-max">
+              <div className="flex min-w-max items-center gap-2 rounded-xl bg-muted/40 p-1">
                 {branches.map((b) => (
                   <button
                     key={b.id}
                     onClick={() => setSelectedBranchId(b.id)}
-                    className={`px-4 py-2 rounded-xl transition-all font-semibold whitespace-nowrap text-sm ${
+                    className={`rounded-lg px-4 py-2 text-sm font-bold transition-all whitespace-nowrap ${
                       selectedBranchId === b.id
-                        ? "bg-[#0f5132] text-white shadow-md shadow-green-900/20"
-                        : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700"
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "text-muted-foreground hover:bg-card hover:text-foreground"
                     }`}
                   >
                     {b.name}
@@ -259,56 +247,56 @@ export default function InventoryPage() {
 
         {/* ── MC label ────────────────────────────────────────────────────────── */}
         {isMC && (
-          <div className="flex items-center gap-2 mb-5">
-            <span className="px-3 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 text-xs font-bold border border-blue-100 dark:border-blue-800/40">
+          <div className="flex items-center gap-2">
+            <span className="rounded-lg border border-primary/15 bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary">
               Micro Credit — All Items
             </span>
           </div>
         )}
 
         {/* ── Search ──────────────────────────────────────────────────────────── */}
-        <div className="relative w-full border border-gray-200 dark:border-gray-800 rounded-xl bg-white dark:bg-gray-900 shadow-sm flex items-center mb-5">
+        <div className="relative flex w-full items-center rounded-2xl border border-border/70 bg-card shadow-sm">
           <Search className="w-4 h-4 text-gray-400 ml-3 shrink-0" />
           <input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             type="text"
             placeholder="Search by name, code, or category…"
-            className="w-full bg-transparent border-none py-2.5 px-2 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:ring-0 outline-none"
+            className="w-full border-none bg-transparent px-2 py-3 text-sm font-medium text-foreground outline-none placeholder:text-muted-foreground focus:ring-0"
           />
         </div>
 
         {/* ── Table ───────────────────────────────────────────────────────────── */}
         {loading ? (
-          <div className="flex flex-col items-center justify-center h-64 gap-4">
+          <div className="flex h-64 flex-col items-center justify-center gap-4 rounded-2xl border border-border/70 bg-card shadow-sm">
             <div className="w-6 h-6 border-2 border-gray-200 border-t-[#0f5132] rounded-full animate-spin" />
             <p className="text-xs font-bold text-gray-500 uppercase tracking-widest animate-pulse">
               Loading inventory…
             </p>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-64 gap-3 text-gray-400">
+          <div className="flex h-64 flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border text-muted-foreground">
             <Package className="w-10 h-10 opacity-30" />
             <p className="text-sm font-semibold">No items found</p>
-            <button onClick={openAdd} className="text-xs font-bold text-[#0f5132] dark:text-emerald-400 hover:underline">
+            <button onClick={openAdd} className="text-xs font-bold text-primary hover:underline">
               + Add the first item
             </button>
           </div>
         ) : (
-          <div className="overflow-x-auto bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-sm">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto rounded-2xl border border-border/70 bg-card shadow-[0_10px_35px_rgba(34,43,72,0.05)]">
+            <table className="w-full min-w-[920px] text-sm">
               <thead>
-                <tr className="border-b border-gray-100 dark:border-gray-800">
+                <tr className="border-b border-border/70 bg-muted/35">
                   {["Item Code", "Name", "Category", ...(isMC ? [] : ["Branch"]), "Qty", "Condition", "Notes", ""].map((h) => (
-                    <th key={h} className="px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-gray-400 whitespace-nowrap">
+                    <th key={h} className="whitespace-nowrap px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
                       {h}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50 dark:divide-gray-800/60">
+              <tbody className="divide-y divide-border/60">
                 {filtered.map((item) => (
-                  <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors">
+                  <tr key={item.id} className="transition-colors hover:bg-primary/[0.025]">
                     <td className="px-4 py-3 font-mono text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">{item.itemCode}</td>
                     <td className="px-4 py-3 font-semibold text-gray-900 dark:text-gray-100">{item.name}</td>
                     <td className="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">{item.InventoryCategory.name}</td>
@@ -326,14 +314,14 @@ export default function InventoryPage() {
                       <div className="flex items-center gap-2 justify-end">
                         <button
                           onClick={() => openEdit(item)}
-                          className="p-1.5 rounded-lg text-gray-400 hover:text-[#0f5132] hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
+                          className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
                         >
                           <Pencil className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(item.id)}
                           disabled={deletingId === item.id}
-                          className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-40"
+                          className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive disabled:opacity-40"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>

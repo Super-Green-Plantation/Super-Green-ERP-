@@ -11,9 +11,9 @@ export const ExistingClientBanner = ({
   onUnlock: () => void;
 }) => {
   return (
-    <div className="relative rounded-2xl border-2 border-primary/30 bg-primary/5 p-5 flex flex-col sm:flex-row sm:items-center gap-4 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+    <div className="relative flex flex-col gap-4 rounded-2xl border border-primary/20 bg-primary/[0.06] p-5 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300 sm:flex-row sm:items-center">
       {/* Lock icon */}
-      <div className="shrink-0 w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
         <Lock className="w-5 h-5 text-primary" />
       </div>
 
@@ -58,7 +58,7 @@ export const ExistingClientBanner = ({
       <button
         type="button"
         onClick={onUnlock}
-        className="absolute top-3 right-3 p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+        className="absolute right-3 top-3 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
         title="Switch to new client registration"
       >
         <X className="w-4 h-4" />

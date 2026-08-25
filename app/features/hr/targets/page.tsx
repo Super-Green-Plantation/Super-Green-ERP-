@@ -216,15 +216,15 @@ export default function PositionTargetsPage() {
   if (loading) return <Loading/>
 
   return (
-    <div className="max-w-7xl mx-auto sm:space-y-8 space-y-2 sm:p-4 md:p-8 min-h-screen">
+    <div className="mx-auto min-h-screen w-full max-w-[1480px] space-y-5 px-4 pb-10 pt-5 sm:px-7 sm:pt-8">
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border">
+      <div className="flex flex-col gap-4 border-b border-border/70 pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex items-center gap-4">
           
-          <div>
-            <Heading>Position Targets</Heading>
-            <p className="text-sm text-muted-foreground font-medium mt-0.5">
+<div>
+            <Heading className="mt-1">Position Targets</Heading>
+            <p className="mt-1 text-xs font-medium text-muted-foreground">
               Configure probation-period monthly targets and bonuses per position.
             </p>
           </div>
@@ -233,7 +233,7 @@ export default function PositionTargetsPage() {
 
           <Link
             href="/features/hr/salary"
-            className="px-5 py-3 text-xs font-bold uppercase tracking-widest text-primary-foreground bg-primary rounded-xl transition-all hover:opacity-90 shadow-xl shadow-primary/10 active:scale-95"
+            className="rounded-xl bg-primary px-4 py-2.5 text-xs font-bold tracking-wide text-primary-foreground shadow-md shadow-primary/15 transition-all hover:brightness-105 active:scale-95"
           >
             Permanent Config
           </Link>
@@ -241,7 +241,7 @@ export default function PositionTargetsPage() {
       </div>
 
       {/* Accordions */}
-      <div className="space-y-2 space-x-0 mx-auto">
+      <div className="mx-auto space-y-3">
         {positions.map((position) => (
           <PositionAccordion
             key={position.id}

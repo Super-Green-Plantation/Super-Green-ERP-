@@ -122,7 +122,7 @@ const Sidebar = ({ role, loading, isCollapsed, setIsCollapsed, onNavigate }: Sid
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         className={`fixed left-0 top-0 z-50 flex h-screen flex-col overflow-y-auto border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-all duration-300 ${isCollapsed ? "-translate-x-full md:translate-x-0 md:w-[76px]" : "translate-x-0 md:w-[248px]"} w-[270px]`}
       >
-        <div className={`flex h-[72px] shrink-0 items-center border-b border-sidebar-border px-5 ${showLabels ? "justify-between" : "justify-center"}`}>
+        <div className={`relative flex h-[72px] shrink-0 items-center border-b border-sidebar-border px-5 ${showLabels ? "justify-between" : "justify-center"}`}>
           {showLabels ? (
             <Link href="/features/dashboard" className="flex items-center gap-2.5" onClick={onNavigate}>
               <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-primary shadow-lg shadow-primary/20">
@@ -138,9 +138,13 @@ const Sidebar = ({ role, loading, isCollapsed, setIsCollapsed, onNavigate }: Sid
               <Image src="/logo.png" alt="SGP ERP" width={30} height={30} className="h-7 w-7 object-cover" />
             </span>
           )}
-          <button onClick={() => setIsCollapsed(!isCollapsed)} aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"} className={`rounded-lg p-1.5 text-muted-foreground hover:bg-sidebar-accent hover:text-foreground ${isCollapsed ? "hidden" : ""}`}>
-            <span className="md:hidden"><ChevronLeft size={17} /></span>
-            <span className="hidden md:inline"><ChevronLeft size={17} /></span>
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className={`rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground ${isCollapsed ? "absolute right-2 top-1/2 hidden -translate-y-1/2 md:block" : ""}`}
+          >
+            {isCollapsed ? <ChevronRight size={17} /> : <ChevronLeft size={17} />}
           </button>
         </div>
 
@@ -180,7 +184,7 @@ const Sidebar = ({ role, loading, isCollapsed, setIsCollapsed, onNavigate }: Sid
           <div className="mx-3 mb-3 rounded-2xl border border-primary/10 bg-primary/[0.07] p-3.5">
             <p className="text-[10px] font-bold text-foreground">Need a hand?</p>
             <p className="mt-1 text-[10px] leading-4 text-muted-foreground">Your workspace is ready for today&apos;s work.</p>
-            <Link href="/features/profile" className="mt-2 inline-flex text-[10px] font-bold text-primary hover:underline">View profile <ChevronRight size={12} /></Link>
+            <Link href="/features/dashboard" className="mt-2 inline-flex text-[10px] font-bold text-primary hover:underline">View profile <ChevronRight size={12} /></Link>
           </div>
         )}
 

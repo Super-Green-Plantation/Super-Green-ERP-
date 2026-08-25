@@ -299,13 +299,13 @@ export const SubmitButton = ({
         type="button"
         disabled={loading}
         className={`
-          w-full py-5 px-6 rounded-[2rem] font-black uppercase tracking-[0.2em] text-xs transition-all duration-500
-          flex items-center justify-center gap-4
+w-full rounded-xl px-6 py-3.5 text-xs font-bold uppercase tracking-[0.16em] transition-all duration-300
+          flex items-center justify-center gap-3
           ${loading
-            ? "bg-muted text-muted-foreground/30 cursor-not-allowed border border-border/50"
+            ? "cursor-not-allowed border border-border/50 bg-muted text-muted-foreground/60"
             : lockedClient
-              ? "bg-accent text-accent-foreground hover:bg-accent/90 shadow-2xl shadow-accent/20 hover:shadow-accent/30 active:scale-95"
-              : "bg-foreground text-background hover:bg-primary hover:text-white shadow-2xl shadow-black/10 hover:shadow-primary/30 active:scale-95"
+              ? "bg-accent text-accent-foreground shadow-lg shadow-accent/15 hover:brightness-105 active:scale-[0.99]"
+              : "bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:brightness-105 active:scale-[0.99]"
           }
         `}
       >

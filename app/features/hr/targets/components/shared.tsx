@@ -137,17 +137,17 @@ export function Field({
     const indicator = prefix === "Rs." ? formatIndicator(value) : null;
     return (
         <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">
+            <label className="mb-1 block text-[9px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
                 {label}
             </label>
-            <div className={`flex items-center border rounded-xl overflow-hidden transition-all bg-muted/30
+            <div className={`flex items-center overflow-hidden rounded-lg border border-border/70 bg-background/55 transition-all
         ${disabled
                     ? "border-border/50 bg-muted/10 opacity-50"
                     : " shadow-sm"
                 }`}
             >
                 {prefix && (
-                    <span className="px-3 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest shrink-0">
+                    <span className="shrink-0 px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">
                         {prefix}
                     </span>
                 )}
@@ -157,15 +157,15 @@ export function Field({
                     value={value ?? 0}
                     disabled={disabled}
                     onChange={(e) => onChange(Number(e.target.value))}
-                    className="flex-1 px-3 py-1.5 text-sm font-bold text-foreground outline-none bg-transparent placeholder:text-muted-foreground/30 disabled:text-muted-foreground/50 min-w-0"
+                    className="min-w-0 flex-1 bg-transparent px-2.5 py-1.5 text-xs font-bold text-foreground outline-none placeholder:text-muted-foreground/30 disabled:text-muted-foreground/50"
                 />
                 {indicator && (
-                    <span className="px-3 py-2 text-[10px] font-bold text-green-600 shrink-0">
+                    <span className="shrink-0 px-2.5 py-1.5 text-[9px] font-bold text-emerald-600">
                         {indicator}
                     </span>
                 )}
                 {suffix && (
-                    <span className="px-3 py-2 text-[10px] font-bold text-muted-foreground bg-muted border-l border-border uppercase tracking-widest shrink-0">
+                    <span className="shrink-0 border-l border-border bg-muted px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">
                         {suffix}
                     </span>
                 )}
@@ -183,10 +183,10 @@ export function Section({
     children: React.ReactNode;
 }) {
     return (
-        <div className="space-y-2">
-            <div className="flex items-center gap-2 pb-1 border-b border-border">
+        <div className="space-y-1.5">
+            <div className="flex items-center gap-2 border-b border-border/70 pb-1.5">
                 <span className="text-primary opacity-70">{icon}</span>
-                <h3 className="text-[11px] font-bold text-foreground uppercase tracking-[0.2em]">{title}</h3>
+                <h3 className="text-[10px] font-bold uppercase tracking-[0.14em] text-foreground">{title}</h3>
             </div>
             {children}
         </div>

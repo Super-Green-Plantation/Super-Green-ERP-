@@ -59,6 +59,14 @@ export default function Page() {
     setIsEditModalOpen(true);
   };
 
+  const formatInterestRate = (rate: unknown) => {
+  if (Array.isArray(rate)) {
+    return rate.length > 0 ? rate.map((value) => `${value}%`).join(", ") : "N/A";
+  }
+  if (rate === null || rate === undefined || rate === "") return "N/A";
+  return `${rate}%`;
+};
+
   const getLoggedUserRole = async () => {
     const role = await fetch("/api/me").then((res) => res.json());
     setUserRole(role.role);
@@ -80,14 +88,13 @@ export default function Page() {
   if (isLoading) return <Loading />;
   if (isError) return <Error />;
   return (
-    <div className="max-w-7xl mx-auto sm:space-y-8 space-y-2 sm:p-4 md:p-8 min-h-screen">
-      <div className="sm:flex justify-between items-start space-y-4 sm:space-y-0 mb-8">
+    <div className="mx-auto min-h-screen w-full max-w-[1480px] space-y-5 px-4 pb-10 pt-5 sm:px-7 sm:pt-8">
+      <div className="flex flex-col gap-4 border-b border-border/70 pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <Heading>
+          <Heading className="mt-1">
             Financial Plans
           </Heading>
-
-          <p className="text-muted-foreground mt-1 text-sm font-medium">
+          <p className="mt-1 text-xs font-medium text-muted-foreground">
             Manage company financial products and terms
           </p>
         </div>
@@ -95,7 +102,7 @@ export default function Page() {
           <div className="flex gap-3">
             <button
             onClick={() => setIsAddModalOpen(true)}
-            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-primary text-primary-foreground text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-xl shadow-primary/10 active:scale-95 hover:opacity-90"
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold tracking-wide text-primary-foreground shadow-md shadow-primary/15 transition-all hover:brightness-105 active:scale-95 sm:flex-none"
           >
             <Plus size={17} /> Add Plan
           </button>
@@ -108,19 +115,19 @@ export default function Page() {
 
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
         {plans.length > 0 ? (
           plans.map((plan: any) => (
             <div
               key={plan.id}
-              className="bg-card rounded-2xl shadow-sm border border-border hover:shadow-xl transition-all duration-300 overflow-hidden group"
+              className="group overflow-hidden rounded-2xl border border-border/80 bg-card shadow-[0_10px_35px_rgba(34,43,72,0.05)] transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/20 hover:shadow-[0_18px_42px_rgba(34,43,72,0.09)]"
             >
-              <div className="p-3  sm:p-6">
+              <div className="flex h-full flex-col p-5 sm:p-6">
                 <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-xl font-bold text-foreground mb-2 tracking-tight">
+                  <h3 className="text-lg font-bold tracking-tight text-foreground">
                     {plan.name}
                   </h3>
-                  <span className="bg-green-500/10 text-green-600 text-[10px] font-bold px-3 py-1 rounded-full uppercase border border-green-500/20">
+                  <span className="rounded-lg border border-emerald-500/15 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-600">
                     {plan.status}
                   </span>
                 </div>
@@ -130,7 +137,7 @@ export default function Page() {
                   {plan.description}
                 </p> */}
 
-                <div className="flex flex-col gap-3 mb-6 bg-muted/50 p-4 rounded-xl border border-border">
+                <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-border/70 bg-muted/35 p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Clock size={16} className="text-primary opacity-70" />
@@ -151,7 +158,7 @@ export default function Page() {
                       </span>
                     </div>
                     <span className="text-sm font-bold text-foreground">
-                      {plan.rate?.map((r:any)=>r)}%
+                      {formatInterestRate(plan.rate)}
                     </span>
                   </div>
 
@@ -177,7 +184,7 @@ export default function Page() {
                   {canEdit && (
                     <button
                       onClick={() => handleEditClick(plan)}
-                      className="flex-1 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-primary hover:bg-muted py-3 rounded-xl transition-all border border-transparent hover:border-border"
+                      className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-transparent py-2.5 text-xs font-bold tracking-wide text-muted-foreground transition-all hover:border-border hover:bg-muted hover:text-primary"
                     >
                       <Edit2 size={14} /> Edit
                     </button>
@@ -186,7 +193,7 @@ export default function Page() {
                   {canDelete && (
                     <button
                       onClick={() => handleDeleteClick(plan.id)}
-                      className="flex-1 flex items-center justify-center gap-2 text-xs font-bold uppercase tracking-widest text-destructive hover:bg-destructive/10 py-3 rounded-xl transition-all border border-transparent hover:border-destructive/20"
+                      className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-transparent py-2.5 text-xs font-bold tracking-wide text-destructive transition-all hover:border-destructive/20 hover:bg-destructive/10"
                     >
                       <Trash2 size={14} /> Delete
                     </button>
@@ -199,7 +206,7 @@ export default function Page() {
             </div>
           ))
         ) : (
-          <div className="col-span-full text-center py-24 text-muted-foreground/30 border-2 border-dashed border-border rounded-2xl flex flex-col items-center gap-4">
+          <div className="col-span-full flex flex-col items-center gap-4 rounded-2xl border border-dashed border-border py-24 text-center text-muted-foreground/50">
             <CircleDollarSign size={48} strokeWidth={1} className="opacity-20" />
             <p className="text-sm font-bold uppercase tracking-[0.2em]">No financial plans found</p>
           </div>

@@ -107,17 +107,17 @@ export function Field({
     const indicator = prefix === "Rs." ? formatIndicator(value) : null;
     return (
         <div>
-            <label className="block text-[10px] font-bold uppercase tracking-wider text-foreground/80 mb-1">
+            <label className="mb-1 block text-[9px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
                 {label}
             </label>
-            <div className={`flex items-center  rounded-xl overflow-hidden transition-all bg-muted/30
+            <div className={`flex items-center overflow-hidden rounded-lg border border-border/70 bg-background/55 transition-all
         ${disabled
                     ? "border-border/50 bg-muted/10 opacity-50"
                     : "border-border focus-within:border-primary/50 focus-within:ring-4 focus-within:ring-primary/10 shadow-sm"
                 }`}
             >
                 {prefix && (
-                    <span className="px-3 py-2 text-[10px] font-bold text-foreground/80 uppercase tracking-widest shrink-0">
+                    <span className="shrink-0 px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">
                         {prefix}
                     </span>
                 )}
@@ -127,15 +127,15 @@ export function Field({
                     value={value ?? 0}
                     disabled={disabled}
                     onChange={(e) => onChange(Number(e.target.value))}
-                    className="flex-1 px-3 py-1.5 text-sm font-bold text-foreground outline-none bg-transparent placeholder:text-muted-foreground/30 disabled:text-muted-foreground/50 min-w-0"
+                    className="min-w-0 flex-1 bg-transparent px-2.5 py-1.5 text-xs font-bold text-foreground outline-none placeholder:text-muted-foreground/30 disabled:text-muted-foreground/50"
                 />
                 {indicator && (
-                    <span className="px-3 py-2 text-[10px] font-bold text-green-600 shrink-0">
+                    <span className="shrink-0 px-2.5 py-1.5 text-[9px] font-bold text-emerald-600">
                         {indicator}
                     </span>
                 )}
                 {suffix && (
-                    <span className="px-3 py-2 text-[10px] font-bold text-foreground/80 bg-muted border-l border-border uppercase tracking-widest shrink-0">
+                    <span className="shrink-0 border-l border-border bg-muted px-2.5 py-1.5 text-[9px] font-bold uppercase tracking-wide text-muted-foreground">
                         {suffix}
                     </span>
                 )}
@@ -223,15 +223,15 @@ export default function SalaryConfigPage() {
   if (loading) return <Loading />
 
   return (
-    <div className="max-w-350 mx-auto sm:space-y-6 space-y-2 p-4 sm:p-6 min-h-screen">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/50 pb-6 mb-4">
+    <div className="mx-auto min-h-screen w-full max-w-[1480px] space-y-5 px-4 pb-10 pt-5 sm:px-7 sm:pt-8">
+      <div className="flex flex-col gap-4 border-b border-border/70 pb-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex gap-6 items-center">
           <Back />
           <div>
-            <h1 className="text-3xl font-extrabold text-foreground uppercase tracking-tight leading-none mb-2">
+            <h1 className="mt-1 text-2xl font-bold tracking-tight text-foreground sm:text-[30px]">
               Financial Architecture
             </h1>
-            <p className="text-sm text-muted-foreground font-bold tracking-tight opacity-70">
+            <p className="mt-1 text-xs font-medium text-muted-foreground">
               Configure basic salary, growth targets, and commission structures per role.
             </p>
           </div>
@@ -249,26 +249,26 @@ export default function SalaryConfigPage() {
             <div
               key={position.id}
               className={`bg-card rounded-2xl border transition-all duration-300 overflow-hidden
-      ${isExpanded ? "border-primary/30 shadow-xl" : "border-border shadow-sm"}`}
+      ${isExpanded ? "border-primary/30 shadow-md" : "border-border/70 shadow-sm"}`}
             >
               <div
                 role="button"
                 tabIndex={0}
                 onClick={() => setExpandedId(isExpanded ? null : position.id)}
                 onKeyDown={(e) => e.key === "Enter" && setExpandedId(isExpanded ? null : position.id)}
-                className={`w-full flex items-center justify-between px-5 py-3 hover:bg-muted/30 transition-all cursor-pointer ${isExpanded ? 'bg-muted/10' : ''}`}
+                className={`flex w-full items-center justify-between gap-3 px-4 py-2.5 transition-all hover:bg-muted/30 cursor-pointer ${isExpanded ? 'bg-muted/10' : ''}`}
               >
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
                   <div className="flex items-center gap-4">
-                    <span className={`px-4 py-2 rounded-2xl text-[11px] font-extrabold uppercase tracking-widest ${isConfigured ? 'bg-primary/10 text-primary border border-primary/20' : 'bg-muted text-muted-foreground border border-border'}`}>
+                    <span className={`rounded-lg px-3 py-1 text-[10px] font-bold uppercase tracking-wide ${isConfigured ? 'bg-primary/10 text-primary border border-primary/20' : 'bg-muted text-muted-foreground border border-border'}`}>
                       {position.title}
                     </span>
-                    <span className="text-[10px] text-muted-foreground/40 font-extrabold uppercase tracking-[0.2em]">Rank {position.rank}</span>
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Rank {position.rank}</span>
                   </div>
 
                   {isConfigured && (
-                    <div className="flex items-center gap-4 border-l border-border/50 pl-6 h-6">
-                      <span className="flex items-center gap-2 text-[10px] font-extrabold text-primary uppercase tracking-wider">
+                    <div className="hidden items-center gap-3 border-l border-border/50 pl-4 h-6 md:flex">
+                      <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-primary">
                         <CheckCircle2 className="w-4 h-4" /> ACTIVE STRUCTURE
                       </span>
                       <span className="hidden md:inline text-[10px] text-muted-foreground font-bold uppercase tracking-tighter opacity-80">
@@ -284,7 +284,7 @@ export default function SalaryConfigPage() {
                       type="button"
                       onClick={(e) => { e.stopPropagation(); handleSave(position.id); }}
                       disabled={isSaving}
-                      className="hidden sm:flex items-center gap-3 px-6 py-3 bg-primary text-primary-foreground text-[10px] font-extrabold uppercase tracking-[0.2em] rounded-2xl transition-all hover:shadow-2xl hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50"
+                      className="hidden items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-[10px] font-bold tracking-wide text-primary-foreground shadow-sm transition-all hover:brightness-105 active:scale-95 disabled:opacity-50 sm:flex"
                     >
                       {isSaving
                         ? <><Loader2 className="w-4 h-4 animate-spin" /> Committing...</>
@@ -292,28 +292,28 @@ export default function SalaryConfigPage() {
                       }
                     </button>
                   )}
-                  <div className={`w-10 h-10 rounded-2xl border border-border flex items-center justify-center transition-transform duration-500 ${isExpanded ? 'rotate-180 bg-primary text-white border-primary' : 'bg-card text-muted-foreground'}`}>
+                  <div className={`flex h-8 w-8 items-center justify-center rounded-lg border border-border transition-transform duration-300 ${isExpanded ? 'rotate-180 bg-primary text-white border-primary' : 'bg-card text-muted-foreground'}`}>
                     <ChevronDown className="w-5 h-5" />
                   </div>
                 </div>
               </div>
 
               {isExpanded && (
-                <div className="px-6 pb-6 border-t border-border/50 space-y-6 pt-6 animate-in slide-in-from-top-4 duration-500">
+                <div className="space-y-5 border-t border-border/70 bg-muted/15 px-4 pb-5 pt-4 animate-in slide-in-from-top-4 duration-300 sm:px-5">
 
                   {/* Basic & Target */}
-                  <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-4">
+                  <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(180px,1fr)_2fr]">
                     <div className="space-y-4">
                       <div className="flex items-center gap-3">
-                        <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/10">
+                        <div className="rounded-xl border border-primary/10 bg-primary/10 p-2.5 text-primary">
                           <Banknote className="w-6 h-6" />
                         </div>
                         <div>
-                          <h3 className="text-sm font-extrabold uppercase tracking-widest text-foreground">Basic Salary</h3>
+                          <h3 className="text-[10px] font-bold uppercase tracking-[0.14em] text-foreground">Basic Salary</h3>
                         </div>
                       </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2">
                       <Field
                         label="Monthly Salary (Rs.)"
                         value={form.basicSalaryPermanent}
@@ -332,18 +332,18 @@ export default function SalaryConfigPage() {
                   </div>
 
                   {/* Incentive & Allowance */}
-                  <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-4">
+                  <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(180px,1fr)_2fr]">
                     <div className="space-y-4">
                       <div className="flex items-center gap-3">
-                        <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/10">
+                        <div className="rounded-xl border border-primary/10 bg-primary/10 p-2.5 text-primary">
                           <Target className="w-6 h-6" />
                         </div>
                         <div>
-                          <h3 className="text-sm font-extrabold uppercase tracking-widest text-foreground">Performance Bonuses</h3>
+                          <h3 className="text-[10px] font-bold uppercase tracking-[0.14em] text-foreground">Performance Bonuses</h3>
                         </div>
                       </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2">
                       <Field
                         label="Incentive (100% Target)"
                         value={form.incentiveAmount}
@@ -397,18 +397,18 @@ export default function SalaryConfigPage() {
                   </div>
 
                   {/* Team Minimums */}
-                  <div className="grid grid-cols-1 lg:grid-cols-[1fr_2fr] gap-4">
+                  <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(180px,1fr)_2fr]">
                     <div className="space-y-4">
                       <div className="flex items-center gap-3">
-                        <div className="p-3 rounded-2xl bg-primary/10 text-primary border border-primary/10">
+                        <div className="rounded-xl border border-primary/10 bg-primary/10 p-2.5 text-primary">
                           <Users className="w-6 h-6" />
                         </div>
                         <div>
-                          <h3 className="text-sm font-extrabold uppercase tracking-widest text-foreground">Team Minimums Carpet</h3>
+                          <h3 className="text-[10px] font-bold uppercase tracking-[0.14em] text-foreground">Team Minimums Carpet</h3>
                         </div>
                       </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 gap-2.5 md:grid-cols-3">
                       <Field
                         label="Min Active Advisors"
                         value={form.minActiveAdvisors}
@@ -431,14 +431,14 @@ export default function SalaryConfigPage() {
                   </div>
 
                   {/* Commission */}
-                  <div className="space-y-6">
+                  <div className="space-y-4">
                    
 
-                    <div className="bg-primary/10 border border-primary/20 text-primary text-[11px] font-bold p-4 rounded-xl uppercase tracking-wider">
+                    <div className="rounded-xl border border-primary/20 bg-primary/10 p-3 text-[10px] font-bold uppercase tracking-wide text-primary">
                       Alert: These rates apply to <span className="text-foreground underline underline-offset-4">Permanent</span> staff. Probation tiers are locked at 7% / 10%.
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 gap-2.5 md:grid-cols-3">
                       <Field
                         label="Tier 1: Below Threshold"
                         value={form.commRateLow}
@@ -464,7 +464,7 @@ export default function SalaryConfigPage() {
                   </div>
 
                   {/* ORC & Statutory */}
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4 border-t border-border/30">
+                  <div className="grid grid-cols-1 gap-5 border-t border-border/70 pt-4 lg:grid-cols-2">
                     <div className="space-y-4">
                       <div className="flex items-center gap-2 mb-2">
                         <Percent className="w-5 h-5 text-primary" />

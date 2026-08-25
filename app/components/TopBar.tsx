@@ -54,7 +54,6 @@ export function TopBar({ role, userName, isCollapsed, onMenuClick }: TopBarProps
           <span>Search anything</span>
           <span className="ml-2 flex items-center gap-0.5 rounded-md border border-border bg-muted/60 px-1.5 py-0.5 text-[9px] text-muted-foreground"><Command size={9} /> K</span>
         </button>
-        <button type="button" aria-label="Upgrade workspace" className="hidden h-9 items-center gap-1.5 rounded-xl bg-primary/10 px-3 text-[11px] font-bold text-primary transition-colors hover:bg-primary/15 sm:flex"><Sparkles size={13} /> Upgrade</button>
         <ThemeToggle />
         {role && BELL_ROLES.includes(role) && <NotificationBell />}
         <div className="mx-1 hidden h-6 w-px bg-border sm:block" />

@@ -159,57 +159,61 @@ const EmpTable = ({ onEdit, onRefresh, branchId, searchQuery }: EmpTableProps) =
   if (isError) return <Error />
 
   return (
-    <div className="w-full overflow-hidden">
+<div className="w-full overflow-hidden rounded-2xl border border-border/70 bg-card shadow-[0_10px_35px_rgba(34,43,72,0.05)]">
+      <div className="flex items-center justify-between border-b border-border/70 px-5 py-4 sm:px-6">
+        <div className="flex items-center gap-2.5"><div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary"><User size={16} /></div><div><p className="text-sm font-bold text-foreground">Team directory</p><p className="mt-0.5 text-[10px] font-medium text-muted-foreground">Manage team members and access</p></div></div>
+        <span className="hidden rounded-lg bg-muted px-2.5 py-1 text-[10px] font-bold text-muted-foreground sm:inline-flex">{allEmployees.length} loaded</span>
+      </div>
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+        <table className="w-full min-w-[980px] text-left">
           <thead>
-            <tr className="bg-muted/30 border-b border-border">
-              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+            <tr className="border-b border-border/70 bg-muted/35">
+              <th className="px-5 py-3.5 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground sm:px-6">
                 Emp No
               </th>
-              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+              <th className="px-5 py-3.5 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground sm:px-6">
                 Employee Name
               </th>
-              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+              <th className="px-5 py-3.5 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground sm:px-6">
                 Position
               </th>
-              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+              <th className="px-5 py-3.5 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground sm:px-6">
                 Contact
               </th>
 
-              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+              <th className="px-5 py-3.5 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground sm:px-6">
                 Status
               </th>
 
              
-              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground text-center">
+              <th className="px-5 py-3.5 text-right text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground sm:px-6">
                 Actions
               </th>
 
 
             </tr>
           </thead>
-          <tbody className="divide-y divide-border">
+          <tbody className="divide-y divide-border/60">
             {pageEmployees?.map((e: any) => (
               <tr
                 key={e.id}
-                className="hover:bg-muted/30 transition-colors group"
+                className="group transition-colors hover:bg-primary/[0.025]"
               >
-                <td className="px-6 py-4">
-                  <span className="text-xs font-bold text-muted-foreground tabular-nums">
+                <td className="px-5 py-4 sm:px-6">
+                  <span className="rounded-lg bg-muted px-2.5 py-1 text-[10px] font-bold tracking-wide text-muted-foreground tabular-nums">
                     #{e.empNo}
                   </span>
                 </td>
-                <td className="px-6 py-4">
+                <td className="px-5 py-4 sm:px-6">
                   <div className="flex items-center gap-3">
 
-                    <span className="text-sm font-bold text-foreground leading-tight">
+                    <span className="text-sm font-bold leading-tight text-foreground">
                       {e.nameWithInitials}
                     </span>
                   </div>
                 </td>
-                <td className="px-6 py-4">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-bold bg-green-500/10 text-green-600 border border-green-500/20 uppercase tracking-tight">
+                <td className="px-5 py-4 sm:px-6">
+                  <div className="inline-flex items-center gap-1.5 rounded-lg border border-primary/10 bg-primary/10 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wide text-primary">
                     <Briefcase size={12} className="opacity-70" />
                     {e.position?.title || "N/A"}
                   </div>
@@ -223,7 +227,7 @@ const EmpTable = ({ onEdit, onRefresh, branchId, searchQuery }: EmpTableProps) =
                   </div>
                 </td>
 
-                <td className="px-6 py-4">
+                <td className="px-5 py-4 sm:px-6">
                   <button
                     onClick={() =>
                       toggleStatusMutation.mutate({ id: e.id, isActive: e.isActive })
@@ -234,8 +238,8 @@ const EmpTable = ({ onEdit, onRefresh, branchId, searchQuery }: EmpTableProps) =
                   >
                     {e.isActive ? (
                       <>
-                        <ToggleRight size={22} className="text-green-500" />
-                        <span className="text-xs font-bold text-green-600 uppercase tracking-tight">
+                        <ToggleRight size={22} className="text-emerald-500" />
+                        <span className="rounded-md bg-emerald-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
                           Active
                         </span>
                       </>
@@ -252,7 +256,7 @@ const EmpTable = ({ onEdit, onRefresh, branchId, searchQuery }: EmpTableProps) =
 
              
 
-                <td className="px-6 py-4">
+                <td className="px-5 py-4 sm:px-6">
                   <div className="flex items-center justify-center gap-2">
                     <button
                       onClick={() => onEdit(e)}
@@ -270,7 +274,7 @@ const EmpTable = ({ onEdit, onRefresh, branchId, searchQuery }: EmpTableProps) =
                     </button>
                     <Link
                       href={`/features/branches/employees/${branchId}/${e.id}`}
-                      className="ml-2 px-4 py-2 text-[10px] font-bold uppercase tracking-tighter text-foreground bg-muted border border-border rounded-xl hover:bg-card hover:shadow-md hover:text-primary transition-all flex items-center gap-1.5 active:scale-95"
+                      className="ml-2 inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground shadow-sm transition-all hover:border-primary/30 hover:bg-primary/5 hover:text-primary active:scale-95"
                     >
                       Profile
                       <ExternalLink size={12} />
@@ -286,11 +290,11 @@ const EmpTable = ({ onEdit, onRefresh, branchId, searchQuery }: EmpTableProps) =
 
         {allEmployees.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16">
-            <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center text-muted-foreground/30 mb-3">
+            <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground/50">
               <User size={24} />
             </div>
             <p className="text-sm font-bold text-muted-foreground italic">
-              No employees found in records
+              No employees found
             </p>
           </div>
         )}

@@ -33,11 +33,11 @@ function PhotoField({
 
   return (
     <div>
-      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-2 ml-1 block">
+      <label className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground mb-2 ml-1 block">
         {label}
       </label>
       <div
-        className="flex items-center gap-3 px-4 py-3 border border-dashed border-border/50 rounded-lg bg-background/50 cursor-pointer hover:bg-background transition-colors"
+        className="flex items-center gap-3 px-4 py-3 border border-dashed border-border rounded-xl bg-muted/20 cursor-pointer hover:border-primary/40 hover:bg-primary/[0.03] transition-colors"
         onClick={() => inputRef.current?.click()}
       >
         {fileName ? (
@@ -79,11 +79,11 @@ const BeneficiaryDetails = ({ lockedClient, beneficiaryPhotosRef }: Props) => {
   const [existingMode, setExistingMode] = useState<"pick" | "edit">("pick");
 
   const inputClass = (hasError?: boolean) =>
-    `bg-background/50 border rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-primary focus:bg-background outline-none transition-all w-full placeholder:text-muted-foreground/30 font-medium ${
+    `bg-background/60 border rounded-xl px-4 py-3 text-sm focus:ring-4 focus:ring-primary/10 focus:border-primary/50 focus:bg-card outline-none transition-all w-full placeholder:text-muted-foreground/40 font-medium ${
       hasError ? "border-red-400 focus:ring-red-400" : "border-border/50"
     }`;
   const labelClass =
-    "text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-2 ml-1 block";
+    "text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground mb-2 ml-1 block";
 
   const handleSelectExisting = (b: any) => {
     setSelectedBeneficiaryId(b.id);
@@ -117,10 +117,10 @@ const BeneficiaryDetails = ({ lockedClient, beneficiaryPhotosRef }: Props) => {
   const savedBeneficiaries: any[] = lockedClient?.beneficiaries ?? [];
 
   return (
-    <div className="bg-card/60 backdrop-blur-xl rounded-xl border border-border/50 shadow-sm overflow-hidden text-card-foreground">
-      <div className="px-8 py-5 border-b border-border/30 flex items-center gap-3">
+    <div className="rounded-2xl border border-border/70 bg-card shadow-[0_10px_35px_rgba(34,43,72,0.05)] overflow-hidden text-card-foreground">
+      <div className="flex items-center gap-3 border-b border-border/70 px-5 py-4 sm:px-6">
         <Landmark className="w-4 h-4 text-muted-foreground/60" />
-        <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground opacity-60">
+        <h2 className="text-sm font-bold tracking-tight text-foreground">
           Beneficiary Details
           <span className="ml-2 font-medium normal-case tracking-normal opacity-70">
             (optional)
@@ -128,7 +128,7 @@ const BeneficiaryDetails = ({ lockedClient, beneficiaryPhotosRef }: Props) => {
         </h2>
       </div>
 
-      <div className="sm:p-6 p-4 space-y-5">
+      <div className="space-y-5 p-5 sm:p-6">
         {/* ── Existing client: show saved beneficiaries to pick from ── */}
         {lockedClient && existingMode === "pick" && (
           <>

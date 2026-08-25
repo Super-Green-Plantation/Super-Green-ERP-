@@ -45,22 +45,22 @@ export default function PositionAccordion({
     <>{probation && (
       <div>
         <div className={`bg-card rounded-2xl border transition-all duration-300 overflow-hidden
-      ${isExpanded ? "border-primary/30 shadow-xl" : "border-border shadow-sm"}`}
+      ${isExpanded ? "border-primary/30 shadow-md" : "border-border/70 shadow-sm"}`}
         >
           {/* Header */}
           <div
             role="button" tabIndex={0}
             onClick={onToggle}
             onKeyDown={(e) => e.key === "Enter" && onToggle()}
-            className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted/30 transition-colors cursor-pointer"
+            className="flex w-full items-center justify-between gap-3 px-4 py-2.5 transition-colors hover:bg-muted/30 cursor-pointer"
           >
-            <div className="sm:flex items-center gap-4">
-              <span className={`px-4 py-1.5 rounded-xl text-[10px] font-bold border uppercase tracking-widest ${rankColor}`}>
+            <div className="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
+              <span className={`rounded-lg px-3 py-1 text-[10px] font-bold uppercase tracking-wide ${rankColor}`}>
                 {position.title}
               </span>
-              <span className="text-[10px] text-muted-foreground/60 font-bold uppercase tracking-tighter">Rank {position.rank}</span>
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Rank {position.rank}</span>
               {hasTargets && (
-                <span className="flex items-center gap-1.5 text-[10px] font-bold text-green-600 bg-green-500/10 border border-green-500/20 px-3 py-1 rounded-full uppercase tracking-tight">
+                <span className="flex items-center gap-1 rounded-lg border border-emerald-500/15 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-600">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Configured
                 </span>
               )}
@@ -71,7 +71,7 @@ export default function PositionAccordion({
                   type="button"
                   onClick={(e) => { e.stopPropagation(); onSave(); }}
                   disabled={isSaving}
-                  className="flex items-center gap-2 px-5 py-2 bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-[0.2em] rounded-xl transition-all active:scale-95 disabled:opacity-50 hover:opacity-90 shadow-lg shadow-primary/10"
+                  className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-[10px] font-bold tracking-wide text-primary-foreground shadow-sm transition-all hover:brightness-105 active:scale-95 disabled:opacity-50"
                 >
                   {isSaving
                     ? <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving...</>
@@ -88,7 +88,7 @@ export default function PositionAccordion({
 
           {/* Body */}
           {isExpanded && edit && (
-            <div className="border-t border-border px-4 pb-4 pt-4 bg-card">
+            <div className="border-t border-border/70 bg-muted/15 px-4 pb-5 pt-4 sm:px-5">
               {isFa ? (
                 <FaTargetConfig
                   fa={edit.fa}

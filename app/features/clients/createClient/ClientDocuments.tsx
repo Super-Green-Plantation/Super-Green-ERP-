@@ -45,7 +45,7 @@ const DocumentUploadSection = ({ pendingFilesRef }: DocumentUploadSectionProps) 
     const isPDF = files[id]?.type === "application/pdf";
 
     return (
-      <div className="relative group rounded-2xl border-2 border-dashed border-gray-200 dark:border-zinc-800 min-h-[110px] md:h-48 overflow-hidden bg-gray-50/50 dark:bg-zinc-900/30 hover:bg-gray-100/70 dark:hover:bg-zinc-900/60 hover:border-blue-400 dark:hover:border-blue-500 transition-all duration-300 flex items-center justify-center shadow-sm">
+      <div className="relative group rounded-2xl border border-dashed border-border min-h-[110px] md:h-48 overflow-hidden bg-muted/20 hover:bg-primary/[0.03] hover:border-primary/40 transition-all duration-300 flex items-center justify-center shadow-sm">
         <input
           type="file"
           id={id}
@@ -57,7 +57,7 @@ const DocumentUploadSection = ({ pendingFilesRef }: DocumentUploadSectionProps) 
           <button
             onClick={(e) => { e.stopPropagation(); handleFileChange(id, null); }}
             title="Remove file"
-            className="absolute top-3 right-3 z-20 pointer-events-auto p-2 bg-red-500 text-white rounded-xl shadow-md hover:bg-red-600 transition-colors"
+            className="absolute right-3 top-3 z-20 pointer-events-auto rounded-lg bg-destructive p-2 text-white shadow-md transition-colors hover:brightness-105"
           >
             <X className="w-4 h-4" />
           </button>
@@ -81,12 +81,12 @@ const DocumentUploadSection = ({ pendingFilesRef }: DocumentUploadSectionProps) 
           </div>
         )}
         {!isSelected && (
-          <div className="p-4 md:p-6 w-full flex md:flex-col items-center md:justify-center gap-4 md:gap-3 text-left md:text-center h-full">
-            <div className="p-3 md:p-4 bg-white dark:bg-zinc-800 shadow-sm group-hover:bg-blue-50 dark:group-hover:bg-blue-950/40 rounded-xl md:rounded-2xl transition-colors shrink-0 group-hover:scale-105 transition-transform duration-300">
-              <UploadCloud className="w-5 h-5 md:w-7 md:h-7 text-gray-400 group-hover:text-blue-500" />
+          <div className="flex h-full w-full items-center gap-4 p-4 text-left md:flex-col md:justify-center md:gap-3 md:p-6 md:text-center">
+            <div className="shrink-0 rounded-xl bg-card p-3 shadow-sm transition-colors group-hover:bg-primary/10 group-hover:scale-105 md:rounded-2xl md:p-4">
+              <UploadCloud className="w-5 h-5 md:w-7 md:h-7 text-muted-foreground group-hover:text-primary" />
             </div>
             <div className="min-w-0 flex-1 md:flex-none">
-              <p className="text-sm md:text-base font-bold text-gray-900 dark:text-zinc-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+              <p className="text-sm font-bold text-foreground transition-colors group-hover:text-primary md:text-base">
                 {label}
               </p>
               <p className="text-[11px] md:text-xs text-gray-400 dark:text-zinc-500 font-medium tracking-wide mt-0.5">
@@ -102,14 +102,14 @@ const DocumentUploadSection = ({ pendingFilesRef }: DocumentUploadSectionProps) 
   const selectedCount = Object.values(files).filter(Boolean).length;
 
   return (
-    <div className="max-w-5xl mx-auto p-1 sm:p-4 md:p-10 space-y-8 bg-white dark:bg-zinc-950 rounded-xl">
+    <div className="mx-auto max-w-5xl space-y-7 rounded-2xl border border-border/70 bg-card p-5 shadow-[0_10px_35px_rgba(34,43,72,0.05)] sm:p-6 md:p-8">
       {/* Header */}
-      <div className="flex items-center gap-4 border-b border-gray-100 dark:border-zinc-900 pb-5">
-        <div className="w-11 h-11 bg-blue-50 dark:bg-blue-950/50 rounded-xl flex items-center justify-center shrink-0">
-          <ShieldCheck className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+      <div className="flex items-center gap-3 border-b border-border/70 pb-5">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+          <ShieldCheck className="w-6 h-6 text-primary" />
         </div>
         <div>
-          <h3 className="text-sm font-extrabold uppercase tracking-widest text-gray-800 dark:text-zinc-200">
+          <h3 className="text-sm font-bold tracking-tight text-foreground">
             Document Compliance
           </h3>
           <p className="text-xs text-gray-400 dark:text-zinc-500 mt-0.5 hidden md:block">
@@ -119,7 +119,7 @@ const DocumentUploadSection = ({ pendingFilesRef }: DocumentUploadSectionProps) 
       </div>
 
       {/* Info Warning Banner */}
-      <div className="p-4 md:p-5 bg-amber-50/60 dark:bg-amber-950/20 rounded-2xl border border-amber-100 dark:border-amber-900/30 flex items-start md:items-center justify-between gap-4">
+      <div className="flex items-start justify-between gap-4 rounded-2xl border border-amber-200/70 bg-amber-50/70 p-4 md:items-center md:p-5 dark:border-amber-900/40 dark:bg-amber-950/20">
         <div className="flex items-start md:items-center gap-3">
           <UploadCloud className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
           <p className="text-xs md:text-sm leading-relaxed text-amber-900 dark:text-amber-400 font-medium">
@@ -127,21 +127,21 @@ const DocumentUploadSection = ({ pendingFilesRef }: DocumentUploadSectionProps) 
           </p>
         </div>
         {selectedCount > 0 && (
-          <span className="hidden md:inline-block bg-blue-600 text-white px-3 py-1 rounded-xl text-xs font-bold tracking-wider shrink-0">
+          <span className="hidden md:inline-block rounded-lg bg-primary px-3 py-1 text-[10px] font-bold tracking-wide text-primary-foreground shrink-0">
             {selectedCount} READY TO UPLOAD
           </span>
         )}
       </div>
 
       {/* Main Grid Layout - Side-by-side or stacked cleanly */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 gap-7 lg:grid-cols-12">
         
         {/* Identity Docs section (Takes 5 cols on large desktop) */}
         <div className="space-y-4 lg:col-span-5">
           <label className="text-xs font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-widest flex items-center gap-2">
             <ImageIcon className="w-4 h-4" /> Identity Documents
           </label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <FileCard id="idFront" label="Front View" description="NIC / DL / Passport" />
             <FileCard id="idBack" label="Back View" description="NIC / DL / Passport" />
           </div>
@@ -152,7 +152,7 @@ const DocumentUploadSection = ({ pendingFilesRef }: DocumentUploadSectionProps) 
           <label className="text-xs font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-widest flex items-center gap-2">
             <FileText className="w-4 h-4" /> Paperwork Documentation
           </label>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <FileCard id="paySlip" label="Pay Slip" description="Recent salary slip" />
             <FileCard id="proposal" label="Proposal" description="Signed copy" />
             <FileCard id="agreement" label="Agreement Contract" description="Binding signature" />
