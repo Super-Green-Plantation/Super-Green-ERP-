@@ -1,182 +1,74 @@
-import { getClientRegistrationByBranch } from "@/app/features/dashboard/analytics";
-import { useEffect, useState } from "react";
-import { ThemeToggle } from "../ThemeToggle";
-import { UserAvatar } from "./UserAvatar";
+import { useState } from "react";
 import Link from "next/link";
-import { Bell, Wallet, Users, Map, BarChart2 } from "lucide-react";
+import { ArrowUpRight, BarChart2, BriefcaseBusiness, CalendarDays, ChevronRight, Map, Users, Wallet } from "lucide-react";
 import { ClientRegistrationChart } from "@/app/features/dashboard/chart";
 import { FloatingKpiCard } from "./FloatingKpiCard";
-import Heading from "../Heading";
 import { MaturityPipeline } from "./MaturityPipeline";
 import { useMaturityPipeline } from "@/app/hooks/useMaturityPipeline";
 import { BranchKpiTable } from "./BranchKpiTable";
 import { CommissionLeaderboard } from "./CommissionLeaderboard";
 import { IncentiveForecast } from "./IncentiveForecast";
 import { PayrollBreakdown } from "./PayrollBreakdown";
+import { UserAvatar } from "./UserAvatar";
 
 export const PrivilegedView = ({ data, userName, userRole, achieved, achievement, target, percentage, isMounted }: any) => {
-
   const { data: maturityData, isLoading: maturityLoading } = useMaturityPipeline();
-
+  const [period] = useState("This year");
+  const firstName = (userName || "there").split(" ")[0];
 
   const modules = [
-    {
-      title: "Client Management",
-      tag: `ACTIVE: ${data.totClients}`,
-      author: "System",
-      image: "https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&q=80",
-      href: "/features/clients"
-    },
-    {
-      title: "Investment",
-      tag: `MODULE`,
-      author: "Finance",
-      image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80",
-      href: "/features/investments"
-    },
-    {
-      title: "Payroll & HR",
-      tag: `STAFF: ${data.totMembers}`,
-      author: "HR",
-      image: "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=800&q=80",
-      href: "/features/hr/payroll"
-    }
+    { title: "Client management", description: `${data.totClients ?? 0} active records`, icon: Users, href: "/features/clients", color: "bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-300" },
+    { title: "Investment portfolio", description: "Review performance", icon: BriefcaseBusiness, href: "/features/investments", color: "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-300" },
+    { title: "People & payroll", description: `${data.totMembers ?? 0} team members`, icon: Wallet, href: "/features/hr/payroll", color: "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300" },
   ];
 
   return (
-    <div className="w-full min-h-screen p-4 sm:p-8 flex flex-col gap-6 sm:gap-8  font-sans text-gray-900 dark:text-gray-100 transition-colors duration-300">
-
-
-
-      <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 flex flex-col gap-6 w-full mx-auto max-w-350">
-        <Heading>
-          Dashboard
-        </Heading>
-
-        {/* KPI Cards Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          <FloatingKpiCard
-            icon={<Wallet className="w-5 h-5" />}
-            title="Investment Capital"
-            value={`Rs. ${(Math.floor(achieved / 10000) / 100).toFixed(2)}M`}
-            subValue="Real-time aggregation"
-            trend="up"
-            trendValue={data.momTrend ? `${data.momTrend > 0 ? '+' : ''}${data.momTrend}%` : "Stable"}
-          />
-          <FloatingKpiCard
-            icon={<Users className="w-5 h-5" />}
-            title="Active Participants"
-            value={data.totClients.toLocaleString()}
-            subValue="Verified investors"
-            trend="up"
-            trendValue="+5"
-          />
-          <FloatingKpiCard
-            icon={<Map className="w-5 h-5" />}
-            title="Branch Network"
-            value={data.totMembers.toLocaleString()}
-            subValue="Island wide staff"
-            trend="neutral"
-            trendValue="Stable"
-          />
-          <FloatingKpiCard
-            icon={<BarChart2 className="w-5 h-5" />}
-            title="Total Achievement"
-            value={`${percentage}%`}
-            subValue="Year-to-date achieved against annual target"
-            trend={percentage >= 50 ? "up" : "neutral"}
-            trendValue={`Rs. ${(achievement / 1000000).toFixed(1)}M / ${(target / 1000000).toFixed(1)}M`}
-          />
+    <div className="mx-auto flex min-h-screen w-full max-w-[1480px] flex-col gap-6 px-4 pb-10 pt-5 sm:px-7 sm:pt-8">
+      <div className="flex flex-col gap-5 rounded-3xl border border-primary/10 bg-gradient-to-br from-[#5556d6] via-[#6768df] to-[#8788ef] p-6 text-white shadow-[0_18px_45px_rgba(91,92,226,0.22)] sm:flex-row sm:items-center sm:justify-between sm:p-8">
+        <div>
+          <div className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-white/65"><span className="h-1.5 w-1.5 rounded-full bg-emerald-300" /> Live workspace</div>
+          <h1 className="text-2xl font-bold tracking-tight text-white sm:text-[30px]">Good morning, {firstName}</h1>
+          <p className="mt-2 max-w-lg text-sm leading-6 text-white/70">Stay on top of your organization&apos;s performance, clients, and team activity from one calm, connected workspace.</p>
         </div>
-
-        {/* Middle Section: Chart and Recent Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-          {/* Chart Section */}
-          <div className="lg:col-span-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm flex flex-col min-h-87.5">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">Branch Registrations</h2>
-
-            </div>
-            <div className="flex-1 w-full">
-              {data.initialChartData ? (
-                <ClientRegistrationChart initialData={data.initialChartData} />
-              ) : (
-                <div className="h-full flex items-center justify-center">
-                  <span className="text-xs text-gray-400">Loading chart...</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Recent Activity Section */}
-          <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl shadow-sm flex flex-col overflow-hidden min-h-87.5">
-            <div className="flex justify-between items-center p-5 px-6 border-b border-gray-100 dark:border-gray-800">
-              <h2 className="text-[15px] font-bold text-gray-900 dark:text-gray-100">Recent Activity</h2>
-              <Link href="#" className="text-[10px] font-bold text-[#0f5132] dark:text-[#4ade80] uppercase tracking-wider hover:underline">View All</Link>
-            </div>
-            <div className="flex-1 overflow-y-auto">
-              {data.recentInvestments?.slice(0, 5).map((inv: any) => (
-                <div key={inv.id} className="flex items-center justify-between p-4 px-6 border-b border-gray-100 dark:border-gray-800 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-[#f0f9f4] dark:bg-[#064e3b] flex items-center justify-center shrink-0 border border-green-100 dark:border-green-900">
-                      <UserAvatar seed={inv.client?.fullName || "User"} className="w-5 h-5 opacity-80 mix-blend-luminosity" />
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-bold text-gray-900 dark:text-gray-100 truncate max-w-35 sm:max-w-50 lg:max-w-30 xl:max-w-45">{inv.client?.fullName}</span>
-                      <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">{isMounted ? new Date(inv.investmentDate).toLocaleDateString() : ""} • {isMounted ? new Date(inv.investmentDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ""}</span>
-                    </div>
-                  </div>
-                  <div className="text-right flex flex-col shrink-0">
-                    <span className="text-sm font-bold text-[#0f5132] dark:text-[#4ade80] whitespace-nowrap">Rs. {isMounted ? inv.amount.toLocaleString() : inv.amount}</span>
-                    <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5 uppercase tracking-tighter truncate max-w-20">FA: {inv.advisor?.nameWithInitials?.split(' ')[0] || "Unassigned"}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+        <div className="flex items-center gap-3 rounded-2xl border border-white/15 bg-white/10 p-3 backdrop-blur-sm sm:min-w-[190px]">
+          <div className="h-11 w-11 overflow-hidden rounded-xl border border-white/20 bg-white/20"><UserAvatar seed={userName || "user"} className="h-full w-full" /></div>
+          <div><p className="text-xs font-bold text-white">{userName || "Administrator"}</p><p className="mt-1 text-[10px] font-medium uppercase tracking-[0.12em] text-white/60">{userRole || "Admin"}</p></div>
         </div>
+      </div>
 
-        {/* Branch KPI Section */}
-        <div className="mt-2">
-          <BranchKpiTable />
+      <section className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="mb-3 flex items-center justify-between"><div><p className="saas-eyebrow">Overview</p><h2 className="mt-1 text-lg">Business at a glance</h2></div><div className="hidden items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-[11px] font-semibold text-muted-foreground sm:flex"><CalendarDays size={14} /> {period}</div></div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <FloatingKpiCard icon={<Wallet className="h-4 w-4" />} title="Investment capital" value={`Rs. ${(Math.floor(achieved / 10000) / 100).toFixed(2)}M`} subValue="Real-time aggregation" trend="up" trendValue={data.momTrend ? `${data.momTrend > 0 ? "+" : ""}${data.momTrend}%` : "Stable"} />
+          <FloatingKpiCard icon={<Users className="h-4 w-4" />} title="Active participants" value={data.totClients.toLocaleString()} subValue="Verified investors" trend="up" trendValue="+5" />
+          <FloatingKpiCard icon={<Map className="h-4 w-4" />} title="Branch network" value={data.totMembers.toLocaleString()} subValue="Island-wide staff" trend="neutral" trendValue="Stable" />
+          <FloatingKpiCard icon={<BarChart2 className="h-4 w-4" />} title="Total achievement" value={`${percentage}%`} subValue="Against annual target" trend={percentage >= 50 ? "up" : "neutral"} trendValue={`Rs. ${(achievement / 1000000).toFixed(1)}M / ${(target / 1000000).toFixed(1)}M`} />
         </div>
+      </section>
 
-        {/* Maturity Pipeline Section */}
-        <div className="mt-2">
-          {maturityLoading || !maturityData ? (
-             <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm flex flex-col justify-center items-center min-h-40">
-                <span className="text-xs text-gray-400">Loading pipeline...</span>
-             </div>
-          ) : (
-            <MaturityPipeline investments={maturityData} />
-          )}
-        </div>
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+        <section className="saas-surface min-h-[350px] overflow-hidden rounded-2xl p-5 sm:p-6 lg:col-span-2">
+          <div className="mb-4 flex items-start justify-between"><div><p className="saas-eyebrow">Activity</p><h2 className="mt-1 text-base">Branch registrations</h2><p className="mt-1 text-[11px] text-muted-foreground">New registrations across your network</p></div><button type="button" className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground"><ArrowUpRight size={16} /></button></div>
+          <div className="h-[255px] w-full">{data.initialChartData ? <ClientRegistrationChart initialData={data.initialChartData} /> : <div className="flex h-full items-center justify-center text-xs text-muted-foreground">Loading chart...</div>}</div>
+        </section>
 
-        {/* Commission, Incentive, & Payroll Section */}
-        <div className="mt-2 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <CommissionLeaderboard />
-          <IncentiveForecast />
-          <PayrollBreakdown />
-        </div>
-
-        {/* Quick Access Section */}
-        <div className="mt-2">
-          <h3 className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest mb-4">Quick Access</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-            {modules.map((mod, idx) => (
-              <Link key={idx} href={mod.href} className="group relative h-36 sm:h-44 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all block">
-                <img src={mod.image} alt={mod.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-                <div className="absolute inset-0 bg-linear-to-t from-[#0f5132]/90 via-[#0f5132]/40 to-transparent dark:from-black/90 dark:via-black/40"></div>
-                <div className="absolute bottom-5 left-5 right-5">
-                  <h4 className="text-white font-bold text-lg sm:text-xl leading-tight tracking-tight drop-shadow-md">{mod.title}</h4>
-                </div>
-              </Link>
+        <section className="saas-surface min-h-[350px] overflow-hidden rounded-2xl">
+          <div className="flex items-start justify-between border-b border-border/70 p-5 sm:p-6"><div><p className="saas-eyebrow">Live feed</p><h2 className="mt-1 text-base">Recent activity</h2></div><Link href="/features/investments" className="text-[10px] font-bold text-primary hover:underline">View all</Link></div>
+          <div className="divide-y divide-border/60">
+            {data.recentInvestments?.slice(0, 5).map((inv: any) => (
+              <div key={inv.id} className="flex items-center justify-between gap-3 px-5 py-3.5 transition-colors hover:bg-muted/30 sm:px-6"><div className="flex min-w-0 items-center gap-3"><div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-primary/10"><UserAvatar seed={inv.client?.fullName || "User"} className="h-5 w-5 opacity-80" /></div><div className="min-w-0"><p className="truncate text-xs font-bold text-foreground">{inv.client?.fullName}</p><p className="mt-0.5 truncate text-[10px] text-muted-foreground">{isMounted ? new Date(inv.investmentDate).toLocaleDateString() : ""} · {inv.advisor?.nameWithInitials?.split(" ")[0] || "Unassigned"}</p></div></div><p className="shrink-0 text-xs font-bold text-foreground">Rs. {isMounted ? inv.amount.toLocaleString() : inv.amount}</p></div>
             ))}
           </div>
-        </div>
-
+        </section>
       </div>
+
+      <section><div className="mb-3 flex items-end justify-between"><div><p className="saas-eyebrow">Performance</p><h2 className="mt-1 text-lg">Network performance</h2></div><span className="text-[10px] font-semibold text-muted-foreground">Updated just now</span></div><BranchKpiTable /></section>
+
+      <section><div className="mb-3"><p className="saas-eyebrow">Pipeline</p><h2 className="mt-1 text-lg">Maturity overview</h2></div>{maturityLoading || !maturityData ? <div className="saas-surface flex min-h-40 items-center justify-center rounded-2xl text-xs text-muted-foreground">Loading pipeline...</div> : <MaturityPipeline investments={maturityData} />}</section>
+
+      <section><div className="mb-3"><p className="saas-eyebrow">Operations</p><h2 className="mt-1 text-lg">Team & finance</h2></div><div className="grid grid-cols-1 gap-5 lg:grid-cols-3"><CommissionLeaderboard /><IncentiveForecast /><PayrollBreakdown /></div></section>
+
+      <section><div className="mb-3 flex items-end justify-between"><div><p className="saas-eyebrow">Shortcuts</p><h2 className="mt-1 text-lg">Jump back in</h2></div><Link href="/features/profile" className="hidden items-center gap-1 text-[11px] font-bold text-primary sm:flex">Manage workspace <ChevronRight size={14} /></Link></div><div className="grid grid-cols-1 gap-4 sm:grid-cols-3">{modules.map((mod) => { const Icon = mod.icon; return <Link key={mod.title} href={mod.href} className="group saas-surface flex items-center justify-between rounded-2xl p-4 transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-[0_16px_38px_rgba(34,43,72,0.09)]"><div className="flex items-center gap-3"><div className={`flex h-10 w-10 items-center justify-center rounded-xl ${mod.color}`}><Icon size={18} /></div><div><h3 className="text-sm font-bold">{mod.title}</h3><p className="mt-0.5 text-[10px] font-medium text-muted-foreground">{mod.description}</p></div></div><ArrowUpRight size={16} className="text-muted-foreground transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary" /></Link>; })}</div></section>
     </div>
   );
 };

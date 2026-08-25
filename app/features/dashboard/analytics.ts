@@ -31,6 +31,7 @@ async function getDashboardBranchScope() {
     .filter((assignment) => assignment.isPrimary)
     .map((assignment) => assignment.branchId);
 
+  // ZM — scope by zone(s)
   if (user.role === "ZONAL_MANAGER" && user.member.zones.length > 0) {
     const zoneIds = user.member.zones.map((assignment) => assignment.zoneId);
     const zoneBranches = await prisma.branch.findMany({
@@ -44,11 +45,24 @@ async function getDashboardBranchScope() {
     };
   }
 
+  // AGM — directly assigned branches only (from MemberBranch), no hierarchy walk
+  if (user.role === "AGM") {
+    const primaryBranch = user.member.branches.find((b) => b.isPrimary)?.branch;
+    const scopeLabel = primaryBranch ? primaryBranch.name : "Assigned branches";
+    
+    return {
+      isSystemScope: false,
+      branchIds: assignedBranchIds,
+      scopeLabel: scopeLabel,
+    };
+  }
+
   const roots = user.role === "BRANCH_MANAGER"
     ? (primaryBranchIds.length ? primaryBranchIds : assignedBranchIds)
     : assignedBranchIds;
 
-  if (user.role === "REGIONAL_MANAGER" || user.role === "AGM") {
+  // RM — assigned branches + all child branches in the hierarchy
+  if (user.role === "REGIONAL_MANAGER") {
     const branches = await prisma.branch.findMany({
       where: { status: "Active" },
       select: { id: true, parentId: true },
@@ -67,6 +81,7 @@ async function getDashboardBranchScope() {
     return { isSystemScope: false, branchIds: [...branchIds], scopeLabel: "Assigned region" };
   }
 
+  // BM — primary branch only (or all assigned if no primary set)
   return { isSystemScope: false, branchIds: roots, scopeLabel: "Assigned branch" };
 }
 
@@ -322,6 +337,8 @@ export type BranchKpi = {
   investmentTotal: number;
   clientCount: number;
   staffCount: number;
+  target: number;
+  achievementPercentage: number;
 };
 
 export async function getBranchKPIs(year: number, month: number): Promise<BranchKpi[]> {
@@ -329,8 +346,40 @@ export async function getBranchKPIs(year: number, month: number): Promise<Branch
   const from = new Date(year, month - 1, 1);
   const to   = new Date(year, month, 0, 23, 59, 59);
 
+  const user = await getCurrentUserWithRole();
+  if (!user) throw new Error("Unauthorized");
+
+  let branchIdsToFetch: number[] = [];
+
+  if (SYSTEM_DASHBOARD_ROLES.has(user.role)) {
+    // Admin sees all active branches
+    const allBranches = await prisma.branch.findMany({ where: { status: "Active" }, select: { id: true } });
+    branchIdsToFetch = allBranches.map(b => b.id);
+  } else if (MANAGERIAL_DASHBOARD_ROLES.has(user.role) && user.member) {
+    // Manager sees branches from memberbranch table
+    // Fetch directly from MemberBranch to guarantee we get all assigned branches
+    const memberBranches = await prisma.memberBranch.findMany({
+      where: { memberId: user.member.id }
+    });
+    branchIdsToFetch = memberBranches.map(mb => mb.branchId);
+
+    // If ZM or RM, we might need hierarchy/zones, but user specifically asked for memberbranch table branches.
+    // If they want RM/ZM to also use hierarchy, we can merge them:
+    const scope = await getDashboardBranchScope();
+    if (user.role === "ZONAL_MANAGER" || user.role === "REGIONAL_MANAGER") {
+       branchIdsToFetch = Array.from(new Set([...branchIdsToFetch, ...scope.branchIds]));
+    }
+  } else {
+    return [];
+  }
+
+  if (branchIdsToFetch.length === 0) return [];
+
   const branches = await prisma.branch.findMany({
-    where: { status: "Active" },
+    where: {
+      status: "Active",
+      id: { in: branchIdsToFetch }
+    },
     select: {
       id:   true,
       name: true,
@@ -339,19 +388,44 @@ export async function getBranchKPIs(year: number, month: number): Promise<Branch
         select: { amount: true },
       },
       client:  { select: { id: true } },
-      members: { select: { memberId: true } },
+      members: {
+        where: { isPrimary: true },
+        select: {
+          memberId: true,
+          member: {
+            select: {
+              position: {
+                select: { salary: { select: { monthlyTarget: true } } },
+              }
+            }
+          }
+        }
+      }
     },
     orderBy: { name: "asc" },
   });
 
-  return branches.map(b => ({
-    branchId:        b.id,
-    branchName:      b.name,
-    investmentCount: b.investments.length,
-    investmentTotal: b.investments.reduce((s, i) => s + i.amount, 0),
-    clientCount:     b.client.length,
-    staffCount:      b.members.length,
-  }));
+  return branches.map(b => {
+    const investmentTotal = b.investments.reduce((s, i) => s + i.amount, 0);
+    const target = b.members.reduce(
+      (sum, m) => sum + (m.member.position.salary?.monthlyTarget ?? 0),
+      0
+    );
+    const achievementPercentage = target > 0
+      ? parseFloat(((investmentTotal / target) * 100).toFixed(1))
+      : 0;
+
+    return {
+      branchId:              b.id,
+      branchName:            b.name,
+      investmentCount:       b.investments.length,
+      investmentTotal,
+      clientCount:           b.client.length,
+      staffCount:            b.members.length,
+      target,
+      achievementPercentage,
+    };
+  });
 }
 
 export type ManagerDashboardStats = {

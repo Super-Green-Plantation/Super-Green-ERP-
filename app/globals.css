@@ -321,3 +321,93 @@ html {
   background-size: 24px 24px;
   opacity: 0.05;
 }
+
+
+/* SaaS visual refresh */
+:root {
+  --background: #f5f7fb;
+  --foreground: #172033;
+  --card: #ffffff;
+  --card-foreground: #172033;
+  --popover: #ffffff;
+  --popover-foreground: #172033;
+  --primary: #5b5ce2;
+  --primary-foreground: #ffffff;
+  --secondary: #eef0f7;
+  --secondary-foreground: #384158;
+  --muted: #f0f2f7;
+  --muted-foreground: #7a849a;
+  --accent: #eceeff;
+  --accent-foreground: #4f51c9;
+  --border: #e5e9f2;
+  --input: #e1e6ef;
+  --ring: #7b7cf0;
+  --chart-1: #5b5ce2;
+  --chart-2: #32b59a;
+  --chart-3: #f3a64a;
+  --chart-4: #ea6b85;
+  --chart-5: #9ca6bb;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #27314a;
+  --sidebar-primary: #5b5ce2;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f4f5fb;
+  --sidebar-accent-foreground: #4f51c9;
+  --sidebar-border: #e8ebf3;
+  --sidebar-ring: #7b7cf0;
+}
+
+.dark {
+  --background: #111522;
+  --foreground: #f1f3f8;
+  --card: #181d2d;
+  --card-foreground: #f1f3f8;
+  --popover: #181d2d;
+  --popover-foreground: #f1f3f8;
+  --primary: #8586f6;
+  --primary-foreground: #111522;
+  --secondary: #232a3d;
+  --secondary-foreground: #f1f3f8;
+  --muted: #232a3d;
+  --muted-foreground: #a0a9bc;
+  --accent: #252746;
+  --accent-foreground: #b6b7ff;
+  --border: #2a3246;
+  --input: #30394f;
+  --ring: #8586f6;
+  --sidebar: #151a29;
+  --sidebar-foreground: #e7eaf2;
+  --sidebar-primary: #8586f6;
+  --sidebar-primary-foreground: #111522;
+  --sidebar-accent: #22283c;
+  --sidebar-accent-foreground: #b6b7ff;
+  --sidebar-border: #252d40;
+  --sidebar-ring: #8586f6;
+}
+
+@layer base {
+  body {
+    background:
+      radial-gradient(circle at 14% 0%, rgba(91, 92, 226, 0.06), transparent 27rem),
+      var(--background);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-bold;
+  }
+}
+
+@layer utilities {
+  .saas-surface {
+    @apply border border-border/80 bg-card shadow-[0_10px_35px_rgba(34,43,72,0.05)];
+  }
+
+  .saas-eyebrow {
+    @apply text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground;
+  }
+}

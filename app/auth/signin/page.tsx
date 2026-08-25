@@ -27,29 +27,29 @@ export default function SignInPage() {
 
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-6 transition-colors duration-500">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background p-6 transition-colors duration-500">
       {/* Background Decorative Element */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px]" />
-        <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px]" />
+        <div className="absolute -left-[12%] -top-[12%] h-[45%] w-[45%] rounded-full bg-primary/10 blur-[120px]" />
+        <div className="absolute -bottom-[12%] -right-[12%] h-[45%] w-[45%] rounded-full bg-emerald-400/10 blur-[120px]" />
       </div>
 
-      <div className="relative w-full max-w-md">
+      <div className="relative w-full max-w-[420px]">
         {/* Logo/Branding Area */}
-        <div className="text-center mb-10">
-          <div className="inline-flex overflow-hidden items-center justify-center w-16 h-16 bg-card rounded-2xl shadow-2xl shadow-primary/5 mb-6 border border-border">
+        <div className="mb-8 text-center">
+          <div className="mb-5 inline-flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-border bg-card shadow-[0_14px_35px_rgba(34,43,72,0.10)]">
             <Image src="/logo.png" alt="Logo" width={64} height={60} />
           </div>
-          <h1 className="text-2xl font-bold text-foreground tracking-tighter uppercase">
+          <h1 className="text-[26px] font-bold tracking-tight text-foreground">
             Sign In
           </h1>
           <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.3em] mt-2">
-            Secure Terminal v1.0
+            Your workspace, all in one place
           </p>
         </div>
 
         {/* Card */}
-        <div className="bg-card backdrop-blur-xl rounded-[2.5rem] shadow-2xl border border-border p-10">
+        <div className="rounded-3xl border border-border/80 bg-card/95 p-7 shadow-[0_24px_70px_rgba(34,43,72,0.10)] backdrop-blur-xl sm:p-9">
           <form action={formAction} className="space-y-6">
 
             {/* Email Field */}
@@ -69,7 +69,7 @@ export default function SignInPage() {
                   placeholder="you@supergreen.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 bg-muted/30 border border-border rounded-2xl text-sm font-bold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:bg-card transition-all"
+                  className="w-full rounded-xl border border-border bg-muted/40 py-3.5 pl-11 pr-4 text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:bg-card focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/50 transition-all"
                 />
               </div>
             </div>
@@ -98,7 +98,7 @@ export default function SignInPage() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-12 pr-12 py-4 bg-muted/30 border border-border rounded-2xl text-sm font-bold text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:bg-card transition-all"
+                  className="w-full rounded-xl border border-border bg-muted/40 py-3.5 pl-11 pr-11 text-sm font-semibold text-foreground placeholder:text-muted-foreground focus:bg-card focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary/50 transition-all"
                 />
                 <button
                   type="button"
@@ -115,7 +115,7 @@ export default function SignInPage() {
             onClick={()=>setLoading(true)}
               type="submit"
               disabled={email === "" || password === ""}
-              className="group relative w-full bg-primary hover:opacity-90 disabled:bg-muted text-primary-foreground rounded-2xl py-4 text-[11px] font-bold uppercase tracking-[0.2em] transition-all shadow-xl shadow-primary/10 active:scale-[0.98] flex items-center justify-center gap-2 overflow-hidden"
+              className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-primary py-3.5 text-[11px] font-bold uppercase tracking-[0.18em] text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:brightness-105 disabled:bg-muted disabled:text-muted-foreground active:scale-[0.98]"
             >
               {Loading ? (
                 <Loader2 size={16} className="animate-spin" />
@@ -131,7 +131,7 @@ export default function SignInPage() {
 
         {/* Footer */}
         <p className="text-center mt-8 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-          Internal Use Only &bull; Secured by SSL encryption
+          Internal workspace · Secured by SSL encryption
         </p>
       </div>
     </div>

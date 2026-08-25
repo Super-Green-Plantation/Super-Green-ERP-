@@ -241,7 +241,7 @@ export default function InvestmentsPage() {
             </button>
           )}
           <Link
-            href="/features/investments/create"
+            href="/features/clients/createClient"
             className="flex items-center justify-center gap-2 px-5 py-2.5 bg-primary hover:opacity-90 text-primary-foreground text-xs font-bold uppercase tracking-widest rounded-xl transition-all shadow-lg active:scale-95"
           >
             New Investment

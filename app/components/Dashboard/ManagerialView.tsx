@@ -8,6 +8,8 @@ import { MaturityPipeline } from "./MaturityPipeline";
 import { useMaturityPipeline } from "@/app/hooks/useMaturityPipeline";
 import { IncentiveForecast } from "./IncentiveForecast";
 import { useManagerDashboard } from "@/app/hooks/useManagerDashboard";
+import { BranchKpiTable } from "./BranchKpiTable";
+
 
 export const ManagerialView = ({ data, branchId }: any) => {
 
@@ -72,6 +74,11 @@ export const ManagerialView = ({ data, branchId }: any) => {
             trend={(managerData?.percentage ?? 0) >= 50 ? "up" : "neutral"}
             trendValue={`Rs. ${((managerData?.currentMonthInvestment ?? 0) / 1000000).toFixed(1)}M / ${((managerData?.target ?? 0) / 1000000).toFixed(1)}M`}
           />
+        </div>
+
+        {/* Branch Performance Leaderboard */}
+        <div className="mt-2">
+          <BranchKpiTable />
         </div>
 
         {/* Maturity Pipeline & Incentive Forecast */}

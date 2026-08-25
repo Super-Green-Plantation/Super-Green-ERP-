@@ -1,19 +1,20 @@
-export function FloatingKpiCard({ icon, title, value, subValue, trend, trendValue }: { icon: React.ReactNode, title: string, value: string, subValue: string, trend: 'up' | 'down' | 'neutral', trendValue?: string }) {
+import type { ReactNode } from "react";
+
+export function FloatingKpiCard({ icon, title, value, subValue, trend, trendValue }: { icon: ReactNode; title: string; value: string; subValue: string; trend: "up" | "down" | "neutral"; trendValue?: string }) {
+  const trendClass = trend === "up" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" : trend === "down" ? "bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300" : "bg-slate-100 text-slate-600 dark:bg-slate-500/10 dark:text-slate-300";
+
   return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5 flex flex-col justify-between shadow-sm transition-colors duration-300 min-h-32.5">
-      <div className="flex justify-between items-start mb-4">
-        <h3 className="text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">{title}</h3>
-        <div className="text-[#0f5132] dark:text-[#4ade80] bg-[#f0f9f4] dark:bg-[#064e3b] p-1.5 rounded-md">
-          {icon}
-        </div>
+    <div className="group flex min-h-[148px] flex-col justify-between rounded-2xl border border-border/80 bg-card p-5 shadow-[0_10px_35px_rgba(34,43,72,0.05)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_38px_rgba(34,43,72,0.09)]">
+      <div className="flex items-start justify-between gap-3">
+        <h3 className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">{title}</h3>
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">{icon}</div>
       </div>
-      
       <div>
-        <div className="flex items-baseline gap-2 mb-1">
-          <p className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight leading-none">{value}</p>
-          {trend === 'up' && <span className="text-xs font-bold text-[#0f5132] dark:text-[#4ade80] flex items-center">{trendValue || "+5"}</span>}
+        <div className="mb-1.5 flex items-end gap-2">
+          <p className="text-[27px] font-bold leading-none tracking-tight text-foreground">{value}</p>
+          {trendValue && <span className={`mb-0.5 rounded-md px-1.5 py-0.5 text-[10px] font-bold ${trendClass}`}>{trend === "up" ? "↗ " : ""}{trendValue}</span>}
         </div>
-        <p className="text-[11px] font-medium text-gray-500 dark:text-gray-400">{subValue}</p>
+        <p className="text-[11px] font-medium text-muted-foreground">{subValue}</p>
       </div>
     </div>
   );

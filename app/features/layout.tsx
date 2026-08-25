@@ -54,7 +54,7 @@ export default function FeaturesLayout({
   }, []);
 
   return (
-    <>
+    <Providers>
       {/* Sidebar overlay on mobile */}
       {!isCollapsed && (
         <div
@@ -82,19 +82,17 @@ export default function FeaturesLayout({
       <main
         className={`
           min-h-screen
-          pt-14
-          sm:pt-14
-          p-4
+          pt-[72px]
+          sm:pt-[72px]
+          p-0
           transition-all duration-300
-          ${isCollapsed ? "md:ml-20" : "md:ml-60"}
+          ${isCollapsed ? "md:ml-[76px]" : "md:ml-[248px]"}
         `}
       >
-        <Providers>
-          <Toast>{children}</Toast>
-        </Providers>
+        <Toast>{children}</Toast>
       </main>
 
       {navigating && <Loading />}
-    </>
+    </Providers>
   );
 }
