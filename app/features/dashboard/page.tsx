@@ -14,10 +14,9 @@ const DashboardPage = () => {
   if (isLoading) return <Loading />;
   if (isError) return <Error />;
   if (!data) return null;
-  const target = data.systemTarget || 500000000;
+  const target = 500_000_000;
   const totalInvestment = data.investmentSum._sum.amount || 0;
-  const yearToDateAchievement = data.yearToDateAchievement || 0;
-  const percentage = Math.min(Math.round((yearToDateAchievement / target) * 100), 100);
+  const percentage = Math.min(Math.round((totalInvestment / target) * 100), 100);
 
   const userName = data.user?.name || data.user?.member?.nameWithInitials || "Administrator";
   const userRole = data.user?.role || "EMPLOYEE";
@@ -27,7 +26,7 @@ const DashboardPage = () => {
   const primaryBranchId = data.user?.member?.branches?.find((b: any) => b.isPrimary)?.branchId ?? null;
 
   if (isPrivileged) {
-    return <PrivilegedView data={data} userName={userName} userRole={userRole} achieved={totalInvestment} achievement={yearToDateAchievement} target={target} percentage={percentage} isMounted={isMounted} />;
+    return <PrivilegedView data={data} userName={userName} userRole={userRole} achieved={totalInvestment} achievement={totalInvestment} target={target} percentage={percentage} isMounted={isMounted} />;
   }
 
   if (isManager) {

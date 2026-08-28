@@ -330,6 +330,63 @@ export async function getMaturityPipeline(branchId?: number): Promise<MaturityIn
 
 // ─── Phase 3: Branch KPI Cards ───────────────────────────────────────────────
 
+type BranchManagerTargetMember = {
+  isActive: boolean;
+  status: string;
+  dateOfJoin: Date | null;
+  position: {
+    title: string;
+    salary: { monthlyTarget: number } | null;
+    positionTargets: Array<{
+      periodNumber: number;
+      monthNumber: number;
+      targetAmount: number;
+      after6MonthTarget: number;
+    }>;
+  } | null;
+};
+
+/**
+ * Resolves the monthly target for one active branch manager.
+ * BM probation targets follow the member's join-month tenure; permanent
+ * JBM/SBM targets come from the position salary configuration.
+ */
+function getBranchManagerMonthlyTarget(
+  member: BranchManagerTargetMember,
+  year: number,
+  month: number,
+): number {
+  const position = member.position;
+  if (!position) return 0;
+
+  const title = position.title;
+  const isPermanentManager = title === "JBM" || title === "SBM" || member.status === "PERMANENT";
+  if (isPermanentManager) return Number(position.salary?.monthlyTarget ?? 0);
+
+  if (title !== "BM") return 0;
+
+  const targets = position.positionTargets ?? [];
+  if (targets.length === 0) return Number(position.salary?.monthlyTarget ?? 0);
+
+  const joinDate = member.dateOfJoin;
+  const tenureMonth = joinDate
+    ? Math.max(1, (year - joinDate.getFullYear()) * 12 + (month - (joinDate.getMonth() + 1)) + 1)
+    : 1;
+
+  if (tenureMonth > 6) {
+    const afterSixMonths = Number(targets[0]?.after6MonthTarget ?? 0);
+    if (afterSixMonths > 0) return afterSixMonths;
+  }
+
+  const periodNumber = tenureMonth <= 3 ? 1 : 2;
+  const monthNumber = tenureMonth <= 3 ? tenureMonth : Math.min(tenureMonth - 3, 3);
+  const target = targets.find(
+    (row) => row.periodNumber === periodNumber && row.monthNumber === monthNumber,
+  );
+
+  return Number(target?.targetAmount ?? position.salary?.monthlyTarget ?? 0);
+}
+
 export type BranchKpi = {
   branchId: number;
   branchName: string;
@@ -389,17 +446,30 @@ export async function getBranchKPIs(year: number, month: number): Promise<Branch
       },
       client:  { select: { id: true } },
       members: {
-        where: { isPrimary: true },
         select: {
           memberId: true,
           member: {
             select: {
+              isActive: true,
+              status: true,
+              dateOfJoin: true,
               position: {
-                select: { salary: { select: { monthlyTarget: true } } },
-              }
-            }
-          }
-        }
+                select: {
+                  title: true,
+                  salary: { select: { monthlyTarget: true } },
+                  positionTargets: {
+                    select: {
+                      periodNumber: true,
+                      monthNumber: true,
+                      targetAmount: true,
+                      after6MonthTarget: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       }
     },
     orderBy: { name: "asc" },
@@ -408,8 +478,14 @@ export async function getBranchKPIs(year: number, month: number): Promise<Branch
   return branches.map(b => {
     const investmentTotal = b.investments.reduce((s, i) => s + i.amount, 0);
     const target = b.members.reduce(
-      (sum, m) => sum + (m.member.position.salary?.monthlyTarget ?? 0),
-      0
+      (sum, assignment) => {
+        const member = assignment.member;
+        if (!member.isActive || !member.position || !["BM", "JBM", "SBM"].includes(member.position.title)) {
+          return sum;
+        }
+        return sum + getBranchManagerMonthlyTarget(member, year, month);
+      },
+      0,
     );
     const achievementPercentage = target > 0
       ? parseFloat(((investmentTotal / target) * 100).toFixed(1))
@@ -458,15 +534,40 @@ export async function getManagerDashboardStats(): Promise<ManagerDashboardStats>
     prisma.client.count({ where: branchFilter }),
     prisma.member.count({ where: { branches: { some: { branchId: { in: scope.branchIds } } } } }),
     prisma.member.findMany({
-      where: { branches: { some: { branchId: { in: scope.branchIds }, isPrimary: true } } },
-      select: { position: { select: { salary: { select: { monthlyTarget: true } } } } },
+      where: {
+        isActive: true,
+        branches: { some: { branchId: { in: scope.branchIds } } },
+        position: { title: { in: ["BM", "JBM", "SBM"] } },
+      },
+      select: {
+        isActive: true,
+        status: true,
+        dateOfJoin: true,
+        position: {
+          select: {
+            title: true,
+            salary: { select: { monthlyTarget: true } },
+            positionTargets: {
+              select: {
+                periodNumber: true,
+                monthNumber: true,
+                targetAmount: true,
+                after6MonthTarget: true,
+              },
+            },
+          },
+        },
+      },
     }),
   ]);
 
   const investmentTotal = investment._sum.amount ?? 0;
   const currentMonthInvestment = thisMonth._sum.amount ?? 0;
   const lastMonthInvestment = lastMonth._sum.amount ?? 0;
-  const target = staff.reduce((total, member) => total + (member.position.salary?.monthlyTarget ?? 0), 0);
+  const target = staff.reduce(
+    (total, member) => total + getBranchManagerMonthlyTarget(member, now.getFullYear(), now.getMonth() + 1),
+    0,
+  );
 
   return {
     investmentTotal,

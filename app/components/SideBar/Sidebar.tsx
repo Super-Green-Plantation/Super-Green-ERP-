@@ -2,7 +2,8 @@
 
 import { logout } from "@/app/auth/logout/action";
 import {
-  BanknoteArrowUp, Calculator, ChevronLeft, ChevronRight,
+    BanknoteArrowUp, CalendarClock, Calculator, ChevronLeft, ChevronRight,
+
   CircleUserRound, IdCardLanyard, Landmark, LayoutDashboard,
   LogOut, Menu, Nfc, Package, Percent, ReceiptText, Target, User, Users, Wallet,
 } from "lucide-react";
@@ -31,7 +32,9 @@ const links: NavItem[] = [
   { name: "Dashboard", href: "/features/dashboard", icon: LayoutDashboard, role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "ZONAL_MANAGER", "AGM"] },
   { name: "Employee", href: "/features/branches/employees", icon: IdCardLanyard, role: ["ADMIN", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "ZONAL_MANAGER", "AGM"] },
   { name: "Clients", href: "/features/clients", icon: Users, role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "ZONAL_MANAGER", "AGM"] },
-  { name: "Investments", href: "/features/investments", icon: BanknoteArrowUp, role: ["ADMIN", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "ZONAL_MANAGER", "AGM"] },
+    { name: "Investments", href: "/features/investments", icon: BanknoteArrowUp, role: ["ADMIN", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "ZONAL_MANAGER", "AGM"] },
+  { name: "Monthly Proposals", href: "/features/monthly-proposals", icon: CalendarClock, role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "ZONAL_MANAGER", "AGM"] },
+
   { name: "Financial Plans", href: "/features/financial_plans", icon: Landmark, role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "ZONAL_MANAGER", "AGM"] },
   { name: "Quotations", href: "/features/quotations", icon: ReceiptText, role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "ZONAL_MANAGER", "AGM"] },
   { name: "Calculations", href: "/features/calculations", icon: Calculator, role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "ZONAL_MANAGER", "AGM"] },
@@ -45,7 +48,7 @@ const links: NavItem[] = [
 ];
 
 const groups = [
-  { label: "Workspace", items: ["Dashboard", "Employee", "Clients", "Investments", "Financial Plans", "Quotations", "Calculations"] },
+  { label: "Workspace", items: ["Dashboard", "Employee", "Clients", "Investments", "Monthly Proposals", "Financial Plans", "Quotations", "Calculations"] },
   { label: "Operations", items: ["Inventory", "Targets", "Payroll", "Accounts", "Commissions"] },
   { label: "Administration", items: ["Users", "Profile"] },
 ];

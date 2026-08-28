@@ -10,6 +10,7 @@ import { ActivityAction, ActivityEntity, Channel, Prisma, Title } from "@prisma/
 import { revalidatePath } from "next/cache";
 import { getDescendantBranchIds } from "../branches/actions";
 import { upsertActivationForMember } from "@/app/scripts/backfill-activations";
+import { getNextProposalFormNoPreview, reserveProposalFormNoInTx } from "@/lib/proposalNumber";
 
 // Generate investment reference number
 function generateInvestmentNumber() {
@@ -21,65 +22,11 @@ function generateInvestmentNumber() {
   return `${prefix}-${timestamp}-${random}`;
 }
 
-// ── Proposal form number generator ────────────────────────────────────────────
-// Format: SG/YY/MM/NNN  (e.g. SG/26/08/500)
-// The sequence is GLOBAL — it never resets per month or year.
-// Base starting number: 500 (first-ever investment).
-//
-// generateProposalFormNoInTx runs INSIDE an existing Prisma transaction (tx)
-// so it's race-condition safe when called from createInvestmentForExistingClient.
-//
-// getNextProposalFormNoPreview runs against the regular prisma client for the
-// preview API route — it is NOT race-safe and is informational only.
-
-const PROPOSAL_BASE = 500;
-
-async function getMaxProposalSequence(client: typeof prisma): Promise<number> {
-  // Pull only the sequence number (last segment) of all SG/* numbers
-  const rows = await client.investment.findMany({
-    where: { proposalFormNo: { startsWith: "SG/" } },
-    select: { proposalFormNo: true },
-  });
-  if (rows.length === 0) return PROPOSAL_BASE - 1;
-  const nums = rows
-    .map((r) => {
-      const parts = r.proposalFormNo!.split("/");
-      return parseInt(parts[parts.length - 1], 10);
-    })
-    .filter((n) => !isNaN(n));
-  return nums.length === 0 ? PROPOSAL_BASE - 1 : Math.max(...nums);
-}
-
-/**
- * Called inside a $transaction — generates and returns the next unique
- * proposal form number based on the current DB state.
- * If the supplied hint is already taken (race), silently increments.
- */
-export async function generateProposalFormNoInTx(
-  tx: any,
-  hint?: string
-): Promise<string> {
-  const max = await getMaxProposalSequence(tx);
-  const next = max + 1;
-
-  const now = new Date();
-  const yy = String(now.getFullYear()).slice(-2);
-  const mm = String(now.getMonth() + 1).padStart(2, "0");
-
-  return `SG/${yy}/${mm}/${next}`;
-}
-
-/**
- * Exposed server action used by the preview API route.
- * Not race-safe — for display only.
- */
-export async function getNextProposalFormNoPreview(): Promise<string> {
-  const max = await getMaxProposalSequence(prisma);
-  const next = max + 1;
-  const now = new Date();
-  const yy = String(now.getFullYear()).slice(-2);
-  const mm = String(now.getMonth() + 1).padStart(2, "0");
-  return `SG/${yy}/${mm}/${next}`;
+// Proposal numbers are allocated by the shared, transaction-locked sequence
+// used by both yearly Investments and Monthly Proposals.
+export { getNextProposalFormNoPreview, reserveProposalFormNoInTx };
+export async function generateProposalFormNoInTx(tx: any, hint?: string): Promise<string> {
+  return reserveProposalFormNoInTx(tx, hint);
 }
 
 export async function getInvestments(page = 1, pageSize = 10, approvalStatus = "ALL") {
@@ -478,9 +425,7 @@ export async function createInvestmentForExistingClient(data: {
       // If a management user supplied a manual override, use it directly.
       // Otherwise, query inside this transaction for the current max and
       // increment by 1 (race-condition safe — runs in the same tx).
-      const proposalFormNo = data.proposalFormNo
-        ? data.proposalFormNo
-        : await generateProposalFormNoInTx(tx);
+      const proposalFormNo = await reserveProposalFormNoInTx(tx, data.proposalFormNo);
 
       const investment = await tx.investment.create({
         data: {

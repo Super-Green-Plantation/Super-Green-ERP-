@@ -132,6 +132,8 @@ const Page = () => {
               lockedClient={null}
               nomineePhotosRef={nomineePhotosRef}
             />
+
+            
           </div>
         </div>
 

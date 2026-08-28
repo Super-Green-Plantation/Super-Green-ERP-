@@ -7,25 +7,32 @@ datasource db {
   provider = "postgresql"
 }
 
+model ProposalNumberSequence {
+  id            Int      @id
+  currentNumber Int
+  updatedAt     DateTime @updatedAt
+}
+
 model Branch {
-  name          String
-  location      String?
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  id            Int             @id @default(autoincrement())
-  status        Status          @default(Active)
-  parentId      Int?
-  zoneId        Int?
-  code          String          @default("")
-  ActivityLog   ActivityLog[]
-  parent        Branch?         @relation("BranchHierarchy", fields: [parentId], references: [id])
-  children      Branch[]        @relation("BranchHierarchy")
-  zone          Zone?           @relation(fields: [zoneId], references: [id])
-  client        Client[]
-  commission    Commission[]
-  InventoryItem InventoryItem[]
-  investments   Investment[]
-  members       MemberBranch[]
+  name             String
+  location         String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  id               Int               @id @default(autoincrement())
+  status           Status            @default(Active)
+  parentId         Int?
+  zoneId           Int?
+  code             String            @default("")
+  ActivityLog      ActivityLog[]
+  parent           Branch?           @relation("BranchHierarchy", fields: [parentId], references: [id])
+  children         Branch[]          @relation("BranchHierarchy")
+  zone             Zone?             @relation(fields: [zoneId], references: [id])
+  client           Client[]
+  commission       Commission[]
+  InventoryItem    InventoryItem[]
+  investments      Investment[]
+  members          MemberBranch[]
+  monthlyProposals MonthlyProposal[]
 }
 
 model Zone {
@@ -139,6 +146,13 @@ model Member {
   monthlyPayrolls        MonthlyPayroll[]
   PayrollRecord          PayrollRecord[]
   SalaryAdvances         SalaryAdvance[]
+
+  monthlyProposalsCreated MonthlyProposal[] @relation("MPCreatedBy")
+  monthlyProposalsAsFA    MonthlyProposal[] @relation("MPFA")
+  monthlyProposalsAsFM    MonthlyProposal[] @relation("MPFM")
+  monthlyProposalsAsBM    MonthlyProposal[] @relation("MPBM")
+  monthlyProposalsAsRM    MonthlyProposal[] @relation("MPRM")
+  monthlyProposalsAsZM    MonthlyProposal[] @relation("MPZM")
 }
 
 model MemberBranch {
@@ -538,6 +552,8 @@ model Client {
   ClientDocumentRequest ClientDocumentRequest[]
   investments           Investment[]
   nominees              Nominee[]
+
+  monthlyProposals MonthlyProposal[]
 }
 
 model Beneficiary {
@@ -898,7 +914,6 @@ enum InventoryCompany {
   MICRO_CREDIT
 }
 
-
 enum NotificationType {
   INVESTMENT_MATURITY
   EMPLOYEE_DEACTIVATION
@@ -915,3 +930,118 @@ model Notification {
 
   @@index([isRead, createdAt(sort: Desc)])
 }
+
+// ─── Add these two enums ──────────────────────────────────────────────────────
+// (npx prisma db pull should auto-generate them; add manually if missing)
+
+enum MonthlyPlanType {
+  CHILD
+  MARGE
+  PENSION
+}
+
+enum MonthlyFrequency {
+  MONTHLY
+  QUARTERLY
+  SEMI_ANNUAL
+  ANNUAL
+}
+
+// ─── Add this model ───────────────────────────────────────────────────────────
+
+model MonthlyProposal {
+  id             Int             @id @default(autoincrement())
+  planType       MonthlyPlanType
+  proposalFormNo String?         @unique
+
+  // Section 1 — Applicant / Parent / Guardian
+  applicantName      String
+  applicantNic       String?
+  applicantDob       DateTime? @db.Date
+  applicantAge       Int?
+  applicantAddress   String?
+  applicantPhone     String?
+  applicantEmail     String?
+  gender             String? // MARGE only
+  maritalStatus      String? // MARGE only
+  applicantBankAccNo String? // PENSION + MARGE
+  applicantBankName  String? // PENSION + MARGE
+
+  // Section 2 — Child details (CHILD only)
+  childName        String?
+  childDob         DateTime? @db.Date
+  childBirthCertNo String?
+  childSchool      String?
+  childGrade       String?
+
+  // Plan selection
+  duration      Int
+  retirementAge Int? // PENSION only
+
+  // Payment
+  frequency MonthlyFrequency
+  premium   Float
+
+  // Financials (calculated at save time)
+  totalInvested  Float
+  interestRate   Float
+  interestEarned Float
+  maturityAmount Float
+  documentCharge Float @default(500)
+
+  // Nominee / Beneficiary
+  nomineeName         String?
+  nomineeNic          String?
+  nomineeRelationship String?
+  nomineePhone        String? // CHILD + MARGE only (not PENSION)
+
+  // Agent bank details (page 2)
+  agentBankAccNo  String?
+  agentBankName   String?
+  agentBankBranch String?
+
+  // Relations
+  clientId    Int?
+  createdById Int?
+  branchId    Int?
+  faId        Int?
+  fmId        Int?
+  bmId        Int?
+  rmId        Int?
+  zmId        Int?
+
+  notes     String?
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @db.Timestamptz(6)
+
+  client    Client? @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  createdBy Member? @relation("MPCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  branch    Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
+  fa        Member? @relation("MPFA", fields: [faId], references: [id], onDelete: SetNull)
+  fm        Member? @relation("MPFM", fields: [fmId], references: [id], onDelete: SetNull)
+  bm        Member? @relation("MPBM", fields: [bmId], references: [id], onDelete: SetNull)
+  rm        Member? @relation("MPRM", fields: [rmId], references: [id], onDelete: SetNull)
+  zm        Member? @relation("MPZM", fields: [zmId], references: [id], onDelete: SetNull)
+
+  @@index([clientId])
+  @@index([createdById])
+  @@index([planType])
+  @@index([branchId])
+  @@index([createdAt])
+}
+
+// ─── Add these back-relations to existing models ──────────────────────────────
+
+// In model Client:
+//   monthlyProposals    MonthlyProposal[]
+
+// In model Branch:
+//   monthlyProposals    MonthlyProposal[]
+
+// In model Member — add all 7 named relations:
+//   monthlyProposalsCreated  MonthlyProposal[]  @relation("MPCreatedBy")
+//   monthlyProposalsAsFA     MonthlyProposal[]  @relation("MPFA")
+//   monthlyProposalsAsFM     MonthlyProposal[]  @relation("MPFM")
+//   monthlyProposalsAsBM     MonthlyProposal[]  @relation("MPBM")
+//   monthlyProposalsAsRM     MonthlyProposal[]  @relation("MPRM")
+//   monthlyProposalsAsZM     MonthlyProposal[]  @relation("MPZM")
