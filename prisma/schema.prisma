@@ -14,25 +14,26 @@ model ProposalNumberSequence {
 }
 
 model Branch {
-  name             String
-  location         String?
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  id               Int               @id @default(autoincrement())
-  status           Status            @default(Active)
-  parentId         Int?
-  zoneId           Int?
-  code             String            @default("")
-  ActivityLog      ActivityLog[]
-  parent           Branch?           @relation("BranchHierarchy", fields: [parentId], references: [id])
-  children         Branch[]          @relation("BranchHierarchy")
-  zone             Zone?             @relation(fields: [zoneId], references: [id])
-  client           Client[]
-  commission       Commission[]
-  InventoryItem    InventoryItem[]
-  investments      Investment[]
-  members          MemberBranch[]
-  monthlyProposals MonthlyProposal[]
+  name                      String
+  location                  String?
+  createdAt                 DateTime                    @default(now())
+  updatedAt                 DateTime                    @updatedAt
+  id                        Int                         @id @default(autoincrement())
+  status                    Status                      @default(Active)
+  parentId                  Int?
+  zoneId                    Int?
+  code                      String                      @default("")
+  ActivityLog               ActivityLog[]
+  parent                    Branch?                     @relation("BranchHierarchy", fields: [parentId], references: [id])
+  children                  Branch[]                    @relation("BranchHierarchy")
+  zone                      Zone?                       @relation(fields: [zoneId], references: [id])
+  client                    Client[]
+  commission                Commission[]
+  InventoryItem             InventoryItem[]
+  investments               Investment[]
+  members                   MemberBranch[]
+  monthlyProposals          MonthlyProposal[]
+  MonthlyProposalCommission MonthlyProposalCommission[]
 }
 
 model Zone {
@@ -71,88 +72,90 @@ model CommissionRate {
 }
 
 model Member {
-  createdAt              DateTime              @default(now())
-  updatedAt              DateTime?
-  id                     Int                   @id @default(autoincrement())
-  positionId             Int
-  empNo                  String                @unique
-  email                  String?               @unique
-  phone                  String?
-  userId                 String?               @unique @db.Uuid
-  accNo                  String?
-  address                String?
-  appointmentLetter      String?
-  bank                   String?
-  bankBranch             String?
-  civilStatus            String?
-  confirmation           String?
-  dateOfJoin             DateTime?
-  dob                    DateTime?
-  gender                 String?
-  nameWithInitials       String?
-  nic                    String?
-  remark                 String?
-  probationStartDate     String?
-  profilePic             String?
-  status                 EmployeeStatus        @default(PROBATION)
-  epfNo                  String?
-  phone2                 String?
-  lastClientRegisteredAt DateTime?
-  reportingPersons       String[]
-  etfNo                  String?
-  isActive               Boolean               @default(true)
-  channel                Channel               @default(Chanel_01)
-  approvalStatus         ApprovalStatus        @default(PENDING)
-  recruitedById          Int?
-  reviewNote             String?
-  reviewedAt             DateTime?
-  reviewedBy             String?
-  submittedAt            DateTime              @default(now())
-  totalCommission        Float?
-  payrollCategory        PayrollCategory?
-  lastInvestmentAt       DateTime?             @db.Timestamp(6)
-  autoDeactivatedAt      DateTime?             @db.Timestamp(6)
-  activityLog            ActivityLog[]
-  clientsAsAGM           Client[]              @relation("ClientAGM")
-  clientsAsBM            Client[]              @relation("ClientBM")
-  clientsAsCCO           Client[]              @relation("ClientCCO")
-  createdClients         Client[]              @relation("CreatedByMember")
-  clientsAsFA            Client[]              @relation("ClientFA")
-  clientsAsFM            Client[]              @relation("ClientFM")
-  clients                Client[]
-  clientsAsRM            Client[]              @relation("ClientRM")
-  clientsAsZM            Client[]              @relation("ClientZM")
-  commissions            Commission[]
-  HoPayrollConfig        HoPayrollConfig?
-  advisorInvestments     Investment[]          @relation("AdvisorInvestments")
-  investmentsAsAGM       Investment[]          @relation("InvestmentAGM")
-  investmentsAsBM        Investment[]          @relation("InvestmentBM")
-  investmentsAsCCO       Investment[]          @relation("InvestmentCCO")
-  investments            Investment[]          @relation("InvestmentCreatedBy")
-  investmentsAsFA        Investment[]          @relation("InvestmentFA")
-  investmentsAsFM        Investment[]          @relation("InvestmentFM")
-  investmentsAsRM        Investment[]          @relation("InvestmentRM")
-  investmentsAsZM        Investment[]          @relation("InvestmentZM")
-  ManagementBaseSalary   ManagementBaseSalary?
-  ManagementSalary       ManagementSalary[]
-  position               Position              @relation(fields: [positionId], references: [id])
-  recruitedBy            Member?               @relation("RecruitedBy", fields: [recruitedById], references: [id])
-  recruits               Member[]              @relation("RecruitedBy")
-  user                   User?                 @relation(fields: [userId], references: [id], onDelete: Cascade)
-  branches               MemberBranch[]
-  zones                  MemberZone[]
-  monthlyActivations     MonthlyActivation[]
-  monthlyEvaluations     MonthlyEvaluation[]
-  monthlyPayrolls        MonthlyPayroll[]
-  PayrollRecord          PayrollRecord[]
-  SalaryAdvances         SalaryAdvance[]
-
-  monthlyProposalsCreated MonthlyProposal[] @relation("MPCreatedBy")
-  monthlyProposalsAsFA    MonthlyProposal[] @relation("MPFA")
-  monthlyProposalsAsFM    MonthlyProposal[] @relation("MPFM")
-  monthlyProposalsAsBM    MonthlyProposal[] @relation("MPBM")
-  monthlyProposalsAsRM    MonthlyProposal[] @relation("MPRM")
-  monthlyProposalsAsZM    MonthlyProposal[] @relation("MPZM")
+  totalCommission                                   Float?
+  createdAt                                         DateTime                    @default(now())
+  updatedAt                                         DateTime?
+  id                                                Int                         @id @default(autoincrement())
+  positionId                                        Int
+  empNo                                             String                      @unique
+  email                                             String?                     @unique
+  phone                                             String?
+  userId                                            String?                     @unique @db.Uuid
+  accNo                                             String?
+  address                                           String?
+  appointmentLetter                                 String?
+  bank                                              String?
+  bankBranch                                        String?
+  civilStatus                                       String?
+  confirmation                                      String?
+  dateOfJoin                                        DateTime?
+  dob                                               DateTime?
+  gender                                            String?
+  nameWithInitials                                  String?
+  nic                                               String?
+  remark                                            String?
+  probationStartDate                                String?
+  profilePic                                        String?
+  status                                            EmployeeStatus              @default(PROBATION)
+  epfNo                                             String?
+  phone2                                            String?
+  lastClientRegisteredAt                            DateTime?
+  reportingPersons                                  String[]
+  etfNo                                             String?
+  isActive                                          Boolean                     @default(true)
+  channel                                           Channel                     @default(Chanel_01)
+  recruitedById                                     Int?
+  approvalStatus                                    ApprovalStatus              @default(PENDING)
+  reviewNote                                        String?
+  reviewedAt                                        DateTime?
+  reviewedBy                                        String?
+  submittedAt                                       DateTime                    @default(now())
+  autoDeactivatedAt                                 DateTime?                   @db.Timestamp(6)
+  lastInvestmentAt                                  DateTime?                   @db.Timestamp(6)
+  payrollCategory                                   PayrollCategory?
+  activityLog                                       ActivityLog[]
+  clientsAsAGM                                      Client[]                    @relation("ClientAGM")
+  clientsAsBM                                       Client[]                    @relation("ClientBM")
+  clientsAsCCO                                      Client[]                    @relation("ClientCCO")
+  createdClients                                    Client[]                    @relation("CreatedByMember")
+  clientsAsFA                                       Client[]                    @relation("ClientFA")
+  clientsAsFM                                       Client[]                    @relation("ClientFM")
+  clients                                           Client[]
+  clientsAsRM                                       Client[]                    @relation("ClientRM")
+  clientsAsZM                                       Client[]                    @relation("ClientZM")
+  commissions                                       Commission[]
+  HoPayrollConfig                                   HoPayrollConfig?
+  advisorInvestments                                Investment[]                @relation("AdvisorInvestments")
+  investmentsAsAGM                                  Investment[]                @relation("InvestmentAGM")
+  investmentsAsBM                                   Investment[]                @relation("InvestmentBM")
+  investmentsAsCCO                                  Investment[]                @relation("InvestmentCCO")
+  investments                                       Investment[]                @relation("InvestmentCreatedBy")
+  investmentsAsFA                                   Investment[]                @relation("InvestmentFA")
+  investmentsAsFM                                   Investment[]                @relation("InvestmentFM")
+  investmentsAsRM                                   Investment[]                @relation("InvestmentRM")
+  investmentsAsZM                                   Investment[]                @relation("InvestmentZM")
+  ManagementBaseSalary                              ManagementBaseSalary?
+  ManagementSalary                                  ManagementSalary[]
+  position                                          Position                    @relation(fields: [positionId], references: [id])
+  recruitedBy                                       Member?                     @relation("RecruitedBy", fields: [recruitedById], references: [id])
+  recruits                                          Member[]                    @relation("RecruitedBy")
+  user                                              User?                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  branches                                          MemberBranch[]
+  zones                                             MemberZone[]
+  monthlyActivations                                MonthlyActivation[]
+  monthlyEvaluations                                MonthlyEvaluation[]
+  monthlyPayrolls                                   MonthlyPayroll[]
+  MonthlyProposal_MonthlyProposal_advisorIdToMember MonthlyProposal[]           @relation("MonthlyProposal_advisorIdToMember")
+  monthlyProposalsAsBM                              MonthlyProposal[]           @relation("MPBM")
+  monthlyProposalsCreated                           MonthlyProposal[]           @relation("MPCreatedBy")
+  monthlyProposalsAsFA                              MonthlyProposal[]           @relation("MPFA")
+  monthlyProposalsAsFM                              MonthlyProposal[]           @relation("MPFM")
+  monthlyProposalsAsRM                              MonthlyProposal[]           @relation("MPRM")
+  monthlyProposalsAsZM                              MonthlyProposal[]           @relation("MPZM")
+  MonthlyProposalCommission                         MonthlyProposalCommission[]
+  MonthlyProposalPayment                            MonthlyProposalPayment[]
+  PayrollRecord                                     PayrollRecord[]
+  SalaryAdvances                                    SalaryAdvance[]
 }
 
 model MemberBranch {
@@ -250,25 +253,25 @@ model MonthlyPayroll {
   createdAt                 DateTime @default(now())
   basicSalaryPermanent      Float    @default(0)
   activationAllowanceEarned Float    @default(0)
-  incentivePartialEarned    Float    @default(0)
-  teamActiveEarned          Float    @default(0)
-  vehicleEarned             Float    @default(0)
-  incentivePartialHit       Boolean  @default(false)
-  teamActiveHit             Boolean  @default(false)
-  vehicleHit                Boolean  @default(false)
-  targetBudgetSalary        Float    @default(0)
-  excessEarned              Float    @default(0)
   advanceDeducted           Float    @default(0)
   attendanceAllowance       Float    @default(0)
   channelOperation          Float    @default(0)
   excessCommission          Float    @default(0)
+  excessEarned              Float    @default(0)
   festivalAdvance           Float    @default(0)
   fixedAllowance            Float    @default(0)
   fuelAllowance             Float    @default(0)
+  incentivePartialEarned    Float    @default(0)
+  incentivePartialHit       Boolean  @default(false)
   loanInstalments           Float    @default(0)
   merchandiseDeduction      Float    @default(0)
   payrollCategory           String   @default("MARKETING")
+  targetBudgetSalary        Float    @default(0)
+  teamActiveEarned          Float    @default(0)
+  teamActiveHit             Boolean  @default(false)
   tenureMonthCount          Int      @default(1)
+  vehicleEarned             Float    @default(0)
+  vehicleHit                Boolean  @default(false)
   member                    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
   @@unique([memberId, year, month])
@@ -471,19 +474,19 @@ model Investment {
   investmentRates      Float[]        @default([])
   status               InvStatus      @default(Active)
   agmId                Int?
-  approvalStatus       ApprovalStatus @default(PENDING)
   bmId                 Int?
   ccoId                Int?
-  createdById          Int?
   faId                 Int?
   fmId                 Int?
+  rmId                 Int?
+  zmId                 Int?
   renewedFromId        Int?
+  approvalStatus       ApprovalStatus @default(PENDING)
   reviewNote           String?
   reviewedAt           DateTime?
   reviewedBy           String?
-  rmId                 Int?
   submittedAt          DateTime       @default(now())
-  zmId                 Int?
+  createdById          Int?
   renewalCreditedAt    DateTime?
   commission           Commission[]
   advisor              Member?        @relation("AdvisorInvestments", fields: [advisorId], references: [id])
@@ -551,9 +554,8 @@ model Client {
   zm                    Member?                 @relation("ClientZM", fields: [zmId], references: [id])
   ClientDocumentRequest ClientDocumentRequest[]
   investments           Investment[]
+  monthlyProposals      MonthlyProposal[]
   nominees              Nominee[]
-
-  monthlyProposals MonthlyProposal[]
 }
 
 model Beneficiary {
@@ -758,6 +760,138 @@ model InventoryItem {
   @@index([company])
 }
 
+model Notification {
+  id        Int              @id @default(autoincrement())
+  type      NotificationType
+  title     String
+  body      String
+  metadata  Json?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now()) @db.Timestamptz(6)
+
+  @@index([isRead, createdAt(sort: Desc)])
+}
+
+model MonthlyProposal {
+  id                                       Int                         @id @default(autoincrement())
+  planType                                 MonthlyPlanType
+  proposalFormNo                           String?                     @unique
+  applicantName                            String
+  applicantNic                             String?
+  applicantDob                             DateTime?                   @db.Date
+  applicantAge                             Int?
+  applicantAddress                         String?
+  applicantPhone                           String?
+  applicantEmail                           String?
+  gender                                   String?
+  maritalStatus                            String?
+  applicantBankAccNo                       String?
+  applicantBankName                        String?
+  childName                                String?
+  childDob                                 DateTime?                   @db.Date
+  childBirthCertNo                         String?
+  childSchool                              String?
+  childGrade                               String?
+  duration                                 Int
+  retirementAge                            Int?
+  frequency                                MonthlyFrequency
+  premium                                  Float
+  totalInvested                            Float
+  interestRate                             Float
+  interestEarned                           Float
+  maturityAmount                           Float
+  documentCharge                           Float                       @default(500)
+  nomineeName                              String?
+  nomineeNic                               String?
+  nomineeRelationship                      String?
+  nomineePhone                             String?
+  agentBankAccNo                           String?
+  agentBankName                            String?
+  agentBankBranch                          String?
+  clientId                                 Int?
+  createdById                              Int?
+  branchId                                 Int?
+  faId                                     Int?
+  fmId                                     Int?
+  bmId                                     Int?
+  rmId                                     Int?
+  zmId                                     Int?
+  notes                                    String?
+  createdAt                                DateTime                    @default(now()) @db.Timestamptz(6)
+  updatedAt                                DateTime                    @default(now()) @db.Timestamptz(6)
+  status                                   MonthlyProposalStatus       @default(PENDING)
+  activatedAt                              DateTime?                   @db.Timestamptz(6)
+  maturityDate                             DateTime?                   @db.Date
+  approvalStatus                           ApprovalStatus              @default(PENDING)
+  reviewNote                               String?
+  reviewedAt                               DateTime?                   @db.Timestamptz(6)
+  reviewedBy                               String?
+  commissionsProcessed                     Boolean                     @default(false)
+  advisorId                                Int?
+  Member_MonthlyProposal_advisorIdToMember Member?                     @relation("MonthlyProposal_advisorIdToMember", fields: [advisorId], references: [id], onUpdate: NoAction)
+  bm                                       Member?                     @relation("MPBM", fields: [bmId], references: [id])
+  branch                                   Branch?                     @relation(fields: [branchId], references: [id])
+  client                                   Client?                     @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  createdBy                                Member?                     @relation("MPCreatedBy", fields: [createdById], references: [id])
+  fa                                       Member?                     @relation("MPFA", fields: [faId], references: [id])
+  fm                                       Member?                     @relation("MPFM", fields: [fmId], references: [id])
+  rm                                       Member?                     @relation("MPRM", fields: [rmId], references: [id])
+  zm                                       Member?                     @relation("MPZM", fields: [zmId], references: [id])
+  MonthlyProposalCommission                MonthlyProposalCommission[]
+  MonthlyProposalPayment                   MonthlyProposalPayment[]
+
+  @@index([clientId])
+  @@index([createdById])
+  @@index([planType])
+  @@index([branchId])
+  @@index([createdAt])
+  @@index([approvalStatus])
+}
+
+model MonthlyProposalPayment {
+  id                Int             @id @default(autoincrement())
+  monthlyProposalId Int
+  installmentNo     Int
+  dueYear           Int
+  dueMonth          Int
+  dueDate           DateTime        @db.Date
+  paidAmount        Float?
+  paidAt            DateTime?       @db.Timestamptz(6)
+  receiptNo         String?
+  paymentMethod     String?
+  notes             String?
+  recordedById      Int?
+  createdAt         DateTime        @default(now()) @db.Timestamptz(6)
+  updatedAt         DateTime        @default(now()) @db.Timestamptz(6)
+  MonthlyProposal   MonthlyProposal @relation(fields: [monthlyProposalId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  Member            Member?         @relation(fields: [recordedById], references: [id], onUpdate: NoAction)
+
+  @@unique([monthlyProposalId, installmentNo])
+  @@index([dueDate])
+  @@index([monthlyProposalId], map: "MonthlyProposalPayment_proposalId_idx")
+  @@index([monthlyProposalId, dueDate], map: "MonthlyProposalPayment_unpaid_idx", where: raw("(\"paidAmount\" IS NULL)"))
+}
+
+model MonthlyProposalCommission {
+  id                Int             @id @default(autoincrement())
+  monthlyProposalId Int
+  memberEmpNo       String
+  amount            Float
+  type              CommissionType
+  refNumber         String?         @unique
+  branchId          Int
+  month             Int
+  year              Int
+  createdAt         DateTime        @default(now()) @db.Timestamptz(6)
+  Branch            Branch          @relation(fields: [branchId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  Member            Member          @relation(fields: [memberEmpNo], references: [empNo], onDelete: Cascade, onUpdate: NoAction)
+  MonthlyProposal   MonthlyProposal @relation(fields: [monthlyProposalId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([memberEmpNo])
+  @@index([monthlyProposalId], map: "MonthlyProposalCommission_proposalId_idx")
+  @@index([year, month])
+}
+
 enum ApprovalStatus {
   PENDING
   APPROVED
@@ -865,13 +999,13 @@ enum Role {
   ADMIN
   HR
   DEV
-  ACC
-  CHAIRMAN
   BRANCH_MANAGER
   REGIONAL_MANAGER
   AGM
   EMPLOYEE
   ZONAL_MANAGER
+  ACC
+  CHAIRMAN
 }
 
 enum QuotationPlanType {
@@ -919,21 +1053,6 @@ enum NotificationType {
   EMPLOYEE_DEACTIVATION
 }
 
-model Notification {
-  id        Int              @id @default(autoincrement())
-  type      NotificationType
-  title     String
-  body      String
-  metadata  Json?
-  isRead    Boolean          @default(false)
-  createdAt DateTime         @default(now()) @db.Timestamptz(6)
-
-  @@index([isRead, createdAt(sort: Desc)])
-}
-
-// ─── Add these two enums ──────────────────────────────────────────────────────
-// (npx prisma db pull should auto-generate them; add manually if missing)
-
 enum MonthlyPlanType {
   CHILD
   MARGE
@@ -947,101 +1066,11 @@ enum MonthlyFrequency {
   ANNUAL
 }
 
-// ─── Add this model ───────────────────────────────────────────────────────────
-
-model MonthlyProposal {
-  id             Int             @id @default(autoincrement())
-  planType       MonthlyPlanType
-  proposalFormNo String?         @unique
-
-  // Section 1 — Applicant / Parent / Guardian
-  applicantName      String
-  applicantNic       String?
-  applicantDob       DateTime? @db.Date
-  applicantAge       Int?
-  applicantAddress   String?
-  applicantPhone     String?
-  applicantEmail     String?
-  gender             String? // MARGE only
-  maritalStatus      String? // MARGE only
-  applicantBankAccNo String? // PENSION + MARGE
-  applicantBankName  String? // PENSION + MARGE
-
-  // Section 2 — Child details (CHILD only)
-  childName        String?
-  childDob         DateTime? @db.Date
-  childBirthCertNo String?
-  childSchool      String?
-  childGrade       String?
-
-  // Plan selection
-  duration      Int
-  retirementAge Int? // PENSION only
-
-  // Payment
-  frequency MonthlyFrequency
-  premium   Float
-
-  // Financials (calculated at save time)
-  totalInvested  Float
-  interestRate   Float
-  interestEarned Float
-  maturityAmount Float
-  documentCharge Float @default(500)
-
-  // Nominee / Beneficiary
-  nomineeName         String?
-  nomineeNic          String?
-  nomineeRelationship String?
-  nomineePhone        String? // CHILD + MARGE only (not PENSION)
-
-  // Agent bank details (page 2)
-  agentBankAccNo  String?
-  agentBankName   String?
-  agentBankBranch String?
-
-  // Relations
-  clientId    Int?
-  createdById Int?
-  branchId    Int?
-  faId        Int?
-  fmId        Int?
-  bmId        Int?
-  rmId        Int?
-  zmId        Int?
-
-  notes     String?
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @default(now()) @db.Timestamptz(6)
-
-  client    Client? @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  createdBy Member? @relation("MPCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
-  branch    Branch? @relation(fields: [branchId], references: [id], onDelete: SetNull)
-  fa        Member? @relation("MPFA", fields: [faId], references: [id], onDelete: SetNull)
-  fm        Member? @relation("MPFM", fields: [fmId], references: [id], onDelete: SetNull)
-  bm        Member? @relation("MPBM", fields: [bmId], references: [id], onDelete: SetNull)
-  rm        Member? @relation("MPRM", fields: [rmId], references: [id], onDelete: SetNull)
-  zm        Member? @relation("MPZM", fields: [zmId], references: [id], onDelete: SetNull)
-
-  @@index([clientId])
-  @@index([createdById])
-  @@index([planType])
-  @@index([branchId])
-  @@index([createdAt])
+enum MonthlyProposalStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  MATURED
+  LAPSED
+  CANCELLED
 }
-
-// ─── Add these back-relations to existing models ──────────────────────────────
-
-// In model Client:
-//   monthlyProposals    MonthlyProposal[]
-
-// In model Branch:
-//   monthlyProposals    MonthlyProposal[]
-
-// In model Member — add all 7 named relations:
-//   monthlyProposalsCreated  MonthlyProposal[]  @relation("MPCreatedBy")
-//   monthlyProposalsAsFA     MonthlyProposal[]  @relation("MPFA")
-//   monthlyProposalsAsFM     MonthlyProposal[]  @relation("MPFM")
-//   monthlyProposalsAsBM     MonthlyProposal[]  @relation("MPBM")
-//   monthlyProposalsAsRM     MonthlyProposal[]  @relation("MPRM")
-//   monthlyProposalsAsZM     MonthlyProposal[]  @relation("MPZM")

@@ -206,12 +206,17 @@ type AdvisorHierarchyProps = {
   onChange: (key: keyof HierarchyState, id: number | null) => void;
   initialMembers?: Partial<Record<keyof HierarchyState, { id: number; nameWithInitials: string; position: { title: string } } | null>>;
   hideCard?: boolean;
+  hiddenSlots?: (keyof HierarchyState)[];
 };
 
-const AdvisorHierarchy = ({ values, onChange, initialMembers = {}, hideCard }: AdvisorHierarchyProps) => {
+const AdvisorHierarchy = ({ values, onChange, initialMembers = {}, hideCard, hiddenSlots }: AdvisorHierarchyProps) => {
+  const visibleSlots = hiddenSlots?.length
+    ? SLOTS.filter((s) => !hiddenSlots.includes(s.key))
+    : SLOTS;
+
   const GridContent = (
     <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4 ${hideCard ? '' : 'p-6'}`}>
-      {SLOTS.map((slot) => (
+      {visibleSlots.map((slot) => (
         <div key={slot.key} className={slot.key === "ccoId" ? "col-span-1 md:col-span-2" : ""}>
           <MemberSearchInput
             slot={slot}

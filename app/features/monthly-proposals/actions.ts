@@ -4,6 +4,9 @@ import { getCurrentUserWithRole } from "@/lib/getCurrentUserWithRole";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { reserveProposalFormNoInTx } from "@/lib/proposalNumber";
+import { logActivity } from "@/lib/logActivity";
+import { ActivityAction, ActivityEntity } from "@prisma/client";
+import { processMonthlyProposalCommissions } from "@/app/features/commissions/processMonthlyProposal";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -290,4 +293,374 @@ export async function deleteMonthlyProposal(id: number) {
   revalidatePath("/features/investments");
   revalidatePath("/features/clients");
   revalidatePath("/features/monthly-proposals");
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const FREQ_INTERVAL_MONTHS: Record<MonthlyFrequency, number> = {
+  MONTHLY: 1, QUARTERLY: 3, SEMI_ANNUAL: 6, ANNUAL: 12,
+};
+
+function getPayingYears(planType: MonthlyPlanType, duration: number): number {
+  if (planType === "CHILD") return 3;
+  if (planType === "MARGE") return 5;
+  return duration;
+}
+
+function buildPaymentSlots(
+  proposalId: number,
+  frequency: MonthlyFrequency,
+  payingYears: number,
+  startDate: Date,
+) {
+  const intervalMonths = FREQ_INTERVAL_MONTHS[frequency];
+  const totalPayments  = Math.round((payingYears * 12) / intervalMonths);
+  const slots = [];
+  for (let i = 0; i < totalPayments; i++) {
+    const due = new Date(startDate);
+    due.setMonth(due.getMonth() + i * intervalMonths);
+    slots.push({
+      monthlyProposalId: proposalId,
+      installmentNo:     i + 1,
+      dueYear:           due.getFullYear(),
+      dueMonth:          due.getMonth() + 1,
+      dueDate:           due,
+    });
+  }
+  return slots;
+}
+
+function calcMaturityDate(activatedAt: Date, durationYears: number): Date {
+  const d = new Date(activatedAt);
+  d.setFullYear(d.getFullYear() + durationYears);
+  return d;
+}
+
+// ─── Activate ─────────────────────────────────────────────────────────────────
+
+export async function activateMonthlyProposal(proposalId: number) {
+  const user = await getCurrentUserWithRole();
+  if (!user?.id) throw new Error("Unauthorized");
+
+  const proposal = await (prisma as any).monthlyProposal.findUnique({
+    where:  { id: proposalId },
+    select: { id: true, status: true, frequency: true, planType: true, duration: true, createdById: true },
+  });
+
+  if (!proposal)                     throw new Error("Proposal not found");
+  if (proposal.status !== "PENDING") throw new Error("Proposal is already activated");
+
+  const activatedAt  = new Date();
+  const maturityDate = calcMaturityDate(activatedAt, proposal.duration);
+  const payingYears  = getPayingYears(proposal.planType, proposal.duration);
+  const slots        = buildPaymentSlots(proposalId, proposal.frequency, payingYears, activatedAt);
+
+  await (prisma as any).$transaction(async (tx: any) => {
+    await tx.monthlyProposal.update({
+      where: { id: proposalId },
+      data:  { status: "ACTIVE", activatedAt, maturityDate, updatedAt: new Date() },
+    });
+    await tx.monthlyProposalPayment.createMany({ data: slots });
+  });
+
+  revalidatePath(`/features/monthly-proposals/${proposalId}`);
+  revalidatePath(`/features/monthly-proposals/${proposalId}/payments`);
+
+  return { activatedAt, maturityDate, totalSlots: slots.length };
+}
+
+// ─── Record payment ───────────────────────────────────────────────────────────
+
+export interface RecordPaymentInput {
+  paymentId:     number;
+  paidAmount:    number;
+  paidAt:        string;
+  receiptNo?:    string;
+  paymentMethod: string;
+  notes?:        string;
+}
+
+export async function recordProposalPayment(input: RecordPaymentInput) {
+  const user = await getCurrentUserWithRole();
+  if (!user?.id) throw new Error("Unauthorized");
+
+  const payment = await (prisma as any).monthlyProposalPayment.findUnique({
+    where:  { id: input.paymentId },
+    select: { id: true, paidAmount: true, monthlyProposalId: true },
+  });
+
+  if (!payment)                    throw new Error("Payment slot not found");
+  if (payment.paidAmount !== null) throw new Error("This installment is already paid");
+
+  await (prisma as any).monthlyProposalPayment.update({
+    where: { id: input.paymentId },
+    data: {
+      paidAmount:    input.paidAmount,
+      paidAt:        new Date(input.paidAt),
+      receiptNo:     input.receiptNo     || null,
+      paymentMethod: input.paymentMethod,
+      notes:         input.notes         || null,
+      recordedById:  user.member?.id     ?? null,
+      updatedAt:     new Date(),
+    },
+  });
+
+  // Auto-complete if all slots paid
+  const unpaidCount = await (prisma as any).monthlyProposalPayment.count({
+    where: { monthlyProposalId: payment.monthlyProposalId, paidAmount: null },
+  });
+  const proposal = await (prisma as any).monthlyProposal.findUnique({
+    where:  { id: payment.monthlyProposalId },
+    select: { status: true },
+  });
+  if (unpaidCount === 0 && proposal?.status === "ACTIVE") {
+    await (prisma as any).monthlyProposal.update({
+      where: { id: payment.monthlyProposalId },
+      data:  { status: "COMPLETED", updatedAt: new Date() },
+    });
+  }
+
+  revalidatePath(`/features/monthly-proposals/${payment.monthlyProposalId}/payments`);
+  revalidatePath(`/features/monthly-proposals/${payment.monthlyProposalId}`);
+}
+
+// ─── Reverse payment ──────────────────────────────────────────────────────────
+
+export async function reverseProposalPayment(paymentId: number) {
+  const user = await getCurrentUserWithRole();
+  if (!user?.id) throw new Error("Unauthorized");
+
+  const isPrivileged = ["ADMIN", "HR", "DEV"].includes(user.role ?? "");
+  if (!isPrivileged) throw new Error("Only admins can reverse payments");
+
+  const payment = await (prisma as any).monthlyProposalPayment.findUnique({
+    where:  { id: paymentId },
+    select: { id: true, paidAmount: true, monthlyProposalId: true },
+  });
+
+  if (!payment)                    throw new Error("Payment not found");
+  if (payment.paidAmount === null) throw new Error("This installment is not paid");
+
+  await (prisma as any).monthlyProposalPayment.update({
+    where: { id: paymentId },
+    data: {
+      paidAmount: null, paidAt: null, receiptNo: null,
+      paymentMethod: null, notes: null, recordedById: null,
+      updatedAt: new Date(),
+    },
+  });
+
+  const proposal = await (prisma as any).monthlyProposal.findUnique({
+    where:  { id: payment.monthlyProposalId },
+    select: { status: true },
+  });
+  if (proposal?.status === "COMPLETED") {
+    await (prisma as any).monthlyProposal.update({
+      where: { id: payment.monthlyProposalId },
+      data:  { status: "ACTIVE", updatedAt: new Date() },
+    });
+  }
+
+  revalidatePath(`/features/monthly-proposals/${payment.monthlyProposalId}/payments`);
+  revalidatePath(`/features/monthly-proposals/${payment.monthlyProposalId}`);
+}
+
+// ─── Get payments ─────────────────────────────────────────────────────────────
+
+export async function getProposalPayments(proposalId: number) {
+  const user = await getCurrentUserWithRole();
+  if (!user?.id) throw new Error("Unauthorized");
+
+  const [proposal, payments] = await Promise.all([
+    (prisma as any).monthlyProposal.findUnique({
+      where:  { id: proposalId },
+      select: {
+        id: true, proposalFormNo: true, planType: true, applicantName: true,
+        frequency: true, premium: true, duration: true, status: true,
+        activatedAt: true, maturityDate: true,
+      },
+    }),
+    (prisma as any).monthlyProposalPayment.findMany({
+      where:   { monthlyProposalId: proposalId },
+      orderBy: { installmentNo: "asc" },
+      // No include — recordedBy relation name may differ per db pull
+      // recordedById is present as a plain field and sufficient for display
+    }),
+  ]);
+
+  if (!proposal) throw new Error("Proposal not found");
+  return JSON.parse(JSON.stringify({ proposal, payments }));
+}
+
+// ─── Approve ──────────────────────────────────────────────────────────────────
+
+export async function approveMonthlyProposalWithHierarchy(data: {
+  proposalId:  number;
+  faId?:       number | null;
+  fmId?:       number | null;
+  bmId?:       number | null;
+  rmId?:       number | null;
+  zmId?:       number | null;
+  reviewNote?: string;
+  advisorId?:  number | null;
+}): Promise<{
+  success:              boolean;
+  proposal?:            any;
+  error?:               string;
+  commissionProcessed?: boolean;
+  commissionError?:     string;
+  commissionReceipt?:   any;
+}> {
+  try {
+    const currentUser = await getCurrentUserWithRole();
+    if (!currentUser) throw new Error("Not authorized");
+
+    const approverIds = [data.faId, data.fmId, data.bmId, data.rmId, data.zmId];
+    if (!approverIds.some((id) => id))
+      throw new Error("At least one hierarchy member is required");
+
+    const proposal = await (prisma as any).monthlyProposal.findUnique({
+      where:  { id: data.proposalId },
+      select: {
+        id: true, approvalStatus: true, premium: true, branchId: true,
+        faId: true, fmId: true, bmId: true, rmId: true, zmId: true,
+      },
+    });
+
+    if (!proposal)                             throw new Error("Proposal not found");
+    if (proposal.approvalStatus !== "PENDING") throw new Error("Proposal is not pending");
+
+    const result = await (prisma as any).$transaction(async (tx: any) => {
+      const updated = await tx.monthlyProposal.update({
+        where: { id: data.proposalId },
+        data: {
+          approvalStatus: "APPROVED",
+          reviewedAt:     new Date(),
+          reviewedBy:     currentUser.id,
+          reviewNote:     data.reviewNote ?? null,
+          faId:           data.faId  ?? null,
+          fmId:           data.fmId  ?? null,
+          bmId:           data.bmId  ?? null,
+          rmId:           data.rmId  ?? null,
+          zmId:           data.zmId  ?? null,
+          advisorId:      data.advisorId ?? null,
+          updatedAt:      new Date(),
+        },
+      });
+
+      const hierarchyIds = [
+        data.faId, data.fmId, data.bmId, data.rmId, data.zmId,
+      ].filter((id): id is number => id !== null && id !== undefined);
+      const uniqueIds = [...new Set(hierarchyIds)];
+
+      if (uniqueIds.length > 0) {
+        const now   = new Date();
+        const year  = now.getFullYear();
+        const month = now.getMonth() + 1;
+        await Promise.all(
+          uniqueIds.map((memberId) =>
+            tx.monthlyPayroll.upsert({
+              where:  { memberId_year_month: { memberId, year, month } },
+              update: { volumeAchieved: { increment: proposal.premium } },
+              create: { memberId, year, month, basicSalaryPermanent: 0, monthlyTarget: 0, volumeAchieved: proposal.premium },
+            })
+          )
+        );
+      }
+
+      return updated;
+    });
+
+    revalidatePath("/features/monthly-proposals");
+
+    void logActivity({
+      action:        ActivityAction.APPROVE,
+      entity:        ActivityEntity.INVESTMENT,
+      entityId:      data.proposalId,
+      performedById: currentUser?.member?.id ?? 0,
+      branchId:      proposal.branchId,
+      metadata: {
+        event: "monthly_proposal_approval",
+        hierarchySnapshot: { faId: data.faId, fmId: data.fmId, bmId: data.bmId, rmId: data.rmId, zmId: data.zmId },
+      },
+    });
+
+    let commissionProcessed = false;
+    let commissionError: string | undefined;
+    let commissionReceipt: any;
+
+    if (data.faId) {
+      try {
+        const faMember = await prisma.member.findUnique({
+          where:  { id: data.faId },
+          select: { empNo: true },
+        });
+        if (!faMember) throw new Error(`FA not found for id ${data.faId}`);
+
+        const uplineIds = [data.fmId, data.bmId, data.rmId, data.zmId]
+          .filter((id): id is number => id !== null && id !== undefined);
+        const uniqueUplineIds = [...new Set(uplineIds)];
+        let hierarchyEmpNos: string[] = [];
+        if (uniqueUplineIds.length > 0) {
+          const members = await prisma.member.findMany({
+            where:  { id: { in: uniqueUplineIds } },
+            select: { id: true, empNo: true },
+          });
+          hierarchyEmpNos = uniqueUplineIds
+            .map((id) => members.find((m) => m.id === id)?.empNo)
+            .filter((e): e is string => !!e);
+        }
+
+        const commResult = await processMonthlyProposalCommissions({
+          proposalId:      data.proposalId,
+          empNo:           faMember.empNo,
+          branchId:        proposal.branchId,
+          hierarchyEmpNos,
+          performedById:   currentUser?.member?.id,
+        });
+
+        if (commResult.success) {
+          commissionProcessed = true;
+          commissionReceipt   = commResult.receipt;
+        } else {
+          commissionError = (commResult.error as any)?.message ?? "Commission processing failed";
+        }
+      } catch (e: any) {
+        commissionError = e.message ?? "Commission processing failed";
+      }
+    }
+
+    return { success: true, proposal: result, commissionProcessed, commissionError, commissionReceipt };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+// ─── Reject ───────────────────────────────────────────────────────────────────
+
+export async function rejectMonthlyProposal(data: {
+  proposalId: number;
+  reviewNote: string;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    const currentUser = await getCurrentUserWithRole();
+    if (!currentUser) throw new Error("Not authorized");
+    if (!data.reviewNote?.trim()) throw new Error("A review note is required to reject");
+
+    await (prisma as any).monthlyProposal.update({
+      where: { id: data.proposalId },
+      data: {
+        approvalStatus: "REJECTED",
+        reviewedAt:     new Date(),
+        reviewedBy:     currentUser.id,
+        reviewNote:     data.reviewNote,
+        updatedAt:      new Date(),
+      },
+    });
+
+    revalidatePath("/features/monthly-proposals");
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
 }
