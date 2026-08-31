@@ -392,33 +392,75 @@ export async function recordProposalPayment(input: RecordPaymentInput) {
   if (!payment)                    throw new Error("Payment slot not found");
   if (payment.paidAmount !== null) throw new Error("This installment is already paid");
 
-  await (prisma as any).monthlyProposalPayment.update({
-    where: { id: input.paymentId },
-    data: {
-      paidAmount:    input.paidAmount,
-      paidAt:        new Date(input.paidAt),
-      receiptNo:     input.receiptNo     || null,
-      paymentMethod: input.paymentMethod,
-      notes:         input.notes         || null,
-      recordedById:  user.member?.id     ?? null,
-      updatedAt:     new Date(),
+  // Fetch hierarchy IDs to update volumeAchieved
+  const proposal = await (prisma as any).monthlyProposal.findUnique({
+    where:  { id: payment.monthlyProposalId },
+    select: {
+      status: true, premium: true,
+      faId: true, fmId: true, bmId: true, rmId: true, zmId: true,
     },
   });
 
-  // Auto-complete if all slots paid
-  const unpaidCount = await (prisma as any).monthlyProposalPayment.count({
-    where: { monthlyProposalId: payment.monthlyProposalId, paidAmount: null },
-  });
-  const proposal = await (prisma as any).monthlyProposal.findUnique({
-    where:  { id: payment.monthlyProposalId },
-    select: { status: true },
-  });
-  if (unpaidCount === 0 && proposal?.status === "ACTIVE") {
-    await (prisma as any).monthlyProposal.update({
-      where: { id: payment.monthlyProposalId },
-      data:  { status: "COMPLETED", updatedAt: new Date() },
+  if (!proposal) throw new Error("Proposal not found");
+
+  const paidDate = new Date(input.paidAt);
+  const year  = paidDate.getFullYear();
+  const month = paidDate.getMonth() + 1;
+
+  // All unique hierarchy member IDs
+  const hierarchyIds = [
+    proposal.faId, proposal.fmId, proposal.bmId,
+    proposal.rmId, proposal.zmId,
+  ].filter((id): id is number => id !== null && id !== undefined);
+  const uniqueIds = [...new Set(hierarchyIds)];
+
+  await (prisma as any).$transaction(async (tx: any) => {
+    // 1. Mark slot as paid
+    await tx.monthlyProposalPayment.update({
+      where: { id: input.paymentId },
+      data: {
+        paidAmount:    input.paidAmount,
+        paidAt:        paidDate,
+        receiptNo:     input.receiptNo     || null,
+        paymentMethod: input.paymentMethod,
+        notes:         input.notes         || null,
+        recordedById:  user.member?.id     ?? null,
+        updatedAt:     new Date(),
+      },
     });
-  }
+
+    // 2. Increment volumeAchieved for all hierarchy members in payment month
+    //    Uses actual paidAmount (not proposal.premium) to support partial payments
+    if (uniqueIds.length > 0) {
+      await Promise.all(
+        uniqueIds.map((memberId: number) =>
+          tx.monthlyPayroll.upsert({
+            where:  { memberId_year_month: { memberId, year, month } },
+            update: { volumeAchieved: { increment: input.paidAmount } },
+            create: {
+              memberId,
+              year,
+              month,
+              basicSalaryPermanent: 0,
+              monthlyTarget:        0,
+              volumeAchieved:       input.paidAmount,
+            },
+          })
+        )
+      );
+    }
+
+    // 3. Auto-complete if all slots paid
+    const unpaidCount = await tx.monthlyProposalPayment.count({
+      where: { monthlyProposalId: payment.monthlyProposalId, paidAmount: null },
+    });
+    if (unpaidCount === 0 && proposal.status === "ACTIVE") {
+      await tx.monthlyProposal.update({
+        where: { id: payment.monthlyProposalId },
+        data:  { status: "COMPLETED", updatedAt: new Date() },
+      });
+    }
+  });
 
   revalidatePath(`/features/monthly-proposals/${payment.monthlyProposalId}/payments`);
   revalidatePath(`/features/monthly-proposals/${payment.monthlyProposalId}`);
@@ -435,31 +477,63 @@ export async function reverseProposalPayment(paymentId: number) {
 
   const payment = await (prisma as any).monthlyProposalPayment.findUnique({
     where:  { id: paymentId },
-    select: { id: true, paidAmount: true, monthlyProposalId: true },
+    select: { id: true, paidAmount: true, paidAt: true, monthlyProposalId: true },
   });
 
   if (!payment)                    throw new Error("Payment not found");
   if (payment.paidAmount === null) throw new Error("This installment is not paid");
 
-  await (prisma as any).monthlyProposalPayment.update({
-    where: { id: paymentId },
-    data: {
-      paidAmount: null, paidAt: null, receiptNo: null,
-      paymentMethod: null, notes: null, recordedById: null,
-      updatedAt: new Date(),
-    },
-  });
-
   const proposal = await (prisma as any).monthlyProposal.findUnique({
     where:  { id: payment.monthlyProposalId },
-    select: { status: true },
+    select: {
+      status: true,
+      faId: true, fmId: true, bmId: true, rmId: true, zmId: true,
+    },
   });
-  if (proposal?.status === "COMPLETED") {
-    await (prisma as any).monthlyProposal.update({
-      where: { id: payment.monthlyProposalId },
-      data:  { status: "ACTIVE", updatedAt: new Date() },
+  if (!proposal) throw new Error("Proposal not found");
+
+  // Use original paidAt to decrement from the correct month
+  const paidDate = payment.paidAt ? new Date(payment.paidAt) : new Date();
+  const year  = paidDate.getFullYear();
+  const month = paidDate.getMonth() + 1;
+
+  const hierarchyIds = [
+    proposal.faId, proposal.fmId, proposal.bmId,
+    proposal.rmId, proposal.zmId,
+  ].filter((id): id is number => id !== null && id !== undefined);
+  const uniqueIds = [...new Set(hierarchyIds)];
+
+  await (prisma as any).$transaction(async (tx: any) => {
+    // 1. Clear payment slot
+    await tx.monthlyProposalPayment.update({
+      where: { id: paymentId },
+      data: {
+        paidAmount: null, paidAt: null, receiptNo: null,
+        paymentMethod: null, notes: null, recordedById: null,
+        updatedAt: new Date(),
+      },
     });
-  }
+
+    // 2. Decrement volumeAchieved for all hierarchy members in the original payment month
+    if (uniqueIds.length > 0) {
+      await Promise.all(
+        uniqueIds.map((memberId: number) =>
+          tx.monthlyPayroll.updateMany({
+            where: { memberId, year, month },
+            data:  { volumeAchieved: { decrement: Number(payment.paidAmount) } },
+          })
+        )
+      );
+    }
+
+    // 3. Revert COMPLETED → ACTIVE if needed
+    if (proposal.status === "COMPLETED") {
+      await tx.monthlyProposal.update({
+        where: { id: payment.monthlyProposalId },
+        data:  { status: "ACTIVE", updatedAt: new Date() },
+      });
+    }
+  });
 
   revalidatePath(`/features/monthly-proposals/${payment.monthlyProposalId}/payments`);
   revalidatePath(`/features/monthly-proposals/${payment.monthlyProposalId}`);

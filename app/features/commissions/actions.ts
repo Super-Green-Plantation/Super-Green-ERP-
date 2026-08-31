@@ -133,3 +133,153 @@ export async function getUplineChain(advisorRank: number, branchId: number) {
 
   return all.sort((a, b) => (a.position?.rank ?? 0) - (b.position?.rank ?? 0));
 }
+// ─── Monthly Proposal Commission actions ──────────────────────────────────────
+
+export async function getMPCommissions() {
+  try {
+    const rows = await prisma.monthlyProposalCommission.findMany({
+      include: {
+        MonthlyProposal: {
+          select: {
+            id: true,
+            proposalFormNo: true,
+            planType: true,
+            applicantName: true,
+            premium: true,
+            frequency: true,
+            commissionsProcessed: true,
+            branchId: true,
+            branch: { select: { name: true } },
+            client: { select: { fullName: true, nic: true } },
+          },
+        },
+        Member: {
+          select: {
+            nameWithInitials: true,
+            empNo: true,
+            position: { select: { title: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    return serializeData(rows);
+  } catch (error) {
+    console.error("Error fetching MP commissions:", error);
+    throw new Error("Failed to fetch monthly proposal commissions");
+  }
+}
+
+export async function getMPCommissionsByBranch(branchId: number) {
+  try {
+    const rows = await (prisma as any).monthlyProposalCommission.findMany({
+      where: { branchId },
+      include: {
+        monthlyProposal: {
+          select: {
+            id: true,
+            proposalFormNo: true,
+            planType: true,
+            applicantName: true,
+            premium: true,
+            frequency: true,
+            commissionsProcessed: true,
+            branchId: true,
+            branch: { select: { name: true } },
+            client: { select: { fullName: true, nic: true } },
+          },
+        },
+        member: {
+          select: {
+            nameWithInitials: true,
+            empNo: true,
+            position: { select: { title: true } },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+    return serializeData(rows);
+  } catch (error) {
+    console.error("Error fetching MP commissions by branch:", error);
+    throw new Error("Failed to fetch monthly proposal commissions by branch");
+  }
+}
+
+export async function undoMPCommissions(proposalId: number): Promise<{
+  success: boolean;
+  reversed?: number;
+  error?: string;
+}> {
+  try {
+    const result = await (prisma as any).$transaction(async (tx: any) => {
+      const proposal = await tx.monthlyProposal.findUnique({
+        where:  { id: proposalId },
+        select: { id: true, commissionsProcessed: true },
+      });
+
+      if (!proposal) throw new Error("Proposal not found");
+      if (!proposal.commissionsProcessed) return { alreadyUndone: true, reversed: 0 };
+
+      const existing = await tx.monthlyProposalCommission.findMany({
+        where: {
+          monthlyProposalId: proposalId,
+          type: { not: "REVERSED" },
+        },
+        select: { id: true, memberEmpNo: true, amount: true, type: true, month: true, year: true, branchId: true },
+      });
+
+      if (existing.length === 0) {
+        await tx.monthlyProposal.update({
+          where: { id: proposalId },
+          data:  { commissionsProcessed: false, updatedAt: new Date() },
+        });
+        return { alreadyUndone: false, reversed: 0 };
+      }
+
+      // Decrement totalCommission for each affected member
+      const groupedByEmpNo = new Map<string, number>();
+      for (const c of existing) {
+        groupedByEmpNo.set(c.memberEmpNo, (groupedByEmpNo.get(c.memberEmpNo) ?? 0) + c.amount);
+      }
+      for (const [empNo, totalAmount] of groupedByEmpNo.entries()) {
+        await tx.member.update({
+          where: { empNo },
+          data:  { totalCommission: { decrement: totalAmount } },
+        });
+      }
+
+      // Delete original commission rows
+      await tx.monthlyProposalCommission.deleteMany({
+        where: { monthlyProposalId: proposalId, type: { not: "REVERSED" } },
+      });
+
+      // Create REVERSED audit entries
+      const reversedRows = existing.map((c: any) => ({
+        monthlyProposalId: proposalId,
+        memberEmpNo:       c.memberEmpNo,
+        amount:            -Math.abs(c.amount),
+        type:              "REVERSED" as const,
+        refNumber:         `REV-MPC-${Date.now()}-${c.id}`,
+        branchId:          c.branchId,
+        month:             c.month,
+        year:              c.year,
+      }));
+
+      await tx.monthlyProposalCommission.createMany({ data: reversedRows });
+
+      // Mark commissions as unprocessed
+      await tx.monthlyProposal.update({
+        where: { id: proposalId },
+        data:  { commissionsProcessed: false, updatedAt: new Date() },
+      });
+
+      return { alreadyUndone: false, reversed: existing.length };
+    });
+
+    return { success: true, reversed: result.reversed };
+  } catch (err: any) {
+    console.error("[undoMPCommissions] error:", err);
+    return { success: false, error: err.message ?? "Something went wrong" };
+  }
+}
