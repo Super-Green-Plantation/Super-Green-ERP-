@@ -33,13 +33,14 @@ const TYPE_STYLES: Record<string, string> = {
 };
 
 const PLAN_BADGE: Record<string, string> = {
-  CHILD:   "bg-purple-100 text-purple-700 border-purple-200",
-  MARGE:   "bg-blue-100 text-blue-700 border-blue-200",
-  PENSION: "bg-amber-100 text-amber-700 border-amber-200",
+  CHILD:      "bg-purple-100 text-purple-700 border-purple-200",
+  MARGE:      "bg-blue-100 text-blue-700 border-blue-200",
+  PENSION:    "bg-amber-100 text-amber-700 border-amber-200",
+  RAN_ASWANU: "bg-green-100 text-green-700 border-green-200",
 };
 
 const PLAN_LABEL: Record<string, string> = {
-  CHILD: "Child Plan", MARGE: "Marriage Plan", PENSION: "Retirement Plan",
+  CHILD: "Child Plan", MARGE: "Marriage Plan", PENSION: "Retirement Plan", RAN_ASWANU: "Ran Aswanu",
 };
 
 const FREQ_LABEL: Record<string, string> = {

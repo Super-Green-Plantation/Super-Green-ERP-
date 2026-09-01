@@ -10,7 +10,7 @@ import { processMonthlyProposalCommissions } from "@/app/features/commissions/pr
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-export type MonthlyPlanType = "CHILD" | "MARGE" | "PENSION";
+export type MonthlyPlanType = "CHILD" | "MARGE" | "PENSION" | "RAN_ASWANU";
 export type MonthlyFrequency = "MONTHLY" | "QUARTERLY" | "SEMI_ANNUAL" | "ANNUAL";
 
 export interface CreateMonthlyProposalInput {
@@ -302,8 +302,9 @@ const FREQ_INTERVAL_MONTHS: Record<MonthlyFrequency, number> = {
 };
 
 function getPayingYears(planType: MonthlyPlanType, duration: number): number {
-  if (planType === "CHILD") return 3;
-  if (planType === "MARGE") return 5;
+  if (planType === "CHILD")      return 3;
+  if (planType === "RAN_ASWANU") return 3;
+  if (planType === "MARGE")      return 5;
   return duration;
 }
 

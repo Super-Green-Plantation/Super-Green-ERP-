@@ -327,7 +327,7 @@ export default function InvestmentsPage() {
               value={searchText}
               onChange={e => setSearchText(e.target.value)}
               type="text"
-              placeholder="Search by NIC, Proposal No. or Ref No."
+              placeholder="Search by Client Name, NIC, Proposal No. or Ref No."
               className="w-full border-none bg-transparent py-3 pl-10 pr-10 text-sm font-medium text-foreground outline-none placeholder:text-muted-foreground focus:ring-0"
             />
             {searchText && (

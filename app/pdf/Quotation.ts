@@ -21,7 +21,7 @@ async function loadLogoBase64(): Promise<string | null> {
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-type PlanType = "CHILD" | "MARGE" | "PENSION";
+type PlanType = "CHILD" | "MARGE" | "PENSION" | "RAN_ASWANU";
 type PaymentFrequency = "MONTHLY" | "QUARTERLY" | "SEMI_ANNUAL" | "ANNUAL";
 
 export interface QuotationPDFData {
@@ -87,13 +87,14 @@ const FREQ_PERIODS: Record<PaymentFrequency, number> = {
 };
 
 const PLAN_LABELS: Record<PlanType, string> = {
-  CHILD:   "Child Plan (Ran Aswanu)",
-  MARGE:   "Marge Plan",
-  PENSION: "Pension Plan",
+  CHILD:      "Child Plan (Ran Aswanu)",
+  MARGE:      "Marge Plan",
+  PENSION:    "Pension Plan",
+  RAN_ASWANU: "Ran Aswanu",
 };
 
 function getPayingYears(planType: PlanType, duration: number) {
-  if (planType === "CHILD") return 3;
+  if (planType === "CHILD" || planType === "RAN_ASWANU") return 3;
   if (planType === "MARGE") return 5;
   return duration;
 }
@@ -167,6 +168,26 @@ const PLAN_CONDITIONS: Record<PlanType, { title: string; conditions: string[]; m
       "If investor withdraws after completing 4 years: 12% interest on the amount invested after 5 years.",
       "If investor withdraws after completing 5 years: 15% interest on the amount invested.",
       "If investor withdraws after completing 6 years: 21% interest on the amount invested.",
+    ],
+    maturityRates: [
+      "After maturity with Monthly payments: 15% interest on invested amount.",
+      "After maturity with Quarterly payments: 18% interest on invested amount.",
+      "After maturity with Semi-Annual payments: 21% interest on invested amount.",
+      "After maturity with Annual payments: 24% interest on invested amount.",
+    ],
+  },
+  RAN_ASWANU: {
+    title: "Child Plan (Super Green Ran Aswanu) - Terms & Conditions",
+    conditions: [
+      "Available durations: 6 Year, 9 Year, and 12 Year plans.",
+      "Paying term is 3 years from the start of the plan.",
+      "Minimum premiums: Monthly Rs. 15,000 | Quarterly Rs. 50,000 | Semi-Annual Rs. 100,000 | Annual Rs. 200,000.",
+      "If payments stop before completing 1 year: 5% interest on invested amount paid after 3 years (monthly & quarterly plans).",
+      "If payments stop after completing 1 year: 8% interest on invested amount paid after 3 years (monthly & quarterly plans).",
+      "If payments stop after completing 2 years: 10% interest on invested amount paid after 3 years (monthly & quarterly plans).",
+      "If investor withdraws after completing 3 years: 12% interest on invested amount.",
+      "If investor withdraws after completing 4 years: 15% interest on invested amount.",
+      "If investor withdraws after completing 5 years: 21% interest on invested amount.",
     ],
     maturityRates: [
       "After maturity with Monthly payments: 15% interest on invested amount.",

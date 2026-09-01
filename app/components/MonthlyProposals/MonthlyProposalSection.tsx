@@ -32,7 +32,7 @@ import AddMonthlyProposalModal from "@/app/components/MonthlyProposals/AddMonthl
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type MonthlyPlanType = "CHILD" | "MARGE" | "PENSION";
+type MonthlyPlanType = "CHILD" | "MARGE" | "PENSION" | "RAN_ASWANU";
 type MonthlyFrequency = "MONTHLY" | "QUARTERLY" | "SEMI_ANNUAL" | "ANNUAL";
 
 interface MonthlyProposal {
@@ -57,9 +57,10 @@ interface MonthlyProposal {
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const PLAN_META: Record<MonthlyPlanType, { label: string; icon: React.ReactNode; color: string }> = {
-  CHILD:   { label: "Child Plan",     icon: <Baby className="w-3.5 h-3.5" />,      color: "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300" },
-  MARGE:   { label: "Marriage Plan",  icon: <TrendingUp className="w-3.5 h-3.5" />, color: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300" },
-  PENSION: { label: "Retirement Plan",icon: <Landmark className="w-3.5 h-3.5" />,  color: "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300" },
+  CHILD:      { label: "Child Plan",      icon: <Baby className="w-3.5 h-3.5" />,      color: "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300" },
+  MARGE:      { label: "Marriage Plan",   icon: <TrendingUp className="w-3.5 h-3.5" />, color: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300" },
+  PENSION:    { label: "Retirement Plan", icon: <Landmark className="w-3.5 h-3.5" />,  color: "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300" },
+  RAN_ASWANU: { label: "Ran Aswanu",      icon: <TrendingUp className="w-3.5 h-3.5" />, color: "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300" },
 };
 
 const FREQ_SHORT: Record<MonthlyFrequency, string> = {

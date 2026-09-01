@@ -7,7 +7,7 @@ import { createQuotation } from "@/app/features/quotations/actions";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-type PlanType = "CHILD" | "MARGE" | "PENSION";
+type PlanType = "CHILD" | "MARGE" | "PENSION" | "RAN_ASWANU";
 type PaymentFrequency = "MONTHLY" | "QUARTERLY" | "SEMI_ANNUAL" | "ANNUAL";
 
 interface PlanConfig {
@@ -56,6 +56,19 @@ const PLANS: Record<PlanType, PlanConfig> = {
     minPremium: { MONTHLY: 15000, QUARTERLY: 50000, SEMI_ANNUAL: 100000, ANNUAL: 200000 },
     commissionRate: { MONTHLY: 2.5, QUARTERLY: 5, SEMI_ANNUAL: 7, ANNUAL: 8 },
     maturityRates: { MONTHLY: 0, QUARTERLY: 0, SEMI_ANNUAL: 0, ANNUAL: 0 },
+  },
+  RAN_ASWANU: {
+    label: "Ran Aswanu",
+    payingTerm: 3,
+    durations: [6, 9, 12],
+    minPremium: { MONTHLY: 15000, QUARTERLY: 50000, SEMI_ANNUAL: 100000, ANNUAL: 200000 },
+    commissionRate: { MONTHLY: 2.5, QUARTERLY: 5, SEMI_ANNUAL: 7, ANNUAL: 8 },
+    maturityRates: { MONTHLY: 15, QUARTERLY: 18, SEMI_ANNUAL: 21, ANNUAL: 24 },
+    earlyWithdrawalRates: [
+      { afterYears: 3, rate: 12 },
+      { afterYears: 4, rate: 15 },
+      { afterYears: 5, rate: 21 },
+    ],
   },
 };
 
@@ -270,7 +283,7 @@ const AddQuotationModal = ({ isOpen, onClose }: AddQuotationModalProps) => {
             <label className="block text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
               Plan Type
             </label>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {(Object.keys(PLANS) as PlanType[]).map((pt) => (
                 <button
                   key={pt}
@@ -282,7 +295,7 @@ const AddQuotationModal = ({ isOpen, onClose }: AddQuotationModalProps) => {
                       : "bg-muted/30 text-muted-foreground border-border hover:border-primary"
                   }`}
                 >
-                  {pt === "CHILD" ? "Child Plan" : pt === "MARGE" ? "Marge Plan" : "Pension Plan"}
+                  {{ CHILD: "Child Plan", MARGE: "Marge Plan", PENSION: "Pension Plan", RAN_ASWANU: "Ran Aswanu" }[pt]}
                 </button>
               ))}
             </div>

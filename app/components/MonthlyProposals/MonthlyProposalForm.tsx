@@ -14,6 +14,7 @@ const frequencies: { value: MonthlyFrequency; label: string; min: number; period
 ];
 const plans: Record<MonthlyPlanType, { label: string; durations: number[]; payingYears: number }> = {
   CHILD: { label: "Child Plan", durations: [6, 9, 12], payingYears: 3 },
+  RAN_ASWANU: { label: "RAN ASWANU", durations: [6, 9, 12], payingYears: 3 },
   MARGE: { label: "Marriage Plan", durations: [5, 10, 15], payingYears: 5 },
   PENSION: { label: "Retirement Plan", durations: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], payingYears: 0 },
 };

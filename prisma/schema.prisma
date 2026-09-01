@@ -1012,6 +1012,7 @@ enum QuotationPlanType {
   CHILD
   MARGE
   PENSION
+  RAN_ASWANU
 }
 
 enum QuotationFrequency {
@@ -1057,6 +1058,7 @@ enum MonthlyPlanType {
   CHILD
   MARGE
   PENSION
+  RAN_ASWANU
 }
 
 enum MonthlyFrequency {

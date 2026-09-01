@@ -869,6 +869,7 @@ export async function searchInvestments(
 
   let whereCondition: any = {
     OR: [
+      { client: { fullName: { contains: searchText, mode: "insensitive" } } },
       { client: { nic: { contains: searchText, mode: "insensitive" } } },
       { proposalFormNo: { contains: searchText, mode: "insensitive" } },
       { refNumber: { contains: searchText, mode: "insensitive" } },

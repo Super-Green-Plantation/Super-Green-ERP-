@@ -64,6 +64,19 @@ const PLAN_META = {
     hasChildDetails: false,
     nomineeSections: 4,
   },
+  RAN_ASWANU: {
+    label: "Ran Aswanu",
+    sinhala: "රන් අස්වනු ආයෝජන සැලැස්ම",
+    icon: <TrendingUp className="w-4 h-4" />,
+    payingTerm: 3 as number,
+    durations: [6, 9, 12] as number[],
+    retirementAges: [] as number[],
+    hasGender: true,
+    hasMaritalStatus: true,
+    hasBankDetails: true,
+    hasChildDetails: false,
+    nomineeSections: 4,
+  },
 } as const;
 
 // ─── Payment frequencies ──────────────────────────────────────────────────────
@@ -399,7 +412,7 @@ const AddMonthlyProposalModal = ({ isOpen, onClose, clientId, lockedClient, onSu
               </div>
 
               {/* DOB — PENSION has it; CHILD form does NOT; MARGE has it */}
-              {(planType === "PENSION" || planType === "MARGE") && (
+              {(planType === "PENSION" || planType === "MARGE" || planType === "RAN_ASWANU") && (
                 <div>
                   <label className={labelCls}>උපන් දිනය (Date of Birth)</label>
                   <input

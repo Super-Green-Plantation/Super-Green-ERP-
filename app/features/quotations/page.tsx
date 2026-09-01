@@ -14,6 +14,7 @@ import {
   TrendingUp,
   Landmark,
   Download,
+  Sparkles,
 } from "lucide-react";
 import { getQuotations, deleteQuotation } from "@/app/features/quotations/actions";
 import { generateQuotationPDF } from "@/app/pdf/Quotation";
@@ -21,7 +22,7 @@ import AddQuotationModal from "@/app/components/Quotations/AddQuotationModal";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type PlanType = "CHILD" | "MARGE" | "PENSION";
+type PlanType = "CHILD" | "MARGE" | "PENSION" | "RAN_ASWANU";
 type PaymentFrequency = "MONTHLY" | "QUARTERLY" | "SEMI_ANNUAL" | "ANNUAL";
 
 interface Quotation {
@@ -60,6 +61,11 @@ const PLAN_META: Record<PlanType, { label: string; icon: React.ReactNode; color:
     label: "Pension Plan",
     icon: <Landmark className="w-3.5 h-3.5" />,
     color: "bg-amber-100 text-amber-700",
+  },
+  RAN_ASWANU: {
+    label: "Ran Aswanu",
+    icon: <Sparkles className="w-3.5 h-3.5" />,
+    color: "bg-emerald-100 text-emerald-700",
   },
 };
 
