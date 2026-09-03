@@ -6,57 +6,14 @@ import { prisma } from "@/lib/prisma";
 import { serializeData } from "@/app/utils/serializers";
 import { revalidatePath } from "next/cache";
 import { logActivity } from "@/lib/logActivity";
-import { ActivityAction, ActivityEntity, Prisma } from "@prisma/client";
+import { ActivityAction, ActivityEntity } from "@prisma/client";
 import { getHierarchyEmpNosFromInvestment } from "../hr/salary/action";
-import { computeExcessCommission } from "@/lib/commissions/excess";
-import { resolvePositionTarget } from "@/lib/commissions/resolvePositionTarget";
 import { autoDetectInvestmentRate } from "@/lib/commissions/investmentRates";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 export async function generateCommissionRef() {
   return `COM-${Date.now()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
-}
-
-async function getPriorVolumeThisMonth(
-  tx: Prisma.TransactionClient,
-  advisorId: number,
-  year: number,
-  month: number,
-  excludeInvestmentId: number,
-) {
-  const startDate = new Date(Date.UTC(year, month - 1, 1));
-  const endDate   = new Date(Date.UTC(year, month, 1));
-  const result = await tx.investment.aggregate({
-    where: {
-      advisorId,
-      commissionsProcessed: true,
-      investmentDate: { gte: startDate, lt: endDate },
-      id: { not: excludeInvestmentId },
-    },
-    _sum: { amount: true },
-  });
-  return Number(result._sum.amount ?? 0);
-}
-
-/** Total approved investment volume for a given member (as FA) in a given month. */
-async function getTotalMonthlyVolume(
-  tx: Prisma.TransactionClient,
-  advisorId: number,
-  year: number,
-  month: number,
-) {
-  const startDate = new Date(Date.UTC(year, month - 1, 1));
-  const endDate   = new Date(Date.UTC(year, month, 1));
-  const result = await tx.investment.aggregate({
-    where: {
-      advisorId,
-      approvalStatus: "APPROVED",
-      investmentDate: { gte: startDate, lt: endDate },
-    },
-    _sum: { amount: true },
-  });
-  return Number(result._sum.amount ?? 0);
 }
 
 // ─── Feature 3: Auto-deactivation helpers ───────────────────────────────────
@@ -255,8 +212,6 @@ export async function processCommissions(data: {
     performedById: callerPerformedById,
   } = data;
 
-  const disabledSet = new Set(disabledEmpNos);
-
   try {
     const currentUser = callerPerformedById
       ? null
@@ -265,73 +220,13 @@ export async function processCommissions(data: {
 
     const advisor = await prisma.member.findUnique({
       where: { empNo },
-      include: {
-        position: {
-          include: { orc: true, salary: true, positionTargets: true },
-        },
-      },
+      select: { id: true, empNo: true, positionId: true, position: { select: { id: true } } },
     });
 
     if (!advisor) throw new ApiError("ADVISOR_NOT_FOUND", "Advisor not found", 404);
     if (!advisor.position) throw new ApiError("POSITION_MISSING", "Advisor has no position");
 
-    const isManagement = advisor.position.type === "MANAGEMENT";
-
-    if (!isManagement && advisor.status !== "PROBATION" && !advisor.position.salary) {
-      console.warn(`[commission] Position ${advisor.position.id} has no salary config — falling back to hardcoded rates for ${advisor.empNo}`);
-    }
-
-    // ── Resolve uplines from investment hierarchy snapshot ───────────────────
-    let uplines: any[] = [];
-    if (hierarchyEmpNos && hierarchyEmpNos.length > 0) {
-      uplines = await prisma.member.findMany({
-        where: { empNo: { in: hierarchyEmpNos } },
-        include: {
-          position: { include: { orc: true, salary: true } },
-          branches: { include: { branch: true } },
-        },
-      });
-      // Preserve rank order from caller's list
-      uplines.sort((a, b) =>
-        hierarchyEmpNos!.indexOf(a.empNo) - hierarchyEmpNos!.indexOf(b.empNo)
-      );
-    } else {
-      const inv = await prisma.investment.findUnique({
-        where: { id: investmentId },
-        select: { fmId: true, bmId: true, rmId: true, zmId: true, agmId: true, ccoId: true },
-      });
-      const savedIds = [
-        inv?.fmId, inv?.bmId, inv?.rmId, inv?.zmId, inv?.agmId, inv?.ccoId,
-      ].filter((id): id is number => id !== null && id !== undefined);
-      const uniqueSavedIds = [...new Set(savedIds)];
-      if (uniqueSavedIds.length > 0) {
-        uplines = await prisma.member.findMany({
-          where: { id: { in: uniqueSavedIds } },
-          include: {
-            position: { include: { orc: true, salary: true } },
-            branches: { include: { branch: true } },
-          },
-        });
-        uplines.sort((a, b) => uniqueSavedIds.indexOf(a.id) - uniqueSavedIds.indexOf(b.id));
-      }
-    }
-
-    // Chairman = highest-rank upline (last in ordered list)
-    // Fixed ORC: totalMonthlyVolume × 2% instead of per-investment rate
-    const CHAIRMAN_ORC_RATE = 0.02;
-    const chairmanUpline = uplines.length > 0 ? uplines[uplines.length - 1] : null;
-
-    const manualMembers =
-      manualEmpNos.length > 0
-        ? await prisma.member.findMany({
-          where: { empNo: { in: manualEmpNos } },
-          include: { position: { include: { orc: true, salary: true } } },
-        })
-        : [];
-
     const result = await prisma.$transaction(async (tx) => {
-      const createdCommissions: any[] = [];
-
       const investment = await tx.investment.findUnique({ where: { id: investmentId } });
       if (!investment) throw new ApiError("INVESTMENT_NOT_FOUND", "Investment not found", 404);
 
@@ -344,10 +239,8 @@ export async function processCommissions(data: {
       }
 
       const investmentDate = new Date(investment.investmentDate);
-      const year  = investmentDate.getFullYear();
-      const month = investmentDate.getMonth() + 1;
 
-      // ── Feature 2: Auto-set rate to 40% if >= 500K ──────────────────────
+      // Auto-set rate to 40% if >= 500K (unchanged — this is rate detection, not commission).
       const currentRates: number[] = Array.isArray(investment.investmentRates)
         ? (investment.investmentRates as any[]).map(Number)
         : [];
@@ -360,42 +253,8 @@ export async function processCommissions(data: {
         });
       }
 
-      // ── Personal commission ──────────────────────────────────────────────
-      // Rate decision is based on the advisor's TOTAL personal investment
-      // volume for the month (all investments where faId = advisor.id,
-      // including the current one), not the single investment amount.
-      // This ensures that if an FA's cumulative monthly volume crosses the
-      // 500K threshold, every investment in that month gets the higher rate.
-      const monthStart = new Date(Date.UTC(year, month - 1, 1));
-      const monthEnd   = new Date(Date.UTC(year, month, 1));
-
-      const monthlyInvestments = await tx.investment.findMany({
-        where: {
-          faId: advisor.id,
-          investmentDate: { gte: monthStart, lt: monthEnd },
-          status: "Active",
-        },
-        select: { amount: true, renewedFromId: true },
-      });
-      // Renewals count at 25% toward volume (consistent with payroll engine)
-      const totalMonthlyVolume = monthlyInvestments.reduce(
-        (s, inv) => s + (inv.renewedFromId ? Number(inv.amount) * 0.25 : Number(inv.amount)),
-        0,
-      );
-
-      const commThreshold = Number(advisor.position.salary?.commThreshold ?? 500000);
-      // Use total monthly volume for the threshold decision, not per-investment amount
-      const isHighRate    = totalMonthlyVolume >= commThreshold;
-      const isPermanentNonManagement = advisor.status === "PERMANENT" && !isManagement;
-
-      const commRate = isPermanentNonManagement
-        ? isHighRate
-          ? Number(advisor.position.salary?.commRateHigh ?? 0.08)
-          : Number(advisor.position.salary?.commRateLow  ?? 0.05)
-        : isHighRate ? 0.1 : 0.07;
-
-      const personalCommissionAmount = investment.amount * commRate;
-
+      // Approval-time: track volume only. Commission amounts are calculated
+      // once at month-end by runMonthEndCommissions.
       await tx.investment.update({
         where: { id: investmentId },
         data: { commissionsProcessed: true, advisorId: advisor.id },
@@ -404,139 +263,17 @@ export async function processCommissions(data: {
       const updatedAdvisor = await tx.member.update({
         where: { empNo },
         data: {
-          totalCommission: { increment: personalCommissionAmount },
           lastInvestmentAt: investmentDate,
           isActive: true,
           autoDeactivatedAt: null,
         },
       });
 
-      const personalCommissionRecord = await tx.commission.create({
-        data: {
-          investmentId,
-          memberEmpNo: empNo,
-          branchId,
-          amount: personalCommissionAmount,
-          type: "PERSONAL",
-          refNumber: await generateCommissionRef(),
-          month,
-          year,
-        },
-        include: { member: { include: { position: true } } },
-      });
-      createdCommissions.push(personalCommissionRecord);
-
-      // ── Excess commission ─────────────────────────────────────────────────
-      const positionTargetRow = resolvePositionTarget(advisor, year, month);
-      const target     = Number(positionTargetRow?.targetAmount ?? 0);
-      const excessRate = Number(positionTargetRow?.excessRate   ?? 0);
-
-      if (target > 0 && excessRate > 0) {
-        const priorVolume = await getPriorVolumeThisMonth(tx, advisor.id, year, month, investmentId);
-        const { excessCommission } = computeExcessCommission({
-          investmentAmount: investment.amount,
-          priorVolumeThisMonth: priorVolume,
-          target,
-          excessRate,
-        });
-
-        if (excessCommission > 0) {
-          await tx.member.update({
-            where: { empNo },
-            data: { totalCommission: { increment: excessCommission } },
-          });
-          const excessRecord = await tx.commission.create({
-            data: {
-              investmentId, memberEmpNo: empNo, branchId,
-              amount: excessCommission, type: "EXCESS",
-              refNumber: await generateCommissionRef(), month, year,
-            },
-            include: { member: { include: { position: true } } },
-          });
-          createdCommissions.push(excessRecord);
-        }
-      }
-
-      // ── Upline / ORC commissions ──────────────────────────────────────────
-      for (const upline of uplines) {
-        if (disabledSet.has(upline.empNo)) continue;
-        if (!upline.position?.orc) continue;
-
-        // ── Feature 1: Chairman gets monthly-volume-based rate ────────────
-        const isChairman = upline.empNo === chairmanUpline?.empNo;
-
-        let uplineAmount: number;
-
-        if (isChairman) {
-          const totalMonthlyVol = await getTotalMonthlyVolume(tx, advisor.id, year, month);
-          uplineAmount = totalMonthlyVol * CHAIRMAN_ORC_RATE;
-        } else {
-          const orcRate = upline.status === "PERMANENT"
-            ? Number(upline.position.orc.ratePermanent)
-            : Number(upline.position.orc.rateNonPermanent);
-          if (orcRate === 0) continue;
-          if (orcRate > 1) throw new ApiError("ORC_RATE_TOO_HIGH", "ORC rate too high");
-          uplineAmount = investment.amount * orcRate;
-        }
-
-        if (uplineAmount <= 0) continue;
-
-        // Reactivate auto-deactivated upline when they receive a commission
-        await tx.member.update({
-          where: { empNo: upline.empNo },
-          data: {
-            totalCommission: { increment: uplineAmount },
-            ...(upline.autoDeactivatedAt ? { isActive: true, autoDeactivatedAt: null } : {}),
-          },
-        });
-
-        const uplineRecord = await tx.commission.create({
-          data: {
-            investmentId, memberEmpNo: upline.empNo,
-            amount: uplineAmount,
-            type: isChairman ? "CHAIRMAN" : "UPLINE",
-            refNumber: await generateCommissionRef(),
-            branchId, month, year,
-          },
-          include: { member: { include: { position: true } } },
-        });
-        createdCommissions.push(uplineRecord);
-      }
-
-      // ── Manual members ────────────────────────────────────────────────────
-      for (const manual of manualMembers) {
-        if (disabledSet.has(manual.empNo)) continue;
-        if (!manual.position?.orc) continue;
-
-        const orcRate = manual.status === "PERMANENT"
-          ? Number(manual.position.orc.ratePermanent)
-          : Number(manual.position.orc.rateNonPermanent);
-        if (orcRate === 0) continue;
-        if (orcRate > 1) throw new ApiError("ORC_RATE_TOO_HIGH", "ORC rate too high");
-
-        const manualAmount = investment.amount * orcRate;
-        await tx.member.update({
-          where: { empNo: manual.empNo },
-          data: { totalCommission: { increment: manualAmount } },
-        });
-
-        const manualRecord = await tx.commission.create({
-          data: {
-            investmentId, memberEmpNo: manual.empNo,
-            amount: manualAmount, type: "UPLINE",
-            refNumber: await generateCommissionRef(),
-            branchId, month, year,
-          },
-          include: { member: { include: { position: true } } },
-        });
-        createdCommissions.push(manualRecord);
-      }
-
       return serializeData({
         alreadyProcessed: false,
         investment,
         advisor: updatedAdvisor,
-        commissions: createdCommissions,
+        commissions: [],
       });
     }, { timeout: 15000 });
 
