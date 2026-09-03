@@ -67,7 +67,7 @@ function ResultModal({ state, onClose }: { state: NonNullable<ModalState>; onClo
             <CheckCircle2 className="w-5 h-5 shrink-0" />
             <div className="flex-1">
               <p className="font-bold text-sm uppercase tracking-wide">Investment Approved</p>
-              <p className="text-xs text-emerald-200">Commissions processed successfully</p>
+              <p className="text-xs text-emerald-200">Volume recorded — commissions calculate at month-end payroll</p>
             </div>
             <button onClick={onClose} className="p-1 hover:bg-emerald-700 rounded-lg transition-colors">
               <X className="w-4 h-4" />
@@ -115,6 +115,7 @@ function ResultModal({ state, onClose }: { state: NonNullable<ModalState>; onClo
                 <span className="flex items-center gap-2">
                   <Receipt className="w-3.5 h-3.5" />
                   Commission Receipt ({state.commissions.length} line{state.commissions.length !== 1 ? "s" : ""})
+                  {state.commissions.length === 0 ? " — calculated at month-end" : ""}
                 </span>
                 {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </button>

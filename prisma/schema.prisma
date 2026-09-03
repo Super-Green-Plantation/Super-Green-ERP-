@@ -592,7 +592,7 @@ model Nominee {
 
 model Commission {
   id           Int            @id @default(autoincrement())
-  investmentId Int
+  investmentId Int?
   memberEmpNo  String
   amount       Float
   type         CommissionType
@@ -602,11 +602,12 @@ model Commission {
   month        Int
   year         Int
   Branch       Branch         @relation(fields: [branchId], references: [id])
-  investment   Investment     @relation(fields: [investmentId], references: [id], onDelete: Cascade)
+  investment   Investment?    @relation(fields: [investmentId], references: [id], onDelete: Cascade)
   member       Member         @relation(fields: [memberEmpNo], references: [empNo], onDelete: Cascade)
 
   @@index([investmentId])
   @@index([memberEmpNo])
+  @@index([year, month, branchId, type])
 }
 
 model Profit {
