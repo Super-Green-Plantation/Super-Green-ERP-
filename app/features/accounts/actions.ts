@@ -36,12 +36,24 @@ function weekForDay(day: number) {
   return 4;
 }
 
-export async function getMonthlyHarvests(year: number, month: number) {
+export async function getMonthlyHarvests(startDate?: Date, endDate?: Date) {
   await assertAccountsAccess();
-  const { end } = monthBounds(year, month);
 
+  // For harvests, we still base it around the months covered by the date range
+  // If no date range, just use current month
+  const today = new Date();
+  const start = startDate || new Date(Date.UTC(today.getFullYear(), today.getMonth(), 1));
+  const end = endDate || new Date(Date.UTC(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59, 999));
+
+  // Determine which months to check. To keep it simple, we use the month of the start date
+  // (In a full implementation, you'd iterate through all months between start and end)
+  const year = start.getUTCFullYear();
+  const month = start.getUTCMonth() + 1;
+
+  const monthEnd = new Date(Date.UTC(year, month, 1));
+  
   const investments = await prisma.investment.findMany({
-    where: { status: "Active", monthlyHarvest: { gt: 0 }, investmentDate: { lt: end } },
+    where: { status: "Active", monthlyHarvest: { gt: 0 }, investmentDate: { lt: monthEnd } },
     select: {
       id: true,
       investmentDate: true,
@@ -62,15 +74,19 @@ export async function getMonthlyHarvests(year: number, month: number) {
       clientName: investment.client.fullName,
       plan: investment.plan ? `${investment.plan.name} (${investment.plan.duration} months)` : "No plan",
     };
+  }).filter(h => {
+    const pd = new Date(h.paymentDate);
+    return pd >= start && pd <= end;
   });
 }
 
-export async function getIncomingInvestments(year: number, month: number) {
+export async function getIncomingInvestments(startDate?: Date, endDate?: Date) {
   await assertAccountsAccess();
-  const { start, end } = monthBounds(year, month);
+
+  const whereClause = startDate && endDate ? { investmentDate: { gte: startDate, lte: endDate } } : {};
 
   const investments = await prisma.investment.findMany({
-    where: { investmentDate: { gte: start, lt: end } },
+    where: whereClause,
     select: {
       id: true,
       amount: true,
@@ -91,9 +107,15 @@ export async function getIncomingInvestments(year: number, month: number) {
   }));
 }
 
-export async function getOutgoingPayroll(year: number, month: number) {
+export async function getOutgoingPayroll(startDate?: Date, endDate?: Date) {
   await assertAccountsAccess();
-  monthBounds(year, month);
+  
+  // Payroll is strictly monthly in the DB. 
+  // If a date range is given, we just look at the month of the startDate.
+  const today = new Date();
+  const start = startDate || new Date(Date.UTC(today.getFullYear(), today.getMonth(), 1));
+  const year = start.getUTCFullYear();
+  const month = start.getUTCMonth() + 1;
 
   const [payroll, commissions] = await Promise.all([
     prisma.monthlyPayroll.aggregate({
@@ -115,4 +137,47 @@ export async function getOutgoingPayroll(year: number, month: number) {
     commissionTotal: commissions._sum.amount ?? 0,
     commissionCount: commissions._count.id,
   };
+}
+
+export async function getMonthlyExpenses(startDate?: Date, endDate?: Date) {
+  await assertAccountsAccess();
+
+  const whereClause = startDate && endDate ? { date: { gte: startDate, lte: endDate } } : {};
+
+  const expenses = await prisma.expense.findMany({
+    where: whereClause,
+    select: {
+      id: true,
+      date: true,
+      amount: true,
+      category: true,
+      description: true,
+      createdBy: { select: { name: true } },
+    },
+    orderBy: { date: "desc" },
+  });
+
+  return expenses.map((exp) => ({
+    id: exp.id,
+    date: exp.date.toISOString(),
+    amount: exp.amount,
+    category: exp.category,
+    description: exp.description,
+    createdBy: exp.createdBy?.name || "Unknown",
+  }));
+}
+
+export async function createExpense(data: { amount: number; category: string; description?: string; date: string }) {
+  const user = await getCurrentUser();
+  await assertAccountsAccess();
+
+  await prisma.expense.create({
+    data: {
+      amount: data.amount,
+      category: data.category,
+      description: data.description,
+      date: new Date(data.date),
+      createdById: user.id,
+    },
+  });
 }

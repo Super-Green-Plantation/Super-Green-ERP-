@@ -86,9 +86,6 @@ export async function processMonthlyProposalCommissions(data: {
       );
     }
 
-    const chairmanUpline = uplines.length > 0 ? uplines[uplines.length - 1] : null;
-    const CHAIRMAN_ORC_RATE = 0.02;
-
     const result = await (prisma as any).$transaction(async (tx: any) => {
       const createdCommissions: any[] = [];
 
@@ -156,37 +153,17 @@ export async function processMonthlyProposalCommissions(data: {
       createdCommissions.push(personalRecord);
 
       // ── ORC / upline commissions ─────────────────────────────────────────
-      // Same ORC rates from position config as yearly investments.
-      // Chairman (top of hierarchy) gets CHAIRMAN_ORC_RATE × total MP volume
-      // this month for this FA. Others get their position ORC rate × premium.
+      // All uplines get their normal position ORC rate × premium.
+      // The AGM/COO is NOT the chairman — chairman is handled separately below.
       for (const upline of uplines) {
         if (!upline.position?.orc) continue;
 
-        const isChairman = upline.empNo === chairmanUpline?.empNo;
-        let uplineAmount: number;
+        const orcRate = upline.status === "PERMANENT"
+          ? Number(upline.position.orc.ratePermanent)
+          : Number(upline.position.orc.rateNonPermanent);
+        if (orcRate === 0) continue;
 
-        if (isChairman) {
-          // Chairman ORC = 2% of total approved MP premium volume this month for this FA
-          const monthStart = new Date(Date.UTC(year, month - 1, 1));
-          const monthEnd   = new Date(Date.UTC(year, month, 1));
-          const volResult  = await tx.monthlyProposal.aggregate({
-            where: {
-              faId:           advisor.id,
-              approvalStatus: "APPROVED",
-              createdAt:      { gte: monthStart, lt: monthEnd },
-            },
-            _sum: { premium: true },
-          });
-          const totalVol = Number(volResult._sum.premium ?? 0);
-          uplineAmount   = totalVol * CHAIRMAN_ORC_RATE;
-        } else {
-          const orcRate = upline.status === "PERMANENT"
-            ? Number(upline.position.orc.ratePermanent)
-            : Number(upline.position.orc.rateNonPermanent);
-          if (orcRate === 0) continue;
-          uplineAmount = commissionBase * orcRate;
-        }
-
+        const uplineAmount = commissionBase * orcRate;
         if (uplineAmount <= 0) continue;
 
         await tx.member.update({
@@ -202,7 +179,7 @@ export async function processMonthlyProposalCommissions(data: {
             monthlyProposalId: proposalId,
             memberEmpNo:       upline.empNo,
             amount:            uplineAmount,
-            type:              isChairman ? "CHAIRMAN" : "UPLINE",
+            type:              "UPLINE",
             refNumber:         await generateCommissionRef(),
             branchId,
             month,

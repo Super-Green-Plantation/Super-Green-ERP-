@@ -149,7 +149,23 @@ export async function undoCommissions(investmentId: number) {
     const result = await prisma.$transaction(async (tx) => {
       const investment = await tx.investment.findUnique({
         where: { id: investmentId },
-        select: { id: true, commissionsProcessed: true, refNumber: true, branchId: true },
+        select: {
+          id: true,
+          commissionsProcessed: true,
+          refNumber: true,
+          branchId: true,
+          amount: true,
+          investmentDate: true,
+          renewedFromId: true,
+          renewalCreditedAt: true,
+          faId: true,
+          fmId: true,
+          bmId: true,
+          rmId: true,
+          zmId: true,
+          agmId: true,
+          ccoId: true,
+        },
       });
       if (!investment) throw new ApiError("NOT_FOUND", "Investment not found", 404);
       if (!investment.commissionsProcessed) {
@@ -187,25 +203,65 @@ export async function undoCommissions(investmentId: number) {
         });
       }
 
+      // ── Decrement volumeAchieved on MonthlyPayroll for all hierarchy members ──
+      // Mirrors what approveInvestmentWithHierarchyLog / renewInvestment wrote.
+      // Renewals credited amount × 0.25 in the renewal month; normal investments
+      // credited the full amount in the investment month.
+      const isRenewal = !!investment.renewedFromId && !!investment.renewalCreditedAt;
+      const volumeToRemove = isRenewal
+        ? Number(investment.amount) * 0.25
+        : Number(investment.amount);
+
+      const refDate = isRenewal
+        ? new Date(investment.renewalCreditedAt!)
+        : new Date(investment.investmentDate);
+      const volYear  = refDate.getFullYear();
+      const volMonth = refDate.getMonth() + 1;
+
+      const hierarchyMemberIds = [
+        investment.faId,
+        investment.fmId,
+        investment.bmId,
+        investment.rmId,
+        investment.zmId,
+        investment.agmId,
+        investment.ccoId,
+      ].filter((id): id is number => id !== null && id !== undefined);
+
+      const uniqueHierarchyIds = [...new Set(hierarchyMemberIds)];
+
+      await Promise.all(
+        uniqueHierarchyIds.map((memberId) =>
+          tx.monthlyPayroll.updateMany({
+            where: { memberId, year: volYear, month: volMonth },
+            data: { volumeAchieved: { decrement: volumeToRemove } },
+          })
+        )
+      );
+
       // Delete original commission rows
       await tx.commission.deleteMany({
         where: { investmentId, type: { not: "REVERSED" } },
       });
 
-      // Create REVERSED audit record (one per original commission)
-      const reversedRef = await generateCommissionRef();
-      await tx.commission.createMany({
-        data: existing.map((c) => ({
-          investmentId,
-          memberEmpNo: c.memberEmpNo,
-          amount: -c.amount,
-          type: "REVERSED" as const,
-          refNumber: `REV-${reversedRef}`,
-          branchId: investment.branchId,
-          month: c.month,
-          year: c.year,
-        })),
-      });
+      // Create REVERSED audit record (one per original commission).
+      // Each row needs its own unique refNumber — generateCommissionRef() uses
+      // Date.now() + random suffix so sequential calls within the same tx are safe.
+      for (const c of existing) {
+        const reversedRef = await generateCommissionRef();
+        await tx.commission.create({
+          data: {
+            investmentId,
+            memberEmpNo: c.memberEmpNo,
+            amount: -c.amount,
+            type: "REVERSED" as const,
+            refNumber: `REV-${reversedRef}`,
+            branchId: investment.branchId,
+            month: c.month,
+            year: c.year,
+          },
+        });
+      }
 
       // Reset commissionsProcessed
       await tx.investment.update({
@@ -315,11 +371,6 @@ export async function processCommissions(data: {
         uplines.sort((a, b) => uniqueSavedIds.indexOf(a.id) - uniqueSavedIds.indexOf(b.id));
       }
     }
-
-    // Chairman = highest-rank upline (last in ordered list)
-    // Fixed ORC: totalMonthlyVolume × 2% instead of per-investment rate
-    const CHAIRMAN_ORC_RATE = 0.02;
-    const chairmanUpline = uplines.length > 0 ? uplines[uplines.length - 1] : null;
 
     const manualMembers =
       manualEmpNos.length > 0
@@ -458,27 +509,19 @@ export async function processCommissions(data: {
       }
 
       // ── Upline / ORC commissions ──────────────────────────────────────────
+      // All uplines (FM → BM → RM → ZM → AGM → COO) receive their normal ORC
+      // rate on the investment amount. The COO is NOT the chairman.
       for (const upline of uplines) {
         if (disabledSet.has(upline.empNo)) continue;
         if (!upline.position?.orc) continue;
 
-        // ── Feature 1: Chairman gets monthly-volume-based rate ────────────
-        const isChairman = upline.empNo === chairmanUpline?.empNo;
+        const orcRate = upline.status === "PERMANENT"
+          ? Number(upline.position.orc.ratePermanent)
+          : Number(upline.position.orc.rateNonPermanent);
+        if (orcRate === 0) continue;
+        if (orcRate > 1) throw new ApiError("ORC_RATE_TOO_HIGH", "ORC rate too high");
 
-        let uplineAmount: number;
-
-        if (isChairman) {
-          const totalMonthlyVol = await getTotalMonthlyVolume(tx, advisor.id, year, month);
-          uplineAmount = totalMonthlyVol * CHAIRMAN_ORC_RATE;
-        } else {
-          const orcRate = upline.status === "PERMANENT"
-            ? Number(upline.position.orc.ratePermanent)
-            : Number(upline.position.orc.rateNonPermanent);
-          if (orcRate === 0) continue;
-          if (orcRate > 1) throw new ApiError("ORC_RATE_TOO_HIGH", "ORC rate too high");
-          uplineAmount = investment.amount * orcRate;
-        }
-
+        const uplineAmount = investment.amount * orcRate;
         if (uplineAmount <= 0) continue;
 
         // Reactivate auto-deactivated upline when they receive a commission
@@ -494,7 +537,7 @@ export async function processCommissions(data: {
           data: {
             investmentId, memberEmpNo: upline.empNo,
             amount: uplineAmount,
-            type: isChairman ? "CHAIRMAN" : "UPLINE",
+            type: "UPLINE",
             refNumber: await generateCommissionRef(),
             branchId, month, year,
           },

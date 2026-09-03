@@ -13,7 +13,7 @@ import { HierarchyState } from "./types";
 
 type CommissionLine = {
   id: number;
-  type: "PERSONAL" | "UPLINE" | "EXCESS";
+  type: "PERSONAL" | "UPLINE" | "EXCESS" | "CHAIRMAN";
   amount: number;
   member: {
     empNo: string;
@@ -40,14 +40,16 @@ function fmt(amount: number) {
 
 const TYPE_LABEL: Record<string, string> = {
   PERSONAL: "Personal",
-  UPLINE: "Upline / ORC",
-  EXCESS: "Excess",
+  UPLINE:   "Upline / ORC",
+  EXCESS:   "Excess",
+  CHAIRMAN: "Chairman",
 };
 
 const TYPE_COLOR: Record<string, string> = {
   PERSONAL: "bg-emerald-100 text-emerald-700",
   UPLINE:   "bg-blue-100 text-blue-700",
   EXCESS:   "bg-amber-100 text-amber-700",
+  CHAIRMAN: "bg-purple-100 text-purple-700",
 };
 
 // ─── Result Modal ──────────────────────────────────────────────────────────

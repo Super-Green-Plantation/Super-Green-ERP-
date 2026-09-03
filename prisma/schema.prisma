@@ -34,6 +34,7 @@ model Branch {
   members                   MemberBranch[]
   monthlyProposals          MonthlyProposal[]
   MonthlyProposalCommission MonthlyProposalCommission[]
+  expenses                  Expense[]
 }
 
 model Zone {
@@ -650,6 +651,20 @@ model MonthlyActivation {
   @@unique([memberId, year, month])
 }
 
+model Expense {
+  id          Int      @id @default(autoincrement())
+  date        DateTime @default(now())
+  amount      Float
+  category    String
+  description String?
+  branchId    Int?
+  branch      Branch?  @relation(fields: [branchId], references: [id])
+  createdById String   @db.Uuid
+  createdBy   User     @relation(fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 model User {
   role                  Role                    @default(EMPLOYEE)
   branchId              Int?
@@ -661,6 +676,7 @@ model User {
   ClientDocumentRequest ClientDocumentRequest[]
   member                Member?
   quotations            Quotation[]
+  expenses              Expense[]
 }
 
 model ClientDocumentRequest {
