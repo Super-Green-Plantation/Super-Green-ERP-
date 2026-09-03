@@ -3,21 +3,11 @@
 /**
  * processMonthlyProposalCommissions
  *
- * Commission rules (from Pension/Child/Marriage plan docx):
+ * Approval-time only: stamp commissionsProcessed, advisor lastInvestmentAt,
+ * and reactivate the FA. Personal / ORC amounts are calculated once at
+ * month-end by runMonthEndCommissions (MP premium is included in FA volume).
  *
- *   Frequency       | Min Premium  | Commission Rate
- *   ────────────────|──────────────|────────────────
- *   Monthly         | Rs. 15,000   | 2.5%
- *   Quarterly       | Rs. 50,000   | 5.0%
- *   Semi-Annual     | Rs. 100,000  | 7.0%
- *   Annual          | Rs. 200,000  | 8.0%
- *
- * Commission base  = proposal.premium (first installment amount)
- * Personal rate    = fixed by frequency (above) — no volume threshold
- * Excess           = NOT applicable for monthly proposals
- * ORC / upline     = same position-based ORC rates as yearly investments
- *
- * Place at: app/features/commissions/processMonthlyProposal.ts
+ * MonthlyPayroll.volumeAchieved is incremented by the approval action, not here.
  */
 
 import { prisma } from "@/lib/prisma";
@@ -25,45 +15,23 @@ import { ApiError } from "@/lib/error";
 import { serializeData } from "@/app/utils/serializers";
 import { revalidatePath } from "next/cache";
 
-// ─── Commission rates by frequency ───────────────────────────────────────────
-
-const FREQ_COMMISSION_RATE: Record<string, number> = {
-  MONTHLY:     0.025,  // 2.5%
-  QUARTERLY:   0.05,   // 5%
-  SEMI_ANNUAL: 0.07,   // 7%
-  ANNUAL:      0.08,   // 8%
-};
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-async function generateCommissionRef(): Promise<string> {
-  return `MPC-${Date.now()}-${Math.random().toString(36).slice(2, 7).toUpperCase()}`;
-}
-
-// ─── Main ─────────────────────────────────────────────────────────────────────
-
 export async function processMonthlyProposalCommissions(data: {
   proposalId:       number;
-  empNo:            string;           // FA empNo
+  empNo:            string;
   branchId:         number;
-  hierarchyEmpNos?: string[];         // [fmEmpNo, bmEmpNo, rmEmpNo, zmEmpNo] in rank order
+  hierarchyEmpNos?: string[];
   performedById?:   number;
 }) {
   const {
     proposalId,
     empNo,
-    branchId,
-    hierarchyEmpNos = [],
   } = data;
 
   try {
-    // ── Resolve FA ───────────────────────────────────────────────────────────
     const advisor = await prisma.member.findUnique({
       where:   { empNo },
       include: {
-        position: {
-          include: { orc: true },
-        },
+        position: { select: { id: true } },
       },
     });
 
@@ -86,10 +54,10 @@ export async function processMonthlyProposalCommissions(data: {
       );
     }
 
-    const result = await (prisma as any).$transaction(async (tx: any) => {
-      const createdCommissions: any[] = [];
+    const chairmanUpline = uplines.length > 0 ? uplines[uplines.length - 1] : null;
+    const CHAIRMAN_ORC_RATE = 0.02;
 
-      // ── Fetch proposal ───────────────────────────────────────────────────
+    const result = await (prisma as any).$transaction(async (tx: any) => {
       const proposal = await tx.monthlyProposal.findUnique({
         where:  { id: proposalId },
         select: {
@@ -108,26 +76,16 @@ export async function processMonthlyProposalCommissions(data: {
         return serializeData({ alreadyProcessed: true, commissions: existing });
       }
 
-      // ── Commission base and rate ─────────────────────────────────────────
-      const commissionBase = Number(proposal.premium);
-      const commRate       = FREQ_COMMISSION_RATE[proposal.frequency] ?? 0.025;
-      const personalAmount = commissionBase * commRate;
-
       const approvalDate = new Date();
-      const year  = approvalDate.getFullYear();
-      const month = approvalDate.getMonth() + 1;
 
-      // ── Mark commissions processed ───────────────────────────────────────
       await tx.monthlyProposal.update({
         where: { id: proposalId },
         data:  { commissionsProcessed: true, updatedAt: new Date() },
       });
 
-      // ── FA totalCommission + lastInvestmentAt ────────────────────────────
       const updatedAdvisor = await tx.member.update({
         where: { empNo },
         data: {
-          totalCommission:   { increment: personalAmount },
           lastInvestmentAt:  approvalDate,
           isActive:          true,
           autoDeactivatedAt: null,
@@ -153,17 +111,37 @@ export async function processMonthlyProposalCommissions(data: {
       createdCommissions.push(personalRecord);
 
       // ── ORC / upline commissions ─────────────────────────────────────────
-      // All uplines get their normal position ORC rate × premium.
-      // The AGM/COO is NOT the chairman — chairman is handled separately below.
+      // Same ORC rates from position config as yearly investments.
+      // Chairman (top of hierarchy) gets CHAIRMAN_ORC_RATE × total MP volume
+      // this month for this FA. Others get their position ORC rate × premium.
       for (const upline of uplines) {
         if (!upline.position?.orc) continue;
 
-        const orcRate = upline.status === "PERMANENT"
-          ? Number(upline.position.orc.ratePermanent)
-          : Number(upline.position.orc.rateNonPermanent);
-        if (orcRate === 0) continue;
+        const isChairman = upline.empNo === chairmanUpline?.empNo;
+        let uplineAmount: number;
 
-        const uplineAmount = commissionBase * orcRate;
+        if (isChairman) {
+          // Chairman ORC = 2% of total approved MP premium volume this month for this FA
+          const monthStart = new Date(Date.UTC(year, month - 1, 1));
+          const monthEnd   = new Date(Date.UTC(year, month, 1));
+          const volResult  = await tx.monthlyProposal.aggregate({
+            where: {
+              faId:           advisor.id,
+              approvalStatus: "APPROVED",
+              createdAt:      { gte: monthStart, lt: monthEnd },
+            },
+            _sum: { premium: true },
+          });
+          const totalVol = Number(volResult._sum.premium ?? 0);
+          uplineAmount   = totalVol * CHAIRMAN_ORC_RATE;
+        } else {
+          const orcRate = upline.status === "PERMANENT"
+            ? Number(upline.position.orc.ratePermanent)
+            : Number(upline.position.orc.rateNonPermanent);
+          if (orcRate === 0) continue;
+          uplineAmount = commissionBase * orcRate;
+        }
+
         if (uplineAmount <= 0) continue;
 
         await tx.member.update({
@@ -179,7 +157,7 @@ export async function processMonthlyProposalCommissions(data: {
             monthlyProposalId: proposalId,
             memberEmpNo:       upline.empNo,
             amount:            uplineAmount,
-            type:              "UPLINE",
+            type:              isChairman ? "CHAIRMAN" : "UPLINE",
             refNumber:         await generateCommissionRef(),
             branchId,
             month,
@@ -196,7 +174,7 @@ export async function processMonthlyProposalCommissions(data: {
         alreadyProcessed: false,
         proposal,
         advisor: updatedAdvisor,
-        commissions: createdCommissions,
+        commissions: [],
       });
     }, { timeout: 15000 });
 

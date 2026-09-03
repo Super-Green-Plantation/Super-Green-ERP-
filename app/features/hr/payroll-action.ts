@@ -6,6 +6,7 @@ import { calculatePayroll, type PayrollCategory } from "./payroll-utils";
 import { resolvePositionTarget } from "@/lib/commissions/resolvePositionTarget";
 import { applyAdvanceDeductions } from "./deduction/action";
 import { previewAdvanceDeductions } from "./deduction/previewAdvanceDeductions";
+import { runMonthEndCommissions } from "@/app/features/commissions/runMonthEndCommissions";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -244,9 +245,6 @@ export async function getPayrollPreview(
   month: number,
   volumes: Record<number, number> = {},
 ) {
-  const startDate = new Date(Date.UTC(year, month - 1, 1));
-  const endDate = new Date(Date.UTC(year, month, 1));
-
   const branchMembers = await prisma.memberBranch.findMany({
     where: { branchId, member: { channel: { not: "Micro" } } },
     include: {
@@ -260,9 +258,8 @@ export async function getPayrollPreview(
           commissions: {
             where: {
               type: "PERSONAL",
-              investment: {
-                investmentDate: { gte: startDate, lt: endDate },
-              },
+              year,
+              month,
             },
             select: { amount: true },
           },
@@ -293,8 +290,9 @@ export async function getPayrollPreview(
       const orcEarned = await prisma.commission.findMany({
         where: {
           memberEmpNo: member.empNo,
-          type: "UPLINE",
-          investment: { investmentDate: { gte: startDate, lt: endDate } },
+          type: { in: ["UPLINE", "CHAIRMAN"] },
+          year,
+          month,
         },
         select: { amount: true },
       }).then((rows) => rows.reduce((sum, c) => sum + Number(c.amount), 0));
@@ -303,7 +301,8 @@ export async function getPayrollPreview(
         where: {
           memberEmpNo: member.empNo,
           type: "EXCESS",
-          investment: { investmentDate: { gte: startDate, lt: endDate } },
+          year,
+          month,
         },
         select: { amount: true },
       }).then((rows) => rows.reduce((sum, c) => sum + Number(c.amount), 0));
@@ -429,8 +428,9 @@ export async function runMonthlyPayroll(
   volumes: Record<number, number>,
   force = false,
 ) {
-  const startDate = new Date(Date.UTC(year, month - 1, 1));
-  const endDate = new Date(Date.UTC(year, month, 1));
+  // Calculate PERSONAL / EXCESS / UPLINE / CHAIRMAN rows for this branch/month
+  // before summing them into payroll. Idempotent — no-ops if already run.
+  await runMonthEndCommissions(branchId, year, month);
 
   const branchMembers = await prisma.memberBranch.findMany({
     where: { branchId, member: { channel: { not: "Micro" } } },
@@ -446,7 +446,8 @@ export async function runMonthlyPayroll(
           commissions: {
             where: {
               type: "PERSONAL",
-              investment: { investmentDate: { gte: startDate, lt: endDate } },
+              year,
+              month,
             },
             select: { amount: true },
           },
@@ -485,8 +486,9 @@ export async function runMonthlyPayroll(
       const orcEarned = await prisma.commission.findMany({
         where: {
           memberEmpNo: member.empNo,
-          type: "UPLINE",
-          investment: { investmentDate: { gte: startDate, lt: endDate } },
+          type: { in: ["UPLINE", "CHAIRMAN"] },
+          year,
+          month,
         },
         select: { amount: true },
       }).then((rows) => rows.reduce((sum, c) => sum + Number(c.amount), 0));
@@ -495,7 +497,8 @@ export async function runMonthlyPayroll(
         where: {
           memberEmpNo: member.empNo,
           type: "EXCESS",
-          investment: { investmentDate: { gte: startDate, lt: endDate } },
+          year,
+          month,
         },
         select: { amount: true },
       }).then((rows) => rows.reduce((sum, c) => sum + Number(c.amount), 0));
