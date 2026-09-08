@@ -25,6 +25,7 @@ import {
   createInvestmentForExistingClient,
   updateInvestment,
   updateInvestmentDocuments,
+  approveInvestmentWithHierarchyLog,
 } from "@/app/features/investments/actions";
 import { useSessionUser } from "@/app/hooks/useSessionUser";
 import { FinancialPlan } from "@/app/types/FinancialPlan";
@@ -566,9 +567,32 @@ export default function CreateInvestmentForm({
         // Show the confirmed proposal number (server may have incremented it)
         const confirmedNo = res.investment?.proposalFormNo;
         if (confirmedNo) setProposalFormNo(confirmedNo);
-        toast.success(
-          `Investment created — Proposal No. ${confirmedNo ?? "assigned"}`
-        );
+
+        // ── Auto-approve if the logged-in user is management staff ────────
+        // Volume (MonthlyPayroll.volumeAchieved) is stamped inside
+        // approveInvestmentWithHierarchyLog, so no separate step needed.
+        if (isManager && res.investment?.id) {
+          const approveRes = await approveInvestmentWithHierarchyLog({
+            investmentId: res.investment.id,
+            faId:  hierarchy.faId  ?? null,
+            fmId:  hierarchy.fmId  ?? null,
+            bmId:  hierarchy.bmId  ?? null,
+            rmId:  hierarchy.rmId  ?? null,
+            zmId:  hierarchy.zmId  ?? null,
+            agmId: hierarchy.agmId ?? null,
+            ccoId: hierarchy.ccoId ?? null,
+          });
+          if (!approveRes.success) {
+            toast.warning(
+              `Investment created (${confirmedNo ?? "assigned"}) but auto-approval failed: ` +
+              (approveRes.error ?? "unknown error")
+            );
+          } else {
+            toast.success(`Investment created & approved — Proposal No. ${confirmedNo ?? "assigned"}`);
+          }
+        } else {
+          toast.success(`Investment created — Proposal No. ${confirmedNo ?? "assigned"}`);
+        }
       }
       onSuccess?.();
     } finally {

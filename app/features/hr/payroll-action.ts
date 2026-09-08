@@ -6,6 +6,7 @@ import { calculatePayroll, type PayrollCategory } from "./payroll-utils";
 import { resolvePositionTarget } from "@/lib/commissions/resolvePositionTarget";
 import { applyAdvanceDeductions } from "./deduction/action";
 import { previewAdvanceDeductions } from "./deduction/previewAdvanceDeductions";
+import { runMonthEndCommissions } from "@/app/features/commissions/runMonthEndCommissions";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -181,7 +182,11 @@ function buildMktConfig(
       targetBudgetCeiling: 30_000,
       targetBudgetMinPct: 0.25,
       hurdleRateProbation: 0.066,
-      hurdleRatePermanent: positionTargetData.partialThresholdPct > 0
+      // FA: partialThresholdPct is the hurdle for the 20K partial incentive (use it).
+      // Non-FA: hurdleRatePermanent is only used for basicIncentive which is 0 for
+      //         non-FA — keep standard 0.20. The incentive threshold for non-FA is
+      //         controlled separately via fullIncentiveThresholdPct below.
+      hurdleRatePermanent: hasPartial && positionTargetData.partialThresholdPct > 0
         ? positionTargetData.partialThresholdPct
         : 0.20,
       // Partial incentive — FA only (partialBonus set). 0 for non-FA.
@@ -190,6 +195,15 @@ function buildMktConfig(
       // Note: for after-6-month rows resolvePositionTarget aliases bonusAmount → partialBonus,
       // but for non-FA positions partialBonus is always 0 so bonusAmount is safe to use directly.
       fullIncentiveAmount: !hasPartial ? (positionTargetData.bonusAmount ?? 0) : 0,
+      // Non-FA: after-6-month rows carry partialThresholdPct = after6MonthIncentivePct
+      // (e.g. 0.45 for TL, 0.50 for BM). Normal probation rows have partialThresholdPct=0
+      // → falls back to 1.0 (must hit 100% of target).
+      // FA: fullIncentiveAmount is always 0 so this value is irrelevant — set to 0.
+      fullIncentiveThresholdPct: !hasPartial
+        ? (positionTargetData.partialThresholdPct > 0
+            ? positionTargetData.partialThresholdPct  // after-6-month reduced threshold
+            : 1.0)                                     // normal probation: require 100%
+        : 0,
       excessCommissionRate: excessRate,
       vehicleThresholdPct: positionTargetData.vehicleThresholdPct,
       vehicleAmount: positionTargetData.vehicleAmount,
@@ -244,8 +258,10 @@ export async function getPayrollPreview(
   month: number,
   volumes: Record<number, number> = {},
 ) {
-  const startDate = new Date(Date.UTC(year, month - 1, 1));
-  const endDate = new Date(Date.UTC(year, month, 1));
+  // Generate commission rows (PERSONAL / EXCESS / UPLINE / CHAIRMAN) before
+  // reading them below. Idempotent — no-ops if already run for this branch/month.
+  // Requires: Commission.investmentId must be nullable in DB (migration applied).
+  await runMonthEndCommissions(branchId, year, month);
 
   const branchMembers = await prisma.memberBranch.findMany({
     where: { branchId, member: { channel: { not: "Micro" } } },
@@ -258,12 +274,7 @@ export async function getPayrollPreview(
           monthlyPayrolls: { where: { year, month } },
           branches: true,
           commissions: {
-            where: {
-              type: "PERSONAL",
-              investment: {
-                investmentDate: { gte: startDate, lt: endDate },
-              },
-            },
+            where: { type: "PERSONAL", year, month },
             select: { amount: true },
           },
         },
@@ -290,23 +301,15 @@ export async function getPayrollPreview(
         0,
       );
 
-      const orcEarned = await prisma.commission.findMany({
-        where: {
-          memberEmpNo: member.empNo,
-          type: "UPLINE",
-          investment: { investmentDate: { gte: startDate, lt: endDate } },
-        },
-        select: { amount: true },
-      }).then((rows) => rows.reduce((sum, c) => sum + Number(c.amount), 0));
+      const orcEarned = await prisma.commission.aggregate({
+        where: { memberEmpNo: member.empNo, type: { in: ["UPLINE", "CHAIRMAN"] }, year, month },
+        _sum: { amount: true },
+      }).then(r => Number(r._sum.amount ?? 0));
 
-      const excessEarned = await prisma.commission.findMany({
-        where: {
-          memberEmpNo: member.empNo,
-          type: "EXCESS",
-          investment: { investmentDate: { gte: startDate, lt: endDate } },
-        },
-        select: { amount: true },
-      }).then((rows) => rows.reduce((sum, c) => sum + Number(c.amount), 0));
+      const excessEarned = await prisma.commission.aggregate({
+        where: { memberEmpNo: member.empNo, type: "EXCESS", year, month },
+        _sum: { amount: true },
+      }).then(r => Number(r._sum.amount ?? 0));
 
       // ── Category routing ─────────────────────────────────────────────────
       const payrollCategory = resolvePayrollCategory(member.position?.rank);
@@ -429,8 +432,9 @@ export async function runMonthlyPayroll(
   volumes: Record<number, number>,
   force = false,
 ) {
-  const startDate = new Date(Date.UTC(year, month - 1, 1));
-  const endDate = new Date(Date.UTC(year, month, 1));
+  // Calculate PERSONAL / EXCESS / UPLINE / CHAIRMAN rows for this branch/month
+  // before summing them into payroll. Idempotent — no-ops if already run.
+  await runMonthEndCommissions(branchId, year, month);
 
   const branchMembers = await prisma.memberBranch.findMany({
     where: { branchId, member: { channel: { not: "Micro" } } },
@@ -446,7 +450,8 @@ export async function runMonthlyPayroll(
           commissions: {
             where: {
               type: "PERSONAL",
-              investment: { investmentDate: { gte: startDate, lt: endDate } },
+              year,
+              month,
             },
             select: { amount: true },
           },
@@ -485,8 +490,9 @@ export async function runMonthlyPayroll(
       const orcEarned = await prisma.commission.findMany({
         where: {
           memberEmpNo: member.empNo,
-          type: "UPLINE",
-          investment: { investmentDate: { gte: startDate, lt: endDate } },
+          type: { in: ["UPLINE", "CHAIRMAN"] },
+          year,
+          month,
         },
         select: { amount: true },
       }).then((rows) => rows.reduce((sum, c) => sum + Number(c.amount), 0));
@@ -495,7 +501,8 @@ export async function runMonthlyPayroll(
         where: {
           memberEmpNo: member.empNo,
           type: "EXCESS",
-          investment: { investmentDate: { gte: startDate, lt: endDate } },
+          year,
+          month,
         },
         select: { amount: true },
       }).then((rows) => rows.reduce((sum, c) => sum + Number(c.amount), 0));

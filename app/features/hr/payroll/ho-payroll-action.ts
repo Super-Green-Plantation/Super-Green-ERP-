@@ -91,17 +91,17 @@ function normaliseUnique<T>(raw: T | T[] | null | undefined): T | null {
 
 // ─── Commission / volume fetchers ─────────────────────────────────────────────
 
-async function getOrcCommission(empNo: string, startDate: Date, endDate: Date): Promise<number> {
+async function getOrcCommission(empNo: string, year: number, month: number): Promise<number> {
   const rows = await prisma.commission.findMany({
-    where: { memberEmpNo: empNo, type: "UPLINE", investment: { investmentDate: { gte: startDate, lt: endDate } } },
+    where: { memberEmpNo: empNo, type: "UPLINE", year, month },
     select: { amount: true },
   });
   return rows.reduce((s, c) => s + Number(c.amount), 0);
 }
 
-async function getPersonalCommissionFromDb(empNo: string, startDate: Date, endDate: Date): Promise<number> {
+async function getPersonalCommissionFromDb(empNo: string, year: number, month: number): Promise<number> {
   const rows = await prisma.commission.findMany({
-    where: { memberEmpNo: empNo, type: "PERSONAL", investment: { investmentDate: { gte: startDate, lt: endDate } } },
+    where: { memberEmpNo: empNo, type: "PERSONAL", year, month },
     select: { amount: true },
   });
   return rows.reduce((s, c) => s + Number(c.amount), 0);
@@ -195,13 +195,17 @@ function buildPermBmConfig(
 
 // ─── Shared commission resolver ───────────────────────────────────────────────
 
-async function resolveMemberCommissions(member: any, startDate: Date, endDate: Date) {
+async function resolveMemberCommissions(member: any, year: number, month: number, startDate: Date, endDate: Date) {
   const rank = member.position?.rank ?? 0;
   const isManagementStaff = !!member.position?.isManagement;
   const isPermBmTrack = PERM_BM_RANKS.has(rank);
   const receivesOrc = !isManagementStaff;
 
-  const orcEarned = receivesOrc ? await getOrcCommission(member.empNo, startDate, endDate) : 0;
+  const orcEarned = receivesOrc ? await getOrcCommission(member.empNo, year, month) : 0;
+  const chairmanEarned = await prisma.commission.aggregate({
+    where: { memberEmpNo: member.empNo, type: "CHAIRMAN", year, month },
+    _sum: { amount: true },
+  }).then((r) => Number(r._sum.amount ?? 0));
 
   let personalCommission = 0;
   let personalIncentive = 0;
@@ -219,10 +223,19 @@ async function resolveMemberCommissions(member: any, startDate: Date, endDate: D
   } else {
     // All non-management HO members (perm BM/RM/ZM/AGM/COO/GM):
     // fetch PERSONAL-type commissions directly from Commission rows.
-    personalCommission = await getPersonalCommissionFromDb(member.empNo, startDate, endDate);
+    personalCommission = await getPersonalCommissionFromDb(member.empNo, year, month);
   }
 
-  return { isManagementStaff, isPermBmTrack, receivesOrc, orcEarned, personalCommission, personalIncentive, volumeAchieved, mgmtExcessCommission };
+  return {
+    isManagementStaff,
+    isPermBmTrack,
+    receivesOrc,
+    orcEarned: orcEarned + chairmanEarned,
+    personalCommission,
+    personalIncentive,
+    volumeAchieved,
+    mgmtExcessCommission,
+  };
 }
 
 // ─── Salary payload builder ───────────────────────────────────────────────────
@@ -301,7 +314,7 @@ async function computeMemberPayroll(
   const endDate   = new Date(Date.UTC(year, month, 1));
 
   const { isManagementStaff, isPermBmTrack, orcEarned, personalCommission, personalIncentive, volumeAchieved, mgmtExcessCommission } =
-    await resolveMemberCommissions(member, startDate, endDate);
+    await resolveMemberCommissions(member, year, month, startDate, endDate);
 
   const rank         = member.position?.rank ?? 0;
   const tenureMonth  = computeTenureMonths(member.dateOfJoin, year, month);
