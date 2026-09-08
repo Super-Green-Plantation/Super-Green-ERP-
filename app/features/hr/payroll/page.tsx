@@ -341,7 +341,7 @@ export default function PayrollPage() {
                     </td>
 
                     {/* Editable volume input */}
-                    <td className="px-5 py-4 text-right">1
+                    <td className="px-5 py-4 text-right">
                       <input
                         type="number"
                         value={volumes[row.memberId] ?? 0}
