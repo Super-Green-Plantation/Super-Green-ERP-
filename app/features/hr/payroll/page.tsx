@@ -138,13 +138,14 @@ export default function PayrollPage() {
     }
   };
 
-  const totalGross = preview.reduce((s, r) => s + (r.breakdown?.grossPay ?? 0), 0);
-  const totalNet = preview.reduce((s, r) => s + (r.breakdown?.netPay ?? 0), 0);
-  const totalEpfEmployee = preview.reduce((s, r) => s + (r.breakdown?.epfDeduction ?? 0), 0);
-  const totalEpfEmployer = preview.reduce((s, r) => s + (r.breakdown?.epfEmployer ?? 0), 0);
-  const totalEtf = preview.reduce((s, r) => s + (r.breakdown?.etfEmployer ?? 0), 0);
-  const alreadyProcessedCount = preview.filter((r) => r.alreadyProcessed).length;
-  const unconfiguredCount = preview.filter((r) => !r.salaryConfigured).length;
+  const activePreview = preview.filter((r) => r.volumeAchieved > 0);
+  const totalGross = activePreview.reduce((s, r) => s + (r.breakdown?.grossPay ?? 0), 0);
+  const totalNet = activePreview.reduce((s, r) => s + (r.breakdown?.netPay ?? 0), 0);
+  const totalEpfEmployee = activePreview.reduce((s, r) => s + (r.breakdown?.epfDeduction ?? 0), 0);
+  const totalEpfEmployer = activePreview.reduce((s, r) => s + (r.breakdown?.epfEmployer ?? 0), 0);
+  const totalEtf = activePreview.reduce((s, r) => s + (r.breakdown?.etfEmployer ?? 0), 0);
+  const alreadyProcessedCount = activePreview.filter((r) => r.alreadyProcessed).length;
+  const unconfiguredCount = activePreview.filter((r) => !r.salaryConfigured).length;
 
   console.log(preview);
 
@@ -326,20 +327,27 @@ export default function PayrollPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {preview.map((row) => (
+                {preview.filter((row) => row.volumeAchieved > 0).map((row) => (
                   <tr key={row.memberId} className="hover:bg-muted/30 transition-colors">
                     <td className="px-5 py-4">
                       <p className="font-bold text-foreground text-sm leading-tight">{row.name}</p>
                       <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-tighter mt-0.5">{row.empNo}</p>
                       <div className="flex  gap-3">
                         <span className="text-xs font-bold text-muted-foreground">{row.position}</span>
-                        <div className="flex">
+                        <div className="flex gap-1.5 items-center">
                           <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border uppercase tracking-wider ${row.status === "PERMANENT"
                             ? "bg-green-500/10 text-green-600 border-green-500/20"
                             : "bg-amber-500/10 text-amber-600 border-amber-500/20"
                             }`}>
                             {row.status === "PERMANENT" ? "Permanent" : "Probation"}
                           </span>
+                          {row.tenureMonthCount > 0 && (
+                            <span className="text-[9px] text-muted-foreground/70 font-medium">
+                              {row.tenureMonthCount < 12
+                                ? `${row.tenureMonthCount} months`
+                                : `${Math.floor(row.tenureMonthCount / 12)}y${row.tenureMonthCount % 12 > 0 ? ` ${row.tenureMonthCount % 12}months` : ""}`}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </td>
@@ -356,7 +364,7 @@ export default function PayrollPage() {
                     </td>
 
                     {/* Editable volume input */}
-                    <td className="px-5 py-4 text-right">
+                    <td className="px-5 py-4 text-right">1
                       <input
                         type="number"
                         value={volumes[row.memberId] ?? 0}

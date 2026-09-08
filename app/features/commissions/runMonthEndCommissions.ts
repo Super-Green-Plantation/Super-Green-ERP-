@@ -96,7 +96,6 @@ type FaBucket = {
   } | null;
   probationStartDate: string | null;
   totalVolume: number;
-  representativeInvestmentId: number | null;
 };
 
 function addFaVolume(
@@ -104,15 +103,11 @@ function addFaVolume(
   faId: number | null | undefined,
   fa: any,
   volume: number,
-  investmentId: number | null,
 ) {
   if (!faId || !fa) return;
   const existing = faMap.get(faId);
   if (existing) {
     existing.totalVolume += volume;
-    if (existing.representativeInvestmentId == null && investmentId != null) {
-      existing.representativeInvestmentId = investmentId;
-    }
     return;
   }
   faMap.set(faId, {
@@ -121,7 +116,6 @@ function addFaVolume(
     position: fa.position ?? null,
     probationStartDate: fa.probationStartDate ?? null,
     totalVolume: volume,
-    representativeInvestmentId: investmentId,
   });
 }
 
@@ -155,18 +149,11 @@ async function writeCommission(
     year: number;
   },
 ) {
-  await tx.commission.create({
-    data: {
-      ...(data.investmentId != null ? { investmentId: data.investmentId } : {}),
-      memberEmpNo: data.memberEmpNo,
-      amount: data.amount,
-      type: data.type,
-      refNumber: await generateCommissionRef(),
-      branchId: data.branchId,
-      month: data.month,
-      year: data.year,
-    },
-  });
+  const ref = await generateCommissionRef();
+  await tx.$executeRaw`
+    INSERT INTO "Commission" ("investmentId", "memberEmpNo", "amount", "type", "refNumber", "branchId", "month", "year")
+    VALUES (${data.investmentId ?? null}, ${data.memberEmpNo}, ${data.amount}, ${data.type}::"CommissionType", ${ref}, ${data.branchId}, ${data.month}, ${data.year})
+  `;
   await tx.member.update({
     where: { empNo: data.memberEmpNo },
     data: { totalCommission: { increment: data.amount } },
@@ -216,7 +203,7 @@ export async function runMonthEndCommissions(
 
     for (const inv of investments) {
       const volume = creditedInvestmentVolume(Number(inv.amount), inv.renewedFromId);
-      addFaVolume(faMap, inv.faId, inv.fa, volume, inv.id);
+      addFaVolume(faMap, inv.faId, inv.fa, volume);
       for (const field of UPLINE_INVESTMENT_FIELDS) {
         addUplineVolume(uplineVolumeMap, inv[field], volume);
       }
@@ -224,7 +211,7 @@ export async function runMonthEndCommissions(
 
     for (const mp of monthlyProposals) {
       const volume = Number(mp.premium);
-      addFaVolume(faMap, mp.faId, mp.fa, volume, null);
+      addFaVolume(faMap, mp.faId, mp.fa, volume);
       for (const field of UPLINE_MP_FIELDS) {
         addUplineVolume(uplineVolumeMap, mp[field], volume);
       }
@@ -247,7 +234,7 @@ export async function runMonthEndCommissions(
 
       if (personalAmount > 0) {
         await writeCommission(tx, {
-          investmentId: fa.representativeInvestmentId,
+          investmentId: null,
           memberEmpNo: fa.empNo,
           amount: personalAmount,
           type: "PERSONAL",
@@ -279,7 +266,7 @@ export async function runMonthEndCommissions(
         });
         if (excessCommission > 0) {
           await writeCommission(tx, {
-            investmentId: fa.representativeInvestmentId,
+            investmentId: null,
             memberEmpNo: fa.empNo,
             amount: excessCommission,
             type: "EXCESS",
@@ -303,9 +290,6 @@ export async function runMonthEndCommissions(
           })
         : [];
 
-    // Representative investment for ORC rows (first branch investment this month).
-    const orcInvestmentId = investments[0]?.id ?? null;
-
     for (const member of uplineMembers) {
       const volume = uplineVolumeMap.get(member.id) ?? 0;
       if (volume <= 0 || !member.position?.orc) continue;
@@ -320,7 +304,7 @@ export async function runMonthEndCommissions(
       if (orcAmount <= 0) continue;
 
       await writeCommission(tx, {
-        investmentId: orcInvestmentId,
+        investmentId: null,
         memberEmpNo: member.empNo,
         amount: orcAmount,
         type: "UPLINE",
@@ -367,7 +351,7 @@ export async function runMonthEndCommissions(
 
       if (chairmanMember && chairmanAmount > 0) {
         await writeCommission(tx, {
-          investmentId: allInvestments[0]?.id ?? orcInvestmentId,
+          investmentId: null,
           memberEmpNo: chairmanMember.empNo,
           amount: chairmanAmount,
           type: "CHAIRMAN",

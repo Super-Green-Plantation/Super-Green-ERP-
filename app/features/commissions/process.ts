@@ -106,7 +106,23 @@ export async function undoCommissions(investmentId: number) {
     const result = await prisma.$transaction(async (tx) => {
       const investment = await tx.investment.findUnique({
         where: { id: investmentId },
-        select: { id: true, commissionsProcessed: true, refNumber: true, branchId: true },
+        select: {
+          id: true,
+          commissionsProcessed: true,
+          refNumber: true,
+          branchId: true,
+          amount: true,
+          investmentDate: true,
+          renewedFromId: true,
+          renewalCreditedAt: true,
+          faId: true,
+          fmId: true,
+          bmId: true,
+          rmId: true,
+          zmId: true,
+          agmId: true,
+          ccoId: true,
+        },
       });
       if (!investment) throw new ApiError("NOT_FOUND", "Investment not found", 404);
       if (!investment.commissionsProcessed) {
@@ -144,25 +160,63 @@ export async function undoCommissions(investmentId: number) {
         });
       }
 
+      // ── Decrement volumeAchieved on MonthlyPayroll for all hierarchy members ──
+      // Renewals credited amount × 0.25 in the renewal month; normal investments
+      // credited the full amount in the investment month.
+      const isRenewal = !!investment.renewedFromId && !!investment.renewalCreditedAt;
+      const volumeToRemove = isRenewal
+        ? Number(investment.amount) * 0.25
+        : Number(investment.amount);
+
+      const refDate = isRenewal
+        ? new Date(investment.renewalCreditedAt!)
+        : new Date(investment.investmentDate);
+      const volYear  = refDate.getFullYear();
+      const volMonth = refDate.getMonth() + 1;
+
+      const hierarchyMemberIds = [
+        investment.faId,
+        investment.fmId,
+        investment.bmId,
+        investment.rmId,
+        investment.zmId,
+        investment.agmId,
+        investment.ccoId,
+      ].filter((id): id is number => id !== null && id !== undefined);
+
+      const uniqueHierarchyIds = [...new Set(hierarchyMemberIds)];
+
+      await Promise.all(
+        uniqueHierarchyIds.map((memberId) =>
+          tx.monthlyPayroll.updateMany({
+            where: { memberId, year: volYear, month: volMonth },
+            data: { volumeAchieved: { decrement: volumeToRemove } },
+          })
+        )
+      );
+
       // Delete original commission rows
       await tx.commission.deleteMany({
         where: { investmentId, type: { not: "REVERSED" } },
       });
 
-      // Create REVERSED audit record (one per original commission)
-      const reversedRef = await generateCommissionRef();
-      await tx.commission.createMany({
-        data: existing.map((c) => ({
-          investmentId,
-          memberEmpNo: c.memberEmpNo,
-          amount: -c.amount,
-          type: "REVERSED" as const,
-          refNumber: `REV-${reversedRef}`,
-          branchId: investment.branchId,
-          month: c.month,
-          year: c.year,
-        })),
-      });
+      // Create REVERSED audit record — one per original commission, each with
+      // its own unique refNumber to avoid the unique constraint on refNumber.
+      for (const c of existing) {
+        const reversedRef = await generateCommissionRef();
+        await (tx.commission.create as any)({
+          data: {
+            investmentId,
+            memberEmpNo: c.memberEmpNo,
+            amount: -c.amount,
+            type: "REVERSED" as const,
+            refNumber: `REV-${reversedRef}`,
+            Branch: { connect: { id: investment.branchId } },
+            month: c.month,
+            year: c.year,
+          },
+        });
+      }
 
       // Reset commissionsProcessed
       await tx.investment.update({

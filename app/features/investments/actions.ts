@@ -1098,13 +1098,11 @@ export async function approveInvestmentWithHierarchyLog(data: {
     const currentUser = await getCurrentUserWithRole();
     if (!currentUser) throw new Error("Not authorized");
 
-    // Guard: at least one hierarchy member must be supplied
-    const approverIds = [
-      data.faId, data.fmId, data.bmId, data.rmId,
-      data.zmId, data.agmId, data.ccoId,
-    ];
-    if (!approverIds.some((id) => id)) {
-      throw new Error("At least one approver is required for approval");
+    // Guard: faId is required so volume can be attributed to the correct FA.
+    // Other hierarchy fields are optional — management staff may enter
+    // proposals without a full chain.
+    if (!data.faId) {
+      throw new Error("faId is required for approval — select an FA first");
     }
 
     const investment = await prisma.investment.findUnique({
