@@ -1,19 +1,23 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import {
-  Loader2, Play, RefreshCw, AlertTriangle, CheckCircle2,
-  ChevronDown, TrendingUp, Banknote, Car, Percent, Users,
-  TicketSlash, FileSpreadsheet, Download,
-} from "lucide-react";
-import { getBranches } from "@/app/features/branches/actions";
-import { toast } from "sonner";
-import { getPayrollPreview, runMonthlyPayroll, getAllPayrollExport } from "../payroll-action";
 import Heading from "@/app/components/Heading";
-import Link from "next/link";
-import { exportPayrollToExcel } from "./exportPayrollToExcel";
-import { exportAllPayrollToExcel } from "./exportAllPayrollToExcel";
+import { getBranches } from "@/app/features/branches/actions";
 import { generateMemberPayslipPDF } from "@/app/pdf/generateMemberPayslipPDF";
+import {
+  AlertTriangle,
+  ChevronDown,
+  Download,
+  FileSpreadsheet,
+  Loader2, Play, RefreshCw,
+  TicketSlash,
+  Users
+} from "lucide-react";
+import Link from "next/link";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
+import { getAllPayrollExport, getPayrollPreview, runMonthlyPayroll } from "../payroll-action";
+import { exportAllPayrollToExcel } from "./exportAllPayrollToExcel";
+import { exportPayrollToExcel } from "./exportPayrollToExcel";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -78,10 +82,6 @@ export default function PayrollPage() {
       setLoadingPreview(false);
     }
   }, [selectedBranchId, year, month]); // keep volumes excluded to avoid loop
-  // Removed auto-fetch useEffect
-  // useEffect(() => {
-  //   loadPreview();
-  // }, [loadPreview]);
 
   // Refresh preview when volume changes (debounced via button)
   const handleVolumeChange = (memberId: number, value: number) => {
@@ -267,27 +267,6 @@ export default function PayrollPage() {
         </div>
       )}
 
-      {/* Summary Cards */}
-      {/* {preview.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-          {[
-            { label: "Total Gross", value: fmt(totalGross), icon: Banknote, color: "text-primary" },
-            { label: "Total Net Pay", value: fmt(totalNet), icon: TrendingUp, color: "text-green-600" },
-            { label: "EPF (Employee)", value: fmt(totalEpfEmployee), icon: Percent, color: "text-amber-600" },
-            { label: "EPF (Employer)", value: fmt(totalEpfEmployer), icon: Percent, color: "text-orange-600" },
-            { label: "ETF (Employer)", value: fmt(totalEtf), icon: Car, color: "text-muted-foreground" },
-          ].map(({ label, value, icon: Icon, color }) => (
-            <div key={label} className="bg-card border border-border rounded-2xl p-5 shadow-sm">
-              <div className={`p-2 w-fit rounded-lg bg-muted mb-3 ${color}`}>
-                <Icon className="w-4 h-4" />
-              </div>
-              <p className="text-xl font-bold text-foreground tabular-nums tracking-tight">{value}</p>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mt-1 opacity-70">{label}</p>
-            </div>
-          ))}
-        </div>
-      )} */} 
-
       {/* Table */}
       <div >
         {loadingPreview ? (
@@ -309,11 +288,9 @@ export default function PayrollPage() {
                     Active Team
                   </th>
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Volume Achieved</th>
-                  {/* <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Basic</th> */}
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Partial (20K)</th>
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Incentive</th>
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Target Budget</th>
-                  {/* <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Allowance</th> */}
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Vehicle</th>
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Team Activation</th>
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">ORC</th>
@@ -374,9 +351,6 @@ export default function PayrollPage() {
                     </td>
 
                     <>
-                      {/* <td className="px-5 py-4 text-right text-xs font-bold text-muted-foreground">
-                        {fmt(row.breakdown?.basicSalaryPermanent ?? 0)}
-                      </td> */}
                       {/* Partial incentive — 20K when hurdle cleared */}
                       <td className="px-5 py-4 text-right text-xs font-bold">
                         <span className={row.breakdown?.incentiveHit ? "text-primary" : "text-muted-foreground/40"}>
@@ -397,12 +371,6 @@ export default function PayrollPage() {
                         </span>
                       </td>
 
-                      {/* <td className="px-5 py-4 text-right text-xs font-bold">
-                        <span className={row.breakdown?.allowanceHit ? "text-primary" : "text-muted-foreground/40"}>
-                          {fmt(row.breakdown?.allowanceEarned ?? 0)}
-
-                        </span>
-                      </td> */}
                       <td className="px-5 py-4 text-right text-xs font-bold">
                         <span className={row.breakdown?.vehicleHit ? "text-primary" : "text-muted-foreground/40"}>
                           {fmt(row.breakdown?.vehicleEarned ?? 0)}
