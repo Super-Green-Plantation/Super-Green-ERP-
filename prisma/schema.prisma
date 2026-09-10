@@ -29,12 +29,12 @@ model Branch {
   zone                      Zone?                       @relation(fields: [zoneId], references: [id])
   client                    Client[]
   commission                Commission[]
+  expenses                  Expense[]
   InventoryItem             InventoryItem[]
   investments               Investment[]
   members                   MemberBranch[]
   monthlyProposals          MonthlyProposal[]
   MonthlyProposalCommission MonthlyProposalCommission[]
-  expenses                  Expense[]
 }
 
 model Zone {
@@ -273,6 +273,8 @@ model MonthlyPayroll {
   tenureMonthCount          Int      @default(1)
   vehicleEarned             Float    @default(0)
   vehicleHit                Boolean  @default(false)
+  deductionAmount           Float    @default(0)
+  deductionRemark           String?
   member                    Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
   @@unique([memberId, year, month])
@@ -659,11 +661,11 @@ model Expense {
   category    String
   description String?
   branchId    Int?
-  branch      Branch?  @relation(fields: [branchId], references: [id])
   createdById String   @db.Uuid
-  createdBy   User     @relation(fields: [createdById], references: [id])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  branch      Branch?  @relation(fields: [branchId], references: [id])
+  createdBy   User     @relation(fields: [createdById], references: [id])
 }
 
 model User {
@@ -675,9 +677,9 @@ model User {
   id                    String                  @id @default(uuid()) @db.Uuid
   lastLoginAt           DateTime?               @default(now())
   ClientDocumentRequest ClientDocumentRequest[]
+  expenses              Expense[]
   member                Member?
   quotations            Quotation[]
-  expenses              Expense[]
 }
 
 model ClientDocumentRequest {
@@ -907,6 +909,12 @@ model MonthlyProposalCommission {
   @@index([memberEmpNo])
   @@index([monthlyProposalId], map: "MonthlyProposalCommission_proposalId_idx")
   @@index([year, month])
+}
+
+model ExpenseCategory {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
 }
 
 enum ApprovalStatus {

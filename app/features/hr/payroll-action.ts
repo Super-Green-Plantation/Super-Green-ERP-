@@ -694,6 +694,8 @@ export async function getPayrollHistory(memberId: number) {
       epfEmployer: true,
       etfEmployer: true,
       advanceDeducted: true,
+      deductionAmount: true,
+      deductionRemark: true,
     },
   });
 }

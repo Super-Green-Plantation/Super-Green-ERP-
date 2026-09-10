@@ -52,6 +52,8 @@ export type MonthlyPayrollRecord = {
   epfEmployer: number;
   etfEmployer: number;
   advanceDeducted: number;
+  deductionAmount: number;
+  deductionRemark: string | null;
 
   // Status flags
   incentiveHit: boolean;
@@ -135,6 +137,8 @@ function FAPaySheet({
   const orcEarned          = payroll.orcEarned ?? 0;
   const grossEarnings      = payroll.grossPay ?? 0;
   const advanceDeducted    = payroll.advanceDeducted ?? 0;
+  const deductionAmount    = payroll.deductionAmount ?? 0;
+  const deductionRemark    = payroll.deductionRemark ?? null;
   const netToBankAmount    = payroll.netPay ?? 0;
 
   const positionTitle = member.position?.title ?? "Staff";
@@ -163,14 +167,12 @@ function FAPaySheet({
         </head>
         <body>
           <div class="wrap">
-            <div class="h1">SUPER GREEN PLANTATION (PVT) LTD</div>
-            <div class="h2">${positionTitle.toUpperCase()} INCENTIVE PAY SHEET</div>
+            <div class="h1">${positionTitle.toUpperCase()} INCENTIVE PAY SHEET</div>
+            <div class="h2">Period: ${monthLabel(payroll.year, payroll.month)}</div>
             <div class="sep"></div>
             <div class="row"><span class="lbl">Employee Name</span><span class="val">${member.nameWithInitials ?? "—"}</span></div>
             <div class="row"><span class="lbl">Designation</span><span class="val">${positionTitle}</span></div>
-            <div class="row"><span class="lbl">Branch</span><span class="val">${member.branches?.[0]?.branch?.name ?? "—"}</span></div>
-            <div class="row"><span class="lbl">Joining Date</span><span class="val">${member.dateOfJoin ? new Date(member.dateOfJoin).toLocaleDateString("en-LK").replace(/\//g, ".") : "—"}</span></div>
-            <div class="row"><span class="lbl">Month</span><span class="val">${monthLabel(payroll.year, payroll.month)}</span></div>
+            <div class="row"><span class="lbl">Emp No</span><span class="val">${member.empNo ?? "—"}</span></div>
             <div class="sep"></div>
             <div class="row"><span class="lbl">Target</span><span class="val">${LKR(target)}</span></div>
             <div class="row"><span class="lbl">Achievement</span><span class="val">${LKR(achieved)}</span></div>
@@ -184,7 +186,9 @@ function FAPaySheet({
             ${personalComm    > 0 ? `<div class="row"><span class="lbl">Personal Commission</span><span class="val">${LKR(personalComm)}</span></div>` : ""}
             ${orcEarned       > 0 ? `<div class="row"><span class="lbl">ORC / Upline Commission</span><span class="val">${LKR(orcEarned)}</span></div>` : ""}
             <div class="gross"><span>Gross Earnings</span><span>${LKR(grossEarnings)}</span></div>
-            <div class="row"><span class="lbl">Deductions</span><span class="val">${advanceDeducted > 0 ? LKR(advanceDeducted) : "LKR  —"}</span></div>
+            ${advanceDeducted > 0 ? `<div class="row"><span class="lbl">Advance Deducted</span><span class="val">${LKR(advanceDeducted)}</span></div>` : ""}
+            ${deductionAmount > 0 ? `<div class="row"><span class="lbl">Other Deduction</span><span class="val">${LKR(deductionAmount)}</span></div>${deductionRemark ? `<div class="row" style="font-size:10px;color:#888;padding:2px 16px 4px">↳ ${deductionRemark}</div>` : ""}` : ""}
+            ${advanceDeducted === 0 && deductionAmount === 0 ? `<div class="row"><span class="lbl">Deductions</span><span class="val">LKR  —</span></div>` : ""}
             <div class="net"><span>NET TO BANK</span><span>${LKR(netToBankAmount)}</span></div>
           </div>
         </body>
@@ -238,12 +242,29 @@ function FAPaySheet({
         {/* Deductions */}
         <div className="px-6 pb-4 space-y-2 border-t border-border/30 pt-4">
           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Deductions</p>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Advance Deducted</span>
-            <span className="font-bold text-rose-500">
-              {advanceDeducted > 0 ? LKR(advanceDeducted) : "—"}
-            </span>
-          </div>
+          {advanceDeducted > 0 && (
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Advance Deducted</span>
+              <span className="font-bold text-rose-500">{LKR(advanceDeducted)}</span>
+            </div>
+          )}
+          {deductionAmount > 0 && (
+            <div className="space-y-0.5">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Other Deduction</span>
+                <span className="font-bold text-rose-500">{LKR(deductionAmount)}</span>
+              </div>
+              {deductionRemark && (
+                <p className="text-[10px] text-muted-foreground/70 italic pl-1">↳ {deductionRemark}</p>
+              )}
+            </div>
+          )}
+          {advanceDeducted === 0 && deductionAmount === 0 && (
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Deductions</span>
+              <span className="text-muted-foreground">—</span>
+            </div>
+          )}
         </div>
 
         {/* Net to Bank */}
@@ -284,7 +305,9 @@ function HOPaySheet({
   const festivalAdvance      = payroll.festivalAdvance ?? 0;
   const merchandiseDeduction = payroll.merchandiseDeduction ?? 0;
   const advanceDeducted      = payroll.advanceDeducted ?? 0;
-  const totalDeductions      = epfDeduction + loanInstalments + festivalAdvance + merchandiseDeduction + advanceDeducted;
+  const deductionAmount      = payroll.deductionAmount ?? 0;
+  const deductionRemark      = payroll.deductionRemark ?? null;
+  const totalDeductions      = epfDeduction + loanInstalments + festivalAdvance + merchandiseDeduction + advanceDeducted + deductionAmount;
 
   const handlePrint = () => {
     if (!printRef.current) return;
@@ -319,8 +342,7 @@ function HOPaySheet({
         </head>
         <body>
           <div class="wrap">
-            <div class="h1">SUPER GREEN PLANTATION (PVT) LTD</div>
-            <div class="h2">SALARY SLIP — ${monthLabel(payroll.year, payroll.month).toUpperCase()}</div>
+            <div class="h1">SALARY SLIP — ${monthLabel(payroll.year, payroll.month).toUpperCase()}</div>
             <div class="info">
               <div><div class="lbl">Employee Name</div><div class="val">${member.nameWithInitials ?? "—"}</div></div>
               <div><div class="lbl">Designation</div><div class="val">${member.position?.title ?? "Staff"}</div></div>
@@ -345,6 +367,7 @@ function HOPaySheet({
                 ${festivalAdvance      > 0 ? `<div class="row"><span class="lbl">Festival Advance</span><span class="val">${LKR(festivalAdvance)}</span></div>` : ""}
                 ${merchandiseDeduction > 0 ? `<div class="row"><span class="lbl">Merchandise</span><span class="val">${LKR(merchandiseDeduction)}</span></div>` : ""}
                 ${advanceDeducted      > 0 ? `<div class="row"><span class="lbl">Salary Advance</span><span class="val">${LKR(advanceDeducted)}</span></div>` : ""}
+                ${deductionAmount      > 0 ? `<div class="row"><span class="lbl">Other Deduction</span><span class="val">${LKR(deductionAmount)}</span></div>${deductionRemark ? `<div class="row" style="font-size:10px;color:#888;padding:2px 12px 3px">↳ ${deductionRemark}</div>` : ""}` : ""}
                 <div class="subtot"><span>Total Deductions</span><span>${LKR(totalDeductions)}</span></div>
               </div>
             </div>
@@ -393,11 +416,19 @@ function HOPaySheet({
         {/* Deductions */}
         <div className="px-6 pb-4 border-t border-border/30 pt-4 space-y-3">
           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Deductions</p>
-          <EarningRow label="EPF Contribution 8%" value={epfDeduction}         isDeduction />
+          <EarningRow label="EPF Contribution 8%"  value={epfDeduction}         isDeduction />
           {loanInstalments      > 0 && <EarningRow label="Loan Instalment"      value={loanInstalments}      isDeduction />}
           {festivalAdvance      > 0 && <EarningRow label="Festival Advance"     value={festivalAdvance}      isDeduction />}
           {merchandiseDeduction > 0 && <EarningRow label="Merchandise"          value={merchandiseDeduction} isDeduction />}
           {advanceDeducted      > 0 && <EarningRow label="Salary Advance"       value={advanceDeducted}      isDeduction />}
+          {deductionAmount      > 0 && (
+            <div className="space-y-0.5 py-0.5">
+              <EarningRow label="Other Deduction" value={deductionAmount} isDeduction />
+              {deductionRemark && (
+                <p className="text-[10px] text-muted-foreground/70 italic pl-6">↳ {deductionRemark}</p>
+              )}
+            </div>
+          )}
           <div className="pt-2 border-t border-border/40 flex justify-between items-center">
             <p className="text-xs font-bold text-rose-500 uppercase tracking-wider">Total Deductions</p>
             <p className="text-base font-extrabold text-rose-500">{LKR(totalDeductions)}</p>

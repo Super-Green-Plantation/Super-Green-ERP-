@@ -328,6 +328,10 @@ export function calculateMarketingPayroll(
   const ceiling = safe(config.targetBudgetCeiling) || 30_000;
   const minPct = safe(config.targetBudgetMinPct) || 0.25;
   const targetBudgetHit = hasBudget && target > 0 && achievementPct >= minPct;
+  // Rule: 30K × achievementPct, unlocks at 25%, capped at 30K.
+  //   25%  → 30 000 × 0.25 =  7 500
+  //   50%  → 30 000 × 0.50 = 15 000
+  //   100% → 30 000 × 1.00 = 30 000 (ceiling)
   const targetBudgetSalary = targetBudgetHit
     ? Math.min(ceiling, ceiling * Math.min(achievementPct, 1))
     : 0;

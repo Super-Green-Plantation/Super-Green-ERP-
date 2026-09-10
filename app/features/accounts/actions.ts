@@ -12,17 +12,6 @@ async function assertAccountsAccess() {
   }
 }
 
-function monthBounds(year: number, month: number) {
-  if (!Number.isInteger(year) || !Number.isInteger(month) || month < 1 || month > 12) {
-    throw new Error("Invalid reporting period.");
-  }
-
-  return {
-    start: new Date(Date.UTC(year, month - 1, 1)),
-    end: new Date(Date.UTC(year, month, 1)),
-  };
-}
-
 function paymentDateForMonth(investmentDate: Date, year: number, month: number) {
   const originalDay = investmentDate.getUTCDate();
   const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
@@ -39,19 +28,14 @@ function weekForDay(day: number) {
 export async function getMonthlyHarvests(startDate?: Date, endDate?: Date) {
   await assertAccountsAccess();
 
-  // For harvests, we still base it around the months covered by the date range
-  // If no date range, just use current month
   const today = new Date();
   const start = startDate || new Date(Date.UTC(today.getFullYear(), today.getMonth(), 1));
   const end = endDate || new Date(Date.UTC(today.getFullYear(), today.getMonth() + 1, 0, 23, 59, 59, 999));
 
-  // Determine which months to check. To keep it simple, we use the month of the start date
-  // (In a full implementation, you'd iterate through all months between start and end)
   const year = start.getUTCFullYear();
   const month = start.getUTCMonth() + 1;
-
   const monthEnd = new Date(Date.UTC(year, month, 1));
-  
+
   const investments = await prisma.investment.findMany({
     where: { status: "Active", monthlyHarvest: { gt: 0 }, investmentDate: { lt: monthEnd } },
     select: {
@@ -64,20 +48,22 @@ export async function getMonthlyHarvests(startDate?: Date, endDate?: Date) {
     orderBy: { investmentDate: "asc" },
   });
 
-  return investments.map((investment) => {
-    const paymentDate = paymentDateForMonth(investment.investmentDate, year, month);
-    return {
-      id: investment.id,
-      paymentDate: paymentDate.toISOString(),
-      week: weekForDay(paymentDate.getUTCDate()),
-      amount: investment.monthlyHarvest ?? 0,
-      clientName: investment.client.fullName,
-      plan: investment.plan ? `${investment.plan.name} (${investment.plan.duration} months)` : "No plan",
-    };
-  }).filter(h => {
-    const pd = new Date(h.paymentDate);
-    return pd >= start && pd <= end;
-  });
+  return investments
+    .map((investment) => {
+      const paymentDate = paymentDateForMonth(investment.investmentDate, year, month);
+      return {
+        id: investment.id,
+        paymentDate: paymentDate.toISOString(),
+        week: weekForDay(paymentDate.getUTCDate()),
+        amount: investment.monthlyHarvest ?? 0,
+        clientName: investment.client.fullName,
+        plan: investment.plan ? `${investment.plan.name} (${investment.plan.duration} months)` : "No plan",
+      };
+    })
+    .filter((h) => {
+      const pd = new Date(h.paymentDate);
+      return pd >= start && pd <= end;
+    });
 }
 
 export async function getIncomingInvestments(startDate?: Date, endDate?: Date) {
@@ -109,9 +95,7 @@ export async function getIncomingInvestments(startDate?: Date, endDate?: Date) {
 
 export async function getOutgoingPayroll(startDate?: Date, endDate?: Date) {
   await assertAccountsAccess();
-  
-  // Payroll is strictly monthly in the DB. 
-  // If a date range is given, we just look at the month of the startDate.
+
   const today = new Date();
   const start = startDate || new Date(Date.UTC(today.getFullYear(), today.getMonth(), 1));
   const year = start.getUTCFullYear();
@@ -167,17 +151,73 @@ export async function getMonthlyExpenses(startDate?: Date, endDate?: Date) {
   }));
 }
 
-export async function createExpense(data: { amount: number; category: string; description?: string; date: string }) {
+// ── Category helpers ─────────────────────────────────────────────
+
+export async function getExpenseCategories(): Promise<string[]> {
+  await assertAccountsAccess();
+  const cats = await prisma.expenseCategory.findMany({
+    orderBy: { name: "asc" },
+    select: { name: true },
+  });
+  return cats.map((c) => c.name);
+}
+
+async function ensureCategory(name: string) {
+  const trimmed = name.trim();
+  if (!trimmed) return;
+  await prisma.expenseCategory.upsert({
+    where: { name: trimmed },
+    create: { name: trimmed },
+    update: {},
+  });
+}
+
+// ── CRUD ─────────────────────────────────────────────────────────
+
+export async function createExpense(data: {
+  amount: number;
+  category: string;
+  description?: string;
+  date: string;
+}) {
   const user = await getCurrentUser();
   await assertAccountsAccess();
+
+  const category = data.category.trim();
+  await ensureCategory(category);
 
   await prisma.expense.create({
     data: {
       amount: data.amount,
-      category: data.category,
-      description: data.description,
+      category,
+      description: data.description?.trim() || null,
       date: new Date(data.date),
       createdById: user.id,
     },
   });
+}
+
+export async function updateExpense(
+  id: number,
+  data: { amount: number; category: string; description?: string; date: string }
+) {
+  await assertAccountsAccess();
+
+  const category = data.category.trim();
+  await ensureCategory(category);
+
+  await prisma.expense.update({
+    where: { id },
+    data: {
+      amount: data.amount,
+      category,
+      description: data.description?.trim() || null,
+      date: new Date(data.date),
+    },
+  });
+}
+
+export async function deleteExpense(id: number) {
+  await assertAccountsAccess();
+  await prisma.expense.delete({ where: { id } });
 }
