@@ -742,13 +742,13 @@ export async function getAllPayrollExport(year: number, month: number) {
     targetBudget:    Number(r.targetBudgetSalary),
     vehicle:         Number(r.vehicleEarned),
     teamActive:      Number(r.teamActiveEarned),
+    excessComm:      Number(r.excessCommission),
     fixedAllowance:  Number(r.fixedAllowance),
     fuelAllowance:   Number(r.fuelAllowance),
     attendanceAllowance: Number(r.attendanceAllowance),
     channelOperation:    Number(r.channelOperation),
     personalComm:    Number(r.commissionEarned),
     orc:             Number(r.orcEarned),
-    excess:          Number(r.excessCommission),
     grossPay:        Number(r.grossPay),
     epfEmployee:     Number(r.epfDeduction),
     epfEmployer:     Number(r.epfEmployer),
@@ -757,6 +757,8 @@ export async function getAllPayrollExport(year: number, month: number) {
     festivalAdvance: Number(r.festivalAdvance),
     merchandiseDeduction: Number(r.merchandiseDeduction),
     advance:         Number(r.advanceDeducted),
+    deductionAmount: Number(r.deductionAmount ?? 0),
+    deductionRemark: r.deductionRemark ?? "",
     netPay:          Number(r.netPay),
   }));
 }

@@ -180,7 +180,7 @@ function buildPermBmConfig(
 ): PermBmSalaryConfig {
   return {
     basicSalary:             ps.basicSalaryPermanent,
-    monthlyTarget:           ps.monthlyTarget,
+    fullTarget:              ps.monthlyTarget,        // full position target; engine scales by tenure %
     incentive75Amount:       ps.incentivePartialAmount,
     incentive100Amount:      ps.incentiveAmount,
     vehicleFuelAmount:       ps.allowanceAmount,
@@ -350,7 +350,7 @@ async function computeMemberPayroll(
     permBmBreakdown = permBmConfig
       ? calculatePermBmPayroll(permBmConfig, teamVol, tenureMonth, orcEarned)
       : calculatePermBmPayroll(
-          { basicSalary: 0, monthlyTarget: 0, incentive75Amount: 0, incentive100Amount: 0,
+          { basicSalary: 0, fullTarget: 0, incentive75Amount: 0, incentive100Amount: 0,
             vehicleFuelAmount: 0, vehicleFuelThresholdPct: 0.5, vehicleFuelUnconditional: false,
             epfEmployeeRate: DEFAULT_EPF_EMPLOYEE_RATE, epfEmployerRate: DEFAULT_EPF_EMPLOYER_RATE,
             etfEmployerRate: DEFAULT_ETF_EMPLOYER_RATE },

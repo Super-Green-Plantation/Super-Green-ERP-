@@ -74,7 +74,6 @@ export function generateMemberPayslipPDF(payroll: any, member: any) {
   // Ref line
   doc.setFontSize(6.5);
   doc.setTextColor(160, 210, 185);
-  doc.text("Super Green Plantation — Confidential", M, 18);
   doc.setTextColor(...C.accent);
   const safeName = (member.nameWithInitials ?? member.name ?? "Employee").replace(/\s+/g, "_");
   doc.text(`Ref: ${safeName}_${periodShort(payroll.year, payroll.month)}`, PW - M, 18, { align: "right" });

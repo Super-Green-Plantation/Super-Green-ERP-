@@ -328,10 +328,6 @@ export function calculateMarketingPayroll(
   const ceiling = safe(config.targetBudgetCeiling) || 30_000;
   const minPct = safe(config.targetBudgetMinPct) || 0.25;
   const targetBudgetHit = hasBudget && target > 0 && achievementPct >= minPct;
-  // Rule: 30K × achievementPct, unlocks at 25%, capped at 30K.
-  //   25%  → 30 000 × 0.25 =  7 500
-  //   50%  → 30 000 × 0.50 = 15 000
-  //   100% → 30 000 × 1.00 = 30 000 (ceiling)
   const targetBudgetSalary = targetBudgetHit
     ? Math.min(ceiling, ceiling * Math.min(achievementPct, 1))
     : 0;
@@ -628,11 +624,13 @@ export function getBasicSalaryThreshold(tenureMonth: number): number {
 
 export type PermBmSalaryConfig = {
   // From PositionSalary
-  basicSalary: number;           // basicSalaryPermanent
-  monthlyTarget: number;         // PositionSalary.monthlyTarget
-  incentive75Amount: number;     // incentivePartialAmount (at 75% target)
-  incentive100Amount: number;    // incentiveAmount (at 100% target)
-  vehicleFuelAmount: number;     // allowanceAmount (vehicle+fuel combined)
+  basicSalary: number;             // basicSalaryPermanent
+  fullTarget: number;              // the full position target (e.g. 10 M for JBM).
+                                   // The engine scales this by the tenure-step %
+                                   // to get the effective monthly target.
+  incentive75Amount: number;       // incentivePartialAmount (at 75% of effective target)
+  incentive100Amount: number;      // incentiveAmount (at 100% of effective target)
+  vehicleFuelAmount: number;       // allowanceAmount (vehicle+fuel combined)
   vehicleFuelThresholdPct: number; // allowanceThresholdPermanent (0.50)
   vehicleFuelUnconditional: boolean; // true for RM/ZM/AGM months 1–4
   // Statutory
@@ -644,10 +642,10 @@ export type PermBmSalaryConfig = {
 export type PermBmPayrollBreakdown = {
   // Inputs
   volumeAchieved: number;
-  monthlyTarget: number;
-  achievementPct: number;
+  monthlyTarget: number;      // effective stepped target (fullTarget × thresholdPct)
+  achievementPct: number;     // vol / monthlyTarget (stepped)
   tenureMonth: number;
-  basicSalaryThresholdPct: number;
+  basicSalaryThresholdPct: number;  // the step fraction used (e.g. 0.60 for month 4)
 
   // Basic salary
   basicSalaryHit: boolean;
@@ -697,27 +695,47 @@ export function calculatePermBmPayroll(
   orcEarned: number = 0,
 ): PermBmPayrollBreakdown {
   const vol = safe(volumeAchieved);
-  const target = safe(config.monthlyTarget);
+  const fullTarget = safe(config.fullTarget);      // the full position target (e.g. 10 M)
   const orc = safe(orcEarned);
-  const achievementPct = target > 0 ? vol / target : 0;
+
+  // ── Effective monthly target ───────────────────────────────────────────────
+  // For permanent BM/RM/ZM/JBM etc., the *working* target for a given tenure
+  // month is the full target scaled by the tenure-step percentage:
+  //   month 1 → 25%, month 2 → 35%, … month 4 → 60%, month 7+ → 100%
+  //
+  // Example: JBM full target = 10 M, month 4 (60%) → effectiveTarget = 6 M.
+  // Achievement %, incentive thresholds, and vehicle thresholds are all
+  // computed against this 6 M figure, NOT the full 10 M.
+  //
+  // The basic-salary gate is then: achievementPct ≥ 100% of effectiveTarget
+  // (i.e. the member must reach the full step amount, not a fraction of it).
+  const basicThresholdPct = getBasicSalaryThreshold(tenureMonth);
+  const effectiveTarget = fullTarget > 0 ? fullTarget * basicThresholdPct : 0;
+
+  // Achievement is relative to the effective (stepped) target.
+  const achievementPct = effectiveTarget > 0 ? vol / effectiveTarget : 0;
 
   // ── Basic salary ───────────────────────────────────────────────────────────
-  const basicThresholdPct = getBasicSalaryThreshold(tenureMonth);
-  const basicSalaryHit = target > 0 && achievementPct >= basicThresholdPct;
+  // Basic salary is released when the member hits basicThresholdPct of their
+  // effective target — i.e. 60% of 6M = 3.6M for a month-4 JBM.
+  // (effectiveTarget already = fullTarget × basicThresholdPct, so the absolute
+  //  volume floor is fullTarget × basicThresholdPct² — e.g. 10M × 0.6 × 0.6 = 3.6M)
+  const basicSalaryHit = effectiveTarget > 0 && achievementPct >= basicThresholdPct;
   const basicSalary = basicSalaryHit ? safe(config.basicSalary) : 0;
 
   // ── Incentives (mutually exclusive) ───────────────────────────────────────
-  const incentive100Hit = target > 0 && achievementPct >= 1.0;
+  // 100%: hit the full effective target (e.g. 6M for month 4)
+  const incentive100Hit = effectiveTarget > 0 && achievementPct >= 1.0;
   const incentive100Earned = incentive100Hit ? safe(config.incentive100Amount) : 0;
 
-  // 75% tier: only when achievement >= 75% AND strictly < 100%
-  const incentive75Hit = !incentive100Hit && target > 0 && achievementPct >= 0.75;
+  // 75%: hit 75% of effective target AND strictly below 100%
+  const incentive75Hit = !incentive100Hit && effectiveTarget > 0 && achievementPct >= 0.75;
   const incentive75Earned = incentive75Hit ? safe(config.incentive75Amount) : 0;
 
   // ── Vehicle + fuel ─────────────────────────────────────────────────────────
   const vehicleFuelHit =
     config.vehicleFuelUnconditional ||
-    (target > 0 && achievementPct >= safe(config.vehicleFuelThresholdPct));
+    (effectiveTarget > 0 && achievementPct >= safe(config.vehicleFuelThresholdPct));
   const vehicleFuelEarned = vehicleFuelHit ? safe(config.vehicleFuelAmount) : 0;
 
   // ── Gross ──────────────────────────────────────────────────────────────────
@@ -738,7 +756,7 @@ export function calculatePermBmPayroll(
 
   return {
     volumeAchieved: vol,
-    monthlyTarget: target,
+    monthlyTarget: effectiveTarget,   // the stepped target used for this pay period
     achievementPct,
     tenureMonth,
     basicSalaryThresholdPct: basicThresholdPct,
