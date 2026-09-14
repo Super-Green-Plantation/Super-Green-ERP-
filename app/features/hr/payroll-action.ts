@@ -27,14 +27,19 @@ type ActiveTeamCounts = { advisors: number; fms: number; bms: number };
 const HO_MIN_RANK = 14;
 
 /**
- * Routes a member to the correct payroll track by position rank.
- * rank >= 14 → HEAD_OFFICE (permanent BM/RM/ZM/AGM, COO, GM, all HO staff)
+ * Routes a member to the correct payroll track by position rank AND status.
+ * PROBATION status → always MARKETING (field incentive track), even for RM/ZM/AGM.
+ * rank >= 14 AND PERMANENT/MANAGEMENT → HEAD_OFFICE (fixed base + statutory)
  * rank <  14 → MARKETING  (FA, TL, probation BM/RM/ZM/AGM)
  *
  * Using rank (not Position.type) because permanent field roles like JBM(14),
  * JRM(16), COO(104) have type=PERMANENT but belong on the HO salary track.
  */
-function resolvePayrollCategory(positionRank: number | null | undefined): PayrollCategory {
+function resolvePayrollCategory(
+  positionRank: number | null | undefined,
+  employmentStatus?: string | null,
+): PayrollCategory {
+  if (employmentStatus === "PROBATION") return "MARKETING";
   if ((positionRank ?? 0) >= HO_MIN_RANK) return "HEAD_OFFICE";
   return "MARKETING";
 }
@@ -312,7 +317,7 @@ export async function getPayrollPreview(
       }).then(r => Number(r._sum.amount ?? 0));
 
       // ── Category routing ─────────────────────────────────────────────────
-      const payrollCategory = resolvePayrollCategory(member.position?.rank);
+      const payrollCategory = resolvePayrollCategory(member.position?.rank, member.status);
 
       const positionTargetRow = resolvePositionTarget(member, year, month);
       const positionTargetData = toPositionTargetData(positionTargetRow);
@@ -508,7 +513,7 @@ export async function runMonthlyPayroll(
       }).then((rows) => rows.reduce((sum, c) => sum + Number(c.amount), 0));
 
       // ── Category routing ─────────────────────────────────────────────────
-      const payrollCategory = resolvePayrollCategory((member as any).position?.rank);
+      const payrollCategory = resolvePayrollCategory((member as any).position?.rank, (member as any).status);
 
       const positionTargetRow = resolvePositionTarget(member, year, month);
       const positionTargetData = toPositionTargetData(positionTargetRow);
