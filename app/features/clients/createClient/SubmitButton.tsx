@@ -1,18 +1,17 @@
 "use client";
 
 import { defaultValues, useFormContext } from "@/app/context/FormContext";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { saveClient } from "../actions";
 import { updateBeneficiary, updateNominee } from "@/app/features/clients/actions";
-import { createInvestmentForExistingClient } from "@/app/features/investments/actions";
+import { createInvestmentForExistingClient, updateInvestmentDocuments, approveInvestmentWithHierarchyLog } from "@/app/features/investments/actions";
 import { createClient } from "@/lib/supabase/client";
 import { LockedClient } from "@/app/types/client";
 
 const BUCKET = "kyc-documents";
 
-type DbUser = { id: string; email: string; role: string; branchId?: number };
 export type PendingFilesRef = React.MutableRefObject<Record<string, File | null>>;
 
 const uploadToSupabase = async (key: string, file: File): Promise<string> => {
@@ -38,24 +37,19 @@ export const SubmitButton = ({
   beneficiaryPhotosRef,
   nomineePhotosRef,
   lockedClient,
+  isManager,
   onResetComplete,
 }: {
   pendingFilesRef: PendingFilesRef;
   beneficiaryPhotosRef: PendingFilesRef;
   nomineePhotosRef: PendingFilesRef;
   lockedClient: LockedClient | null;
+  isManager: boolean;
   onResetComplete: () => void;
 }) => {
   const { form } = useFormContext();
   const [loading, setLoading] = useState(false);
-  const [dbUser, setDbUser] = useState<DbUser | null>(null);
   const { reset } = form;
-
-  useEffect(() => {
-    fetch("/api/me")
-      .then((r) => r.json())
-      .then(({ dbUser }) => setDbUser(dbUser));
-  }, []);
 
   // ── Upload helper ─────────────────────────────────────────────────────────
   const uploadPhotos = async (
@@ -136,6 +130,26 @@ export const SubmitButton = ({
         return;
       }
 
+      // ── If management staff, approve immediately with hierarchy ───────────
+      const createdInvId = res.investment?.id;
+      if (isManager && createdInvId) {
+        const approveRes = await approveInvestmentWithHierarchyLog({
+          investmentId: createdInvId,
+          faId: data.applicant.faId ?? null,
+          fmId: data.applicant.fmId ?? null,
+          bmId: data.applicant.bmId ?? null,
+          rmId: data.applicant.rmId ?? null,
+          zmId: data.applicant.zmId ?? null,
+          agmId: data.applicant.agmId ?? null,
+          ccoId: data.applicant.ccoId ?? null,
+        });
+        if (!approveRes.success) {
+          toast.warning(
+            `Investment created but approval failed: ${approveRes.error ?? "unknown error"}`
+          );
+        }
+      }
+
       // ── Upload beneficiary photos ────────────────────────────────────────
       const finalBeneficiaryId = res.investment?.beneficiaryId;
       const finalNomineeId = res.investment?.nomineeId;
@@ -158,12 +172,48 @@ export const SubmitButton = ({
         );
       }
 
+      // ── Upload investment documents ──────────────────────────────────────
+      const invId = res.investment?.id;
+      if (invId) {
+        const invFiles = {
+          paySlip: pendingFilesRef.current.paySlip,
+          proposal: pendingFilesRef.current.proposal,
+          agreement: pendingFilesRef.current.agreement,
+        };
+        const hasInvDocs = Object.values(invFiles).some(Boolean);
+        
+        if (hasInvDocs) {
+          toast.loading("Uploading documents...", { id: "inv-docs" });
+          const uploadPromises = Object.entries(invFiles).map(async ([key, file]) => {
+            if (!file) return [key, null];
+            const url = await uploadToSupabase(key, file);
+            return [key, url];
+          });
+          
+          photoUploads.push(
+            Promise.all(uploadPromises).then(async (results) => {
+              const uploaded = Object.fromEntries(results);
+              await updateInvestmentDocuments(invId, {
+                paymentSlip: uploaded.paySlip,
+                proposal: uploaded.proposal,
+                agreement: uploaded.agreement,
+              });
+              toast.dismiss("inv-docs");
+            }).catch(err => {
+              console.error(err);
+              toast.dismiss("inv-docs");
+              throw err;
+            })
+          );
+        }
+      }
+
       if (photoUploads.length) {
         try {
           await Promise.all(photoUploads);
         } catch (err) {
-          console.error("Photo upload error:", err);
-          toast.warning("Investment created but some photos failed to upload.");
+          console.error("Upload error:", err);
+          toast.warning("Investment created but some files failed to upload.");
         }
       }
 
@@ -222,7 +272,7 @@ export const SubmitButton = ({
       }
 
       const data = form.getValues();
-      const res = await saveClient(data, dbUser?.email);
+      const res = await saveClient(data, null);
 
       if (!res.success) {
         if ((res as any).fieldErrors) {
@@ -265,6 +315,26 @@ export const SubmitButton = ({
         } catch (err) {
           console.error("Photo upload error:", err);
           toast.warning("Client saved but some photos failed to upload.");
+        }
+      }
+
+      // ── If management staff, approve the created investment immediately ───
+      const newInvId = (res as any).client?.investments?.[0]?.id;
+      if (isManager && newInvId) {
+        const approveRes = await approveInvestmentWithHierarchyLog({
+          investmentId: newInvId,
+          faId: data.applicant.faId ?? null,
+          fmId: data.applicant.fmId ?? null,
+          bmId: data.applicant.bmId ?? null,
+          rmId: data.applicant.rmId ?? null,
+          zmId: data.applicant.zmId ?? null,
+          agmId: data.applicant.agmId ?? null,
+          ccoId: data.applicant.ccoId ?? null,
+        });
+        if (!approveRes.success) {
+          toast.warning(
+            `Client registered but approval failed: ${approveRes.error ?? "unknown error"}`
+          );
         }
       }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { FileText, ShieldCheck, Image as ImageIcon, X, UploadCloud } from "lucide-react";
+import { FileText, ShieldCheck, Image as ImageIcon, X, UploadCloud, ChevronDown } from "lucide-react";
 
 interface FileUploadState { [key: string]: File | null; }
 interface PreviewState { [key: string]: string | null; }
@@ -18,6 +18,8 @@ const DocumentUploadSection = ({ pendingFilesRef }: DocumentUploadSectionProps) 
   const [previews, setPreviews] = useState<PreviewState>({
     idFront: null, idBack: null, paySlip: null, proposal: null, agreement: null,
   });
+
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     pendingFilesRef.current = files;
@@ -102,63 +104,90 @@ const DocumentUploadSection = ({ pendingFilesRef }: DocumentUploadSectionProps) 
   const selectedCount = Object.values(files).filter(Boolean).length;
 
   return (
-    <div className="mx-auto max-w-5xl space-y-7 rounded-2xl border border-border/70 bg-card p-5 shadow-[0_10px_35px_rgba(34,43,72,0.05)] sm:p-6 md:p-8">
-      {/* Header */}
-      <div className="flex items-center gap-3 border-b border-border/70 pb-5">
+    <div className="mx-auto max-w-5xl rounded-2xl border border-border/70 bg-card shadow-[0_10px_35px_rgba(34,43,72,0.05)] overflow-hidden">
+      {/* ── Clickable Header ── */}
+      <button
+        type="button"
+        onClick={() => setIsOpen((v) => !v)}
+        className="w-full flex items-center gap-3 px-5 py-4 sm:px-6 hover:bg-muted/30 transition-colors"
+      >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
           <ShieldCheck className="w-6 h-6 text-primary" />
         </div>
-        <div>
+        <div className="flex-1 text-left">
           <h3 className="text-sm font-bold tracking-tight text-foreground">
             Document Compliance
           </h3>
           <p className="text-xs text-gray-400 dark:text-zinc-500 mt-0.5 hidden md:block">
-            Please upload the required verification files below.
+            Upload KYC and paperwork verification files
           </p>
         </div>
-      </div>
 
-      {/* Info Warning Banner */}
-      <div className="flex items-start justify-between gap-4 rounded-2xl border border-amber-200/70 bg-amber-50/70 p-4 md:items-center md:p-5 dark:border-amber-900/40 dark:bg-amber-950/20">
-        <div className="flex items-start md:items-center gap-3">
-          <UploadCloud className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
-          <p className="text-xs md:text-sm leading-relaxed text-amber-900 dark:text-amber-400 font-medium">
-            Payload Limit: <span className="font-bold">1MB / Section</span>. 
-          </p>
-        </div>
-        {selectedCount > 0 && (
-          <span className="hidden md:inline-block rounded-lg bg-primary px-3 py-1 text-[10px] font-bold tracking-wide text-primary-foreground shrink-0">
-            {selectedCount} READY TO UPLOAD
+        {/* Badge showing how many files are selected when collapsed */}
+        {!isOpen && selectedCount > 0 && (
+          <span className="rounded-lg bg-primary px-2.5 py-1 text-[10px] font-bold tracking-wide text-primary-foreground shrink-0">
+            {selectedCount} file{selectedCount > 1 ? "s" : ""}
           </span>
         )}
-      </div>
+        {isOpen && selectedCount > 0 && (
+          <span className="rounded-lg bg-primary/10 px-2.5 py-1 text-[10px] font-bold tracking-wide text-primary shrink-0">
+            {selectedCount} ready
+          </span>
+        )}
 
-      {/* Main Grid Layout - Side-by-side or stacked cleanly */}
-      <div className="grid grid-cols-1 gap-7 lg:grid-cols-12">
-        
-        {/* Identity Docs section (Takes 5 cols on large desktop) */}
-        <div className="space-y-4 lg:col-span-5">
-          <label className="text-xs font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-            <ImageIcon className="w-4 h-4" /> Identity Documents
-          </label>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <FileCard id="idFront" label="Front View" description="NIC / DL / Passport" />
-            <FileCard id="idBack" label="Back View" description="NIC / DL / Passport" />
+        <ChevronDown
+          className={`w-4 h-4 text-muted-foreground shrink-0 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
+        />
+      </button>
+
+      {/* ── Collapsible Body ── */}
+      <div
+        className={`transition-all duration-300 ease-in-out overflow-hidden ${
+          isOpen ? "max-h-[1000px] opacity-100" : "max-h-0 opacity-0"
+        }`}
+      >
+        <div className="space-y-7 border-t border-border/70 p-5 sm:p-6 md:p-8">
+          {/* Info Warning Banner */}
+          <div className="flex items-start justify-between gap-4 rounded-2xl border border-amber-200/70 bg-amber-50/70 p-4 md:items-center md:p-5 dark:border-amber-900/40 dark:bg-amber-950/20">
+            <div className="flex items-start md:items-center gap-3">
+              <UploadCloud className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
+              <p className="text-xs md:text-sm leading-relaxed text-amber-900 dark:text-amber-400 font-medium">
+                Payload Limit: <span className="font-bold">1MB / Section</span>.
+              </p>
+            </div>
+            {selectedCount > 0 && (
+              <span className="hidden md:inline-block rounded-lg bg-primary px-3 py-1 text-[10px] font-bold tracking-wide text-primary-foreground shrink-0">
+                {selectedCount} READY TO UPLOAD
+              </span>
+            )}
+          </div>
+
+          {/* Main Grid Layout */}
+          <div className="grid grid-cols-1 gap-7 lg:grid-cols-12">
+            {/* Identity Docs */}
+            <div className="space-y-4 lg:col-span-5">
+              <label className="text-xs font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                <ImageIcon className="w-4 h-4" /> Identity Documents
+              </label>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <FileCard id="idFront" label="Front View" description="NIC / DL / Passport" />
+                <FileCard id="idBack" label="Back View" description="NIC / DL / Passport" />
+              </div>
+            </div>
+
+            {/* Paperwork */}
+            <div className="space-y-4 lg:col-span-7">
+              <label className="text-xs font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                <FileText className="w-4 h-4" /> Paperwork Documentation
+              </label>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <FileCard id="paySlip" label="Pay Slip" description="Recent salary slip" />
+                <FileCard id="proposal" label="Proposal" description="Signed copy" />
+                <FileCard id="agreement" label="Agreement Contract" description="Binding signature" />
+              </div>
+            </div>
           </div>
         </div>
-
-        {/* Paperwork Section (Takes 7 cols on large desktop to give 3 cards plenty of text room) */}
-        <div className="space-y-4 lg:col-span-7">
-          <label className="text-xs font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-            <FileText className="w-4 h-4" /> Paperwork Documentation
-          </label>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <FileCard id="paySlip" label="Pay Slip" description="Recent salary slip" />
-            <FileCard id="proposal" label="Proposal" description="Signed copy" />
-            <FileCard id="agreement" label="Agreement Contract" description="Binding signature" />
-          </div>
-        </div>
-        
       </div>
     </div>
   );

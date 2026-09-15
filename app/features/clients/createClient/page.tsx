@@ -11,11 +11,21 @@ import AdvisorHierarchy from "./MemberSearchInput";
 import { useRef, useState } from "react";
 import { ExistingClientBanner } from "./ExistingClientBanner";
 import { LockedClient } from "@/app/types/client";
-import CreateInvestmentForm from "@/app/features/investments/create/page";
+import { useSessionUser } from "@/app/hooks/useSessionUser";
 
 const Page = () => {
   const [resetKey, setResetKey] = useState(0);
   const [lockedClient, setLockedClient] = useState<LockedClient | null>(null);
+
+  const { data: userData } = useSessionUser();
+  const isManager =
+    userData &&
+    (
+      ["ADMIN", "HR", "DEV"].includes(userData.role) ||
+      ["CHAIRMEN", "HR", "ACC", "PRO", "OPM"].includes(
+        (userData as any).member?.position?.title ?? ""
+      )
+    );
 
   // KYC identity + paperwork docs (existing ref, unchanged)
   const pendingFilesRef = useRef<Record<string, File | null>>({
@@ -43,97 +53,78 @@ const Page = () => {
 
   const handleUnlockClient = () => {
     setLockedClient(null);
+    setResetKey((p) => p + 1);
+    pendingFilesRef.current = {
+      idFront: null,
+      idBack: null,
+      paymentSlip: null,
+      proposal: null,
+      agreement: null,
+    };
+    beneficiaryPhotosRef.current = {
+      bankBookPhotoUrl: null,
+      idCopyUrl: null,
+    };
+    nomineePhotosRef.current = {
+      idCopyUrl: null,
+    };
   };
 
-  // ── When adding an investment to an existing client, use the same
-  //    clean form as /features/investments/create
-  if (lockedClient) {
-    return (
-      <div className="mx-auto min-h-screen w-full max-w-[1120px] space-y-5 px-4 pb-10 pt-5 sm:px-7 sm:pt-8">
-        {/* Page header */}
-        <div className="flex flex-col gap-4 border-b border-border/70 pb-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-4">
-            <Back />
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-[30px]">
-                Add Investment
-              </h1>
-              <p className="mt-1 text-xs font-medium text-muted-foreground">
-                Creating new investment for {lockedClient.fullName}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Existing client banner */}
-        <ExistingClientBanner
-          client={lockedClient}
-          onUnlock={handleUnlockClient}
-        />
-
-        {/* Same investment form UI as /features/investments/create */}
-        <CreateInvestmentForm
-          key={resetKey}
-          hideHeader
-          lockedClient={lockedClient}
-          onSuccess={() => {
-            setResetKey((p) => p + 1);
-            setLockedClient(null);
-          }}
-        />
-      </div>
-    );
-  }
-
-  // ── New-client registration flow ─────────────────────────────────────────
+  // ── Unified Registration / Investment flow ────────────────────────────────
   return (
-    <FormProvider>
-      <div className="mx-auto min-h-screen w-full max-w-[1280px] space-y-5 px-4 pb-10 pt-5 sm:px-7 sm:pt-8">
+    <FormProvider key={resetKey}>
+      <div className="mx-auto min-h-screen w-full space-y-5 px-4 pb-10 pt-5 sm:px-7 sm:pt-8">
         {/* Header */}
         <div className="flex flex-col gap-4 border-b border-border/70 pb-5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-4">
             <Back />
             <div>
               <h1 className="text-2xl font-bold tracking-tight text-foreground sm:text-[30px]">
-                Register Client
+                {lockedClient ? "Add Investment" : "Register Client"}
               </h1>
               <p className="mt-1 text-xs font-medium text-muted-foreground">
-                Search for an existing client or register a new one
+                {lockedClient
+                  ? `Creating new investment for ${lockedClient.fullName}`
+                  : "Search for an existing client or register a new one"}
               </p>
             </div>
           </div>
         </div>
+
+        {/* Existing client banner (allows unlocking) */}
+        {lockedClient && (
+          <ExistingClientBanner
+            client={lockedClient}
+            onUnlock={handleUnlockClient}
+          />
+        )}
 
         {/* Main Layout Grid */}
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
           {/* Left Column */}
           <div className="space-y-5 lg:col-span-2">
             <ApplicantDetails
-              lockedClient={null}
+              lockedClient={lockedClient}
               onClientLock={handleLockClient}
             />
 
-            <div className="rounded-2xl border border-border/70 bg-card p-5 shadow-[0_10px_35px_rgba(34,43,72,0.05)] sm:p-6">
-              <DocumentUploadSection
-                key={resetKey}
-                pendingFilesRef={pendingFilesRef}
-              />
-            </div>
+            <DocumentUploadSection
+              key={resetKey}
+              pendingFilesRef={pendingFilesRef}
+            />
           </div>
 
           {/* Right Column */}
           <div className="space-y-5 lg:col-span-1">
-            {/* <AdvisorHierarchy /> */}
+            {isManager && <AdvisorHierarchy />}
             <BeneficiaryDetails
-              lockedClient={null}
+              lockedClient={lockedClient}
               beneficiaryPhotosRef={beneficiaryPhotosRef}
             />
             <NomineeDetails
-              lockedClient={null}
+              lockedClient={lockedClient}
               nomineePhotosRef={nomineePhotosRef}
             />
-
-            
           </div>
         </div>
 
@@ -142,7 +133,8 @@ const Page = () => {
             pendingFilesRef={pendingFilesRef}
             beneficiaryPhotosRef={beneficiaryPhotosRef}
             nomineePhotosRef={nomineePhotosRef}
-            lockedClient={null}
+            lockedClient={lockedClient}
+            isManager={isManager || false}
             onResetComplete={() => {
               setResetKey((p) => p + 1);
             }}
