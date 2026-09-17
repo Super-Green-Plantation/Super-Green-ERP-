@@ -147,13 +147,13 @@ export default function InventoryPage() {
 
   return (
     <>
-      <div className="mx-auto min-h-screen w-full max-w-[1480px] space-y-5 px-4 pb-10 pt-5 font-sans transition-colors duration-300 sm:px-7 sm:pt-8">
+      <div className="min-h-screen w-full space-y-4 px-3 pb-8 pt-4 font-sans transition-colors duration-300 sm:px-5 lg:px-7">
 
         {/* ── Header ─────────────────────────────────────────────────────────── */}
         <div className="flex flex-col gap-4 border-b border-border/70 pb-5 sm:flex-row sm:items-end sm:justify-between">
           <div className="flex flex-col gap-1 min-w-0">
             <p className="saas-eyebrow">Operations workspace</p>
-            <h1 className="mt-1 truncate text-2xl font-bold tracking-tight text-foreground sm:text-[30px]">
+            <h1 className="mt-1 truncate text-xl font-bold tracking-tight text-foreground sm:text-2xl">
               Inventory Management
             </h1>
             <p className="mt-1 text-xs font-medium text-muted-foreground">
@@ -164,12 +164,12 @@ export default function InventoryPage() {
         </div>
 
         {/* ── Company Toggle ──────────────────────────────────────────────────── */}
-        <div className="flex w-fit items-center gap-1 rounded-xl bg-muted/60 p-1">
+        <div className="flex w-fit items-center gap-1 rounded-lg bg-muted/60 p-1">
           {COMPANIES.map((c) => (
             <button
               key={c.value}
               onClick={() => handleCompanyChange(c.value)}
-              className={`flex items-center gap-1.5 rounded-lg px-4 py-2 text-xs font-bold transition-all whitespace-nowrap ${
+                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[11px] font-bold transition-all whitespace-nowrap ${
                 selectedCompany === c.value
                   ? "bg-card text-primary shadow-sm ring-1 ring-border"
                   : "text-muted-foreground hover:bg-card hover:text-foreground"
@@ -181,19 +181,25 @@ export default function InventoryPage() {
           ))}
         </div>
 
+        <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-3">
+          <div className="rounded-lg border border-border/70 bg-card px-3 py-2.5 shadow-sm"><p className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Line items</p><p className="mt-1 text-base font-black tabular-nums">{filtered.length}</p></div>
+          <div className="rounded-lg border border-border/70 bg-card px-3 py-2.5 shadow-sm"><p className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Total quantity</p><p className="mt-1 text-base font-black tabular-nums">{totalQty}</p></div>
+          <div className="col-span-2 rounded-lg border border-border/70 bg-card px-3 py-2.5 shadow-sm lg:col-span-1"><p className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Condition mix</p><p className="mt-1 text-xs font-bold"><span className="text-emerald-600">{filtered.filter((item) => item.condition === "GOOD").length} good</span><span className="mx-2 text-border">•</span><span className="text-amber-600">{filtered.filter((item) => item.condition === "FAIR").length} fair</span><span className="mx-2 text-border">•</span><span className="text-red-600">{filtered.filter((item) => item.condition === "DAMAGED").length} damaged</span></p></div>
+        </div>
+
         {/* ── Toolbar ─────────────────────────────────────────────────────────── */}
-        <div className="flex flex-col gap-3 rounded-2xl border border-border/70 bg-card/70 p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-2 rounded-xl border border-border/70 bg-card/70 p-2.5 shadow-sm sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={openAdd}
-            className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold tracking-wide text-primary-foreground shadow-md shadow-primary/15 transition-all hover:brightness-105"
+            className="flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-xs font-bold tracking-wide text-primary-foreground shadow-md shadow-primary/15 transition-all hover:brightness-105"
           >
             <Plus className="w-3.5 h-3.5" />
             Add Item
           </button>
           <button
             onClick={() => setCatModalOpen(true)}
-            className="flex items-center gap-1.5 rounded-xl border border-border bg-card px-4 py-2.5 text-xs font-bold tracking-wide text-foreground shadow-sm transition-colors hover:bg-muted"
+            className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3.5 py-2 text-xs font-bold tracking-wide text-foreground shadow-sm transition-colors hover:bg-muted"
           >
             <Tags className="w-3.5 h-3.5" />
             Categories
@@ -226,12 +232,12 @@ export default function InventoryPage() {
                 ))}
               </div>
             ) : (
-              <div className="flex min-w-max items-center gap-2 rounded-xl bg-muted/40 p-1">
+              <div className="flex min-w-max items-center gap-1 rounded-lg bg-muted/40 p-1">
                 {branches.map((b) => (
                   <button
                     key={b.id}
                     onClick={() => setSelectedBranchId(b.id)}
-                    className={`rounded-lg px-4 py-2 text-sm font-bold transition-all whitespace-nowrap ${
+                    className={`rounded-md px-3 py-1.5 text-xs font-bold transition-all whitespace-nowrap ${
                       selectedBranchId === b.id
                         ? "bg-primary text-primary-foreground shadow-sm"
                         : "text-muted-foreground hover:bg-card hover:text-foreground"
@@ -255,27 +261,27 @@ export default function InventoryPage() {
         )}
 
         {/* ── Search ──────────────────────────────────────────────────────────── */}
-        <div className="relative flex w-full items-center rounded-2xl border border-border/70 bg-card shadow-sm">
+        <div className="relative flex w-full items-center rounded-xl border border-border/70 bg-card shadow-sm">
           <Search className="w-4 h-4 text-gray-400 ml-3 shrink-0" />
           <input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             type="text"
             placeholder="Search by name, code, or category…"
-            className="w-full border-none bg-transparent px-2 py-3 text-sm font-medium text-foreground outline-none placeholder:text-muted-foreground focus:ring-0"
+            className="w-full border-none bg-transparent px-2 py-2.5 text-xs font-medium text-foreground outline-none placeholder:text-muted-foreground focus:ring-0"
           />
         </div>
 
         {/* ── Table ───────────────────────────────────────────────────────────── */}
         {loading ? (
-          <div className="flex h-64 flex-col items-center justify-center gap-4 rounded-2xl border border-border/70 bg-card shadow-sm">
+          <div className="flex h-52 flex-col items-center justify-center gap-3 rounded-xl border border-border/70 bg-card shadow-sm">
             <div className="w-6 h-6 border-2 border-gray-200 border-t-[#0f5132] rounded-full animate-spin" />
             <p className="text-xs font-bold text-gray-500 uppercase tracking-widest animate-pulse">
               Loading inventory…
             </p>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="flex h-64 flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border text-muted-foreground">
+          <div className="flex h-52 flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border text-muted-foreground">
             <Package className="w-10 h-10 opacity-30" />
             <p className="text-sm font-semibold">No items found</p>
             <button onClick={openAdd} className="text-xs font-bold text-primary hover:underline">
@@ -283,12 +289,13 @@ export default function InventoryPage() {
             </button>
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-2xl border border-border/70 bg-card shadow-[0_10px_35px_rgba(34,43,72,0.05)]">
-            <table className="w-full min-w-[920px] text-sm">
+          <div className="overflow-hidden rounded-xl border border-border/70 bg-card shadow-sm">
+            <div className="overflow-x-auto">
+            <table className="w-full min-w-[860px] text-sm">
               <thead>
                 <tr className="border-b border-border/70 bg-muted/35">
                   {["Item Code", "Name", "Category", ...(isMC ? [] : ["Branch"]), "Qty", "Condition", "Notes", ""].map((h) => (
-                    <th key={h} className="whitespace-nowrap px-4 py-3.5 text-left text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
+                    <th key={h} className="whitespace-nowrap px-4 py-2.5 text-left text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">
                       {h}
                     </th>
                   ))}
@@ -297,20 +304,20 @@ export default function InventoryPage() {
               <tbody className="divide-y divide-border/60">
                 {filtered.map((item) => (
                   <tr key={item.id} className="transition-colors hover:bg-primary/[0.025]">
-                    <td className="px-4 py-3 font-mono text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">{item.itemCode}</td>
-                    <td className="px-4 py-3 font-semibold text-gray-900 dark:text-gray-100">{item.name}</td>
-                    <td className="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">{item.InventoryCategory.name}</td>
+                    <td className="px-4 py-2.5 font-mono text-[11px] text-gray-500 dark:text-gray-400 whitespace-nowrap">{item.itemCode}</td>
+                    <td className="px-4 py-2.5 font-semibold text-gray-900 dark:text-gray-100">{item.name}</td>
+                    <td className="px-4 py-2.5 text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">{item.InventoryCategory.name}</td>
                     {!isMC && (
-                      <td className="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">{item.Branch?.name ?? "—"}</td>
+                      <td className="px-4 py-2.5 text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">{item.Branch?.name ?? "—"}</td>
                     )}
-                    <td className="px-4 py-3 font-bold text-gray-900 dark:text-gray-100">{item.quantity}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-2.5 font-bold text-gray-900 dark:text-gray-100">{item.quantity}</td>
+                    <td className="px-4 py-2.5">
                       <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${conditionBadge[item.condition]}`}>
                         {item.condition}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs max-w-[200px] truncate">{item.notes ?? "—"}</td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-2.5 text-gray-500 dark:text-gray-400 text-xs max-w-[200px] truncate">{item.notes ?? "—"}</td>
+                    <td className="px-4 py-2.5">
                       <div className="flex items-center gap-2 justify-end">
                         <button
                           onClick={() => openEdit(item)}
@@ -331,6 +338,7 @@ export default function InventoryPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         )}
       </div>

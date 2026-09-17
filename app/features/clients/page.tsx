@@ -153,9 +153,12 @@ const Page = () => {
       {/* Header */}
       <div className="sm:flex sm:justify-between sm:items-center mb-6">
         <div>
-          <Heading className="mb-3">Client</Heading>
+          <Heading className="mb-3">Clients</Heading>
           <p className="text-sm text-muted-foreground font-medium mt-0.5">
             {total} total clients
+          </p>
+          <p className="mt-2 max-w-xl text-xs leading-5 text-muted-foreground">
+            See who the client is, which branch owns the relationship, who registered them, and their investment footprint before opening the full profile.
           </p>
         </div>
         <Link
@@ -179,7 +182,7 @@ const Page = () => {
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
               type="text"
-              placeholder="Search Client NIC / Proposal Form No."
+              placeholder="Search client name or NIC"
               className="w-full bg-transparent border-none pl-11 pr-10 py-3 text-sm font-semibold text-foreground outline-none"
             />
             {searchText && (

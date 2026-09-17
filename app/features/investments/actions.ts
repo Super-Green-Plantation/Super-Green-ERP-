@@ -916,7 +916,7 @@ export async function searchInvestments(
   const [investments, total] = await Promise.all([
     prisma.investment.findMany({
       where: whereCondition,
-      include: { client: true, plan: true, advisor: true },
+      include: { client: true, plan: true, advisor: true, branch: true, beneficiary: true, nominee: true },
       orderBy: { investmentDate: "desc" },
       ...(pageSize !== -1 ? { skip: (page - 1) * pageSize, take: pageSize } : {}),
     }),

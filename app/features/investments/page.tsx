@@ -249,62 +249,32 @@ export default function InvestmentsPage() {
         </div>
       </div>
 
-      {/* Date range + Summary cards */}
-      <div className="space-y-4">
-
-
-        {/* Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="rounded-2xl border border-border/80 bg-card p-5 shadow-[0_10px_35px_rgba(34,43,72,0.05)]">
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-              Total Invested
-            </p>
-            <p className="text-2xl font-black text-foreground tabular-nums tracking-tight">
-              <span className="text-sm font-bold text-muted-foreground mr-1">Rs.</span>
-              {(summary?.totalAmount ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-            </p>
-            {selectedMonth !== "all" && (
-              <p className="text-[10px] text-muted-foreground font-medium">
-                {new Date(dateFilters.from!).toLocaleDateString("en-GB", { month: "long", year: "numeric" })}
-              </p>
-            )}
-          </div>
-          {/* <div className="sm:flex-col flex gap-3">
-            <div className=" bg-card border border-border rounded-2xl p-5 space-y-1">
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                Total Investments
-              </p>
-              <p className="text-2xl font-black text-foreground tabular-nums">
-                {summary?.investmentCount ?? 0}
-              </p>
-              <p className="text-[10px] text-muted-foreground font-medium">records</p>
-            </div>
-
-            <div className="rounded-2xl border border-border/80 bg-card p-5 shadow-[0_10px_35px_rgba(34,43,72,0.05)]">
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                Proposals Filed
-              </p>
-              <p className="text-2xl font-black text-foreground tabular-nums">
-                {summary?.proposalCount ?? 0}
-              </p>
-              <p className="text-[10px] text-muted-foreground font-medium">
-                of {summary?.investmentCount ?? 0} have proposal no.
-              </p>
-            </div>
-          </div> */}
-
-
-
+      {/* Compact portfolio snapshot */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+        <div className="rounded-xl border border-border/70 bg-card px-4 py-3 shadow-sm">
+          <p className="text-[9px] font-black uppercase tracking-[0.16em] text-muted-foreground">Total invested</p>
+          <p className="mt-1 text-lg font-black tracking-tight text-foreground tabular-nums"><span className="mr-1 text-xs font-bold text-muted-foreground">Rs.</span>{(summary?.totalAmount ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+          {selectedMonth !== "all" && <p className="mt-0.5 text-[10px] font-medium text-muted-foreground">{new Date(dateFilters.from!).toLocaleDateString("en-GB", { month: "short", year: "numeric" })}</p>}
+        </div>
+        <div className="rounded-xl border border-border/70 bg-card px-4 py-3 shadow-sm">
+          <p className="text-[9px] font-black uppercase tracking-[0.16em] text-muted-foreground">Investment records</p>
+          <p className="mt-1 text-lg font-black tracking-tight text-foreground tabular-nums">{summary?.investmentCount ?? total}</p>
+          <p className="mt-0.5 text-[10px] font-medium text-muted-foreground">in the selected scope</p>
+        </div>
+        <div className="col-span-2 rounded-xl border border-border/70 bg-card px-4 py-3 shadow-sm lg:col-span-1">
+          <p className="text-[9px] font-black uppercase tracking-[0.16em] text-muted-foreground">Proposals filed</p>
+          <p className="mt-1 text-lg font-black tracking-tight text-foreground tabular-nums">{summary?.proposalCount ?? 0}<span className="ml-1 text-xs font-bold text-muted-foreground">/ {summary?.investmentCount ?? total}</span></p>
+          <p className="mt-0.5 text-[10px] font-medium text-muted-foreground">with a proposal number</p>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-1 rounded-xl bg-muted/60 p-1">
+      <div className="flex items-center gap-1 overflow-x-auto rounded-xl bg-muted/60 p-1">
         {["ALL", "PENDING", "APPROVED", "REJECTED"].map((tab) => (
           <button
             key={tab}
             onClick={() => { setActiveTab(tab); setCurrentPage(1); }}
-            className={`rounded-lg px-4 py-2 text-xs font-bold transition-all ${activeTab === tab ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:bg-card hover:text-foreground"}`}
+            className={`rounded-lg px-3 py-1.5 text-[11px] font-bold transition-all ${activeTab === tab ? "bg-card text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:bg-card hover:text-foreground"}`}
           >
             {tab.charAt(0) + tab.slice(1).toLowerCase()}
           </button>
@@ -312,7 +282,7 @@ export default function InvestmentsPage() {
       </div>
 
       {/* Search & Filter */}
-      <div className="rounded-2xl border border-border/70 bg-card/70 p-3 shadow-sm">
+      <div className="rounded-xl border border-border/70 bg-card/70 p-2.5 shadow-sm">
         <div className="mb-2 hidden items-center justify-between px-1 sm:flex"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Find an investment</p>{isFiltered && <span className="text-[10px] font-semibold text-primary">Filters active</span>}</div>
         <div className="flex flex-col items-center gap-2 md:flex-row">
 
@@ -413,10 +383,10 @@ export default function InvestmentsPage() {
             </div>
           )}
 <div className="overflow-x-auto">
-            <table className="w-full min-w-[1180px] text-left">
+            <table className="w-full min-w-[1020px] text-left">
               <thead>
                 <tr className="border-b border-border/70 bg-muted/35">
-                  {["Proposal No.", "Client", "Plan", "Amount", "Inv. Date", "Maturity", "Advisor", "Status", "Actions"].map(h => (
+                  {["Investment", "Client / branch", "Plan", "Amount", "Maturity", "Advisor", "Status", "Actions"].map(h => (
                     <th key={h} className={`px-5 py-3.5 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground ${h === "Actions" ? "text-center" : ""}`}>
                       {h}
                     </th>
@@ -426,28 +396,21 @@ export default function InvestmentsPage() {
               <tbody className="divide-y divide-border/60">
                 {investments.map((inv: any) => (
                   <tr key={inv.id} className="group transition-colors hover:bg-primary/[0.025]">
-                    <td className="px-5 py-4">
-                      <span className="text-[11px] font-bold text-muted-foreground/80 font-mono tracking-tighter">
-                        {inv.proposalFormNo ?? `#${inv.id}`}
-                      </span>
+                    <td className="px-4 py-3.5">
+                      <p className="text-[11px] font-bold text-foreground font-mono tracking-tighter">{inv.proposalFormNo ?? `#${inv.id}`}</p>
+                      <p className="mt-1 text-[10px] font-medium text-muted-foreground">{inv.refNumber || "Reference pending"}</p>
                     </td>
-                    <td className="px-3 py-4">
+                    <td className="px-4 py-3.5">
                       <p className="text-sm font-bold text-foreground leading-tight">{inv.client?.fullName ?? "—"}</p>
                       <p className="text-[10px] text-muted-foreground font-semibold">{inv.client?.nic ?? "No NIC"}</p>
+                      <p className="mt-1 text-[10px] font-semibold text-primary">{inv.branch?.name ?? "Branch not assigned"}</p>
                     </td>
-                    <td className="px-6 py-5 text-right font-medium text-muted-foreground text-xs text-nowrap">
+                    <td className="px-4 py-3.5 font-medium text-muted-foreground text-xs text-nowrap">
                       <p>{inv.plan?.name || "N/A"}</p>
                       <p className="text-foreground font-bold mt-0.5">{getCurrentRate(inv)}</p>
                     </td>
                     <td className="px-5 py-4">
                       <p className="text-sm font-black text-foreground tabular-nums">Rs. {fmt(inv.amount)}</p>
-                    </td>
-                    <td className="px-5 py-4">
-                      <div className="text-xs font-bold text-muted-foreground/90">
-                        {inv.investmentDate && isMounted
-                          ? new Date(inv.investmentDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
-                          : "—"}
-                      </div>
                     </td>
                     <td className="px-5 py-4">
                       <div className="space-y-1">

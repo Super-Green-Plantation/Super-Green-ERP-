@@ -187,6 +187,7 @@ export async function getMonthlyProposals(
       take: pageSize,
       include: {
         client: { select: { id: true, fullName: true, nic: true } },
+        branch: { select: { id: true, name: true } },
         createdBy: { select: { id: true, nameWithInitials: true } },
       },
     }),

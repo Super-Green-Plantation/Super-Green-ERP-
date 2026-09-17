@@ -18,8 +18,8 @@ const plans: Record<MonthlyPlanType, { label: string; durations: number[]; payin
   MARGE: { label: "Marriage Plan", durations: [5, 10, 15], payingYears: 5 },
   PENSION: { label: "Retirement Plan", durations: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10], payingYears: 0 },
 };
-const inputClass = "w-full rounded-xl border border-border bg-muted/20 px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/40";
-const labelClass = "mb-1.5 block text-[11px] font-bold uppercase tracking-wide text-muted-foreground";
+const inputClass = "w-full rounded-lg border border-border bg-muted/20 px-3 py-2 text-sm outline-none transition focus:border-primary/50 focus:ring-2 focus:ring-primary/20";
+const labelClass = "mb-1 block text-[10px] font-bold uppercase tracking-wide text-muted-foreground";
 
 export default function MonthlyProposalForm({ clientId = null, onSaved }: { clientId?: number | null; onSaved?: (id: number) => void }) {
   const router = useRouter();
@@ -130,27 +130,25 @@ export default function MonthlyProposalForm({ clientId = null, onSaved }: { clie
 
   const field = (key: string, label: string, type = "text", extra = "") => <div className={extra}><label className={labelClass}>{label}</label><input className={inputClass} type={type} value={value(key)} onChange={(e) => set(key, e.target.value)} /></div>;
 
-  return <form onSubmit={submit} className="space-y-7 rounded-2xl border border-border/70 bg-card p-5 shadow-sm sm:p-7">
-    <div>
-      <h2 className="text-lg font-bold">New Monthly Proposal</h2><p className="mt-1 text-sm text-muted-foreground">Create a proposal matching the printed Super Green forms.</p></div>
-    <div className="flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-start sm:justify-between">
+  return <form onSubmit={submit} className="w-full space-y-5 rounded-xl border border-border/70 bg-card p-4 shadow-sm sm:p-5">
+    <div className="flex flex-col gap-3 border-b border-border pb-4 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <h2 className="text-lg font-bold">New Monthly Proposal</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <h2 className="text-base font-bold">New Monthly Proposal</h2>
+        <p className="mt-0.5 text-xs text-muted-foreground">
           Create a proposal matching the printed Super Green forms.
         </p>
       </div>
 
-      <div className="min-w-[220px] rounded-xl border border-primary/20 bg-primary/5 px-4 py-3">
+      <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 sm:min-w-[220px]">
         <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
           Proposal Form No.
         </p>
 
-        <p className="mt-1 font-mono text-base font-bold text-primary">
+        <p className="mt-0.5 font-mono text-sm font-bold text-primary">
           {proposalNumberLoading ? "Loading…" : proposalFormNo || "Unavailable"}
         </p>
 
-        <p className="mt-1 text-[10px] leading-4 text-muted-foreground">
+        <p className="mt-0.5 text-[9px] leading-3 text-muted-foreground">
           Number is confirmed when the proposal is saved.
         </p>
       </div>
@@ -158,21 +156,21 @@ export default function MonthlyProposalForm({ clientId = null, onSaved }: { clie
 
 
     <section>
-      <h3 className="mb-3 border-b border-border pb-2 text-sm font-bold">Plan selection</h3>
-      <div className="grid gap-3 sm:grid-cols-3">{(Object.keys(plans) as MonthlyPlanType[]).map((type) => <button key={type} type="button" onClick={() => { setPlanType(type); setDuration(plans[type].durations[0]); }} className={`rounded-xl border p-3 text-sm font-semibold ${planType === type ? "border-primary bg-primary text-primary-foreground" : "border-border bg-muted/20"}`}>{plans[type].label}<span className="mt-1 block text-[10px] opacity-70">{type}</span></button>)}</div></section>
+      <h3 className="mb-2 border-b border-border pb-1.5 text-xs font-bold">Plan selection</h3>
+      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">{(Object.keys(plans) as MonthlyPlanType[]).map((type) => <button key={type} type="button" onClick={() => { setPlanType(type); setDuration(plans[type].durations[0]); }} className={`rounded-lg border px-3 py-2 text-xs font-semibold ${planType === type ? "border-primary bg-primary text-primary-foreground" : "border-border bg-muted/20 hover:bg-muted/40"}`}>{plans[type].label}<span className="mt-0.5 block text-[9px] opacity-70">{type}</span></button>)}</div></section>
     <section>
-      <h3 className="mb-3 border-b border-border pb-2 text-sm font-bold">Applicant / parent / guardian details</h3><div className="grid gap-4 sm:grid-cols-2">{field("applicantName", "Full name *", "text", "sm:col-span-2")}{field("applicantNic", "NIC")}{field("applicantDob", "Date of birth", "date")}{field("applicantAge", "Age", "number")}{field("applicantPhone", "Phone")}{field("applicantEmail", "Email", "email")}{field("applicantAddress", "Address", "text", "sm:col-span-2")}{planType === "MARGE" && <>{field("gender", "Gender")}{field("maritalStatus", "Marital status")}</>}{(planType === "PENSION" || planType === "MARGE") && <>{field("applicantBankAccNo", "Applicant bank account")}{field("applicantBankName", "Applicant bank name")}</>}</div></section>
+      <h3 className="mb-2 border-b border-border pb-1.5 text-xs font-bold">Applicant / parent / guardian details</h3><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{field("applicantName", "Full name *", "text", "sm:col-span-2 lg:col-span-4")}{field("applicantNic", "NIC")}{field("applicantDob", "Date of birth", "date")}{field("applicantAge", "Age", "number")}{field("applicantPhone", "Phone")}{field("applicantEmail", "Email", "email", "sm:col-span-2")}{field("applicantAddress", "Address", "text", "sm:col-span-2 lg:col-span-4")}{planType === "MARGE" && <>{field("gender", "Gender")}{field("maritalStatus", "Marital status")}</>}{(planType === "PENSION" || planType === "MARGE") && <>{field("applicantBankAccNo", "Applicant bank account", "text", "sm:col-span-2")}{field("applicantBankName", "Applicant bank name", "text", "sm:col-span-2")}</>}</div></section>
     {planType === "CHILD" && <section>
-      <h3 className="mb-3 border-b border-border pb-2 text-sm font-bold">Child details</h3><div className="grid gap-4 sm:grid-cols-2">{field("childName", "Child full name", "text", "sm:col-span-2")}{field("childDob", "Child date of birth", "date")}{field("childBirthCertNo", "Birth certificate no.")}{field("childSchool", "School")}{field("childGrade", "Grade / class")}</div></section>}
+      <h3 className="mb-2 border-b border-border pb-1.5 text-xs font-bold">Child details</h3><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{field("childName", "Child full name", "text", "sm:col-span-2 lg:col-span-4")}{field("childDob", "Child date of birth", "date")}{field("childBirthCertNo", "Birth certificate no.")}{field("childSchool", "School")}{field("childGrade", "Grade / class")}</div></section>}
     <section>
-      <h3 className="mb-3 border-b border-border pb-2 text-sm font-bold">Plan and payment</h3><div className="grid gap-4 sm:grid-cols-2"> <div><label className={labelClass}>Duration</label><select className={inputClass} value={duration} onChange={(e) => setDuration(Number(e.target.value))}>{plans[planType].durations.map((year) => <option key={year} value={year}>{year} years</option>)}</select></div>{planType === "PENSION" && field("retirementAge", "Retirement age", "number")}<div><label className={labelClass}>Payment frequency</label><select className={inputClass} value={frequency} onChange={(e) => { const next = e.target.value as MonthlyFrequency; setFrequency(next); setPremium(Math.max(premium, frequencies.find((f) => f.value === next)!.min)); }}>{frequencies.map((item) => <option key={item.value} value={item.value}>{item.label} — min Rs. {item.min.toLocaleString()}</option>)}</select></div><div><label className={labelClass}>Premium</label><input className={inputClass} type="number" min={frequencyMeta.min} value={premium} onChange={(e) => setPremium(Number(e.target.value))} /></div></div></section>
+      <h3 className="mb-2 border-b border-border pb-1.5 text-xs font-bold">Plan and payment</h3><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"> <div><label className={labelClass}>Duration</label><select className={inputClass} value={duration} onChange={(e) => setDuration(Number(e.target.value))}>{plans[planType].durations.map((year) => <option key={year} value={year}>{year} years</option>)}</select></div>{planType === "PENSION" && field("retirementAge", "Retirement age", "number")}<div><label className={labelClass}>Payment frequency</label><select className={inputClass} value={frequency} onChange={(e) => { const next = e.target.value as MonthlyFrequency; setFrequency(next); setPremium(Math.max(premium, frequencies.find((f) => f.value === next)!.min)); }}>{frequencies.map((item) => <option key={item.value} value={item.value}>{item.label} — min Rs. {item.min.toLocaleString()}</option>)}</select></div><div><label className={labelClass}>Premium</label><input className={inputClass} type="number" min={frequencyMeta.min} value={premium} onChange={(e) => setPremium(Number(e.target.value))} /></div></div></section>
     <section>
-      <h3 className="mb-3 border-b border-border pb-2 text-sm font-bold">Nominee / beneficiary</h3><div className="grid gap-4 sm:grid-cols-2">{field("nomineeName", "Name")}{field("nomineeNic", "NIC")}{field("nomineeRelationship", "Relationship")}{field("nomineePhone", "Phone")}</div></section>
+      <h3 className="mb-2 border-b border-border pb-1.5 text-xs font-bold">Nominee / beneficiary</h3><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{field("nomineeName", "Name")}{field("nomineeNic", "NIC")}{field("nomineeRelationship", "Relationship")}{field("nomineePhone", "Phone")}</div></section>
     <section>
-      <h3 className="mb-3 border-b border-border pb-2 text-sm font-bold">Agent bank details</h3><div className="grid gap-4 sm:grid-cols-3">{field("agentBankAccNo", "Account no.")}{field("agentBankName", "Bank name")}{field("agentBankBranch", "Branch")}</div></section>
+      <h3 className="mb-2 border-b border-border pb-1.5 text-xs font-bold">Agent bank details</h3><div className="grid gap-3 sm:grid-cols-3">{field("agentBankAccNo", "Account no.")}{field("agentBankName", "Bank name")}{field("agentBankBranch", "Branch")}</div></section>
     <div className="flex justify-end gap-3">
 
-      <button type="button" onClick={() => router.back()} className="rounded-xl border border-border px-4 py-2.5 text-sm font-semibold">Cancel</button><button disabled={mutation.isPending} className="rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-60">{mutation.isPending ? "Saving…" : "Save proposal"}</button></div>
+      <button type="button" onClick={() => router.back()} className="rounded-lg border border-border px-4 py-2 text-xs font-semibold">Cancel</button><button disabled={mutation.isPending} className="rounded-lg bg-primary px-5 py-2 text-xs font-bold text-primary-foreground disabled:opacity-60">{mutation.isPending ? "Saving…" : "Save proposal"}</button></div>
   </form>;
 }
 

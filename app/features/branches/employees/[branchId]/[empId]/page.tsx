@@ -22,7 +22,9 @@ import {
   Pen,
   Phone,
   Trash2,
-  User
+  User,
+  Calendar,
+  IdCard,
 } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
@@ -42,15 +44,14 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
   const branchId = Number(params.branchId);
 
   const [employee, setEmployee] = useState<Member | null>(null);
-  // const [performance, setPerformance] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [allCommission, setAllCommission] = useState();
   const [payrolls, setPayrolls] = useState<any[]>([]);
   const [openModel, setModelOpen] = useState(false);
   const [orc, setOrc] = useState(0);
   const [reportingPeople, setReportingPeople] = useState<any[]>([]);
-  const [isManagement, setIsManagement] = useState(false)
-  const [isPermeant, setIsPermeant] = useState(false)
+  const [isManagement, setIsManagement] = useState(false);
+  const [isPermeant, setIsPermeant] = useState(false);
   const [activeTab, setActiveTab] = useState<"commissions" | "paysheets">(isPermeant ? "paysheets" : "commissions");
 
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; branchId: number | null }>({
@@ -68,7 +69,7 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
     } else if (employee?.status === "PROBATION") {
       setOrc(employee.position?.orc?.rateNonPermanent * 100 || 0);
     } else if (employee?.status === "MANAGEMENT") {
-      setIsManagement(true)
+      setIsManagement(true);
     }
   }, [employee]);
 
@@ -99,26 +100,19 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
 
   useEffect(() => {
     const empNos = employee?.reportingPersons ?? [];
-
     if (empNos.length === 0) return;
-
     const fetchReportingPersons = async () => {
       const res = await getReportingPersons(empNos);
       setReportingPeople(res.employees);
     };
-
     fetchReportingPersons();
   }, [employee]);
-
-
-
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => deleteEmployee(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["employees", branchId] });
       toast.success("Employee deleted successfully");
-
     },
     onError: () => {
       toast.error("Failed to delete employee");
@@ -138,86 +132,86 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
   if (loading) return <Loading />;
   if (!employee) return null;
 
-
   return (
-    <main className=" max-w-7xl mx-auto min-h-screen sm:p-8 space-y-8 animate-in fade-in duration-700">
+    <main className="max-w-7xl mx-auto min-h-screen sm:p-8 space-y-6 animate-in fade-in duration-700">
 
-      {/* ── Premium Hero Section: Glassmorphic Profile ── */}
-      <section className="relative h-auto sm:h-72 rounded-[2.5rem] sm:rounded-[3.5rem] overflow-hidden shadow-2xl shadow-primary/10 border border-white/10 group">
+      {/* ── Hero Section ── */}
+      <section className="relative h-auto sm:h-56 rounded-[2rem] overflow-hidden shadow-2xl shadow-primary/10 border border-white/10">
         <div className="absolute inset-0 dark:bg-teal-900 bg-teal-900 z-0" />
-        <div className="absolute top-0 right-0 w-125 h-125 bg-secondary/10 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-secondary/10 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
-        <div className="relative min-h-72 h-auto sm:h-full flex items-end p-8 sm:p-12 z-10">
-          <div className="flex flex-col sm:flex-row items-center sm:items-end gap-6 sm:gap-8 w-full mt-8 sm:mt-0">
+        <div className="relative h-full flex items-center p-6 sm:p-10 z-10">
+          <div className="flex flex-col sm:flex-row items-center sm:items-center gap-5 sm:gap-8 w-full">
 
-            <div className="relative group shrink-0">
-              <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-3xl overflow-hidden border-4 border-white/20 shadow-2xl relative">
-                {employee.profilePic ? (
-                  <Image
-                    src={employee.profilePic}
-                    alt={employee.nameWithInitials ?? "Profile"}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-white/10 flex items-center justify-center">
-                    <User className="w-16 h-16 text-white/50" />
-                  </div>
-                )}
-              </div>
+            {/* Avatar */}
+            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden border-4 border-white/20 shadow-2xl shrink-0">
+              {employee.profilePic ? (
+                <Image
+                  src={employee.profilePic}
+                  alt={employee.nameWithInitials ?? "Profile"}
+                  fill
+                  className="object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-white/10 flex items-center justify-center">
+                  <User className="w-12 h-12 text-white/50" />
+                </div>
+              )}
             </div>
 
-            <div className="flex-1 flex flex-col sm:flex-row justify-between items-center sm:items-end w-full gap-5 sm:gap-6 mt-2 sm:mt-0">
-              <div className="text-center sm:text-left flex flex-col items-center sm:items-start w-full">
-                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 mb-2">
-                  <h1 className="text-3xl sm:text-3xl font-extrabold text-white tracking-tight font-heading">
+            {/* Name + meta */}
+            <div className="flex-1 flex flex-col sm:flex-row justify-between items-center sm:items-center w-full gap-4">
+              <div className="text-center sm:text-left">
+                <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
+                  <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
                     {employee.nameWithInitials}
                   </h1>
                   {!readOnly && (
                     <button
                       onClick={() => setModelOpen(true)}
-                      className="p-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-white transition-all backdrop-blur-md border border-white/10 shadow-sm"
+                      className="p-2 bg-white/10 hover:bg-white/20 rounded-xl text-white transition-all border border-white/10"
                     >
-                      <Pen className="w-4 h-4" />
+                      <Pen className="w-3.5 h-3.5" />
                     </button>
                   )}
-
                 </div>
-                <p className="text-emerald-100/70 font-bold text-lg flex items-center gap-2 justify-center sm:justify-start">
-                  <Briefcase className="w-5 h-5 text-secondary" />
-                  {employee.position?.title || "Department Lead"} • {employee.branches?.[0]?.branch?.name || "HQ"}
+                <p className="text-emerald-100/70 font-semibold text-sm flex items-center gap-2 justify-center sm:justify-start mb-3">
+                  <Briefcase className="w-4 h-4 text-secondary" />
+                  {employee.position?.title || "—"} • {employee.branches?.[0]?.branch?.name || "HQ"}
                 </p>
-                <div className="flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-3 mt-6 w-full sm:w-auto">
-                  {/* Status Badge */}
-                  <span className="px-4 py-1.5 bg-white/5 backdrop-blur-md rounded-full text-[10px] font-bold text-white uppercase tracking-[0.2em] border border-white/5 whitespace-nowrap">
+                <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                  <span className="px-3 py-1 bg-white/5 backdrop-blur-md rounded-full text-[10px] font-bold text-white uppercase tracking-widest border border-white/10">
                     {employee.status || "PROBATION"}
                   </span>
-
-                  {/* ID Badge */}
-                  <span className="px-4 py-1.5 bg-secondary/20 backdrop-blur-md rounded-full text-[10px] font-bold text-secondary uppercase tracking-[0.2em] border border-secondary/10 whitespace-nowrap">
+                  <span className="px-3 py-1 bg-secondary/20 backdrop-blur-md rounded-full text-[10px] font-bold text-secondary uppercase tracking-widest border border-secondary/10">
                     ID: {employee.empNo}
                   </span>
-
-                  {/* Export Button - Full width on mobile, auto width on desktop */}
-                  {!readOnly && (
-                    <ExportButton
-                      data={{ ...employee, reportingPeople }}
-                      exportFn={generateEmployeeFullProfilePDF}
-                      className="w-full sm:w-auto sm:px-6 bg-white/10 hover:bg-white/20 text-white rounded-full py-3 sm:py-2 font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-3 border border-white/5 transition-all shadow-lg active:scale-95"
-                    />
-                  )}
-
+                  <span className="px-3 py-1 bg-white/5 backdrop-blur-md rounded-full text-[10px] font-bold text-white/60 uppercase tracking-widest border border-white/10">
+                    NIC: {employee.nic || "—"}
+                  </span>
+                  <span className="px-3 py-1 bg-white/5 backdrop-blur-md rounded-full text-[10px] font-bold text-white/60 uppercase tracking-widest border border-white/10">
+                    Joined: {new Date(employee.createdAt).toLocaleDateString()}
+                  </span>
                 </div>
               </div>
+
+              {/* Export */}
+              {!readOnly && (
+                <ExportButton
+                  data={{ ...employee, reportingPeople }}
+                  exportFn={generateEmployeeFullProfilePDF}
+                  className="sm:px-6 bg-white/10 hover:bg-white/20 text-white rounded-full py-2.5 font-bold text-[10px] uppercase tracking-widest flex items-center justify-center gap-2 border border-white/10 transition-all shadow-lg active:scale-95"
+                />
+              )}
             </div>
           </div>
         </div>
       </section>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-        {/* ── Main Column: Calibration ── */}
-        <div className="lg:col-span-8 space-y-8">
+        {/* ── Main Column ── */}
+        <div className="lg:col-span-8 space-y-6">
 
           {!isManagement && (
             <EmployeeStatusSection
@@ -227,200 +221,157 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
             />
           )}
 
+          {/* Identity + Banking merged into 2-col grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-          {/* Detailed Info Blocks (Identity & Banking) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <section className="bg-card/30 backdrop-blur-sm rounded-[2rem] p-8 border border-border/40">
-              <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-[0.3em] mb-8 border-b border-border/40 pb-4 flex items-center gap-2">
-                <BadgeInfo className="w-4 h-4" /> Identity & Contact
+            {/* Identity & Contact */}
+            <section className="bg-card/30 backdrop-blur-sm rounded-2xl p-6 border border-border/40">
+              <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.3em] mb-5 border-b border-border/40 pb-3 flex items-center gap-2">
+                <BadgeInfo className="w-3.5 h-3.5" /> Identity & Contact
               </h4>
-              <div className="space-y-6">
+              <div className="space-y-4">
                 <DetailItem label="Official Name" value={employee.nameWithInitials} icon={<User className="w-4 h-4 text-primary" />} />
-                <DetailItem label="Email Address" value={employee.email} icon={<Mail className="w-4 h-4 text-primary" />} />
-                <DetailItem label="Phone Line" value={employee.phone} icon={<Phone className="w-4 h-4 text-primary" />} />
+                <DetailItem label="NIC" value={employee.nic} icon={<IdCard className="w-4 h-4 text-primary" />} />
+                <DetailItem label="Email" value={employee.email} icon={<Mail className="w-4 h-4 text-primary" />} />
+                <DetailItem label="Phone" value={employee.phone} icon={<Phone className="w-4 h-4 text-primary" />} />
                 <DetailItem label="Address" value={employee.address} icon={<MapPin className="w-4 h-4 text-primary" />} />
+                <DetailItem label="Joined" value={new Date(employee.createdAt).toLocaleDateString()} icon={<Calendar className="w-4 h-4 text-primary" />} />
               </div>
             </section>
 
-            <section className="bg-card/30 backdrop-blur-sm rounded-[2rem] p-8 border border-border/40">
-              <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-[0.3em] mb-8 border-b border-border/40 pb-4 flex items-center gap-2">
-                <CreditCard className="w-4 h-4" /> Banking & Finance
+            {/* Banking & Finance */}
+            <section className="bg-card/30 backdrop-blur-sm rounded-2xl p-6 border border-border/40">
+              <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.3em] mb-5 border-b border-border/40 pb-3 flex items-center gap-2">
+                <CreditCard className="w-3.5 h-3.5" /> Banking & Finance
               </h4>
-              <div className="space-y-6">
-                <DetailItem label="Account Number" value={employee.accNo} icon={<Hash className="w-4 h-4 text-primary" />} />
-                <DetailItem label="Primary Bank" value={employee.bank} icon={<Briefcase className="w-4 h-4 text-primary" />} />
+              <div className="space-y-4">
+                <DetailItem label="Account No." value={employee.accNo} icon={<Hash className="w-4 h-4 text-primary" />} />
+                <DetailItem label="Bank" value={employee.bank} icon={<Briefcase className="w-4 h-4 text-primary" />} />
                 <DetailItem label="Bank Branch" value={employee.bankBranch} icon={<MapPin className="w-4 h-4 text-primary" />} />
-                <DetailItem label="EPF Registration" value={employee.epfNo} icon={<FileText className="w-4 h-4 text-primary" />} />
+                <DetailItem label="EPF No." value={employee.epfNo} icon={<FileText className="w-4 h-4 text-primary" />} />
+                <DetailItem label="Designation" value={employee.position?.title} icon={<Briefcase className="w-4 h-4 text-primary" />} />
               </div>
             </section>
           </div>
         </div>
 
-        {/* ── Sidebar Column ── */}
-        <aside className="lg:col-span-4 space-y-8">
-          <div>
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">
+        {/* ── Sidebar ── */}
+        <aside className="lg:col-span-4 space-y-6">
+          <div className="bg-card/30 backdrop-blur-sm rounded-2xl p-5 border border-border/40">
+            <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.3em] mb-4 border-b border-border/40 pb-3">
               Reporting Persons
             </h3>
-
-            <div className="grid md:grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-2">
               {reportingPeople.map((person) => {
-                const branchId = person.branches?.[0]?.branchId;
-
+                const personBranchId = person.branches?.[0]?.branchId;
                 return (
                   <Link
                     key={person.id}
-                    href={`/features/branches/employees/${branchId}/${person.id}`}
-                    className="group border rounded-xl p-3 bg-white hover:shadow-md transition-all"
+                    href={`/features/branches/employees/${personBranchId}/${person.id}`}
+                    className="group flex items-center gap-3 p-2.5 rounded-xl hover:bg-muted/40 transition-all border border-transparent hover:border-border"
                   >
-                    <div className="flex items-center gap-3">
-
-                      {/* Profile Image */}
-                      <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
-                        {person.profilePic ? (
-                          <img
-                            src={person.profilePic}
-                            alt={person.nameWithInitials ?? "profile"}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <span className="text-xs text-gray-400">No Img</span>
-                        )}
-                      </div>
-
-                      {/* Info */}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-800 truncate group-hover:text-blue-600">
-                          {person.nameWithInitials ?? "Unnamed"}
-                        </p>
-
-                        <p className="text-xs text-gray-500">
-                          {person.position?.title ?? "No Position"}
-                        </p>
-
-                        <p className="text-xs text-gray-400">
-                          {person.empNo}
-                        </p>
-                      </div>
+                    <div className="w-9 h-9 rounded-xl overflow-hidden bg-muted flex items-center justify-center shrink-0">
+                      {person.profilePic ? (
+                        <img src={person.profilePic} alt={person.nameWithInitials ?? "profile"} className="w-full h-full object-cover" />
+                      ) : (
+                        <User className="w-4 h-4 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+                        {person.nameWithInitials ?? "Unnamed"}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">{person.position?.title ?? "No Position"}</p>
+                      <p className="text-[10px] text-muted-foreground/60">{person.empNo}</p>
                     </div>
                   </Link>
                 );
               })}
+              {reportingPeople.length === 0 && (
+                <p className="text-[11px] text-muted-foreground/50 py-2">No reporting persons assigned.</p>
+              )}
             </div>
-
-            {reportingPeople.length === 0 && (
-              <p className="text-xs text-gray-400 mt-2">
-                No reporting persons assigned.
-              </p>
-            )}
           </div>
         </aside>
-
-
       </div>
-      {/* Managed Employees (Downline) */}
+
+      {/* Managed Employees */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-700 mb-3">
+        <h3 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-widest text-xs">
           Managed Employees
         </h3>
         <SubordinatesSection memberId={employee.id} />
       </div>
 
+      {/* ── Financial Statements ── */}
+      <section className="pt-6 border-t border-border/50">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+          <h3 className="text-lg font-bold text-foreground">Financial Statements</h3>
 
-      {/* ── Financial Statement Feed ── */}
-      <section className="pt-12 border-t border-border/50">
-        <div className="flex flex-col xl:flex-row items-start xl:items-center justify-between mb-10 gap-4">
-          <div>
-            <h3 className="text-2xl font-bold text-foreground flex items-center gap-4">
-              Financial Statements
-            </h3>
-          </div>
-
-          <div className="flex items-center gap-4 flex-wrap">
-            <div className="flex bg-card/50 p-1 rounded-xl border border-border/40 backdrop-blur-md">
-
-              {(isPermeant || isManagement) && (
-                <button
-                  onClick={() => setActiveTab("paysheets")}
-                  className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === "paysheets"
-                    ? "bg-primary/50 text-white shadow-md"
-                    : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
-                    }`}
-                >
-                  Salary Slips
-                </button>
-              )}
-
-              {!isManagement && (
-                <button
-                  onClick={() => setActiveTab("commissions")}
-                  className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === "commissions"
-                    ? "bg-primary/50 text-white shadow-md"
-                    : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
-                    }`}
-                >
-                  Commissions
-                </button>
-              )}
-
-            </div>
-            {/* {!readOnly && <Back />} */}
+          <div className="flex bg-card/50 p-1 rounded-xl border border-border/40 backdrop-blur-md">
+            {(isPermeant || isManagement) && (
+              <button
+                onClick={() => setActiveTab("paysheets")}
+                className={`px-5 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === "paysheets"
+                  ? "bg-primary/50 text-white shadow-md"
+                  : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
+                  }`}
+              >
+                Salary Slips
+              </button>
+            )}
+            {!isManagement && (
+              <button
+                onClick={() => setActiveTab("commissions")}
+                className={`px-5 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === "commissions"
+                  ? "bg-primary/50 text-white shadow-md"
+                  : "text-muted-foreground hover:text-foreground hover:bg-foreground/5"
+                  }`}
+              >
+                Commissions
+              </button>
+            )}
           </div>
         </div>
 
         {activeTab === "paysheets" ? (
           <PaySheet payrolls={payrolls} member={employee} />
-
         ) : (
           allCommission && (
-            <div className="bg-card/30 rounded-[3rem] p-2 sm:p-6 border border-border/40 backdrop-blur-sm animate-in fade-in slide-in-from-bottom-10 duration-1000">
+            <div className="bg-card/30 rounded-[2rem] p-2 sm:p-6 border border-border/40 backdrop-blur-sm animate-in fade-in slide-in-from-bottom-10 duration-700">
               <CommissionStatementPage data={allCommission} />
             </div>
           )
         )}
       </section>
 
-      {/* ── Identity Audit Details ── */}
-      <section className="bg-primary/5 rounded-[2.5rem] p-8 sm:p-12 border border-primary/5">
-        <h4 className="text-xs font-bold text-primary/40 uppercase tracking-[0.5em] mb-10 text-center">Identity Audit Archives</h4>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          <DetailItem label="EPF Registry" value={employee.epfNo} />
-          <DetailItem label="NIC Reference" value={employee.nic} />
-          <DetailItem label="Onboarding Date" value={new Date(employee.createdAt).toLocaleDateString()} />
-          <DetailItem label="Designation Entry" value={employee.position?.title} />
-        </div>
-      </section>
-
-      {/* ── Termination Protocol (Danger Zone) ── */}
-      {
-        !readOnly && (
-          <div className="pt-12 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-8 opacity-40 hover:opacity-100 transition-all duration-500 py-10">
-            <div className="text-center sm:text-left">
-              <h4 className="text-sm font-bold text-foreground uppercase tracking-widest">Delete Employee Record</h4>
-              <p className="text-xs text-muted-foreground font-medium mt-1 uppercase tracking-wider">
-                Permanent delete from core enterprise records.
-              </p>
-            </div>
-            <button
-              onClick={() => handleDeleteClick(Number(params.empId))}
-              className="flex items-center gap-3 px-8 py-4 bg-red-600 text-white rounded-[1.5rem] text-xs font-bold uppercase tracking-widest shadow-xl shadow-red-600/20 hover:scale-105 transition-all">
-              <Trash2 className="w-4 h-4" /> Delete This Record
-            </button>
+      {/* ── Danger Zone ── */}
+      {!readOnly && (
+        <div className="pt-6 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-6 opacity-40 hover:opacity-100 transition-all duration-500 py-6">
+          <div className="text-center sm:text-left">
+            <h4 className="text-xs font-bold text-foreground uppercase tracking-widest">Delete Employee Record</h4>
+            <p className="text-[11px] text-muted-foreground font-medium mt-1 uppercase tracking-wider">
+              Permanently removes from enterprise records.
+            </p>
           </div>
-        )
-      }
+          <button
+            onClick={() => handleDeleteClick(Number(params.empId))}
+            className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-xl text-xs font-bold uppercase tracking-widest shadow-xl shadow-red-600/20 hover:scale-105 transition-all"
+          >
+            <Trash2 className="w-4 h-4" /> Delete Record
+          </button>
+        </div>
+      )}
 
       {/* Edit Modal */}
-      {
-        !readOnly && openModel && (
-          <EmpModal
-            mode="edit"
-            initialData={employee}
-            onClose={() => setModelOpen(false)}
-            onSuccess={fetchMember}
-          />
-        )
-      }
+      {!readOnly && openModel && (
+        <EmpModal
+          mode="edit"
+          initialData={employee}
+          onClose={() => setModelOpen(false)}
+          onSuccess={fetchMember}
+        />
+      )}
 
       <ConfirmDialog
         open={deleteDialog.open}
@@ -432,7 +383,7 @@ const EmployeeDetailsPage = ({ empId: propEmpId, readOnly = false }: { empId?: n
         cancelLabel="Keep it"
         variant="danger"
       />
-    </main >
+    </main>
   );
 };
 

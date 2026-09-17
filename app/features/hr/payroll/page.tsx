@@ -63,9 +63,6 @@ export default function PayrollPage() {
       const rows = await getPayrollPreview(selectedBranchId, year, month, volumes);
       setPreview(rows);
 
-      console.log("rows ---------- ", rows);
-
-
       // Seed volumes from DB — only for members not yet in local state
       setVolumes((prev) => {
         const next = { ...prev };
@@ -151,23 +148,23 @@ export default function PayrollPage() {
 
 
   return (
-    <div className="w-full min-h-screen p-4 sm:p-8 flex flex-col gap-6 sm:gap-8 font-sans text-gray-900 dark:text-gray-100 transition-colors duration-300">
+    <div className="w-full min-h-screen px-3 pb-8 pt-4 sm:px-5 lg:px-7 flex flex-col gap-4 font-sans text-gray-900 dark:text-gray-100 transition-colors duration-300">
 
       {/* Header */}
       <div>
         <Heading>
           Monthly Payroll
         </Heading>
-        <p className="text-sm text-muted-foreground mt-2 font-medium max-w-2xl">
+        <p className="text-xs text-muted-foreground mt-1 font-medium max-w-2xl">
           Enter volume achieved per employee and run payroll for the selected month.
         </p>
       </div>
 
       {/* Selectors */}
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-wrap gap-2 rounded-xl border border-border/70 bg-card/70 p-2.5 shadow-sm">
         <div className="relative">
           <select
-            className="appearance-none pl-4 pr-10 py-3 bg-card border border-border rounded-xl text-sm font-bold text-foreground outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 cursor-pointer shadow-sm transition-all"
+            className="appearance-none pl-3 pr-9 py-2 bg-card border border-border rounded-lg text-xs font-bold text-foreground outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 cursor-pointer shadow-sm transition-all"
             value={selectedBranchId ?? ""}
             onChange={(e) => setSelectedBranchId(Number(e.target.value))}
           >
@@ -180,7 +177,7 @@ export default function PayrollPage() {
 
         <div className="relative">
           <select
-            className="appearance-none pl-4 pr-10 py-3 bg-card border border-border rounded-xl text-sm font-bold text-foreground outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 cursor-pointer shadow-sm transition-all"
+            className="appearance-none pl-3 pr-9 py-2 bg-card border border-border rounded-lg text-xs font-bold text-foreground outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 cursor-pointer shadow-sm transition-all"
             value={month}
             onChange={(e) => setMonth(Number(e.target.value))}
           >
@@ -193,7 +190,7 @@ export default function PayrollPage() {
 
         <div className="relative">
           <select
-            className="appearance-none pl-4 pr-10 py-3 bg-card border border-border rounded-xl text-sm font-bold text-foreground outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 cursor-pointer shadow-sm transition-all"
+            className="appearance-none pl-3 pr-9 py-2 bg-card border border-border rounded-lg text-xs font-bold text-foreground outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 cursor-pointer shadow-sm transition-all"
             value={year}
             onChange={(e) => setYear(Number(e.target.value))}
           >
@@ -253,6 +250,13 @@ export default function PayrollPage() {
       </div>
 
 
+      <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+        <div className="rounded-lg border border-border/70 bg-card px-3 py-2.5 shadow-sm"><p className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Active employees</p><p className="mt-1 text-base font-black tabular-nums">{activePreview.length}</p></div>
+        <div className="rounded-lg border border-border/70 bg-card px-3 py-2.5 shadow-sm"><p className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Gross payroll</p><p className="mt-1 text-sm font-black tabular-nums">{fmt(totalGross)}</p></div>
+        <div className="rounded-lg border border-border/70 bg-card px-3 py-2.5 shadow-sm"><p className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Net payroll</p><p className="mt-1 text-sm font-black text-primary tabular-nums">{fmt(totalNet)}</p></div>
+        <div className="col-span-2 rounded-lg border border-border/70 bg-card px-3 py-2.5 shadow-sm lg:col-span-1"><p className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Payroll checks</p><p className="mt-1 text-xs font-bold"><span className="text-emerald-600">{alreadyProcessedCount} processed</span><span className="mx-2 text-border">•</span><span className="text-amber-600">{unconfiguredCount} unconfigured</span></p></div>
+      </div>
+
       {/* Warnings */}
       {alreadyProcessedCount > 0 && (
         <div className="flex items-center gap-3 px-5 py-3.5 bg-amber-500/10 border border-amber-500/20 rounded-xl text-sm font-bold text-amber-600 uppercase tracking-tight">
@@ -268,7 +272,7 @@ export default function PayrollPage() {
       )}
 
       {/* Table */}
-      <div >
+      <div className="overflow-hidden rounded-xl border border-border/70 bg-card shadow-sm">
         {loadingPreview ? (
           <div className="flex items-center justify-center h-48">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
@@ -280,14 +284,14 @@ export default function PayrollPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full min-w-[1420px] text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
-                  <th className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Employee</th>
+                  <th className="text-left px-3 py-2.5 text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Employee</th>
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                     Active Team
                   </th>
-                  <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Volume Achieved</th>
+                  <th className="text-right px-3 py-2.5 text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Volume Achieved</th>
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Partial (20K)</th>
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Incentive</th>
                   <th className="text-right px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Target Budget</th>
@@ -306,7 +310,7 @@ export default function PayrollPage() {
               <tbody className="divide-y divide-border">
                 {preview.filter((row) => row.volumeAchieved > 0).map((row) => (
                   <tr key={row.memberId} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-5 py-4">
+                    <td className="px-3 py-3">
                       <p className="font-bold text-foreground text-sm leading-tight">{row.name}</p>
                       <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-tighter mt-0.5">{row.empNo}</p>
                       <div className="flex  gap-3">
@@ -329,7 +333,7 @@ export default function PayrollPage() {
                       </div>
                     </td>
 
-                    <td className="px-5 py-4 text-right">
+                    <td className="px-3 py-3 text-right">
                       <div className="flex flex-col items-end gap-0.5">
                         <span className="text-xs font-bold text-foreground">
                           {row.activeTeamCounts?.advisors ?? 0} FA
@@ -341,12 +345,12 @@ export default function PayrollPage() {
                     </td>
 
                     {/* Editable volume input */}
-                    <td className="px-5 py-4 text-right">
+                    <td className="px-3 py-3 text-right">
                       <input
                         type="number"
                         value={volumes[row.memberId] ?? 0}
                         onChange={(e) => handleVolumeChange(row.memberId, Number(e.target.value))}
-                        className="w-32 text-right px-3 py-2 bg-muted/30 border border-border rounded-xl text-sm font-bold text-foreground focus:outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all outline-none"
+                        className="w-28 text-right px-2.5 py-1.5 bg-muted/30 border border-border rounded-lg text-xs font-bold text-foreground focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 transition-all outline-none"
                       />
                     </td>
 
