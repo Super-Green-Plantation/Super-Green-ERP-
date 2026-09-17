@@ -14,6 +14,7 @@ interface Branch {
   id: number;
   name: string;
   location: string;
+  code?: string;
   members: any[];
 }
 
@@ -29,7 +30,6 @@ const BranchTable = ({ data, isLoading, onRefresh }: BranchTableProps) => {
   const [updateModel, setUpdateModel] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-
 
   const totalPages = Math.ceil((data?.length ?? 0) / PAGE_SIZE);
   const paginatedData = data?.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
@@ -67,13 +67,10 @@ const BranchTable = ({ data, isLoading, onRefresh }: BranchTableProps) => {
     deleteMutation.mutate(deleteDialog.branchId);
   };
 
-  // Styled Loading State
-  if (isLoading) return <Loading />
+  if (isLoading) return <Loading />;
 
   return (
     <div className="overflow-hidden">
-      <div className="flex justify-end  items-center">
-      </div>
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
@@ -101,11 +98,17 @@ const BranchTable = ({ data, isLoading, onRefresh }: BranchTableProps) => {
                 key={branch.id}
                 className="hover:bg-muted/30 transition-colors group"
               >
-                {/* ID Column */}
+                {/* Code Column */}
                 <td className="px-6 py-4">
-                  <span className="text-xs font-bold text-muted-foreground tabular-nums">
-                    #{branch.id.toString().padStart(3, "0")}
-                  </span>
+                  {branch.code ? (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-lg bg-primary/10 text-primary border border-primary/20 text-[11px] font-bold uppercase tracking-widest">
+                      {branch.code}
+                    </span>
+                  ) : (
+                    <span className="text-xs font-bold text-muted-foreground/40 italic">
+                      —
+                    </span>
+                  )}
                 </td>
 
                 {/* Branch Name */}
@@ -189,10 +192,12 @@ const BranchTable = ({ data, isLoading, onRefresh }: BranchTableProps) => {
             id: selectedBranch.id,
             name: selectedBranch.name,
             location: selectedBranch.location,
+            code: selectedBranch.code,
           }}
           onClose={() => {
             setUpdateModel(false);
             setSelectedBranch(null);
+            if (onRefresh) onRefresh();
           }}
         />
       )}

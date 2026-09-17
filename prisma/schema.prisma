@@ -347,6 +347,7 @@ model ManagementSalary {
   incentive100Hit          Boolean   @default(false)
   vehicleFuelEarned        Decimal   @default(0) @db.Decimal(12, 2)
   vehicleFuelHit           Boolean   @default(false)
+  mgmtExcessCommission     Float     @default(0)
   member                   Member    @relation(fields: [memberId], references: [id])
 
   @@unique([memberId, month])

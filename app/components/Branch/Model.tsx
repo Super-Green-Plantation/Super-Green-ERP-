@@ -10,6 +10,7 @@ interface BranchData {
   id?: number;
   name: string;
   location: string;
+  code?: string;
 }
 
 interface BranchModalProps {
@@ -25,6 +26,7 @@ const BranchModal = ({
 }: BranchModalProps) => {
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
+  const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
 
   const queryClient = useQueryClient();
@@ -33,22 +35,24 @@ const BranchModal = ({
     if (mode === "edit" && initialData) {
       setName(initialData.name);
       setLocation(initialData.location);
+      setCode(initialData.code ?? "");
     }
   }, [mode, initialData]);
 
   const mutation = useMutation({
     mutationFn: (data: BranchData) =>
       mode === "add"
-        ? createBranch({ name: data.name, location: data.location })
-        : updateBranch(data.id!, { name: data.name, location: data.location }),
+        ? createBranch({ name: data.name, location: data.location, code: data.code })
+        : updateBranch(data.id!, { name: data.name, location: data.location, code: data.code }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["branches"] });
+      toast.success(mode === "add" ? "Branch added successfully" : "Branch updated successfully");
       setLoading(false);
       onClose();
     },
     onError: () => {
       setLoading(false);
-      alert("Failed to save branch");
+      toast.error("Failed to save branch");
     },
   });
 
@@ -56,7 +60,7 @@ const BranchModal = ({
     e.preventDefault();
 
     if (!name) {
-      alert("Please fill in all fields!");
+      toast.error("Please enter a branch name");
       return;
     }
 
@@ -66,6 +70,7 @@ const BranchModal = ({
       id: initialData?.id,
       name,
       location,
+      code,
     });
   };
 
@@ -92,7 +97,22 @@ const BranchModal = ({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
-              Branch Name
+              Branch Code
+            </label>
+            <input
+              type="text"
+              value={code}
+              onChange={(e) => setCode(e.target.value.toUpperCase())}
+              className="w-full bg-muted/30 border border-border rounded-xl px-4 py-3 text-sm font-bold text-foreground placeholder:text-muted-foreground/50 focus:ring-2 focus:ring-primary/10 transition-all outline-none uppercase"
+              disabled={loading}
+              placeholder="e.g. GLB-001"
+              maxLength={20}
+            />
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
+              Branch Name <span className="text-destructive">*</span>
             </label>
             <input
               type="text"

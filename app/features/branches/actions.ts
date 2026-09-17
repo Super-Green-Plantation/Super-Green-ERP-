@@ -9,7 +9,7 @@ import { revalidatePath } from "next/cache";
 import { requirePermission } from "@/lib/auth/withPermission";
 
 // Create new branch
-export async function createBranch(data: { name: string; location: string }) {
+export async function createBranch(data: { name: string; location: string; code?: string }) {
 
 
   
@@ -20,6 +20,7 @@ export async function createBranch(data: { name: string; location: string }) {
       data: {
         name: data.name,
         location: data.location ? data.location : data.name,
+        code: data.code ?? "",
       },
     });
 
@@ -137,7 +138,7 @@ export async function getBranchesByMemberId(memberId: number) {
 
 
 // Update branch
-export async function updateBranch(id: number, data: { name: string; location: string }) {
+export async function updateBranch(id: number, data: { name: string; location: string; code?: string }) {
   try {
     await requirePermission("UPDATE_BRANCHES");
     const [currentUser, oldBranch] = await Promise.all([
@@ -150,6 +151,7 @@ export async function updateBranch(id: number, data: { name: string; location: s
       data: {
         name: data.name,
         location: data.location,
+        code: data.code ?? "",
       },
     });
 

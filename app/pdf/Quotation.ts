@@ -50,14 +50,16 @@ export interface QuotationPDFData {
 // ─── Brand Colors ─────────────────────────────────────────────────────────────
 
 const C = {
+  navy:       [15,  23, 42] as [number, number, number],
   green:      [22, 101, 52]   as [number, number, number],
-  greenLight: [220, 252, 231] as [number, number, number],
+  greenLight: [236, 253, 245] as [number, number, number],
   greenMid:   [74, 222, 128]  as [number, number, number],
+  gold:       [180, 134, 52]   as [number, number, number],
   dark:       [17, 24, 39]    as [number, number, number],
   mid:        [75, 85, 99]    as [number, number, number],
   light:      [156, 163, 175] as [number, number, number],
-  border:     [229, 231, 235] as [number, number, number],
-  bg:         [249, 250, 251] as [number, number, number],
+  border:     [226, 232, 240] as [number, number, number],
+  bg:         [248, 250, 252] as [number, number, number],
   white:      [255, 255, 255] as [number, number, number],
 };
 
@@ -100,6 +102,30 @@ function getPayingYears(planType: PlanType, duration: number) {
 }
 
 
+
+function drawSectionHeading(doc: jsPDF, label: string, y: number, width = 42) {
+  doc.setFontSize(8.5);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...C.navy);
+  doc.text(label.toUpperCase(), 14, y);
+  doc.setDrawColor(...C.green);
+  doc.setLineWidth(0.7);
+  doc.line(14, y + 2.2, 14 + width, y + 2.2);
+  doc.setLineWidth(0.2);
+  return y + 8;
+}
+
+function drawFooter(doc: jsPDF, pageNumber: number, totalPages: number) {
+  const pw = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  doc.setDrawColor(...C.border);
+  doc.line(14, pageH - 11, pw - 14, pageH - 11);
+  doc.setFontSize(7);
+  doc.setFont("helvetica", "normal");
+  doc.setTextColor(...C.light);
+  doc.text("Super Green Plantation (Pvt) Ltd.", 14, pageH - 6);
+  doc.text(`Confidential quotation  |  Page ${pageNumber} of ${totalPages}`, pw - 14, pageH - 6, { align: "right" });
+}
 
 function generateYearlyBreakdown(data: QuotationPDFData) {
   const periodsPerYear = FREQ_PERIODS[data.frequency];
@@ -177,17 +203,17 @@ const PLAN_CONDITIONS: Record<PlanType, { title: string; conditions: string[]; m
     ],
   },
   RAN_ASWANU: {
-    title: "Child Plan (Super Green Ran Aswanu) - Terms & Conditions",
+    title: "Ran Aswanu - Terms & Conditions",
     conditions: [
       "Available durations: 6 Year, 9 Year, and 12 Year plans.",
       "Paying term is 3 years from the start of the plan.",
       "Minimum premiums: Monthly Rs. 15,000 | Quarterly Rs. 50,000 | Semi-Annual Rs. 100,000 | Annual Rs. 200,000.",
-      "If payments stop before completing 1 year: 5% interest on invested amount paid after 3 years (monthly & quarterly plans).",
-      "If payments stop after completing 1 year: 8% interest on invested amount paid after 3 years (monthly & quarterly plans).",
-      "If payments stop after completing 2 years: 10% interest on invested amount paid after 3 years (monthly & quarterly plans).",
-      "If investor withdraws after completing 3 years: 12% interest on invested amount.",
-      "If investor withdraws after completing 4 years: 15% interest on invested amount.",
-      "If investor withdraws after completing 5 years: 21% interest on invested amount.",
+      "If payments stop before completing 1 year: 5% interest on invested amount paid after 3 years (Only Monthly and Quarterly).",
+      "If payments stop after completing 1 year: 8% interest on invested amount paid after 3 years (Only Monthly and Quarterly).",
+      "If payments stop after completing 2 years: 10% interest on invested amount paid after 3 years (Only Monthly and Quarterly).",
+      "If investor withdraws after completing 3 years: 12% interest on invested amount (Any).",
+      "If investor withdraws after completing 4 years: 15% interest on invested amount (Only Semi-Annual and Annual).",
+      "If investor withdraws after completing 5 years: 21% interest on invested amount (Only Semi-Annual and Annual).",
     ],
     maturityRates: [
       "After maturity with Monthly payments: 15% interest on invested amount.",
@@ -228,9 +254,11 @@ function drawPage1(doc: jsPDF, data: QuotationPDFData, logo: string | null) {
   const payoutMonths = payoutYears * 12;
   const monthlyPension = data.planType === "PENSION" ? data.maturityAmount / payoutMonths : null;
 
-  // Header bar
+  // Premium brand header
+  doc.setFillColor(...C.navy);
+  doc.rect(0, 0, pw, 29, "F");
   doc.setFillColor(...C.green);
-  doc.rect(0, 0, pw, 28, "F");
+  doc.rect(0, 27, pw, 2, "F");
 
   // Logo
   const logoW = 22, logoH = 22, logoX = 8, logoY = 3;
@@ -246,6 +274,9 @@ function drawPage1(doc: jsPDF, data: QuotationPDFData, logo: string | null) {
   doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
   doc.text("INVESTMENT QUOTATION", textStartX, 13);
+  doc.setFontSize(7);
+  doc.setFont("helvetica", "normal");
+  doc.text("PERSONALISED FINANCIAL PROPOSAL", textStartX, 19);
 
   // Company
   doc.setFontSize(8.5);
@@ -254,25 +285,28 @@ function drawPage1(doc: jsPDF, data: QuotationPDFData, logo: string | null) {
   doc.setFontSize(7.5);
   doc.setFont("helvetica", "normal");
   doc.text("supergreenplantation.lk", pw - 8, 18, { align: "right" });
+  doc.setFontSize(6.5);
+  doc.setTextColor(190, 220, 201);
+  doc.text("VALID FOR 30 DAYS", pw - 8, 23, { align: "right" });
 
   // Meta strip
   doc.setFillColor(...C.bg);
-  doc.rect(0, 28, pw, 13, "F");
+  doc.rect(0, 29, pw, 13, "F");
   doc.setFontSize(7.5);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(...C.light);
-  doc.text("QUOTATION NO.", 14, 34);
-  doc.text("DATE ISSUED", 68, 34);
-  doc.text("VALID UNTIL", 130, 34);
+  doc.text("QUOTATION NO.", 14, 35);
+  doc.text("DATE ISSUED", 68, 35);
+  doc.text("VALID UNTIL", 130, 35);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(9);
   doc.setTextColor(...C.dark);
-  doc.text(`#QT-${refNo}`, 14, 40);
-  doc.text(fmtDate(data.createdAt), 68, 40);
-  doc.text(addOneMonth(data.createdAt), 130, 40);
+  doc.text(`#QT-${refNo}`, 14, 41);
+  doc.text(fmtDate(data.createdAt), 68, 41);
+  doc.text(addOneMonth(data.createdAt), 130, 41);
 
   // Info boxes
-  const boxTop = 46, boxH = 36, colW = (pw - 30) / 2;
+  const boxTop = 48, boxH = 36, colW = (pw - 30) / 2;
 
   const drawInfoBox = (x: number, headerLabel: string, name: string, lines: string[]) => {
     doc.setFillColor(...C.white);
@@ -310,11 +344,7 @@ function drawPage1(doc: jsPDF, data: QuotationPDFData, logo: string | null) {
   let y = boxTop + boxH + 7;
 
   // Plan details table
-  doc.setFontSize(8.5);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...C.dark);
-  doc.text("PLAN DETAILS", 14, y);
-  y += 3;
+  y = drawSectionHeading(doc, "Plan details", y, 34);
 
   autoTable(doc, {
     startY: y,
@@ -330,10 +360,11 @@ function drawPage1(doc: jsPDF, data: QuotationPDFData, logo: string | null) {
         : []),
     ],
     theme: "plain",
-    styles: { fontSize: 8.5, cellPadding: { top: 3, bottom: 3, left: 5, right: 5 } },
+    styles: { fontSize: 8.5, cellPadding: { top: 3.2, bottom: 3.2, left: 5, right: 5 }, lineColor: C.border, lineWidth: 0.15 },
+    alternateRowStyles: { fillColor: [252, 253, 254] },
     columnStyles: {
       0: { fontStyle: "bold", cellWidth: 52, fillColor: C.bg, textColor: C.mid },
-      1: { textColor: C.dark },
+      1: { textColor: C.dark, fontStyle: "bold" },
     },
     tableLineColor: C.border,
     tableLineWidth: 0.2,
@@ -343,11 +374,7 @@ function drawPage1(doc: jsPDF, data: QuotationPDFData, logo: string | null) {
   y = (doc as any).lastAutoTable.finalY + 7;
 
   // Financial summary
-  doc.setFontSize(8.5);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...C.dark);
-  doc.text("FINANCIAL SUMMARY", 14, y);
-  y += 3;
+  y = drawSectionHeading(doc, "Financial summary", y, 43);
 
   const docCharge = data.documentCharge ?? 500;
   const grossInterest = data.interestEarned + docCharge;
@@ -371,10 +398,11 @@ function drawPage1(doc: jsPDF, data: QuotationPDFData, logo: string | null) {
     startY: y,
     body: finBody,
     theme: "plain",
-    styles: { fontSize: 8.5, cellPadding: { top: 3, bottom: 3, left: 5, right: 5 } },
+    styles: { fontSize: 8.5, cellPadding: { top: 3.2, bottom: 3.2, left: 5, right: 5 }, lineColor: C.border, lineWidth: 0.15 },
+    alternateRowStyles: { fillColor: [252, 253, 254] },
     columnStyles: {
       0: { fontStyle: "bold", cellWidth: 52, fillColor: C.bg, textColor: C.mid },
-      1: { textColor: C.dark },
+      1: { textColor: C.dark, fontStyle: "bold", halign: "right" },
     },
     didParseCell: (hook) => {
       if (hook.row.index === 3 && hook.column.index === 1) {
@@ -395,13 +423,18 @@ function drawPage1(doc: jsPDF, data: QuotationPDFData, logo: string | null) {
 
   // Net Maturity highlight bar
   doc.setFillColor(...C.greenLight);
-  doc.rect(14, y, pw - 28, 9, "F");
+  doc.setDrawColor(...C.greenMid);
+  doc.roundedRect(14, y, pw - 28, 11, 2, 2, "FD");
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...C.dark);
-  doc.text("Net Maturity Amount", 19, y + 6);
-  doc.text(lkr(data.maturityAmount), pw - 15, y + 6, { align: "right" });
-  y += 8; // tight gap after maturity bar
+  doc.setFontSize(8);
+  doc.setTextColor(...C.green);
+  doc.text("PROJECTED VALUE AT MATURITY", 19, y + 4.5);
+  doc.setFontSize(12);
+  doc.setTextColor(...C.navy);
+  doc.text(lkr(data.maturityAmount), pw - 19, y + 7.5, { align: "right" });
+  y += 13;
 
   // Notes
   if (data.notes?.trim()) {
@@ -470,9 +503,7 @@ function drawPage1(doc: jsPDF, data: QuotationPDFData, logo: string | null) {
   doc.text("Signature of Advisor", rX, y);
 
   // Footer pinned to bottom
-  doc.setFontSize(7);
-  doc.setTextColor(...C.light);
-  doc.text("Super Green Plantation (Pvt) Ltd.  |  Page 1 of 2", pw / 2, pageH - 3, { align: "center" });
+  drawFooter(doc, 1, 2);
 }
 
 // ─── Page 2: Plan Conditions ──────────────────────────────────────────────────
@@ -483,8 +514,10 @@ function drawPage2(doc: jsPDF, data: QuotationPDFData, logo: string | null) {
   const cond = PLAN_CONDITIONS[data.planType];
 
   // Header bar
+  doc.setFillColor(...C.navy);
+  doc.rect(0, 0, pw, 25, "F");
   doc.setFillColor(...C.green);
-  doc.rect(0, 0, pw, 24, "F");
+  doc.rect(0, 23, pw, 2, "F");
 
   const p2LogoW = 18, p2LogoH = 18, p2LogoX = 8, p2LogoY = 3;
   if (logo) {
@@ -502,7 +535,7 @@ function drawPage2(doc: jsPDF, data: QuotationPDFData, logo: string | null) {
   doc.setFont("helvetica", "normal");
   doc.text(`Ref: #QT-${data.id.slice(-6).toUpperCase()}  |  ${fmtDate(data.createdAt)}`, pw - 8, 15, { align: "right" });
 
-  let y = 32;
+  let y = 34;
 
   // Plan title
   doc.setFontSize(10.5);
@@ -512,13 +545,7 @@ function drawPage2(doc: jsPDF, data: QuotationPDFData, logo: string | null) {
   y += 9;
 
   // General conditions
-  doc.setFontSize(8.5);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...C.dark);
-  doc.text("General Conditions", 14, y);
-  doc.setDrawColor(...C.green);
-  doc.line(14, y + 1.5, 60, y + 1.5);
-  y += 7;
+  y = drawSectionHeading(doc, "General conditions", y, 42);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.5);
@@ -533,13 +560,7 @@ function drawPage2(doc: jsPDF, data: QuotationPDFData, logo: string | null) {
   y += 5;
 
   // Maturity rates
-  doc.setFontSize(8.5);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...C.dark);
-  doc.text("Maturity & Payout Rates", 14, y);
-  doc.setDrawColor(...C.green);
-  doc.line(14, y + 1.5, 66, y + 1.5);
-  y += 7;
+  y = drawSectionHeading(doc, "Maturity & payout rates", y, 52);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.5);
@@ -558,13 +579,7 @@ function drawPage2(doc: jsPDF, data: QuotationPDFData, logo: string | null) {
     const payoutMonths = payoutYears * 12;
     const monthlyPension = data.maturityAmount / payoutMonths;
 
-    doc.setFontSize(8.5);
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(...C.dark);
-    doc.text("Your Pension Payout Breakdown", 14, y);
-    doc.setDrawColor(...C.green);
-    doc.line(14, y + 1.5, 80, y + 1.5);
-    y += 5;
+    y = drawSectionHeading(doc, "Your pension payout breakdown", y, 66);
 
     autoTable(doc, {
       startY: y,
@@ -600,13 +615,7 @@ function drawPage2(doc: jsPDF, data: QuotationPDFData, logo: string | null) {
 
   // ─── Year-by-Year Breakdown Table ──────────────────────────────────────────────
 
-doc.setFontSize(8.5);
-doc.setFont("helvetica", "bold");
-doc.setTextColor(...C.dark);
-doc.text("Year-by-Year Growth Schedule", 14, y);
-doc.setDrawColor(...C.green);
-doc.line(14, y + 1.5, 70, y + 1.5);
-y += 5;
+  y = drawSectionHeading(doc, "Year-by-year growth schedule", y, 59);
 
 const yearlyRows = generateYearlyBreakdown(data);
 
@@ -642,7 +651,7 @@ autoTable(doc, {
 });
 
 y = (doc as any).lastAutoTable.finalY + 8;
-  // Acceptance
+  // Acceptance and three-column approval area
   y += 10;
   doc.setFontSize(9);
   doc.setFont("helvetica", "bold");
@@ -650,21 +659,27 @@ y = (doc as any).lastAutoTable.finalY + 8;
   doc.text("I hereby agree to the terms and conditions mentioned above.", 18, y);
 
   y += 15;
+  const approvalY = y;
+  const col1X = 18;
+  const col2X = pw / 2;
+  const col3X = pw - 62;
+  const lineW = 48;
+  doc.setDrawColor(...C.green);
   doc.setLineWidth(0.5);
-  doc.line(19, y, 80, y);
-  doc.line(pw - 80, y, pw - 19, y);
+  doc.line(col1X, approvalY, col1X + lineW, approvalY);
+  doc.line(col3X, approvalY, col3X + lineW, approvalY);
+
 
   y += 5;
-  doc.setFontSize(8);
+  doc.setFontSize(7.2);
   doc.setFont("helvetica", "normal");
-  doc.text("Authorized Client Signature", 19, y);
-  doc.text("Date", pw - 80, y);
+  doc.setTextColor(...C.mid);
+  doc.text("Authorized Client Signature", col1X, y);
+  doc.text("Chairman Seal / Signature", col2X, y, { align: "center" });
+  doc.text("Date", col3X, y);
 
   // Footer
-  doc.setFontSize(7.5);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(...C.light);
-  doc.text("Super Green Plantation (Pvt) Ltd.  |  Page 2 of 2", pw / 2, pageH - 5, { align: "center" });
+  drawFooter(doc, 2, 2);
 }
 
 // ─── Main Export ──────────────────────────────────────────────────────────────
@@ -672,9 +687,17 @@ y = (doc as any).lastAutoTable.finalY + 8;
 export const generateQuotationPDF = async (data: QuotationPDFData) => {
   const logo = await loadLogoBase64();
   const doc = new jsPDF({ unit: "mm", format: "a4" });
+  doc.setProperties({
+    title: `Investment Quotation - ${data.clientName}`,
+    subject: "Personalised investment quotation",
+    author: "Super Green Plantation (Pvt) Ltd.",
+    creator: "Super Green Quotation System",
+    keywords: "quotation, investment, Super Green Plantation",
+  });
   drawPage1(doc, data, logo);
   doc.addPage();
   drawPage2(doc, data, logo);
+
   const fileName = `Quotation_${data.clientName.replace(/\s+/g, "_")}_${data.id.slice(-6).toUpperCase()}.pdf`;
   doc.save(fileName);
 };

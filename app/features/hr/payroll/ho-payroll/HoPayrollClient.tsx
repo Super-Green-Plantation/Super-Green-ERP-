@@ -16,6 +16,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { exportHoPayrollToExcel } from "../exportHoPayrollToExcel";
+import { downloadHoPayslips, type HoPayslipRow } from "../exportHoPayslipToPDF";
 import {
   getHoPayrollExport,
   getHoPayrollPreview,
@@ -294,6 +295,7 @@ export default function HoPayrollClient({
   const [overrides, setOverrides] = useState<Record<number, LocalOverrides>>({});
   const [running, setRunning]         = useState(false);
   const [exporting, setExporting]     = useState(false);
+  const [printingSlips, setPrintingSlips] = useState(false);
   const [payingId, setPayingId]       = useState<number | null>(null);
   const [savingId, setSavingId]   = useState<number | null>(null);
   const [rerunningId, setRerunningId] = useState<number | null>(null);
@@ -358,6 +360,26 @@ export default function HoPayrollClient({
       toast.success(`Exported ${rows.length} HO payroll records`);
     } catch { toast.error("Export failed"); }
     finally { setExporting(false); }
+  };
+
+  const handlePayslips = async () => {
+    setPrintingSlips(true);
+    try {
+      const rows = await getHoPayrollExport(year, month);
+      if (rows.length === 0) { toast.warning("No processed HO payroll records found for this period."); return; }
+      downloadHoPayslips(rows as HoPayslipRow[], month, year);
+      toast.success(`Generated ${rows.length} pay slip${rows.length > 1 ? "s" : ""}`);
+    } catch { toast.error("Pay slip generation failed"); }
+    finally { setPrintingSlips(false); }
+  };
+
+  const handleSinglePayslip = async (empNo: string) => {
+    try {
+      const rows = await getHoPayrollExport(year, month);
+      const row = rows.find((r) => r.empNo === empNo);
+      if (!row) { toast.error("Pay slip not found — run payroll first"); return; }
+      downloadHoPayslips([row] as HoPayslipRow[], month, year);
+    } catch { toast.error("Pay slip generation failed"); }
   };
 
   const handleSearch = async () => { await refetch(); };
@@ -742,18 +764,28 @@ export default function HoPayrollClient({
 
                         {/* Status */}
                         <td className="px-3 py-4 text-center">
-                          {row.status === "PAID" ? (
-                            <span className="text-[10px] font-bold text-green-600 bg-green-500/10 border border-green-500/20 px-3 py-1 rounded-full uppercase">Paid</span>
-                          ) : row.alreadyProcessed ? (
-                            <button onClick={() => handleMarkPaid(row.memberId)}
-                              disabled={payingId === row.memberId}
-                              className="flex items-center gap-1 text-[10px] font-bold text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-full uppercase hover:bg-primary/20 transition-all disabled:opacity-50">
-                              {payingId === row.memberId ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
-                              Mark Paid
-                            </button>
-                          ) : (
-                            <span className="text-[10px] font-bold text-muted-foreground/50 bg-muted border border-border px-3 py-1 rounded-full uppercase">Pending</span>
-                          )}
+                          <div className="flex items-center justify-center gap-2">
+                            {row.status === "PAID" ? (
+                              <span className="text-[10px] font-bold text-green-600 bg-green-500/10 border border-green-500/20 px-3 py-1 rounded-full uppercase">Paid</span>
+                            ) : row.alreadyProcessed ? (
+                              <button onClick={() => handleMarkPaid(row.memberId)}
+                                disabled={payingId === row.memberId}
+                                className="flex items-center gap-1 text-[10px] font-bold text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-full uppercase hover:bg-primary/20 transition-all disabled:opacity-50">
+                                {payingId === row.memberId ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
+                                Mark Paid
+                              </button>
+                            ) : (
+                              <span className="text-[10px] font-bold text-muted-foreground/50 bg-muted border border-border px-3 py-1 rounded-full uppercase">Pending</span>
+                            )}
+                            {row.alreadyProcessed && (
+                              <button
+                                onClick={() => handleSinglePayslip(row.empNo)}
+                                title="Download pay slip"
+                                className="p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors">
+                                <FileDown className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
 
@@ -852,6 +884,11 @@ export default function HoPayrollClient({
             className="flex items-center justify-center gap-2 px-8 py-4 bg-card border border-border text-foreground text-xs font-bold uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-95 hover:bg-muted/40 disabled:opacity-50 shadow-sm">
             {exporting ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileDown className="w-5 h-5" />}
             Export Excel
+          </button>
+          <button onClick={handlePayslips} disabled={printingSlips || running}
+            className="flex items-center justify-center gap-2 px-8 py-4 bg-card border border-border text-foreground text-xs font-bold uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-95 hover:bg-muted/40 disabled:opacity-50 shadow-sm">
+            {printingSlips ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileDown className="w-5 h-5" />}
+            Pay Slips PDF
           </button>
         </div>
       )}
