@@ -5,6 +5,7 @@ import { UserAvatar } from "@/app/components/Dashboard/UserAvatar";
 import { NotificationBell } from "@/app/components/NotificationBell";
 import { Command, Menu, Search, Sparkles } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { useGreeting } from "@/app/hooks/useGreeting";
 
 const BELL_ROLES = ["ADMIN", "HR", "DEV"];
 
@@ -33,6 +34,7 @@ export function TopBar({ role, userName, isCollapsed, onMenuClick }: TopBarProps
   const pathname = usePathname();
   const pageTitle = getPageTitle(pathname);
   const isDashboard = pageTitle === "Dashboard";
+  const { subtitle } = useGreeting();
 
   return (
     <header className={`fixed top-0 right-0 z-30 flex h-[72px] items-center justify-between gap-4 border-b border-border/70 bg-background/85 px-4 backdrop-blur-xl transition-all duration-300 sm:px-7 ${isCollapsed ? "left-0 md:left-[76px]" : "left-0 md:left-[248px]"}`}>
@@ -44,7 +46,7 @@ export function TopBar({ role, userName, isCollapsed, onMenuClick }: TopBarProps
             <span className="hidden text-border sm:inline">/</span>
             <span className="truncate text-foreground/75">{pageTitle}</span>
           </div>
-          {isDashboard && <p className="mt-0.5 hidden text-[10px] font-medium text-muted-foreground sm:block">Good morning — here&apos;s what&apos;s happening today.</p>}
+          {isDashboard && <p className="mt-0.5 hidden text-[10px] font-medium text-muted-foreground sm:block">— {subtitle}</p>}
         </div>
       </div>
 

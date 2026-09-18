@@ -10,11 +10,13 @@ import { CommissionLeaderboard } from "./CommissionLeaderboard";
 import { IncentiveForecast } from "./IncentiveForecast";
 import { PayrollBreakdown } from "./PayrollBreakdown";
 import { UserAvatar } from "./UserAvatar";
+import { useGreeting } from "@/app/hooks/useGreeting";
 
 export const PrivilegedView = ({ data, userName, userRole, achieved, achievement, target, percentage, isMounted }: any) => {
   const { data: maturityData, isLoading: maturityLoading } = useMaturityPipeline();
   const [period] = useState("This year");
   const firstName = (userName || "there").split(" ")[0];
+  const { greeting } = useGreeting();
 
   const modules = [
     { title: "Client management", description: `${data.totClients ?? 0} active records`, icon: Users, href: "/features/clients", color: "bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-300" },
@@ -27,7 +29,7 @@ export const PrivilegedView = ({ data, userName, userRole, achieved, achievement
       <div className="flex flex-col gap-5 rounded-3xl border border-primary/10 bg-gradient-to-br from-[#5556d6] via-[#6768df] to-[#8788ef] p-6 text-white shadow-[0_18px_45px_rgba(91,92,226,0.22)] sm:flex-row sm:items-center sm:justify-between sm:p-8">
         <div>
           <div className="mb-3 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-white/65"><span className="h-1.5 w-1.5 rounded-full bg-emerald-300" /> Live workspace</div>
-          <h1 className="text-2xl font-bold tracking-tight text-white sm:text-[30px]">Good morning, {firstName}</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-white sm:text-[30px]">{greeting}, {firstName}</h1>
           <p className="mt-2 max-w-lg text-sm leading-6 text-white/70">Stay on top of your organization&apos;s performance, clients, and team activity from one calm, connected workspace.</p>
         </div>
         <div className="flex items-center gap-3 rounded-2xl border border-white/15 bg-white/10 p-3 backdrop-blur-sm sm:min-w-[190px]">

@@ -117,8 +117,8 @@ export default function CommissionAccordionList() {
   return (
     <div className="w-full space-y-4">
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
-        <div className="flex items-center gap-2 flex-1 w-full px-4 py-2 bg-card border border-border rounded-xl shadow-sm focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/50 transition-all">
+      <div className="flex flex-col sm:flex-row items-center gap-2 w-full">
+        <div className="flex items-center gap-2 flex-1 w-full px-3 py-2 bg-card border border-border rounded-lg shadow-sm focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/50 transition-all">
           <Search className="w-4 h-4 text-muted-foreground shrink-0" />
           <input
             type="text"
@@ -148,12 +148,12 @@ export default function CommissionAccordionList() {
       </div>
 
       {filteredList.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground/50 py-20 bg-card rounded-2xl border border-border shadow-sm">
+        <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground/50 py-14 bg-card rounded-xl border border-border shadow-sm">
           <Inbox size={40} strokeWidth={1} />
           <p className="text-sm font-bold">No investments found</p>
         </div>
       ) : (
-        <Accordion type="multiple" className="space-y-4">
+        <Accordion type="multiple" className="space-y-3">
           {filteredList.map((group: any) => {
             const { investment, branch, commissions } = group;
             const isProcessed = investment.commissionsProcessed;
@@ -168,9 +168,9 @@ export default function CommissionAccordionList() {
               <AccordionItem
                 key={investment.id}
                 value={`inv-${investment.id}`}
-                className="bg-card rounded-2xl border border-border shadow-sm overflow-hidden border-b-0"
+                className="bg-card rounded-xl border border-border shadow-sm overflow-hidden border-b-0"
               >
-                <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-muted/30 transition-colors [&[data-state=open]]:border-b border-border">
+                <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/30 transition-colors [&[data-state=open]]:border-b border-border">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between w-full gap-4 text-left mr-4">
                     <div>
                       <h3 className="text-sm font-bold text-foreground">
@@ -204,30 +204,30 @@ export default function CommissionAccordionList() {
                   </div>
                 </AccordionTrigger>
 
-                <AccordionContent className="px-6 pb-6 pt-2">
+                <AccordionContent className="px-4 pb-4 pt-2">
                   <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                       <thead>
                         <tr className="border-b border-border">
-                          <th className="py-3 pr-4 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Type</th>
-                          <th className="py-3 px-4 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Member</th>
-                          <th className="py-3 px-4 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Amount</th>
-                          <th className="py-3 pl-4 text-[10px] font-bold uppercase tracking-wider text-muted-foreground text-right">Details</th>
+                          <th className="py-2.5 pr-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Type</th>
+                          <th className="py-2.5 px-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Member</th>
+                          <th className="py-2.5 px-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Amount</th>
+                          <th className="py-2.5 pl-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground text-right">Details</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border">
                         {commissions.map((comm: any) => (
                           <tr key={comm.id} className="hover:bg-muted/50 transition-colors">
-                            <td className="py-3 pr-4">
+                            <td className="py-2.5 pr-3">
                               <span className={`inline-flex items-center px-2 py-1 rounded text-[9px] font-bold uppercase tracking-widest border ${TYPE_STYLES[comm.type] ?? "bg-muted text-muted-foreground border-border"}`}>
                                 {comm.type}
                               </span>
                             </td>
-                            <td className="py-3 px-4">
+                            <td className="py-2.5 px-3">
                               <div className="text-xs font-bold text-foreground">{comm.member?.nameWithInitials || "Unknown"}</div>
                               <div className="text-[9px] text-muted-foreground uppercase tracking-wider">{comm.member?.empNo}</div>
                             </td>
-                            <td className="py-3 px-4">
+                            <td className="py-2.5 px-3">
                               <div className="flex items-baseline gap-1">
                                 <span className="text-[9px] font-bold text-primary uppercase">Rs.</span>
                                 <span className={`text-xs font-bold tabular-nums ${comm.type === "REVERSED" ? "text-red-500 line-through" : "text-foreground"}`}>
@@ -235,7 +235,7 @@ export default function CommissionAccordionList() {
                                 </span>
                               </div>
                             </td>
-                            <td className="py-3 pl-4 text-right">
+                            <td className="py-2.5 pl-3 text-right">
                               <Link
                                 href={`/features/commissions/${comm.id}/details`}
                                 className="inline-flex p-1.5 text-muted-foreground hover:text-primary hover:bg-muted rounded-lg border border-transparent hover:border-border transition-all"

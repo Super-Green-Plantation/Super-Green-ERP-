@@ -135,7 +135,6 @@ const QuotationsPage = () => {
         <div className="sm:flex space-y-3 items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold dark:text-gray-50 text-gray-900 flex items-center gap-2">
-              <FileText className="w-6 h-6 text-green-600" />
               Quotations
             </h1>
             <p className="text-sm text-muted-foreground mt-0.5">
