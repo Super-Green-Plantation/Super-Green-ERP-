@@ -16,7 +16,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { exportHoPayrollToExcel } from "../exportHoPayrollToExcel";
-import { downloadHoPayslips, type HoPayslipRow } from "../exportHoPayslipToPDF";
 import {
   getHoPayrollExport,
   getHoPayrollPreview,
@@ -295,7 +294,6 @@ export default function HoPayrollClient({
   const [overrides, setOverrides] = useState<Record<number, LocalOverrides>>({});
   const [running, setRunning]         = useState(false);
   const [exporting, setExporting]     = useState(false);
-  const [printingSlips, setPrintingSlips] = useState(false);
   const [payingId, setPayingId]       = useState<number | null>(null);
   const [savingId, setSavingId]   = useState<number | null>(null);
   const [rerunningId, setRerunningId] = useState<number | null>(null);
@@ -360,26 +358,6 @@ export default function HoPayrollClient({
       toast.success(`Exported ${rows.length} HO payroll records`);
     } catch { toast.error("Export failed"); }
     finally { setExporting(false); }
-  };
-
-  const handlePayslips = async () => {
-    setPrintingSlips(true);
-    try {
-      const rows = await getHoPayrollExport(year, month);
-      if (rows.length === 0) { toast.warning("No processed HO payroll records found for this period."); return; }
-      downloadHoPayslips(rows as HoPayslipRow[], month, year);
-      toast.success(`Generated ${rows.length} pay slip${rows.length > 1 ? "s" : ""}`);
-    } catch { toast.error("Pay slip generation failed"); }
-    finally { setPrintingSlips(false); }
-  };
-
-  const handleSinglePayslip = async (empNo: string) => {
-    try {
-      const rows = await getHoPayrollExport(year, month);
-      const row = rows.find((r) => r.empNo === empNo);
-      if (!row) { toast.error("Pay slip not found — run payroll first"); return; }
-      downloadHoPayslips([row] as HoPayslipRow[], month, year);
-    } catch { toast.error("Pay slip generation failed"); }
   };
 
   const handleSearch = async () => { await refetch(); };
@@ -458,10 +436,10 @@ export default function HoPayrollClient({
   );
 
   return (
-    <div className="w-full min-h-screen p-4 sm:p-8 flex flex-col gap-6 sm:gap-8 font-sans text-gray-900 dark:text-gray-100">
+    <div className="w-full min-h-screen px-3 pb-8 pt-4 sm:px-5 lg:px-7 flex flex-col gap-4 font-sans text-gray-900 dark:text-gray-100">
       <div>
         <Heading>Head Office Payroll</Heading>
-        <p className="text-sm text-muted-foreground mt-2 font-medium max-w-2xl">
+        <p className="text-xs text-muted-foreground mt-1 font-medium max-w-3xl">
           Permanent BM/RM/ZM/AGM are volume-gated (basic requires achievement ramp, incentives at 75%/100%, vehicle+fuel at 50%).
           RM and above receive vehicle+fuel unconditionally for their first 4 months.
           Fixed-salary HO staff use flat config amounts.
@@ -469,16 +447,16 @@ export default function HoPayrollClient({
       </div>
 
       {/* Selectors */}
-      <div className="flex flex-wrap gap-3 items-center">
+      <div className="flex flex-wrap gap-2 items-center rounded-xl border border-border/70 bg-card/70 p-2.5 shadow-sm">
         <div className="relative">
-          <select className="appearance-none pl-4 pr-10 py-3 bg-card border border-border rounded-xl text-sm font-bold text-foreground outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 cursor-pointer shadow-sm transition-all"
+          <select className="appearance-none pl-3 pr-9 py-2 bg-card border border-border rounded-lg text-xs font-bold text-foreground outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 cursor-pointer shadow-sm transition-all"
             value={month} onChange={(e) => setMonth(Number(e.target.value))}>
             {months.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
           </select>
           <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
         </div>
         <div className="relative">
-          <select className="appearance-none pl-4 pr-10 py-3 bg-card border border-border rounded-xl text-sm font-bold text-foreground outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 cursor-pointer shadow-sm transition-all"
+          <select className="appearance-none pl-3 pr-9 py-2 bg-card border border-border rounded-lg text-xs font-bold text-foreground outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 cursor-pointer shadow-sm transition-all"
             value={year} onChange={(e) => setYear(Number(e.target.value))}>
             {Array.from({ length: 6 }, (_, i) => new Date().getFullYear() - 3 + i).map((y) => (
               <option key={y} value={y}>{y}</option>
@@ -491,7 +469,7 @@ export default function HoPayrollClient({
           {isFetching && <Loader2 className="w-4 h-4 animate-spin" />} Search
         </button>
         {unconfiguredCount > 0 && (
-          <div className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs font-bold text-amber-600">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-lg text-[11px] font-bold text-amber-600">
             <AlertTriangle className="w-4 h-4" />
             {unconfiguredCount} member{unconfiguredCount > 1 ? "s" : ""} without base salary configured
           </div>
@@ -500,7 +478,7 @@ export default function HoPayrollClient({
 
       {/* Summary cards */}
       {preview.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-5">
           <SummaryCard label="Total Gross" value={fmt(totalGross)} />
           <SummaryCard label="Total Net"   value={fmt(totalNet)} />
           <SummaryCard label="EPF (Employee)" value={fmt(totalEpf)} />
@@ -510,18 +488,18 @@ export default function HoPayrollClient({
       )}
 
       {/* Table */}
-      <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
+      <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
         {preview.length === 0 ? (
           <div className="p-12 text-center text-sm text-muted-foreground font-medium">
             {isFetching ? "Loading…" : "No management members found. Click Search to load."}
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full min-w-[1400px] text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/20">
-                  <th className="w-8 px-4 py-3" />
-                  <th className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Employee</th>
+                  <th className="w-8 px-3 py-2.5" />
+                  <th className="text-left px-3 py-2.5 text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Employee</th>
                   <th className="text-right px-3 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Basic</th>
                   <th className="text-right px-3 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Incentive</th>
                   <th className="text-right px-3 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">V&F / Allow.</th>
@@ -549,7 +527,7 @@ export default function HoPayrollClient({
                     <React.Fragment key={row.memberId}>
                       <tr className="hover:bg-muted/30 transition-colors">
                         {/* Expand */}
-                        <td className="px-4 py-4">
+                        <td className="px-3 py-3">
                           <button onClick={() => toggleExpand(row.memberId)}
                             className="p-1 rounded-lg text-muted-foreground hover:text-foreground transition-colors">
                             <ChevronRight className={`w-4 h-4 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
@@ -557,7 +535,7 @@ export default function HoPayrollClient({
                         </td>
 
                         {/* Employee */}
-                        <td className="px-4 py-4">
+                        <td className="px-3 py-3">
                           <p className="font-bold text-foreground text-sm leading-tight">{row.name}</p>
                           <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-tighter mt-0.5">{row.empNo}</p>
                           <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
@@ -764,28 +742,18 @@ export default function HoPayrollClient({
 
                         {/* Status */}
                         <td className="px-3 py-4 text-center">
-                          <div className="flex items-center justify-center gap-2">
-                            {row.status === "PAID" ? (
-                              <span className="text-[10px] font-bold text-green-600 bg-green-500/10 border border-green-500/20 px-3 py-1 rounded-full uppercase">Paid</span>
-                            ) : row.alreadyProcessed ? (
-                              <button onClick={() => handleMarkPaid(row.memberId)}
-                                disabled={payingId === row.memberId}
-                                className="flex items-center gap-1 text-[10px] font-bold text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-full uppercase hover:bg-primary/20 transition-all disabled:opacity-50">
-                                {payingId === row.memberId ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
-                                Mark Paid
-                              </button>
-                            ) : (
-                              <span className="text-[10px] font-bold text-muted-foreground/50 bg-muted border border-border px-3 py-1 rounded-full uppercase">Pending</span>
-                            )}
-                            {row.alreadyProcessed && (
-                              <button
-                                onClick={() => handleSinglePayslip(row.empNo)}
-                                title="Download pay slip"
-                                className="p-1.5 rounded-lg hover:bg-muted/60 text-muted-foreground hover:text-foreground transition-colors">
-                                <FileDown className="w-3.5 h-3.5" />
-                              </button>
-                            )}
-                          </div>
+                          {row.status === "PAID" ? (
+                            <span className="text-[10px] font-bold text-green-600 bg-green-500/10 border border-green-500/20 px-3 py-1 rounded-full uppercase">Paid</span>
+                          ) : row.alreadyProcessed ? (
+                            <button onClick={() => handleMarkPaid(row.memberId)}
+                              disabled={payingId === row.memberId}
+                              className="flex items-center gap-1 text-[10px] font-bold text-primary bg-primary/10 border border-primary/20 px-3 py-1 rounded-full uppercase hover:bg-primary/20 transition-all disabled:opacity-50">
+                              {payingId === row.memberId ? <Loader2 className="w-3 h-3 animate-spin" /> : <CheckCircle2 className="w-3 h-3" />}
+                              Mark Paid
+                            </button>
+                          ) : (
+                            <span className="text-[10px] font-bold text-muted-foreground/50 bg-muted border border-border px-3 py-1 rounded-full uppercase">Pending</span>
+                          )}
                         </td>
                       </tr>
 
@@ -885,11 +853,6 @@ export default function HoPayrollClient({
             {exporting ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileDown className="w-5 h-5" />}
             Export Excel
           </button>
-          <button onClick={handlePayslips} disabled={printingSlips || running}
-            className="flex items-center justify-center gap-2 px-8 py-4 bg-card border border-border text-foreground text-xs font-bold uppercase tracking-[0.2em] rounded-2xl transition-all active:scale-95 hover:bg-muted/40 disabled:opacity-50 shadow-sm">
-            {printingSlips ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileDown className="w-5 h-5" />}
-            Pay Slips PDF
-          </button>
         </div>
       )}
     </div>
@@ -900,9 +863,9 @@ export default function HoPayrollClient({
 
 function SummaryCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
-      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{label}</p>
-      <p className="text-xl font-bold text-foreground mt-1">{value}</p>
+    <div className="bg-card border border-border rounded-lg px-3 py-2.5 shadow-sm">
+      <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">{label}</p>
+      <p className="text-base font-black text-foreground mt-1 tabular-nums">{value}</p>
     </div>
   );
 }

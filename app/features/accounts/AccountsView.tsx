@@ -180,20 +180,17 @@ export default function AccountsView() {
   return (
     <main className="min-h-screen bg-[#f0f4f2] pb-10">
       {/* ── Hero ── */}
-      <div className="relative overflow-hidden bg-[#0e2a1f] px-5 pt-6 pb-8">
+      <div className="relative overflow-hidden bg-[#0e2a1f] px-4 pt-4 pb-6 sm:px-5">
         <div className="pointer-events-none absolute -top-16 -right-16 h-56 w-56 rounded-full border border-white/5" />
         <div className="pointer-events-none absolute -top-8 -right-8 h-36 w-36 rounded-full border border-white/5" />
 
-        <div className="flex items-start justify-between mb-6">
-          <div>
-            <p className="text-[11px] font-medium tracking-widest text-white/40 uppercase mb-0.5">Super Green Plantation</p>
+        <div className="flex items-start justify-between ">
             <h1 className="text-[17px] font-semibold text-white">Accounts Overview</h1>
-          </div>
           <label className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs text-white/70 cursor-pointer hover:bg-white/15 transition-colors">
-            <CalendarDays className="h-3.5 w-3.5" />
+            <CalendarDays className="h-3.5 w-3.5 " />
             <input aria-label="Reporting month" type="month" value={globalPeriod}
               onChange={(e) => setGlobalPeriod(e.target.value)}
-              className="bg-transparent outline-none text-xs w-[7rem]" />
+              className="bg-transparent outline-none text-xs w-[7rem] text-white" />
           </label>
         </div>
 
@@ -204,15 +201,15 @@ export default function AccountsView() {
           </p>
         </div>
 
-        <div className="mt-5 grid grid-cols-2 gap-3">
-          <div className="rounded-xl bg-white/8 px-4 py-3">
+        <div className="mt-4 grid grid-cols-2 gap-2.5">
+          <div className="rounded-lg bg-white/8 px-3 py-2.5">
             <div className="flex items-center gap-1.5 mb-1">
               <ArrowDownLeft className="h-3.5 w-3.5 text-emerald-400" />
               <span className="text-[11px] text-white/50">Total Income</span>
             </div>
             <p className="text-base font-semibold text-white">{loading ? "—" : fmt(investmentTotal)}</p>
           </div>
-          <div className="rounded-xl bg-white/8 px-4 py-3">
+          <div className="rounded-lg bg-white/8 px-3 py-2.5">
             <div className="flex items-center gap-1.5 mb-1">
               <ArrowUpRight className="h-3.5 w-3.5 text-red-400" />
               <span className="text-[11px] text-white/50">Total Outgoing</span>
@@ -223,11 +220,11 @@ export default function AccountsView() {
       </div>
 
       {/* ── Stats / Tab Strip ── */}
-      <div className="px-4 -mt-2">
-        <div className="grid grid-cols-4 gap-2 rounded-2xl bg-white shadow-sm border border-black/5 p-3">
+      <div className="px-3 -mt-2 sm:px-4">
+        <div className="grid grid-cols-4 gap-1.5 rounded-xl bg-white shadow-sm border border-black/5 p-2.5">
           {tabs.map((t) => (
             <button key={t.id} onClick={() => setTab(t.id)}
-              className={`flex flex-col items-center gap-1 rounded-xl py-2.5 px-1 transition-colors ${tab === t.id ? "bg-[#f0f4f2]" : "hover:bg-gray-50"}`}>
+              className={`flex flex-col items-center gap-1 rounded-lg py-2 px-1 transition-colors ${tab === t.id ? "bg-[#f0f4f2]" : "hover:bg-gray-50"}`}>
               <span className={`${t.color} ${tab === t.id ? "opacity-100" : "opacity-60"}`}>{t.icon}</span>
               <span className={`text-[10px] font-medium ${tab === t.id ? "text-gray-800" : "text-gray-400"}`}>{t.label}</span>
               <span className={`text-[11px] font-bold ${tab === t.id ? t.color : "text-gray-500"}`}>
@@ -250,10 +247,10 @@ export default function AccountsView() {
       )}
 
       {/* ── Transaction Panel ── */}
-      <div className="px-4 mt-3">
-        <div className="rounded-2xl bg-white shadow-sm border border-black/5 overflow-hidden">
+        <div className="px-3 mt-2 sm:px-4">
+        <div className="rounded-xl bg-white shadow-sm border border-black/5 overflow-hidden">
           {/* Panel header */}
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+          <div className="flex items-center justify-between px-3 py-2.5 border-b border-gray-100">
             <div className="flex items-center gap-2">
               <span className={tabs.find((t) => t.id === tab)?.color}>
                 {tabs.find((t) => t.id === tab)?.icon}
@@ -363,7 +360,7 @@ export default function AccountsView() {
 
 function TotalRow({ label, value, color = "text-gray-800" }: { label: string; value: number; color?: string }) {
   return (
-    <div className="flex items-center justify-between px-4 py-3 bg-gray-50 border-t border-gray-100">
+    <div className="flex items-center justify-between px-3 py-2.5 bg-gray-50 border-t border-gray-100">
       <span className="text-xs font-medium text-gray-500">{label}</span>
       <span className={`text-sm font-bold ${color}`}>{fmtFull(value)}</span>
     </div>
@@ -382,7 +379,7 @@ function InvestmentsList({ rows, total }: { rows: Investment[]; total: number })
     <div>
       <div className="divide-y divide-gray-50">
         {rows.map((row) => (
-          <div key={row.id} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
+          <div key={row.id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 transition-colors">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-50">
               <Landmark className="h-4 w-4 text-emerald-600" />
             </div>
@@ -410,13 +407,13 @@ function HarvestList({ weeks, total }: { weeks: { week: number; rows: Harvest[] 
       {weeks.map(({ week, rows }) =>
         rows.length === 0 ? null : (
           <div key={week}>
-            <div className="px-4 py-2 bg-amber-50/60 flex items-center justify-between">
+            <div className="px-3 py-1.5 bg-amber-50/60 flex items-center justify-between">
               <span className="text-[11px] font-semibold text-amber-700 tracking-wide">WEEK {week}</span>
               <span className="text-[11px] text-amber-500">{rows.length} payments · {fmt(rows.reduce((s, r) => s + r.amount, 0))}</span>
             </div>
             <div className="divide-y divide-gray-50">
               {rows.map((row) => (
-                <div key={row.id} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
+                <div key={row.id} className="flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 transition-colors">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-50">
                     <Leaf className="h-4 w-4 text-amber-600" />
                   </div>
@@ -449,14 +446,14 @@ function PayrollBreakdown({ payroll }: { payroll: Payroll }) {
     <div>
       <div className="divide-y divide-gray-50">
         {items.map((item) => (
-          <div key={item.label} className="flex items-center gap-3 px-4 py-3.5">
+          <div key={item.label} className="flex items-center gap-3 px-3 py-2.5">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-50">{item.icon}</div>
             <span className="flex-1 text-sm text-gray-700">{item.label}</span>
             <span className="text-sm font-semibold text-gray-800">{fmtFull(item.value)}</span>
           </div>
         ))}
       </div>
-      <div className="flex items-center gap-4 px-4 py-3 bg-gray-50 border-t border-gray-100">
+      <div className="flex items-center gap-4 px-3 py-2.5 bg-gray-50 border-t border-gray-100">
         <div className="flex items-center gap-1.5">
           <span className="text-xs text-gray-400">Payroll records:</span>
           <span className="text-xs font-bold text-gray-600">{payroll.payrollCount}</span>
@@ -490,13 +487,13 @@ function ExpensesList({
     <div>
       {Object.entries(grouped).map(([category, items]) => (
         <div key={category}>
-          <div className="px-4 py-2 bg-red-50/40 flex items-center justify-between">
+          <div className="px-3 py-1.5 bg-red-50/40 flex items-center justify-between">
             <span className="text-[11px] font-semibold text-red-600 tracking-wide uppercase">{category}</span>
             <span className="text-[11px] text-red-400">{fmt(items.reduce((s, r) => s + r.amount, 0))}</span>
           </div>
           <div className="divide-y divide-gray-50">
             {items.map((row) => (
-              <div key={row.id} className="group flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
+              <div key={row.id} className="group flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 transition-colors">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red-50">
                   <ReceiptText className="h-4 w-4 text-red-500" />
                 </div>
