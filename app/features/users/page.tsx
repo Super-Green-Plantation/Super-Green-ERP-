@@ -9,6 +9,7 @@ import {
   Clock,
   Loader2,
   MapPin,
+  Search,
   Shield,
   User as UserIcon
 } from 'lucide-react';
@@ -37,6 +38,7 @@ const UserListPage = () => {
 
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState('');
   const ITEMS_PER_PAGE = 10;
 
   if (isLoading) return <Loading />
@@ -66,35 +68,63 @@ const UserListPage = () => {
     }
   };
 
-  const totalPages = Math.ceil(users.length / ITEMS_PER_PAGE);
-  const paginatedUsers = users.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const filteredUsers = users.filter((user) => {
+    if (!normalizedQuery) return true;
+    const branch = user.member?.branches?.[0]?.branch;
+    return [user.name, user.email, user.role, branch?.name, branch?.location]
+      .filter(Boolean)
+      .some((value) => String(value).toLowerCase().includes(normalizedQuery));
+  });
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / ITEMS_PER_PAGE));
+  const activeUsers = filteredUsers.filter((user) => user.status).length;
+  const inactiveUsers = filteredUsers.length - activeUsers;
+  const paginatedUsers = filteredUsers.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   return (
-    <div className="max-w-7xl mx-auto sm:space-y-8 space-y-2 sm:p-4 md:p-8 min-h-screen">
-      <div className="mb-8">
+    <div className="min-h-screen w-full space-y-4 px-3 pb-8 pt-4 sm:px-5 lg:px-7">
+      <div className="border-b border-border/70 pb-4">
         <Heading>
           Access Control
         </Heading>
         <p className="text-xs font-bold text-muted-foreground uppercase tracking-[0.2em]">Manage employee accounts and permissions</p>
       </div>
 
-      <div >
+      <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-3">
+        <div className="rounded-lg border border-border/70 bg-card px-3 py-2.5 shadow-sm"><p className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Total users</p><p className="mt-1 text-base font-black tabular-nums">{users.length}</p></div>
+        <div className="rounded-lg border border-border/70 bg-card px-3 py-2.5 shadow-sm"><p className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Active access</p><p className="mt-1 text-base font-black text-primary tabular-nums">{activeUsers}</p></div>
+        <div className="col-span-2 rounded-lg border border-border/70 bg-card px-3 py-2.5 shadow-sm lg:col-span-1"><p className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Inactive access</p><p className="mt-1 text-base font-black text-muted-foreground tabular-nums">{inactiveUsers}</p></div>
+      </div>
+
+      <div className="flex items-center gap-2 rounded-xl border border-border/70 bg-card/70 px-3 py-2 shadow-sm focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/10">
+        <Search size={15} className="shrink-0 text-muted-foreground" />
+        <input
+          value={searchQuery}
+          onChange={(event) => { setSearchQuery(event.target.value); setCurrentPage(1); }}
+          placeholder="Search by name, email, role, branch, or location"
+          className="w-full bg-transparent text-xs font-medium text-foreground outline-none placeholder:text-muted-foreground/70"
+          aria-label="Search users"
+        />
+        {searchQuery && <button onClick={() => { setSearchQuery(''); setCurrentPage(1); }} className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground">Clear</button>}
+      </div>
+
+      <div className="overflow-hidden rounded-xl border border-border/70 bg-card shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full min-w-[820px] text-left border-collapse">
             <thead>
               <tr className="bg-muted/30 border-b border-border">
-                <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Identity</th>
-                <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">System Role</th>
-                <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Branch</th>
-                <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Status</th>
-                <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground text-center">Actions</th>
+                <th className="px-4 py-2.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Identity</th>
+                <th className="px-4 py-2.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">System Role</th>
+                <th className="px-4 py-2.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Branch</th>
+                <th className="px-4 py-2.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Status</th>
+                <th className="px-4 py-2.5 text-[9px] font-bold uppercase tracking-wider text-muted-foreground text-center">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
               {paginatedUsers?.map((user: any) => (
                 <tr key={user.id} className="hover:bg-muted/20 transition-colors group">
                   {/* Identity Column */}
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       {/* <div className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm shadow-lg shadow-primary/10 uppercase">
                         {user?.name?.charAt(0) || <UserIcon size={16} />}
@@ -109,7 +139,7 @@ const UserListPage = () => {
                   </td>
 
                   {/* Role Column */}
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-3">
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold bg-primary/10 text-primary border border-primary/20 uppercase tracking-tight">
                       <Shield size={12} className="opacity-70" />
                       {user.role}
@@ -117,7 +147,7 @@ const UserListPage = () => {
                   </td>
 
                   {/* Branch Column */}
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-3">
                     <div className="flex flex-col">
                       <div className="flex items-center gap-1 text-sm font-bold text-foreground">
                         <MapPin size={12} className="text-muted-foreground opacity-50" />
@@ -131,7 +161,7 @@ const UserListPage = () => {
 
 
                   {/* Status Column */}
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <button
                         onClick={() => handleToggleStatus(user.id, user.status)}
@@ -155,7 +185,7 @@ const UserListPage = () => {
                   </td>
 
                   {/* Action Column */}
-                  <td className="px-6 py-4">
+                  <td className="px-4 py-3">
                     <div className="flex justify-center">
                       <ActionMenu userId={user.id} currentRole={user.role} email={user.email} />
                     </div>
@@ -165,15 +195,15 @@ const UserListPage = () => {
             </tbody>
           </table>
 
-          {users?.length === 0 && (
-            <div className="py-20 flex flex-col items-center justify-center text-muted-foreground/30">
+          {filteredUsers.length === 0 && (
+            <div className="py-14 flex flex-col items-center justify-center text-muted-foreground/30">
               <UserIcon size={48} strokeWidth={1} className="mb-4 opacity-50" />
-              <p className="text-sm font-bold uppercase tracking-widest">No users found in records</p>
+              <p className="text-sm font-bold uppercase tracking-widest">{normalizedQuery ? 'No users match your search' : 'No users found in records'}</p>
             </div>
           )}
         </div>
         {totalPages > 1 && (
-          <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-muted/10">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-border bg-muted/10">
             <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
               Page {currentPage} of {totalPages}
             </span>
