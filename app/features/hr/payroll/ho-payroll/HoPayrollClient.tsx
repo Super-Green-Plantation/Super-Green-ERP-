@@ -49,6 +49,8 @@ type PreviewRow = {
   primaryBranch: string;
   isManagementStaff: boolean;
   isPermBmTrack: boolean;
+  isProbationHoMember?: boolean;
+  probationTarget?: number | null;
   receivesOrc: boolean;
   baseSalaryConfigured: boolean;
 
@@ -436,10 +438,10 @@ export default function HoPayrollClient({
   );
 
   return (
-    <div className="w-full min-h-screen px-3 pb-8 pt-4 sm:px-5 lg:px-7 flex flex-col gap-4 font-sans text-gray-900 dark:text-gray-100">
+    <div className="w-full min-h-screen p-4 sm:p-8 flex flex-col gap-6 sm:gap-8 font-sans text-gray-900 dark:text-gray-100">
       <div>
         <Heading>Head Office Payroll</Heading>
-        <p className="text-xs text-muted-foreground mt-1 font-medium max-w-3xl">
+        <p className="text-sm text-muted-foreground mt-2 font-medium max-w-2xl">
           Permanent BM/RM/ZM/AGM are volume-gated (basic requires achievement ramp, incentives at 75%/100%, vehicle+fuel at 50%).
           RM and above receive vehicle+fuel unconditionally for their first 4 months.
           Fixed-salary HO staff use flat config amounts.
@@ -447,16 +449,16 @@ export default function HoPayrollClient({
       </div>
 
       {/* Selectors */}
-      <div className="flex flex-wrap gap-2 items-center rounded-xl border border-border/70 bg-card/70 p-2.5 shadow-sm">
+      <div className="flex flex-wrap gap-3 items-center">
         <div className="relative">
-          <select className="appearance-none pl-3 pr-9 py-2 bg-card border border-border rounded-lg text-xs font-bold text-foreground outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 cursor-pointer shadow-sm transition-all"
+          <select className="appearance-none pl-4 pr-10 py-3 bg-card border border-border rounded-xl text-sm font-bold text-foreground outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 cursor-pointer shadow-sm transition-all"
             value={month} onChange={(e) => setMonth(Number(e.target.value))}>
             {months.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
           </select>
           <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
         </div>
         <div className="relative">
-          <select className="appearance-none pl-3 pr-9 py-2 bg-card border border-border rounded-lg text-xs font-bold text-foreground outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/10 cursor-pointer shadow-sm transition-all"
+          <select className="appearance-none pl-4 pr-10 py-3 bg-card border border-border rounded-xl text-sm font-bold text-foreground outline-none focus:border-primary/50 focus:ring-4 focus:ring-primary/10 cursor-pointer shadow-sm transition-all"
             value={year} onChange={(e) => setYear(Number(e.target.value))}>
             {Array.from({ length: 6 }, (_, i) => new Date().getFullYear() - 3 + i).map((y) => (
               <option key={y} value={y}>{y}</option>
@@ -469,7 +471,7 @@ export default function HoPayrollClient({
           {isFetching && <Loader2 className="w-4 h-4 animate-spin" />} Search
         </button>
         {unconfiguredCount > 0 && (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-lg text-[11px] font-bold text-amber-600">
+          <div className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-xl text-xs font-bold text-amber-600">
             <AlertTriangle className="w-4 h-4" />
             {unconfiguredCount} member{unconfiguredCount > 1 ? "s" : ""} without base salary configured
           </div>
@@ -478,7 +480,7 @@ export default function HoPayrollClient({
 
       {/* Summary cards */}
       {preview.length > 0 && (
-        <div className="grid grid-cols-2 gap-2.5 lg:grid-cols-5">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
           <SummaryCard label="Total Gross" value={fmt(totalGross)} />
           <SummaryCard label="Total Net"   value={fmt(totalNet)} />
           <SummaryCard label="EPF (Employee)" value={fmt(totalEpf)} />
@@ -488,18 +490,18 @@ export default function HoPayrollClient({
       )}
 
       {/* Table */}
-      <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
+      <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm">
         {preview.length === 0 ? (
           <div className="p-12 text-center text-sm text-muted-foreground font-medium">
             {isFetching ? "Loading…" : "No management members found. Click Search to load."}
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1400px] text-sm">
+            <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/20">
-                  <th className="w-8 px-3 py-2.5" />
-                  <th className="text-left px-3 py-2.5 text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Employee</th>
+                  <th className="w-8 px-4 py-3" />
+                  <th className="text-left px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Employee</th>
                   <th className="text-right px-3 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Basic</th>
                   <th className="text-right px-3 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Incentive</th>
                   <th className="text-right px-3 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">V&F / Allow.</th>
@@ -527,7 +529,7 @@ export default function HoPayrollClient({
                     <React.Fragment key={row.memberId}>
                       <tr className="hover:bg-muted/30 transition-colors">
                         {/* Expand */}
-                        <td className="px-3 py-3">
+                        <td className="px-4 py-4">
                           <button onClick={() => toggleExpand(row.memberId)}
                             className="p-1 rounded-lg text-muted-foreground hover:text-foreground transition-colors">
                             <ChevronRight className={`w-4 h-4 transition-transform ${isExpanded ? "rotate-90" : ""}`} />
@@ -535,7 +537,7 @@ export default function HoPayrollClient({
                         </td>
 
                         {/* Employee */}
-                        <td className="px-3 py-3">
+                        <td className="px-4 py-4">
                           <p className="font-bold text-foreground text-sm leading-tight">{row.name}</p>
                           <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-tighter mt-0.5">{row.empNo}</p>
                           <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
@@ -547,6 +549,9 @@ export default function HoPayrollClient({
                             )}
                             {row.isManagementStaff && (
                               <span className="text-[9px] font-bold bg-purple-500/10 text-purple-600 border border-purple-500/20 px-1.5 py-0.5 rounded-full uppercase">Mgmt</span>
+                            )}
+                            {row.isProbationHoMember && (
+                              <span className="text-[9px] font-bold bg-amber-500/10 text-amber-600 border border-amber-500/20 px-1.5 py-0.5 rounded-full uppercase">Probation</span>
                             )}
                           </div>
                         </td>
@@ -773,6 +778,35 @@ export default function HoPayrollClient({
                                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground w-full mb-1">
                                   Override allowances for this run
                                 </p>
+
+                                {/* Probation RM: show their monthly target for the selected month */}
+                                {row.isProbationHoMember && (
+                                  <div className="w-full mb-2 flex items-center gap-3 px-3 py-2.5 bg-amber-500/5 border border-amber-500/20 rounded-xl">
+                                    <div className="flex flex-col">
+                                      <span className="text-[10px] font-bold uppercase tracking-widest text-amber-600/80">Monthly Target (this month)</span>
+                                      <span className="text-sm font-bold text-amber-700 dark:text-amber-400 mt-0.5">
+                                        {row.probationTarget ? fmt(row.probationTarget) : <span className="text-muted-foreground/50 text-xs">No target configured</span>}
+                                      </span>
+                                    </div>
+                                    {row.probationTarget != null && row.probationTarget > 0 && (
+                                      <>
+                                        <div className="w-px h-8 bg-border" />
+                                        <div className="flex flex-col">
+                                          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Volume achieved</span>
+                                          <span className={`text-sm font-bold mt-0.5 ${row.volumeAchieved >= row.probationTarget ? "text-green-600" : "text-foreground"}`}>
+                                            {fmt(row.volumeAchieved)}
+                                          </span>
+                                        </div>
+                                        <div className="flex flex-col">
+                                          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Achievement</span>
+                                          <span className={`text-sm font-bold mt-0.5 ${row.volumeAchieved >= row.probationTarget ? "text-green-600" : "text-amber-600"}`}>
+                                            {fmtPct(row.volumeAchieved / row.probationTarget)}
+                                          </span>
+                                        </div>
+                                      </>
+                                    )}
+                                  </div>
+                                )}
                                 <AllowanceInput label="Channel Op / Fixed Allow." value={ov.channelOperation ?? row.channelOperation} disabled={isPaid} onChange={(v) => setField(row.memberId, "channelOperation", v)} />
                                 <AllowanceInput label="Vehicle Allowance" value={ov.vehicleAllowance ?? row.vehicleAllowance} disabled={isPaid} onChange={(v) => setField(row.memberId, "vehicleAllowance", v)} />
                                 <AllowanceInput label="Fuel Allowance" value={ov.fuelAllowance ?? row.fuelAllowance} disabled={isPaid} onChange={(v) => setField(row.memberId, "fuelAllowance", v)} />
@@ -863,9 +897,9 @@ export default function HoPayrollClient({
 
 function SummaryCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-card border border-border rounded-lg px-3 py-2.5 shadow-sm">
-      <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">{label}</p>
-      <p className="text-base font-black text-foreground mt-1 tabular-nums">{value}</p>
+    <div className="bg-card border border-border rounded-2xl p-5 shadow-sm">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{label}</p>
+      <p className="text-xl font-bold text-foreground mt-1">{value}</p>
     </div>
   );
 }

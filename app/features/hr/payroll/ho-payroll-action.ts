@@ -1,6 +1,8 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
+import { type Title } from "@prisma/client";
+import { resolvePositionTarget } from "@/lib/commissions/resolvePositionTarget";
 import { revalidatePath } from "next/cache";
 import {
   calculateHoPayroll,
@@ -54,15 +56,30 @@ export type HoPayrollOverrides = {
 
 const HO_MIN_RANK = 14;
 
+// Probation members at RM level (or above) who should appear in HO payroll.
+// They use the fixed-salary HO track (not the volume-gated PERM_BM_RANKS track).
+const PROBATION_HO_TITLES: Title[] = ["RM", "ZM", "PRO_AGM"];
+
 async function getHoMembers() {
   return prisma.member.findMany({
     where: {
-      position: { rank: { gte: HO_MIN_RANK } },
       isActive: true,
       channel: { not: "Micro" },
+      OR: [
+        // Permanent/management HO track (JBM rank 14 and above)
+        {
+          position: { rank: { gte: HO_MIN_RANK } },
+          status: { not: "PROBATION" },
+        },
+        // Probation RMs (and equivalent) who are paid on HO payroll
+        {
+          position: { title: { in: PROBATION_HO_TITLES } },
+          status: "PROBATION",
+        },
+      ],
     },
     include: {
-      position: { include: { salary: true } },
+      position: { include: { salary: true, positionTargets: true } },
       branches: { include: { branch: true } },
       ManagementBaseSalary: true,
       HoPayrollConfig: true,
@@ -199,6 +216,7 @@ async function resolveMemberCommissions(member: any, year: number, month: number
   const rank = member.position?.rank ?? 0;
   const isManagementStaff = !!member.position?.isManagement;
   const isPermBmTrack = PERM_BM_RANKS.has(rank);
+  const isProbationHoMember = member.status === "PROBATION";
   const receivesOrc = !isManagementStaff;
 
   const orcEarned = receivesOrc ? await getOrcCommission(member.empNo, year, month) : 0;
@@ -224,6 +242,12 @@ async function resolveMemberCommissions(member: any, year: number, month: number
     // All non-management HO members (perm BM/RM/ZM/AGM/COO/GM):
     // fetch PERSONAL-type commissions directly from Commission rows.
     personalCommission = await getPersonalCommissionFromDb(member.empNo, year, month);
+
+    // Probation RMs (and equivalent) on the HO track: also fetch team volume so
+    // their achievement against the monthly target can be displayed.
+    if (isProbationHoMember) {
+      volumeAchieved = await getTeamVolumeAchieved(member.id, startDate, endDate);
+    }
   }
 
   return {
@@ -313,11 +337,15 @@ async function computeMemberPayroll(
   const startDate = new Date(Date.UTC(year, month - 1, 1));
   const endDate   = new Date(Date.UTC(year, month, 1));
 
-  const { isManagementStaff, isPermBmTrack, orcEarned, personalCommission, personalIncentive, volumeAchieved, mgmtExcessCommission } =
+  const { isManagementStaff, isPermBmTrack: _isPermBmTrack, orcEarned, personalCommission, personalIncentive, volumeAchieved, mgmtExcessCommission } =
     await resolveMemberCommissions(member, year, month, startDate, endDate);
 
   const rank         = member.position?.rank ?? 0;
   const tenureMonth  = computeTenureMonths(member.dateOfJoin, year, month);
+
+  // Probation RMs use the fixed-salary HO track, not the volume-gated perm BM track.
+  const isProbationHoMember = member.status === "PROBATION";
+  const isPermBmTrack = _isPermBmTrack && !isProbationHoMember;
   const leavesTaken  = overrides.leavesTaken ?? 0;
 
   let permBmBreakdown: ReturnType<typeof calculatePermBmPayroll> | undefined;
@@ -393,7 +421,7 @@ async function computeMemberPayroll(
     - (overrides.merchandiseDeduction ?? hoBreakdown.merchandiseDeduction ?? 0);
 
   return {
-    isManagementStaff, isPermBmTrack, rank, tenureMonth,
+    isManagementStaff, isPermBmTrack, isProbationHoMember, rank, tenureMonth,
     orcEarned, personalCommission, personalIncentive, volumeAchieved, mgmtExcessCommission,
     hoBreakdown, permBmBreakdown,
     totalGross, epfEmployee, epfEmployer, etfEmployer,
@@ -519,15 +547,26 @@ export async function getHoPayrollPreview(
       const pb = computed.permBmBreakdown;
       const tenureMonth = computed.tenureMonth;
 
+      // For probation HO members (e.g. probation RM), resolve their position target
+      // for the selected month so it can be shown in the expanded panel.
+      const probationTarget = computed.isProbationHoMember
+        ? (() => {
+            const t = resolvePositionTarget(member, year, month);
+            return t ? Number(t.targetAmount) : 0;
+          })()
+        : null;
+
       return {
         memberId:    member.id,
         name:        member.nameWithInitials ?? member.empNo,
         empNo:       member.empNo,
         position:    member.position?.title ?? "—",
         primaryBranch: member.branches.find((b: any) => b.isPrimary)?.branch?.name ?? member.branches[0]?.branch?.name ?? "—",
-        isManagementStaff: computed.isManagementStaff,
-        isPermBmTrack:     computed.isPermBmTrack,
-        receivesOrc:       !computed.isManagementStaff,
+        isManagementStaff:   computed.isManagementStaff,
+        isPermBmTrack:       computed.isPermBmTrack,
+        isProbationHoMember: computed.isProbationHoMember,
+        probationTarget,
+        receivesOrc:         !computed.isManagementStaff,
         baseSalaryConfigured: computed.hoConfig.basicSalary > 0 || (pb?.basicSalary ?? 0) > 0,
 
         // Fixed-salary HO fields
