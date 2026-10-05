@@ -116,6 +116,13 @@ export const SubmitButton = ({
         newBeneficiary,
         newNominee,
         proposalFormNo: data.applicant.proposalFormNo ?? "",
+        faId: data.applicant.faId ?? null,
+        fmId: data.applicant.fmId ?? null,
+        bmId: data.applicant.bmId ?? null,
+        rmId: data.applicant.rmId ?? null,
+        zmId: data.applicant.zmId ?? null,
+        agmId: data.applicant.agmId ?? null,
+        ccoId: data.applicant.ccoId ?? null,
       });
 
       if (!res.success) {
@@ -144,8 +151,8 @@ export const SubmitButton = ({
           ccoId: data.applicant.ccoId ?? null,
         });
         if (!approveRes.success) {
-          toast.warning(
-            `Investment created but approval failed: ${approveRes.error ?? "unknown error"}`
+          toast.error(
+            `Investment saved as PENDING (no hierarchy approved): ${approveRes.error ?? "unknown error"}`
           );
         }
       }
@@ -390,4 +397,4 @@ w-full rounded-xl px-6 py-3.5 text-xs font-bold uppercase tracking-[0.16em] tran
       </button>
     </div>
   );
-};
+};  

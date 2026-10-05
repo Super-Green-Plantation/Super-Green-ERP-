@@ -5,8 +5,7 @@ import { Check, Loader2, X, AlertTriangle, CheckCircle2, Receipt, ChevronDown, C
 import { toast } from "sonner";
 import { SectionHeader } from "./ui";
 import AdvisorHierarchy from "./AdvisorHierarchy";
-import { approveInvestmentWithHierarchyLog } from "../../hr/salary/action";
-import { rejectInvestment } from "@/app/features/investments/actions";
+import { approveInvestmentWithHierarchyLog, rejectInvestment } from "@/app/features/investments/actions";
 import { HierarchyState } from "./types";
 
 // ─── Types ─────────────────────────────────────────────────────────────────

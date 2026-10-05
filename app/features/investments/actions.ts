@@ -1098,11 +1098,15 @@ export async function approveInvestmentWithHierarchyLog(data: {
     const currentUser = await getCurrentUserWithRole();
     if (!currentUser) throw new Error("Not authorized");
 
-    // Guard: faId is required so volume can be attributed to the correct FA.
-    // Other hierarchy fields are optional — management staff may enter
-    // proposals without a full chain.
-    if (!data.faId) {
-      throw new Error("faId is required for approval — select an FA first");
+    // Guard: at least one hierarchy member is required. The advisor does not
+    // have to be an FA — a BM/RM/ZM/AGM doing personal business has no FA
+    // beneath them. The lowest-ranked member present gets PERSONAL credit.
+    const approverIds = [
+      data.faId, data.fmId, data.bmId, data.rmId,
+      data.zmId, data.agmId, data.ccoId,
+    ];
+    if (!approverIds.some((id) => id)) {
+      throw new Error("At least one hierarchy member is required for approval");
     }
 
     const investment = await prisma.investment.findUnique({
@@ -1237,59 +1241,46 @@ export async function approveInvestmentWithHierarchyLog(data: {
     let commissionProcessed = false;
     let commissionReceipt: any = undefined;
 
-    if (data.faId) {
-      try {
-        // Resolve the FA's empNo — processCommissions needs it for PERSONAL commission
-        const faMember = await prisma.member.findUnique({
-          where: { id: data.faId },
-          select: { empNo: true },
-        });
+    // Lowest-ranked present member (FA -> FM -> BM -> RM -> ZM -> AGM -> CCO)
+    // is the personal-credit recipient; everyone above is upline (ORC).
+    const orderedIds = [
+      data.faId, data.fmId, data.bmId, data.rmId,
+      data.zmId, data.agmId, data.ccoId,
+    ].filter((id): id is number => !!id);
+    const presentIds = [...new Set(orderedIds)];
 
-        if (!faMember) throw new Error(`FA member not found for id ${data.faId}`);
+    try {
+      const members = await prisma.member.findMany({
+        where: { id: { in: presentIds } },
+        select: { id: true, empNo: true },
+      });
+      const idToEmpNo = new Map(members.map((m) => [m.id, m.empNo]));
 
-        // Build the hierarchy empNos in rank order from the snapshotted IDs.
-        // Exclude the FA — processCommissions handles FA personal commission
-        // separately via empNo, so we only pass the upline members here.
-        const hierarchyIds = [
-          data.fmId ?? null,
-          data.bmId ?? null,
-          data.rmId ?? null,
-          data.zmId ?? null,
-          data.agmId ?? null,
-          data.ccoId ?? null,
-        ].filter((id): id is number => id !== null);
+      const personalEmpNo = idToEmpNo.get(presentIds[0]);
+      if (!personalEmpNo) throw new Error(`Member id ${presentIds[0]} not found`);
 
-        const uniqueHierarchyIds = [...new Set(hierarchyIds)];
+      const hierarchyEmpNos = presentIds
+        .slice(1)
+        .map((id) => idToEmpNo.get(id))
+        .filter((e): e is string => !!e);
 
-        let hierarchyEmpNos: string[] = [];
-        if (uniqueHierarchyIds.length > 0) {
-          const hierarchyMembers = await prisma.member.findMany({
-            where: { id: { in: uniqueHierarchyIds } },
-            select: { id: true, empNo: true },
-          });
-          // Preserve rank order from the hierarchy ID list
-          hierarchyEmpNos = uniqueHierarchyIds
-            .map((id) => hierarchyMembers.find((m) => m.id === id)?.empNo)
-            .filter((e): e is string => !!e);
-        }
+      const commResult = await processCommissions({
+        investmentId: data.investmentId,
+        empNo: personalEmpNo,
+        branchId: investment.branchId,
+        hierarchyEmpNos,
+        performedById: currentUser?.member?.id ?? 0,
+      });
 
-        const commResult = await processCommissions({
-          investmentId: data.investmentId,
-          empNo: faMember.empNo,
-          branchId: investment.branchId,
-          hierarchyEmpNos,
-        });
-
-        if (commResult.success) {
-          commissionProcessed = true;
-          commissionReceipt = commResult.receipt;
-        } else {
-          commissionError = commResult.error?.message ?? "Commission processing failed";
-        }
-      } catch (commErr: any) {
-        commissionError = commErr.message ?? "Commission processing failed";
-        console.error("Auto-commission error (approval still succeeded):", commErr);
+      if (commResult.success) {
+        commissionProcessed = true;
+        commissionReceipt = commResult.receipt;
+      } else {
+        commissionError = commResult.error?.message ?? "Commission processing failed";
       }
+    } catch (commErr: any) {
+      commissionError = commErr.message ?? "Commission processing failed";
+      console.error("Auto-commission error (approval still succeeded):", commErr);
     }
 
     return { success: true, investment: result, commissionProcessed, commissionError, commissionReceipt };

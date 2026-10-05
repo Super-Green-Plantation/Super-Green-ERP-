@@ -187,7 +187,15 @@ export async function runMonthEndCommissions(
         approvalStatus: "APPROVED",
         investmentDate: { gte: monthStart, lt: monthEnd },
       },
-      include: { fa: { include: FA_INCLUDE } },
+      include: {
+        fa: { include: FA_INCLUDE },
+        fm: { include: FA_INCLUDE },
+        bm: { include: FA_INCLUDE },
+        rm: { include: FA_INCLUDE },
+        zm: { include: FA_INCLUDE },
+        agm: { include: FA_INCLUDE },
+        cco: { include: FA_INCLUDE },
+      },
     });
 
     const monthlyProposals = await tx.monthlyProposal.findMany({
@@ -203,8 +211,18 @@ export async function runMonthEndCommissions(
 
     for (const inv of investments) {
       const volume = creditedInvestmentVolume(Number(inv.amount), inv.renewedFromId);
-      addFaVolume(faMap, inv.faId, inv.fa, volume);
+      // Personal credit goes to the lowest-ranked member present — normally
+      // the FA, but a BM/RM/ZM/AGM doing personal business has no FA below
+      // them. That member is excluded from upline so they aren't paid twice.
+      const personalField = (["faId", ...UPLINE_INVESTMENT_FIELDS] as const).find(
+        (f) => inv[f],
+      );
+      if (personalField) {
+        const rel = personalField.replace("Id", "") as "fa" | "fm" | "bm" | "rm" | "zm" | "agm" | "cco";
+        addFaVolume(faMap, inv[personalField], inv[rel], volume);
+      }
       for (const field of UPLINE_INVESTMENT_FIELDS) {
+        if (field === personalField) continue;
         addUplineVolume(uplineVolumeMap, inv[field], volume);
       }
     }
