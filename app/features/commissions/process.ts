@@ -53,14 +53,18 @@ export async function stampLastInvestmentAndReactivate(
 
 /**
  * Run periodically (cron / manual trigger) — deactivates members who have had
- * no investment approved in the last 2 calendar months.
+ * no investment activity in the last 2 calendar months.
+ *
+ * An employee stays active if they appear anywhere in the investment hierarchy
+ * (faId, fmId, bmId, rmId, zmId, agmId, ccoId) of any APPROVED investment
+ * within the past 2 months — even if they didn't personally bring it.
  */
 export async function autoDeactivateInactiveMembers() {
   try {
     const twoMonthsAgo = new Date();
     twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
 
-    const toDeactivate = await prisma.member.findMany({
+    const candidates = await prisma.member.findMany({
       where: {
         isActive: true,
         autoDeactivatedAt: null,
@@ -73,6 +77,35 @@ export async function autoDeactivateInactiveMembers() {
       },
       select: { id: true, empNo: true },
     });
+
+    if (candidates.length === 0) return { deactivated: 0 };
+
+    // Collect all member IDs that appear in recent investment hierarchies
+    const recentHierarchyInvestments = await prisma.investment.findMany({
+      where: {
+        investmentDate: { gte: twoMonthsAgo },
+        approvalStatus: "APPROVED",
+      },
+      select: {
+        faId: true,
+        fmId: true,
+        bmId: true,
+        rmId: true,
+        zmId: true,
+        agmId: true,
+        ccoId: true,
+      },
+    });
+
+    const activeHierarchyMemberIds = new Set<number>();
+    for (const inv of recentHierarchyInvestments) {
+      for (const id of [inv.faId, inv.fmId, inv.bmId, inv.rmId, inv.zmId, inv.agmId, inv.ccoId]) {
+        if (id !== null && id !== undefined) activeHierarchyMemberIds.add(id);
+      }
+    }
+
+    // Only deactivate candidates who are NOT in any recent hierarchy
+    const toDeactivate = candidates.filter((m) => !activeHierarchyMemberIds.has(m.id));
 
     if (toDeactivate.length === 0) return { deactivated: 0 };
 
