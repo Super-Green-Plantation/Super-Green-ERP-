@@ -7,15 +7,41 @@
 // DELETE /api/notifications?id=N   — deletes a single notification
 
 import { prisma } from "@/lib/prisma";
-import { getCurrentUserWithRole } from "@/lib/getCurrentUserWithRole";
+import { createClient } from "@/lib/supabase/server";
 import { NextRequest } from "next/server";
 
 const ALLOWED_ROLES = ["ADMIN", "HR", "DEV"];
 
+async function checkAuth() {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user || !user.email) {
+      return { ok: false as const, status: 401, error: "Unauthorized" };
+    }
+
+    const dbUser = await prisma.user.findUnique({
+      where: { email: user.email },
+      select: { role: true },
+    });
+
+    if (!dbUser || !ALLOWED_ROLES.includes(dbUser.role)) {
+      return { ok: false as const, status: 403, error: "Forbidden" };
+    }
+
+    return { ok: true as const, role: dbUser.role };
+  } catch {
+    return { ok: false as const, status: 401, error: "Unauthorized" };
+  }
+}
+
 export async function GET() {
-  const user = await getCurrentUserWithRole();
-  if (!user || !ALLOWED_ROLES.includes(user.role)) {
-    return Response.json({ error: "Forbidden" }, { status: 403 });
+  const auth = await checkAuth();
+  if (!auth.ok) {
+    return Response.json({ error: auth.error }, { status: auth.status });
   }
 
   const notifications = await prisma.notification.findMany({
@@ -29,9 +55,9 @@ export async function GET() {
 }
 
 export async function PATCH(req: NextRequest) {
-  const user = await getCurrentUserWithRole();
-  if (!user || !ALLOWED_ROLES.includes(user.role)) {
-    return Response.json({ error: "Forbidden" }, { status: 403 });
+  const auth = await checkAuth();
+  if (!auth.ok) {
+    return Response.json({ error: auth.error }, { status: auth.status });
   }
 
   const { searchParams } = new URL(req.url);
@@ -53,9 +79,9 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const user = await getCurrentUserWithRole();
-  if (!user || !ALLOWED_ROLES.includes(user.role)) {
-    return Response.json({ error: "Forbidden" }, { status: 403 });
+  const auth = await checkAuth();
+  if (!auth.ok) {
+    return Response.json({ error: auth.error }, { status: auth.status });
   }
 
   const { searchParams } = new URL(req.url);

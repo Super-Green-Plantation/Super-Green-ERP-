@@ -133,6 +133,7 @@ export async function runBatchEvaluation(
           include: {
             position: { include: { positionTargets: true } },
             monthlyEvaluations: { where: { year, month } },
+            monthlyPayrolls: { where: { year, month } },
             // Replace clients include with this:
             advisorInvestments: {
               where: {
@@ -157,9 +158,7 @@ export async function runBatchEvaluation(
         continue;
       }
 
-      const payroll = await prisma.monthlyPayroll.findUnique({
-        where: { memberId_year_month: { memberId: member.id, year, month } },
-      });
+      const payroll = member.monthlyPayrolls?.[0] ?? null;
 
       const volumeAchieved = Number(payroll?.volumeAchieved ?? 0);
 

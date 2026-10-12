@@ -68,44 +68,20 @@ function toPositionTargetData(target: any) {
   };
 }
 
-async function getActiveTeamCounts(
-  memberEmpNo: string,
-  year: number,
-  month: number,
-): Promise<ActiveTeamCounts> {
-  const startDate = new Date(Date.UTC(year, month - 1, 1));
-  const endDate = new Date(Date.UTC(year, month, 1));
-
-  const member = await prisma.member.findUnique({
-    where: { empNo: memberEmpNo },
-    select: { id: true, position: { select: { rank: true } } },
-  });
-
-  if (!member) return { advisors: 0, fms: 0, bms: 0 };
-  const memberId = member.id;
-  const rank = member.position?.rank ?? 0;
-
+function computeActiveTeamCounts(
+  memberId: number,
+  rank: number,
+  investments: Array<{
+    faId: number | null;
+    fmId: number | null;
+    bmId: number | null;
+    rmId: number | null;
+    zmId: number | null;
+    agmId: number | null;
+    ccoId: number | null;
+  }>,
+): ActiveTeamCounts {
   if (rank === 1 || rank === 11 || rank === 12) return { advisors: 0, fms: 0, bms: 0 };
-
-  const investments = await prisma.investment.findMany({
-    where: {
-      investmentDate: { gte: startDate, lt: endDate },
-      OR: [
-        { fmId: memberId },
-        { bmId: memberId },
-        { rmId: memberId },
-        { zmId: memberId },
-        { agmId: memberId },
-        { ccoId: memberId },
-      ],
-    },
-    select: {
-      faId: true, fmId: true, bmId: true,
-      rmId: true, zmId: true, agmId: true, ccoId: true,
-    },
-  });
-
-  if (investments.length === 0) return { advisors: 0, fms: 0, bms: 0 };
 
   const activeAdvisorIds = new Set<number>();
   const activeFmIds = new Set<number>();
@@ -115,6 +91,17 @@ async function getActiveTeamCounts(
   const showBms = rank >= 4;
 
   for (const inv of investments) {
+    if (
+      inv.fmId !== memberId &&
+      inv.bmId !== memberId &&
+      inv.rmId !== memberId &&
+      inv.zmId !== memberId &&
+      inv.agmId !== memberId &&
+      inv.ccoId !== memberId
+    ) {
+      continue;
+    }
+
     const lowestBringer =
       inv.faId ?? inv.fmId ?? inv.bmId ??
       inv.rmId ?? inv.zmId ?? inv.agmId ?? inv.ccoId ?? null;
@@ -131,6 +118,34 @@ async function getActiveTeamCounts(
     fms: showFms ? activeFmIds.size : 0,
     bms: showBms ? activeBmIds.size : 0,
   };
+}
+
+async function getActiveTeamCounts(
+  memberEmpNo: string,
+  year: number,
+  month: number,
+): Promise<ActiveTeamCounts> {
+  const startDate = new Date(Date.UTC(year, month - 1, 1));
+  const endDate = new Date(Date.UTC(year, month, 1));
+
+  const member = await prisma.member.findUnique({
+    where: { empNo: memberEmpNo },
+    select: { id: true, position: { select: { rank: true } } },
+  });
+
+  if (!member) return { advisors: 0, fms: 0, bms: 0 };
+
+  const investments = await prisma.investment.findMany({
+    where: {
+      investmentDate: { gte: startDate, lt: endDate },
+    },
+    select: {
+      faId: true, fmId: true, bmId: true,
+      rmId: true, zmId: true, agmId: true, ccoId: true,
+    },
+  });
+
+  return computeActiveTeamCounts(member.id, member.position?.rank ?? 0, investments);
 }
 
 /**
@@ -278,9 +293,10 @@ export async function getPayrollPreview(
           },
           monthlyPayrolls: { where: { year, month } },
           branches: true,
+          ManagementBaseSalary: true,
           commissions: {
-            where: { type: "PERSONAL", year, month },
-            select: { amount: true },
+            where: { year, month },
+            select: { amount: true, type: true },
           },
         },
       },
@@ -296,25 +312,34 @@ export async function getPayrollPreview(
     return primaryBranch?.branchId === branchId;
   });
 
+  const startDate = new Date(Date.UTC(year, month - 1, 1));
+  const endDate = new Date(Date.UTC(year, month, 1));
+  const monthInvestments = await prisma.investment.findMany({
+    where: { investmentDate: { gte: startDate, lt: endDate } },
+    select: {
+      faId: true, fmId: true, bmId: true,
+      rmId: true, zmId: true, agmId: true, ccoId: true,
+    },
+  });
+
   const rows = await Promise.all(
     filteredMembers.map(async ({ member }: any) => {
       const existing = member.monthlyPayrolls?.[0] ?? null;
       const volumeAchieved = volumes[member.id] ?? Number(existing?.volumeAchieved ?? 0);
 
-      const personalCommissionEarned = member.commissions.reduce(
-        (sum: number, c: any) => sum + Number(c.amount),
-        0,
-      );
-
-      const orcEarned = await prisma.commission.aggregate({
-        where: { memberEmpNo: member.empNo, type: { in: ["UPLINE", "CHAIRMAN"] }, year, month },
-        _sum: { amount: true },
-      }).then(r => Number(r._sum.amount ?? 0));
-
-      const excessEarned = await prisma.commission.aggregate({
-        where: { memberEmpNo: member.empNo, type: "EXCESS", year, month },
-        _sum: { amount: true },
-      }).then(r => Number(r._sum.amount ?? 0));
+      let personalCommissionEarned = 0;
+      let orcEarned = 0;
+      let excessEarned = 0;
+      for (const c of member.commissions ?? []) {
+        const amt = Number(c.amount ?? 0);
+        if (c.type === "PERSONAL") {
+          personalCommissionEarned += amt;
+        } else if (c.type === "UPLINE" || c.type === "CHAIRMAN") {
+          orcEarned += amt;
+        } else if (c.type === "EXCESS") {
+          excessEarned += amt;
+        }
+      }
 
       // ── Category routing ─────────────────────────────────────────────────
       const payrollCategory = resolvePayrollCategory(member.position?.rank, member.status);
@@ -322,7 +347,11 @@ export async function getPayrollPreview(
       const positionTargetRow = resolvePositionTarget(member, year, month);
       const positionTargetData = toPositionTargetData(positionTargetRow);
       const tenureMonthCount = computeTenureMonths(member.dateOfJoin, year, month);
-      const activeTeamCounts = await getActiveTeamCounts(member.empNo, year, month);
+      const activeTeamCounts = computeActiveTeamCounts(
+        member.id,
+        member.position?.rank ?? 0,
+        monthInvestments,
+      );
 
       // HO config: for MANAGEMENT members we use ManagementBaseSalary as the
       // basicSalary; other HO-detail fields default to zero (editable via the
@@ -454,11 +483,10 @@ export async function runMonthlyPayroll(
           ManagementBaseSalary: true,
           commissions: {
             where: {
-              type: "PERSONAL",
               year,
               month,
             },
-            select: { amount: true },
+            select: { amount: true, type: true },
           },
         },
       },
@@ -474,6 +502,16 @@ export async function runMonthlyPayroll(
     return primaryBranch?.branchId === branchId;
   });
 
+  const startDate = new Date(Date.UTC(year, month - 1, 1));
+  const endDate = new Date(Date.UTC(year, month, 1));
+  const monthInvestments = await prisma.investment.findMany({
+    where: { investmentDate: { gte: startDate, lt: endDate } },
+    select: {
+      faId: true, fmId: true, bmId: true,
+      rmId: true, zmId: true, agmId: true, ccoId: true,
+    },
+  });
+
   let processed = 0;
   let skipped = 0;
   const errors: string[] = [];
@@ -487,30 +525,19 @@ export async function runMonthlyPayroll(
     }
 
     try {
-      const personalCommissionEarned = (member as any).commissions.reduce(
-        (sum: number, c: any) => sum + Number(c.amount),
-        0,
-      );
-
-      const orcEarned = await prisma.commission.findMany({
-        where: {
-          memberEmpNo: member.empNo,
-          type: { in: ["UPLINE", "CHAIRMAN"] },
-          year,
-          month,
-        },
-        select: { amount: true },
-      }).then((rows) => rows.reduce((sum, c) => sum + Number(c.amount), 0));
-
-      const excessEarned = await prisma.commission.findMany({
-        where: {
-          memberEmpNo: member.empNo,
-          type: "EXCESS",
-          year,
-          month,
-        },
-        select: { amount: true },
-      }).then((rows) => rows.reduce((sum, c) => sum + Number(c.amount), 0));
+      let personalCommissionEarned = 0;
+      let orcEarned = 0;
+      let excessEarned = 0;
+      for (const c of (member as any).commissions ?? []) {
+        const amt = Number(c.amount ?? 0);
+        if (c.type === "PERSONAL") {
+          personalCommissionEarned += amt;
+        } else if (c.type === "UPLINE" || c.type === "CHAIRMAN") {
+          orcEarned += amt;
+        } else if (c.type === "EXCESS") {
+          excessEarned += amt;
+        }
+      }
 
       // ── Category routing ─────────────────────────────────────────────────
       const payrollCategory = resolvePayrollCategory((member as any).position?.rank, (member as any).status);
@@ -518,7 +545,11 @@ export async function runMonthlyPayroll(
       const positionTargetRow = resolvePositionTarget(member, year, month);
       const positionTargetData = toPositionTargetData(positionTargetRow);
       const tenureMonthCount = computeTenureMonths(member.dateOfJoin, year, month);
-      const activeTeamCounts = await getActiveTeamCounts(member.empNo, year, month);
+      const activeTeamCounts = computeActiveTeamCounts(
+        member.id,
+        (member as any).position?.rank ?? 0,
+        monthInvestments,
+      );
 
       const dbVolumeAchieved = existingPayroll?.volumeAchieved
         ? Number(existingPayroll.volumeAchieved)

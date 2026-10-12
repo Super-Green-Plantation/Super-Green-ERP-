@@ -8,7 +8,10 @@ export const useDashboard = () => {
       return await getDashboardStats();
     },
     staleTime: 1000 * 60 * 5,
-     gcTime: 1000 * 60 * 5,
-    retry: 3,
+    gcTime: 1000 * 60 * 5,
+    retry: (failureCount, error: any) => {
+      if (error?.message?.includes("Unauthorized")) return false;
+      return failureCount < 2;
+    },
   });
 };

@@ -35,9 +35,11 @@ export function resolvePositionTarget(member: any, year: number, month: number) 
   }
 
   // After 6 months: use after6MonthTarget and after6MonthIncentivePct.
-  // Pass partialThresholdPct so calculatePayroll computes the absolute
-  // threshold consistently as: targetAmount × partialThresholdPct.
+  // If after6MonthTarget is not set (>0), return null to fall back to PositionSalary (e.g. FA's 2.5M).
   const anyTarget = targets[0];
+  if (!anyTarget.after6MonthTarget || anyTarget.after6MonthTarget <= 0) {
+    return null;
+  }
 
   return {
     ...anyTarget,
@@ -58,6 +60,44 @@ export function resolvePositionTarget(member: any, year: number, month: number) 
     //   FA:     partialBonus > 0  (e.g. 20 000)  → hasPartial=true → basicIncentive
     //   TL/BM:  partialBonus = 0                 → hasPartial=false → fullIncentive (bonusAmount)
   };
+}
+
+/**
+ * Resolves the monthly sales target for any member:
+ * 1. If on PROBATION, checks resolvePositionTarget.
+ * 2. Checks position.salary.monthlyTarget (for permanent staff or probation fallback).
+ * 3. Fallback to any positive positionTarget or 0.
+ */
+export function resolveMemberTarget(
+  member: any,
+  year: number,
+  month: number
+): number {
+  if (!member || !member.position) return 0;
+
+  // 1. If probation, try resolvePositionTarget
+  if (member.status === "PROBATION") {
+    const pt = resolvePositionTarget(member, year, month);
+    if (pt && pt.targetAmount > 0) {
+      return pt.targetAmount;
+    }
+  }
+
+  // 2. Check position salary monthlyTarget (covers permanent members and probation fallbacks)
+  if (member.position.salary?.monthlyTarget && member.position.salary.monthlyTarget > 0) {
+    return member.position.salary.monthlyTarget;
+  }
+
+  // 3. Fallback: check any position target
+  const posTargets = member.position.positionTargets;
+  if (posTargets && posTargets.length > 0) {
+    const firstTarget = posTargets.find((t: any) => t.targetAmount > 0);
+    if (firstTarget) {
+      return firstTarget.targetAmount;
+    }
+  }
+
+  return 0;
 }
 
 function getMonthsInProbation(

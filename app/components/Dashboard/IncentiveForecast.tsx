@@ -56,7 +56,15 @@ export const IncentiveForecast = ({ branchId }: Props) => {
   };
 
   const renderStatus = (achieved: number, target: number, fullHit: boolean, partialHit: boolean) => {
-    const pct = target > 0 ? (achieved / target) * 100 : 0;
+    if (target <= 0) {
+      return (
+        <div className="flex items-center gap-1 text-gray-500 bg-gray-100 dark:bg-gray-800 dark:text-gray-400 px-2 py-1 rounded-full w-max">
+          <span className="text-[10px] font-bold">No Target</span>
+        </div>
+      );
+    }
+
+    const pct = (achieved / target) * 100;
     
     if (fullHit || pct >= 100) {
       return (
@@ -148,8 +156,8 @@ export const IncentiveForecast = ({ branchId }: Props) => {
                 {renderStatus(row.volumeAchieved, row.monthlyTarget, row.incentiveHit, row.incentivePartialHit)}
               </div>
               <div className="mt-4 flex items-end justify-between gap-3">
-                <div><p className="text-[10px] uppercase font-bold text-gray-500">Achieved / target</p><p className="text-sm font-bold text-[#0f5132] dark:text-[#4ade80]">Rs. {row.volumeAchieved.toLocaleString()} <span className="text-gray-500">/ {row.monthlyTarget.toLocaleString()}</span></p></div>
-                <p className="text-lg font-black text-gray-900 dark:text-gray-100">{pct}%</p>
+                <div><p className="text-[10px] uppercase font-bold text-gray-500">Achieved / target</p><p className="text-sm font-bold text-[#0f5132] dark:text-[#4ade80]">Rs. {row.volumeAchieved.toLocaleString()} <span className="text-gray-500">/ {row.monthlyTarget > 0 ? `Rs. ${row.monthlyTarget.toLocaleString()}` : "—"}</span></p></div>
+                <p className="text-lg font-black text-gray-900 dark:text-gray-100">{row.monthlyTarget > 0 ? `${pct}%` : "—"}</p>
               </div>
               <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700"><div className={`h-full rounded-full ${pct >= 100 ? "bg-green-500" : pct >= 75 ? "bg-yellow-500" : "bg-red-500"}`} style={{ width: `${pct}%` }} /></div>
             </article>
@@ -202,11 +210,11 @@ export const IncentiveForecast = ({ branchId }: Props) => {
                       Rs. {row.volumeAchieved.toLocaleString()}
                     </td>
                     <td className="px-4 py-3 text-right text-gray-500 font-medium">
-                      Rs. {row.monthlyTarget.toLocaleString()}
+                      {row.monthlyTarget > 0 ? `Rs. ${row.monthlyTarget.toLocaleString()}` : "—"}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex flex-col items-end gap-1 w-full max-w-24 ml-auto">
-                        <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{pct}%</span>
+                        <span className="text-xs font-bold text-gray-700 dark:text-gray-300">{row.monthlyTarget > 0 ? `${pct}%` : "—"}</span>
                         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
                           <div 
                             className={`h-1.5 rounded-full ${

@@ -272,19 +272,30 @@ export async function getDescendantBranchIds(
   branchId: number,
   db: PrismaClient = prisma
 ): Promise<number[]> {
-  // Fetch all children recursively
-  const children = await db.branch.findMany({
-    where: { parentId: branchId },
-    select: { id: true },
+  return getDescendantBranchIdsForMany([branchId], db);
+}
+
+export async function getDescendantBranchIdsForMany(
+  branchIds: number[],
+  db: PrismaClient = prisma
+): Promise<number[]> {
+  const allBranches = await db.branch.findMany({
+    select: { id: true, parentId: true },
   });
 
-  const childIds = children.map((c) => c.id);
+  const result = new Set<number>(branchIds);
+  let added = true;
+  while (added) {
+    added = false;
+    for (const b of allBranches) {
+      if (b.parentId && result.has(b.parentId) && !result.has(b.id)) {
+        result.add(b.id);
+        added = true;
+      }
+    }
+  }
 
-  const nestedIds = await Promise.all(
-    childIds.map((id) => getDescendantBranchIds(id, db))
-  );
-
-  return [branchId, ...childIds, ...nestedIds.flat()];
+  return Array.from(result);
 }
 
 

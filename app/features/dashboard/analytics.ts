@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUserWithRole } from "@/lib/getCurrentUserWithRole";
 import { serializeData } from "@/app/utils/serializers";
 import { prisma } from "@/lib/prisma";
+import { resolveMemberTarget } from "@/lib/commissions/resolvePositionTarget";
 
 const SYSTEM_DASHBOARD_ROLES = new Set(["ADMIN", "HR", "DEV"]);
 const MANAGERIAL_DASHBOARD_ROLES = new Set([
@@ -220,7 +221,10 @@ export async function getDashboardStats() {
       yearToDateAchievement,
       initialChartData
     };
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.message?.includes("Unauthorized")) {
+      throw error;
+    }
     console.error("Error fetching dashboard stats:", error);
     throw new Error("Failed to fetch dashboard statistics");
   }
@@ -662,9 +666,25 @@ export async function getIncentiveForecast(
       incentivePartialHit: true,
       member: {
         select: {
-          nameWithInitials: true,
-          empNo:            true,
-          position:         { select: { title: true } },
+          id:                 true,
+          nameWithInitials:   true,
+          empNo:              true,
+          status:             true,
+          probationStartDate: true,
+          dateOfJoin:         true,
+          position: {
+            select: {
+              title:              true,
+              rank:               true,
+              targetBudgetAmount: true,
+              salary: {
+                select: {
+                  monthlyTarget: true,
+                },
+              },
+              positionTargets: true,
+            },
+          },
           branches: {
             where:  { isPrimary: true },
             select: { branch: { select: { name: true } } },
@@ -675,7 +695,32 @@ export async function getIncentiveForecast(
     orderBy: { volumeAchieved: "desc" },
   });
 
-  return serializeData(results);
+  const formatted: IncentiveForecastEntry[] = results.map((row) => {
+    const monthlyTarget = row.monthlyTarget > 0
+      ? row.monthlyTarget
+      : resolveMemberTarget(row.member, year, month);
+
+    const pct = monthlyTarget > 0 ? (row.volumeAchieved / monthlyTarget) * 100 : 0;
+    const incentiveHit = row.incentiveHit || pct >= 100;
+    const incentivePartialHit = row.incentivePartialHit || pct >= 75;
+
+    return {
+      volumeAchieved: row.volumeAchieved,
+      monthlyTarget,
+      incentiveHit,
+      incentivePartialHit,
+      member: row.member
+        ? {
+            nameWithInitials: row.member.nameWithInitials,
+            empNo: row.member.empNo,
+            position: row.member.position ? { title: row.member.position.title } : { title: "FA" },
+            branches: row.member.branches,
+          }
+        : null,
+    };
+  });
+
+  return serializeData(formatted);
 }
 
 // ─── Phase 6: Payroll Cost Breakdown ─────────────────────────────────────────

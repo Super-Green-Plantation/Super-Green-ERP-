@@ -7,6 +7,7 @@ import { reserveProposalFormNoInTx } from "@/lib/proposalNumber";
 import { logActivity } from "@/lib/logActivity";
 import { ActivityAction, ActivityEntity } from "@prisma/client";
 import { processMonthlyProposalCommissions } from "@/app/features/commissions/processMonthlyProposal";
+import { resolveMemberTarget } from "@/lib/commissions/resolvePositionTarget";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -435,8 +436,13 @@ export async function recordProposalPayment(input: RecordPaymentInput) {
     //    Uses actual paidAmount (not proposal.premium) to support partial payments
     if (uniqueIds.length > 0) {
       await Promise.all(
-        uniqueIds.map((memberId: number) =>
-          tx.monthlyPayroll.upsert({
+        uniqueIds.map(async (memberId: number) => {
+          const member = await tx.member.findUnique({
+            where: { id: memberId },
+            include: { position: { include: { salary: true, positionTargets: true } } },
+          });
+          const target = member ? resolveMemberTarget(member, year, month) : 0;
+          return tx.monthlyPayroll.upsert({
             where:  { memberId_year_month: { memberId, year, month } },
             update: { volumeAchieved: { increment: input.paidAmount } },
             create: {
@@ -444,11 +450,11 @@ export async function recordProposalPayment(input: RecordPaymentInput) {
               year,
               month,
               basicSalaryPermanent: 0,
-              monthlyTarget:        0,
+              monthlyTarget:        target,
               volumeAchieved:       input.paidAmount,
             },
-          })
-        )
+          });
+        })
       );
     }
 
@@ -634,13 +640,18 @@ export async function approveMonthlyProposalWithHierarchy(data: {
         const year  = now.getFullYear();
         const month = now.getMonth() + 1;
         await Promise.all(
-          uniqueIds.map((memberId) =>
-            tx.monthlyPayroll.upsert({
+          uniqueIds.map(async (memberId) => {
+            const member = await tx.member.findUnique({
+              where: { id: memberId },
+              include: { position: { include: { salary: true, positionTargets: true } } },
+            });
+            const target = member ? resolveMemberTarget(member, year, month) : 0;
+            return tx.monthlyPayroll.upsert({
               where:  { memberId_year_month: { memberId, year, month } },
               update: { volumeAchieved: { increment: proposal.premium } },
-              create: { memberId, year, month, basicSalaryPermanent: 0, monthlyTarget: 0, volumeAchieved: proposal.premium },
-            })
-          )
+              create: { memberId, year, month, basicSalaryPermanent: 0, monthlyTarget: target, volumeAchieved: proposal.premium },
+            });
+          })
         );
       }
 

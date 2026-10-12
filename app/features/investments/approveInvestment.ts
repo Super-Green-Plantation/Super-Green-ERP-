@@ -5,6 +5,7 @@ import { ActivityAction, ActivityEntity } from "@prisma/client";
 import { getCurrentUserWithRole } from "@/lib/getCurrentUserWithRole";
 import { prisma } from "@/lib/prisma";
 import { logActivity } from "@/lib/logActivity";
+import { resolveMemberTarget } from "@/lib/commissions/resolvePositionTarget";
 
 const HIERARCHY_FIELDS = ["faId", "fmId", "bmId", "rmId", "zmId", "agmId", "ccoId"] as const;
 type HierarchyField = typeof HIERARCHY_FIELDS[number];
@@ -80,13 +81,23 @@ export async function approveInvestment(
 
       // Increment for added members
       await Promise.all(
-        added.map((memberId) =>
-          tx.monthlyPayroll.upsert({
+        added.map(async (memberId) => {
+          const member = await tx.member.findUnique({
+            where: { id: memberId },
+            include: {
+              position: {
+                include: { salary: true, positionTargets: true },
+              },
+            },
+          });
+          const target = member ? resolveMemberTarget(member, year, month) : 0;
+
+          return tx.monthlyPayroll.upsert({
             where: { memberId_year_month: { memberId, year, month } },
             update: { volumeAchieved: { increment: amount } },
-            create: { memberId, year, month, monthlyTarget: 0, volumeAchieved: amount, basicSalaryPermanent: 0 },
-          })
-        )
+            create: { memberId, year, month, monthlyTarget: target, volumeAchieved: amount, basicSalaryPermanent: 0 },
+          });
+        })
       );
 
       // Update investment

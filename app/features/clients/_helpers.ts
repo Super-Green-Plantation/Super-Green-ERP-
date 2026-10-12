@@ -2,6 +2,7 @@
 
 import { titleToHierarchySlot, HierarchySlot } from '@/lib/hierarchy'
 import { prisma } from '@/lib/prisma'
+import { resolveMemberTarget } from '@/lib/commissions/resolvePositionTarget'
 
 type HierarchyResult = {
   faId:  number | null
@@ -72,16 +73,19 @@ export async function upsertVolumeAchieved(
   const uniqueIds = [...new Set(memberIds.filter((id): id is number => id !== null))];
 
   for (const memberId of uniqueIds) {
-    const position = await tx.member.findUnique({
+    const member = await tx.member.findUnique({
       where: { id: memberId },
-      select: { positionId: true, position: { select: { monthlyTarget: false, salary: true } } },
+      include: {
+        position: {
+          include: {
+            salary: true,
+            positionTargets: true,
+          },
+        },
+      },
     });
 
-    // Get this member's target for the month from PositionSalary or PositionTarget
-    const target = await tx.positionTarget.findFirst({
-      where: { positionId: position?.positionId },
-      select: { target: true },
-    });
+    const targetAmount = member ? resolveMemberTarget(member, year, month) : 0;
 
     await tx.monthlyPayroll.upsert({
       where: { memberId_year_month: { memberId, year, month } },
@@ -90,7 +94,7 @@ export async function upsertVolumeAchieved(
         year,
         month,
         volumeAchieved: amount,
-        monthlyTarget:  target?.target ?? 0,
+        monthlyTarget:  targetAmount,
       },
       update: {
         volumeAchieved: { increment: amount },

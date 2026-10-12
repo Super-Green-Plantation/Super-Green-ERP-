@@ -1,5 +1,3 @@
-// app/api/cron/employee-deactivation/route.ts
-//
 // Daily cron — finds non-management, active employees (FA/TL level) who have
 // no activity in the past 2 months, deactivates their account, and creates an
 // in-app Notification for each deactivation.
@@ -14,10 +12,6 @@
 //
 // Only targets employees whose position is NOT management (isManagement=false),
 // matching the field-advisor deactivation intent.
-//
-// Triggered by vercel.json:
-//   { "path": "/api/cron/employee-deactivation", "schedule": "0 0 1 * *" }
-//   (runs on the 1st of each month at midnight — adjust as needed)
 
 import { prisma } from "@/lib/prisma";
 import { NextRequest } from "next/server";

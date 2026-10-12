@@ -90,7 +90,11 @@ const Page = () => {
   useEffect(() => {
     fetch("/api/me")
       .then((res) => res.json())
-      .then(({ dbUser }) => setDbUser(dbUser));
+      .then((data) => {
+        setDbUser(data.dbUser);
+        setUserRole(data.role || data.dbUser?.role || null);
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -126,13 +130,6 @@ const Page = () => {
       fetchNetworkData();
     }
   };
-  const getLoggedUserRole = async () => {
-    const role = await fetch("/api/me").then((res) => res.json());
-    setUserRole(role.role);
-  }
-  useEffect(() => {
-    getLoggedUserRole();
-  }, []);
 
   const canEdit = usePermission(userRole, PERMISSIONS.UPDATE_FINANCIAL_PLAN);
 

@@ -8,9 +8,10 @@ import { prisma } from "@/lib/prisma";
 import { createInvestmentForExistingClientSchema, updateInvestmentSchema } from "@/lib/validations/investment.schema";
 import { ActivityAction, ActivityEntity, Channel, Prisma, Title } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import { getDescendantBranchIds } from "../branches/actions";
+import { getDescendantBranchIds, getDescendantBranchIdsForMany } from "../branches/actions";
 import { upsertActivationForMember } from "@/app/scripts/backfill-activations";
 import { getNextProposalFormNoPreview, reserveProposalFormNoInTx } from "@/lib/proposalNumber";
+import { resolveMemberTarget } from "@/lib/commissions/resolvePositionTarget";
 
 // Generate investment reference number
 function generateInvestmentNumber() {
@@ -472,8 +473,18 @@ export async function createInvestmentForExistingClient(data: {
         const month = investmentDate.getMonth() + 1;
 
         await Promise.all(
-          uniqueHierarchyIds.map((memberId) =>
-            tx.monthlyPayroll.upsert({
+          uniqueHierarchyIds.map(async (memberId) => {
+            const member = await tx.member.findUnique({
+              where: { id: memberId },
+              include: {
+                position: {
+                  include: { salary: true, positionTargets: true },
+                },
+              },
+            });
+            const target = member ? resolveMemberTarget(member, year, month) : 0;
+
+            return tx.monthlyPayroll.upsert({
               where: { memberId_year_month: { memberId, year, month } },
               update: { volumeAchieved: { increment: data.amount } },
               create: {
@@ -481,11 +492,11 @@ export async function createInvestmentForExistingClient(data: {
                 year,
                 month,
                 basicSalaryPermanent: 0,
-                monthlyTarget: 0,
+                monthlyTarget: target,
                 volumeAchieved: data.amount,
               },
-            })
-          )
+            });
+          })
         );
         await upsertActivationsForInvestment(
           tx,
@@ -635,13 +646,18 @@ export async function updateInvestment({
               data: { volumeAchieved: { decrement: oldInv.amount } },
             })
           ));
-          await Promise.all(newMembers.map(memberId =>
-            tx.monthlyPayroll.upsert({
+          await Promise.all(newMembers.map(async (memberId) => {
+            const member = await tx.member.findUnique({
+              where: { id: memberId },
+              include: { position: { include: { salary: true, positionTargets: true } } },
+            });
+            const target = member ? resolveMemberTarget(member, newYear, newMonth) : 0;
+            return tx.monthlyPayroll.upsert({
               where: { memberId_year_month: { memberId, year: newYear, month: newMonth } },
               update: { volumeAchieved: { increment: amount } },
-              create: { memberId, year: newYear, month: newMonth, basicSalaryPermanent: 0, monthlyTarget: 0, volumeAchieved: amount },
-            })
-          ));
+              create: { memberId, year: newYear, month: newMonth, basicSalaryPermanent: 0, monthlyTarget: target, volumeAchieved: amount },
+            });
+          }));
         } else {
           const removed = oldMembers.filter(id => !newMembers.includes(id));
           const added = newMembers.filter(id => !oldMembers.includes(id));
@@ -655,13 +671,18 @@ export async function updateInvestment({
               data: { volumeAchieved: { decrement: oldInv.amount } },
             })
           ));
-          await Promise.all(added.map(memberId =>
-            tx.monthlyPayroll.upsert({
+          await Promise.all(added.map(async (memberId) => {
+            const member = await tx.member.findUnique({
+              where: { id: memberId },
+              include: { position: { include: { salary: true, positionTargets: true } } },
+            });
+            const target = member ? resolveMemberTarget(member, newYear, newMonth) : 0;
+            return tx.monthlyPayroll.upsert({
               where: { memberId_year_month: { memberId, year: newYear, month: newMonth } },
               update: { volumeAchieved: { increment: amount } },
-              create: { memberId, year: newYear, month: newMonth, basicSalaryPermanent: 0, monthlyTarget: 0, volumeAchieved: amount },
-            })
-          ));
+              create: { memberId, year: newYear, month: newMonth, basicSalaryPermanent: 0, monthlyTarget: target, volumeAchieved: amount },
+            });
+          }));
 
           if (amountChanged && staying.length > 0) {
             const delta = amount - oldInv.amount;
@@ -1010,11 +1031,8 @@ export async function getInvestmentSummary(filters: {
       const directBranchIds =
         dbUser.member?.branches?.map((mb) => mb.branchId) ?? [];
 
-      // Expand each assigned branch to include its descendants
-      const allBranchIdSets = await Promise.all(
-        directBranchIds.map((id) => getDescendantBranchIds(id))
-      );
-      const allBranchIds = [...new Set(allBranchIdSets.flat())];
+      // Expand each assigned branch to include its descendants in a single query
+      const allBranchIds = await getDescendantBranchIdsForMany(directBranchIds);
 
       // If a branchId filter was already applied, intersect — don't override
       if (filters.branchId) {
@@ -1155,8 +1173,13 @@ export async function approveInvestmentWithHierarchyLog(data: {
         const month = new Date(investment.investmentDate).getMonth() + 1;
 
         await Promise.all(
-          uniqueHierarchyIds.map((memberId) =>
-            tx.monthlyPayroll.upsert({
+          uniqueHierarchyIds.map(async (memberId) => {
+            const member = await tx.member.findUnique({
+              where: { id: memberId },
+              include: { position: { include: { salary: true, positionTargets: true } } },
+            });
+            const target = member ? resolveMemberTarget(member, year, month) : 0;
+            return tx.monthlyPayroll.upsert({
               where: { memberId_year_month: { memberId, year, month } },
               update: { volumeAchieved: { increment: investment.amount } },
               create: {
@@ -1164,11 +1187,11 @@ export async function approveInvestmentWithHierarchyLog(data: {
                 year,
                 month,
                 basicSalaryPermanent: 0,
-                monthlyTarget: 0,
+                monthlyTarget: target,
                 volumeAchieved: investment.amount,
               },
-            })
-          )
+            });
+          })
         );
 
         // ── c. Upsert activations for each non-FA hierarchy member ────────────
