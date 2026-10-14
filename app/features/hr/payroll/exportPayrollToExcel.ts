@@ -26,10 +26,21 @@ const COLS: ColDef[] = [
   { key: "No.",           field: (_r, i) => (i ?? 0) + 1,                                    width: 5  },
   { key: "Emp No",        field: r => r.empNo ?? "—",                                       width: 11 },
   { key: "Employee Name", field: r => r.name ?? "—",                                        width: 26 },
+  { key: "Position",      field: r => r.position ?? "—",                                    width: 18 },
   { key: "Status",        field: r => r.status ?? "—",                                      width: 11 },
+  { key: "Joined Date",   field: r => r.dateOfJoin ? new Date(r.dateOfJoin).toISOString().slice(0, 10) : "—", width: 13 },
+  { key: "Probation Start", field: r => (r.probationStartDate || r.effectiveProbationStart) ? new Date(r.probationStartDate || r.effectiveProbationStart).toISOString().slice(0, 10) : "—", width: 15 },
+  { key: "Months Serving", field: r => r.tenureMonthCount ?? 1,                             width: 14, isNum: true },
+
+  // ── PERFORMANCE ─────────────────────────────────────────────────────────────
+  { key: "Monthly Target", field: r => r.monthlyTarget ?? r.breakdown?.monthlyTarget ?? 0,   width: 16, isNum: true },
+  { key: "Volume Achieved", field: r => r.volumeAchieved ?? 0,                              width: 16, isNum: true },
+  { key: "Achieved %",     field: r => {
+    const t = r.monthlyTarget ?? r.breakdown?.monthlyTarget ?? 0;
+    return t > 0 ? `${((r.volumeAchieved / t) * 100).toFixed(1)}%` : "—";
+  }, width: 12 },
 
   // ── EARNINGS ────────────────────────────────────────────────────────────────
-  { key: "Volume Achieved",      field: r => r.volumeAchieved ?? 0,                         width: 16, isNum: true },
   { key: "Basic Salary",         field: r => r.breakdown?.basicSalaryPermanent ?? 0,         width: 13, isNum: true },
   { key: "Incentive",            field: r => r.breakdown?.incentiveEarned ?? 0,              width: 12, isNum: true },
   { key: "Target Budget",        field: r => r.breakdown?.targetBudgetSalary ?? 0,           width: 14, isNum: true },

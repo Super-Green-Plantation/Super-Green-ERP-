@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { calculatePayroll, type PayrollCategory } from "./payroll-utils";
-import { resolvePositionTarget } from "@/lib/commissions/resolvePositionTarget";
+import { resolvePositionTarget, getMonthsInProbation } from "@/lib/commissions/resolvePositionTarget";
 import { applyAdvanceDeductions } from "./deduction/action";
 import { previewAdvanceDeductions } from "./deduction/previewAdvanceDeductions";
 import { runMonthEndCommissions } from "@/app/features/commissions/runMonthEndCommissions";
@@ -425,11 +425,174 @@ export async function getPayrollPreview(
 
       const finalNetPay = breakdown ? breakdown.netPay - advanceDeducted : 0;
 
+      const effectiveProbationStart =
+        member.probationStartDate ||
+        (member.dateOfJoin ? member.dateOfJoin.toISOString().slice(0, 10) : null);
+
+      let monthsInProbation = tenureMonthCount;
+      let probationPeriod = 1;
+      let probationMonthInPeriod = 1;
+      let isAfter6Months = false;
+
+      if (effectiveProbationStart) {
+        const elapsed = getMonthsInProbation(effectiveProbationStart, year, month);
+        if (elapsed >= 0) {
+          monthsInProbation = elapsed + 1; // 1-indexed serving month in probation
+          isAfter6Months = elapsed >= 6;
+          if (!isAfter6Months) {
+            probationPeriod = elapsed < 3 ? 1 : 2;
+            probationMonthInPeriod = (elapsed % 3) + 1;
+          } else {
+            probationPeriod = 3;
+            probationMonthInPeriod = elapsed - 5;
+          }
+        }
+      }
+
+      const monthlyTarget =
+        payrollCategory === "HEAD_OFFICE"
+          ? (member.position?.salary?.monthlyTarget ?? 0)
+          : (mktConfig?.targetAmount ?? 0);
+      const achievementPct = monthlyTarget > 0 ? (volumeAchieved / monthlyTarget) * 100 : 0;
+      const targetDiff = volumeAchieved - monthlyTarget;
+
+      const criteria = {
+        // Tenure & Identity context
+        dateOfJoin: member.dateOfJoin ? member.dateOfJoin.toISOString() : null,
+        probationStartDate: member.probationStartDate ?? null,
+        effectiveProbationStart,
+        monthsServing: tenureMonthCount,
+        monthsInProbation,
+        probationPeriod,
+        probationMonthInPeriod,
+        isAfter6Months,
+        status: member.status,
+        payrollCategory,
+        positionTitle: member.position?.title ?? "—",
+        rank: member.position?.rank ?? 0,
+
+        // Performance
+        monthlyTarget,
+        volumeAchieved,
+        achievementPct,
+        targetDiff,
+
+        // Target Budget Salary (FA only)
+        targetBudget: {
+          isFa: (mktConfig?.targetBudgetAmount ?? 0) > 0,
+          targetBudgetAmount: mktConfig?.targetBudgetAmount ?? 0,
+          ceiling: mktConfig?.targetBudgetCeiling ?? 30000,
+          minPct: (mktConfig?.targetBudgetMinPct ?? 0.25) * 100,
+          hit: breakdown?.targetBudgetSalary ? breakdown.targetBudgetSalary > 0 : false,
+          earned: breakdown?.targetBudgetSalary ?? 0,
+        },
+
+        // Basic / Partial Incentive (FA partial 20K)
+        basicIncentive: {
+          isApplicable: (mktConfig?.basicIncentiveAmount ?? 0) > 0,
+          configuredAmount: mktConfig?.basicIncentiveAmount ?? 0,
+          hurdleRatePct: (tenureMonthCount <= 3
+            ? (mktConfig?.hurdleRateProbation ?? 0.066)
+            : (mktConfig?.hurdleRatePermanent ?? 0.20)) * 100,
+          hurdleAmount: mktConfig
+            ? mktConfig.targetAmount * (tenureMonthCount <= 3
+                ? (mktConfig?.hurdleRateProbation ?? 0.066)
+                : (mktConfig?.hurdleRatePermanent ?? 0.20))
+            : 0,
+          hit: breakdown?.incentiveHit ?? false,
+          earned: breakdown?.incentiveEarned ?? 0,
+        },
+
+        // Full Incentive (Non-FA)
+        fullIncentive: {
+          isApplicable: (mktConfig?.fullIncentiveAmount ?? 0) > 0,
+          configuredAmount: mktConfig?.fullIncentiveAmount ?? 0,
+          thresholdPct: (mktConfig?.fullIncentiveThresholdPct ?? 1.0) * 100,
+          thresholdAmount: mktConfig
+            ? mktConfig.targetAmount * (mktConfig?.fullIncentiveThresholdPct ?? 1.0)
+            : 0,
+          hit: breakdown?.fullIncentiveHit ?? false,
+          earned: breakdown?.fullIncentive ?? 0,
+        },
+
+        // Vehicle Allowance
+        vehicleAllowance: {
+          isApplicable: (mktConfig?.vehicleAmount ?? 0) > 0,
+          configuredAmount: mktConfig?.vehicleAmount ?? 0,
+          baseTarget: mktConfig?.vehicleBaseTarget ?? mktConfig?.targetAmount ?? 0,
+          thresholdPct: (mktConfig?.vehicleThresholdPct ?? 0) * 100,
+          thresholdAmount: (mktConfig?.vehicleBaseTarget ?? mktConfig?.targetAmount ?? 0) * (mktConfig?.vehicleThresholdPct ?? 0),
+          hit: breakdown?.vehicleHit ?? false,
+          earned: breakdown?.vehicleEarned ?? 0,
+        },
+
+        // Team Activation Allowance
+        teamActivation: {
+          isApplicable: (mktConfig?.teamActiveAmount ?? 0) > 0,
+          configuredAmount: mktConfig?.teamActiveAmount ?? 0,
+          baseTarget: mktConfig?.teamActiveBaseTarget ?? mktConfig?.targetAmount ?? 0,
+          thresholdPct: (mktConfig?.teamActiveThresholdPct ?? 0) * 100,
+          thresholdAmount: (mktConfig?.teamActiveBaseTarget ?? mktConfig?.targetAmount ?? 0) * (mktConfig?.teamActiveThresholdPct ?? 0),
+          volumeHit: volumeAchieved >= ((mktConfig?.teamActiveBaseTarget ?? mktConfig?.targetAmount ?? 0) * (mktConfig?.teamActiveThresholdPct ?? 0)),
+          minHeadcount: {
+            advisors: mktConfig?.minActiveAdvisors ?? 0,
+            fms: mktConfig?.minActiveFMs ?? 0,
+            bms: mktConfig?.minActiveBMs ?? 0,
+          },
+          actualHeadcount: activeTeamCounts,
+          headcountHit: (
+            activeTeamCounts.advisors >= (mktConfig?.minActiveAdvisors ?? 0) &&
+            activeTeamCounts.fms >= (mktConfig?.minActiveFMs ?? 0) &&
+            activeTeamCounts.bms >= (mktConfig?.minActiveBMs ?? 0)
+          ),
+          hit: breakdown?.teamActiveHit ?? false,
+          earned: breakdown?.teamActiveEarned ?? 0,
+        },
+
+        // Excess Commission
+        excessCommission: {
+          ratePct: (mktConfig?.excessCommissionRate ?? 0.005) * 100,
+          surplusVolume: Math.max(0, volumeAchieved - (mktConfig?.targetAmount ?? 0)),
+          earned: breakdown?.excessCommission ?? 0,
+        },
+
+        // Commissions
+        commissions: {
+          personal: personalCommissionEarned,
+          orc: orcEarned,
+          excessEarned,
+        },
+
+        // Deductions
+        deductions: {
+          epfEmployee: breakdown?.epfDeduction ?? 0,
+          advanceDeducted,
+          advanceDetails: deductionDetails,
+          outstandingAdvanceRemaining: outstandingRemaining,
+          outstandingTypes,
+        },
+
+        // Head office specifics (if HO category)
+        hoDetails: payrollCategory === "HEAD_OFFICE" ? {
+          basicSalary: mgtBaseSalary,
+          attendanceAllowance: breakdown?.attendanceAllowance ?? 0,
+          fixedAllowance: breakdown?.fixedAllowance ?? 0,
+          fuelAllowance: breakdown?.fuelAllowance ?? 0,
+          channelOperation: breakdown?.channelOperation ?? 0,
+        } : null,
+
+        grossPay: breakdown?.grossPay ?? 0,
+        totalDeductions: (breakdown?.epfDeduction ?? 0) + advanceDeducted,
+        netPay: finalNetPay,
+      };
+
       return {
         memberId: member.id,
         name: member.nameWithInitials ?? member.name,
         empNo: member.empNo,
         dateOfJoin: member.dateOfJoin ?? null, 
+        probationStartDate: member.probationStartDate ?? null,
+        effectiveProbationStart,
         position: member.position?.title ?? "—",
         status: member.status,
         payrollCategory,
@@ -438,18 +601,26 @@ export async function getPayrollPreview(
         salaryConfigured: payrollCategory === "HEAD_OFFICE"
           ? mgtBaseSalary > 0
           : !!mktConfig,
+        monthlyTarget,
+        achievementPct,
+        targetDiff,
         volumeAchieved,
         personalCommissionEarned,
         orcEarned,
         excessEarned,
         tenureMonthCount,
+        monthsInProbation,
+        probationPeriod,
+        probationMonthInPeriod,
+        isAfter6Months,
         advanceDeducted,
         advanceTypes: deductionDetails.map((d: any) => d.type),
         actualCommissionEarned: personalCommissionEarned + orcEarned + excessEarned,
         activeTeamCounts: activeTeamCounts ?? { advisors: 0, fms: 0, bms: 0 },
-        breakdown: breakdown ? { ...breakdown, netPay: finalNetPay } : null,
+        breakdown: breakdown ? { ...breakdown, netPay: finalNetPay, monthlyTarget } : null,
         outstandingAdvanceRemaining: outstandingRemaining,
         outstandingAdvanceTypes: outstandingTypes,
+        criteria,
       };
     }),
   );
@@ -750,6 +921,8 @@ export async function getAllPayrollExport(year: number, month: number) {
           nameWithInitials: true,
           empNo: true,
           status: true,
+          dateOfJoin: true,
+          probationStartDate: true,
           branches: {
             where: { isPrimary: true },
             select: { branch: { select: { name: true } } },
@@ -771,6 +944,10 @@ export async function getAllPayrollExport(year: number, month: number) {
     name:          r.member.nameWithInitials ?? "—",
     position:      r.member.position?.title ?? "—",
     status:        r.member.status ?? "—",
+    dateOfJoin:    r.member.dateOfJoin ? r.member.dateOfJoin.toISOString() : null,
+    probationStartDate: r.member.probationStartDate ?? null,
+    tenureMonthCount: r.tenureMonthCount ?? 1,
+    monthlyTarget:   Number(r.monthlyTarget ?? 0),
     payrollCategory: r.payrollCategory,
     volumeAchieved:  Number(r.volumeAchieved),
     basic:           Number(r.basicSalaryPermanent),

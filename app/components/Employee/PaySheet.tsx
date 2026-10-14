@@ -1,11 +1,14 @@
 "use client";
 
-import { useMemo, useState, useEffect, useRef } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import {
   ChevronDown,
   Download,
   ReceiptText,
   CalendarClock,
+  Calendar,
+  Clock,
+  Info,
   Target,
   TrendingUp,
   CheckCircle2,
@@ -124,6 +127,7 @@ function FAPaySheet({
   member: any;
 }) {
   const printRef = useRef<HTMLDivElement>(null);
+  const [showCriteria, setShowCriteria] = useState(false);
 
   const target             = payroll.monthlyTarget ?? 0;
   const achieved           = payroll.volumeAchieved ?? 0;
@@ -173,6 +177,9 @@ function FAPaySheet({
             <div class="row"><span class="lbl">Employee Name</span><span class="val">${member.nameWithInitials ?? "—"}</span></div>
             <div class="row"><span class="lbl">Designation</span><span class="val">${positionTitle}</span></div>
             <div class="row"><span class="lbl">Emp No</span><span class="val">${member.empNo ?? "—"}</span></div>
+            ${member.dateOfJoin ? `<div class="row"><span class="lbl">Joined Date</span><span class="val">${new Date(member.dateOfJoin).toLocaleDateString("en-GB", { month: "short", year: "numeric" })}</span></div>` : ""}
+            ${member.probationStartDate ? `<div class="row"><span class="lbl">Probation Start</span><span class="val">${new Date(member.probationStartDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</span></div>` : ""}
+            ${payroll.tenureMonthCount > 0 ? `<div class="row"><span class="lbl">Serving Duration</span><span class="val">Month ${payroll.tenureMonthCount}</span></div>` : ""}
             <div class="sep"></div>
             <div class="row"><span class="lbl">Target</span><span class="val">${LKR(target)}</span></div>
             <div class="row"><span class="lbl">Achievement</span><span class="val">${LKR(achieved)}</span></div>
@@ -208,6 +215,27 @@ function FAPaySheet({
 
       {/* ── Digital card view ── */}
       <div className="bg-card/40 backdrop-blur-md rounded-[2rem] border border-border/40 overflow-hidden max-w-lg mx-auto shadow-lg">
+
+        {/* Service & Tenure info banner */}
+        <div className="px-5 py-3 bg-muted/20 border-b border-border/30 flex flex-wrap items-center justify-between gap-2 text-xs">
+          {member.dateOfJoin && (
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <Calendar className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+              <span>Joined: <strong className="text-foreground">{new Date(member.dateOfJoin).toLocaleDateString("en-GB", { month: "short", year: "numeric" })}</strong></span>
+            </div>
+          )}
+          {member.probationStartDate && (
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <Clock className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+              <span>Probation: <strong className="text-foreground">{new Date(member.probationStartDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</strong></span>
+            </div>
+          )}
+          {payroll.tenureMonthCount > 0 && (
+            <div className="flex items-center gap-1.5 text-primary font-bold">
+              <span>Month {payroll.tenureMonthCount} serving</span>
+            </div>
+          )}
+        </div>
 
         {/* Performance stat cards */}
         <div className="grid grid-cols-3 gap-px bg-border/30">
@@ -278,6 +306,48 @@ function FAPaySheet({
             <p className="text-xs font-bold text-white/70 mt-1">Marketing Track</p>
           </div>
         </div>
+
+        {/* Expandable Criteria Explanation Accordion */}
+        <div className="border-t border-border/40 p-4 bg-card/60">
+          <button
+            onClick={() => setShowCriteria(!showCriteria)}
+            className="w-full flex items-center justify-between text-xs font-bold text-primary hover:text-primary/80 transition-colors"
+          >
+            <span className="flex items-center gap-1.5">
+              <Info className="w-4 h-4" />
+              Salary Calculation Criteria & Rules
+            </span>
+            <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showCriteria ? "rotate-180" : ""}`} />
+          </button>
+
+          {showCriteria && (
+            <div className="mt-3 pt-3 border-t border-border/30 space-y-2 text-xs text-muted-foreground">
+              <div className="p-2.5 rounded-lg bg-muted/40 space-y-1">
+                <p className="font-bold text-foreground">Target Budget Salary (Ceiling: Rs. 30,000)</p>
+                <p>Requires &ge;25% target achievement. Formula: Rs. 30,000 &times; min({achievementPct.toFixed(1)}%, 100%) = <strong className="text-foreground">{LKR(targetBudget)}</strong>.</p>
+              </div>
+
+              <div className="p-2.5 rounded-lg bg-muted/40 space-y-1">
+                <p className="font-bold text-foreground">Basic / Partial Incentive (Rs. 20,000)</p>
+                <p>Hurdle rate is {payroll.tenureMonthCount <= 3 ? "6.6%" : "20.0%"} for Month {payroll.tenureMonthCount}. {payroll.incentivePartialHit || payroll.incentiveHit ? "Hurdle passed ✓" : "Hurdle missed ✗"} = <strong className="text-foreground">{LKR(basicIncentive)}</strong>.</p>
+              </div>
+
+              {vehicleEarned > 0 && (
+                <div className="p-2.5 rounded-lg bg-muted/40 space-y-1">
+                  <p className="font-bold text-foreground">Vehicle Allowance</p>
+                  <p>Vehicle target threshold cleared = <strong className="text-foreground">{LKR(vehicleEarned)}</strong>.</p>
+                </div>
+              )}
+
+              {excessComm > 0 && (
+                <div className="p-2.5 rounded-lg bg-muted/40 space-y-1">
+                  <p className="font-bold text-foreground">Excess Commission (0.5%)</p>
+                  <p>Surplus volume achieved above 100% target baseline &times; 0.5% = <strong className="text-foreground">{LKR(excessComm)}</strong>.</p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -347,6 +417,9 @@ function HOPaySheet({
               <div><div class="lbl">Employee Name</div><div class="val">${member.nameWithInitials ?? "—"}</div></div>
               <div><div class="lbl">Designation</div><div class="val">${member.position?.title ?? "Staff"}</div></div>
               <div><div class="lbl">Emp No</div><div class="val">${member.empNo ?? "—"}</div></div>
+              ${member.dateOfJoin ? `<div><div class="lbl">Joined Date</div><div class="val">${new Date(member.dateOfJoin).toLocaleDateString("en-GB", { month: "short", year: "numeric" })}</div></div>` : ""}
+              ${member.probationStartDate ? `<div><div class="lbl">Probation Start</div><div class="val">${new Date(member.probationStartDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</div></div>` : ""}
+              ${payroll.tenureMonthCount > 0 ? `<div><div class="lbl">Serving Duration</div><div class="val">Month ${payroll.tenureMonthCount}</div></div>` : ""}
             </div>
             <div class="two-col">
               <div>
@@ -395,6 +468,27 @@ function HOPaySheet({
 
       {/* Digital card */}
       <div className="bg-card/40 backdrop-blur-md rounded-[2rem] border border-border/40 overflow-hidden max-w-lg mx-auto shadow-lg">
+
+        {/* Service & Tenure info banner */}
+        <div className="px-5 py-3 bg-muted/20 border-b border-border/30 flex flex-wrap items-center justify-between gap-2 text-xs">
+          {member.dateOfJoin && (
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <Calendar className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+              <span>Joined: <strong className="text-foreground">{new Date(member.dateOfJoin).toLocaleDateString("en-GB", { month: "short", year: "numeric" })}</strong></span>
+            </div>
+          )}
+          {member.probationStartDate && (
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <Clock className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+              <span>Probation: <strong className="text-foreground">{new Date(member.probationStartDate).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</strong></span>
+            </div>
+          )}
+          {payroll.tenureMonthCount > 0 && (
+            <div className="flex items-center gap-1.5 text-primary font-bold">
+              <span>Month {payroll.tenureMonthCount} serving</span>
+            </div>
+          )}
+        </div>
 
         {/* Earnings */}
         <div className="p-6 space-y-3">

@@ -8,7 +8,10 @@ export function resolvePositionTarget(member: any, year: number, month: number) 
   // period 1 / month 1. This is the safest fallback — the member still gets their
   // position's vehicle, team-activation, and incentive amounts rather than falling
   // through to PositionSalary (which has those fields as 0).
-  if (!member.probationStartDate) {
+  // If probationStartDate is missing, fall back to dateOfJoin. If neither is available,
+  // we default to period 1 / month 1 as the safest fallback.
+  const effectiveProbationStart = member.probationStartDate || member.dateOfJoin;
+  if (!effectiveProbationStart) {
     return (
       targets.find((t: any) => t.periodNumber === 1 && t.monthNumber === 1) ??
       targets[0] ??
@@ -17,7 +20,7 @@ export function resolvePositionTarget(member: any, year: number, month: number) 
   }
 
   const monthsElapsed = getMonthsInProbation(
-    member.probationStartDate,
+    effectiveProbationStart,
     year,
     month,
   );
@@ -100,7 +103,7 @@ export function resolveMemberTarget(
   return 0;
 }
 
-function getMonthsInProbation(
+export function getMonthsInProbation(
   probationStartDate: string | Date,
   year: number,
   month: number,

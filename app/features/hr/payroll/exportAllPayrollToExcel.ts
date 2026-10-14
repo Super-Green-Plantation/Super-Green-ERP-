@@ -12,6 +12,10 @@ type PayrollRow = {
   name: string;
   position: string;
   status: string;
+  dateOfJoin?: string | null;
+  probationStartDate?: string | null;
+  tenureMonthCount?: number;
+  monthlyTarget?: number;
   payrollCategory: string;
   volumeAchieved: number;
   basic: number;
@@ -40,14 +44,22 @@ type PayrollRow = {
 };
 
 function toRow(r: PayrollRow) {
+  const target = r.monthlyTarget ?? 0;
+  const achPct = target > 0 ? ((r.volumeAchieved / target) * 100).toFixed(1) + "%" : "—";
+
   return {
     "Branch":               r.branch,
     "Emp No":               r.empNo,
     "Employee":             r.name,
     "Position":             r.position,
     "Status":               r.status,
+    "Joined Date":          r.dateOfJoin ? new Date(r.dateOfJoin).toISOString().slice(0, 10) : "—",
+    "Probation Start":      r.probationStartDate ? new Date(r.probationStartDate).toISOString().slice(0, 10) : "—",
+    "Months Serving":       r.tenureMonthCount ?? 1,
     "Category":             r.payrollCategory,
+    "Monthly Target":       target,
     "Volume Achieved":      r.volumeAchieved,
+    "Achieved %":           achPct,
     // ── Earnings ──────────────────────────────────
     "Basic Salary":         r.basic,
     "Incentive":            r.incentive,
