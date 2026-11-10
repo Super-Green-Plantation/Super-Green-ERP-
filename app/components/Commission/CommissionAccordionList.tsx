@@ -212,7 +212,6 @@ export default function CommissionAccordionList() {
                           <th className="py-2.5 pr-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Type</th>
                           <th className="py-2.5 px-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Member</th>
                           <th className="py-2.5 px-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Amount</th>
-                          <th className="py-2.5 pl-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground text-right">Details</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border">

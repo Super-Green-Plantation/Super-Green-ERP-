@@ -25,7 +25,7 @@ export const MaturityPipeline = ({ investments }: { investments: MaturityInvestm
   return (
     <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-2xl p-6 shadow-sm flex flex-col w-full">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">Maturity Pipeline</h2>
+        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">Maturity overview</h2>
         <div className="flex items-center gap-1 bg-muted/40 rounded-lg p-0.5">
           <button
             onClick={() => setActiveTab("30")}
