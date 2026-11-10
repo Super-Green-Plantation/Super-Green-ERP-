@@ -173,6 +173,39 @@ export async function updateBranch(id: number, data: { name: string; location: s
   }
 }
 
+export async function toggleBranchStatus(id: number) {
+  try {
+    await requirePermission("UPDATE_BRANCHES");
+    const [currentUser, oldBranch] = await Promise.all([
+      getCurrentUserWithRole(),
+      prisma.branch.findUnique({ where: { id } }),
+    ]);
+    if (!oldBranch) return { success: false, error: "Branch not found" };
+
+    const status = oldBranch.status === "Active" ? "Inactive" : "Active";
+    const updatedBranch = await prisma.branch.update({
+      where: { id },
+      data: { status },
+    });
+
+    revalidatePath("/features/branches");
+    revalidatePath("/features/branches/employees");
+    void logActivity({
+      action: ActivityAction.UPDATE,
+      entity: ActivityEntity.BRANCH,
+      entityId: id,
+      performedById: currentUser?.member?.id ?? 0,
+      branchId: id,
+      metadata: { before: oldBranch, after: updatedBranch },
+    });
+
+    return { success: true, branch: updatedBranch };
+  } catch (error) {
+    console.error("Error updating branch status:", error);
+    return { success: false, error: "Failed to update branch status" };
+  }
+}
+
 // Delete branch
 export async function deleteBranch(id: number) {
   try {

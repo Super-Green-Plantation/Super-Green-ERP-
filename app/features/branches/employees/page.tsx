@@ -49,6 +49,7 @@ const Page = () => {
   const { data: branches, isLoading: branchesLoading, error } = useBranches();
   const [dbUser, setDbUser] = useState<any>(null);
   const [branch, setBranch] = useState<any[]>([]);
+  const [employeeBranchStatusFilter, setEmployeeBranchStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [searchText, setSearchText] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const [empSearchLoading, setEmpSearchLoading] = useState(false);
@@ -63,6 +64,21 @@ const Page = () => {
       setSelectedBranchId(branch[0].id);
     }
   }, [branch, selectedBranchId]);
+
+  const employeeTabBranches = branch.filter((b) =>
+    employeeBranchStatusFilter === "all" ||
+    (employeeBranchStatusFilter === "active" ? b.status === "Active" : b.status === "Inactive")
+  );
+
+  useEffect(() => {
+    if (employeeTabBranches.length === 0) {
+      if (selectedBranchId !== null) setSelectedBranchId(null);
+      return;
+    }
+    if (!employeeTabBranches.some((b) => b.id === selectedBranchId)) {
+      setSelectedBranchId(employeeTabBranches[0].id);
+    }
+  }, [employeeTabBranches, selectedBranchId]);
 
   const handleRefreshEmployees = () => {
     if (selectedBranchId) {
@@ -79,6 +95,7 @@ const Page = () => {
   const [networkBranches, setNetworkBranches] = useState<any[]>([]);
   const [networkLoading, setNetworkLoading] = useState(false);
   const [networkSearchQuery, setNetworkSearchQuery] = useState("");
+  const [branchStatusFilter, setBranchStatusFilter] = useState<"all" | "active" | "inactive">("all");
   const [showAddModal, setShowAddModal] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
 
@@ -205,9 +222,10 @@ const Page = () => {
         <div className="space-y-4">
 
           {/* Branch Selector — scrollable pill row */}
-          <div className="w-full overflow-x-auto no-scrollbar rounded-2xl border border-border/70 bg-card/60 p-2 shadow-sm">
-            <div className="flex items-center gap-2 min-w-max py-1">
-              {branch?.map((b) => {
+          <div className="flex w-full items-center gap-2 rounded-2xl border border-border/70 bg-card/60 p-2 shadow-sm">
+            <div className="min-w-0 flex-1 overflow-x-auto no-scrollbar">
+              <div className="flex items-center gap-2 min-w-max py-1">
+              {employeeTabBranches.map((b) => {
                 const isActive = selectedBranchId === b.id;
                 const count = b.members?.length || 0;
                 const proposals = proposalMap.get(b.id) ?? 0;
@@ -241,6 +259,19 @@ const Page = () => {
                   </button>
                 );
               })}
+              </div>
+            </div>
+            <div className="shrink-0">
+              <select
+                aria-label="Filter branches by status"
+                value={employeeBranchStatusFilter}
+                onChange={(e) => setEmployeeBranchStatusFilter(e.target.value as "all" | "active" | "inactive")}
+                className="rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-foreground outline-none focus:border-primary/50"
+              >
+                <option value="all">All branches</option>
+                <option value="active">Active branches</option>
+                <option value="inactive">Inactive branches</option>
+              </select>
             </div>
           </div>
 
@@ -285,15 +316,27 @@ const Page = () => {
       ══════════════════════════════════════════════════════════════ */}
       {activeTab === "network" && (
         <div className="space-y-4">
-          <div className="relative flex w-full items-center rounded-xl border border-border bg-card shadow-sm">
-            <Search className="w-4 h-4 text-gray-400 ml-3 shrink-0" />
-            <input
-              type="text"
-              placeholder="Search branch"
-              className="w-full bg-transparent border-none py-2.5 px-2 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:ring-0 outline-none"
-              value={networkSearchQuery}
-              onChange={(e) => setNetworkSearchQuery(e.target.value)}
-            />
+          <div className="flex flex-wrap gap-2">
+            <div className="relative flex min-w-[220px] flex-1 items-center rounded-xl border border-border bg-card shadow-sm">
+              <Search className="w-4 h-4 text-gray-400 ml-3 shrink-0" />
+              <input
+                type="text"
+                placeholder="Search branch"
+                className="w-full bg-transparent border-none py-2.5 px-2 text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-400 focus:ring-0 outline-none"
+                value={networkSearchQuery}
+                onChange={(e) => setNetworkSearchQuery(e.target.value)}
+              />
+            </div>
+            <select
+              aria-label="Filter branches by status"
+              value={branchStatusFilter}
+              onChange={(e) => setBranchStatusFilter(e.target.value as "all" | "active" | "inactive")}
+              className="rounded-xl border border-border bg-card px-3 py-2.5 text-xs font-semibold text-foreground shadow-sm outline-none focus:border-primary/50"
+            >
+              <option value="all">All branches</option>
+              <option value="active">Active branches</option>
+              <option value="inactive">Inactive branches</option>
+            </select>
           </div>
 
           {networkLoading ? (
@@ -307,9 +350,14 @@ const Page = () => {
             <div className="overflow-x-auto rounded-2xl border border-border/70 bg-card p-3 shadow-[0_10px_35px_rgba(34,43,72,0.05)] sm:p-4">
               <BranchTable
                 data={networkBranches.filter(
-                  (b) =>
-                    b.name?.toLowerCase().includes(networkSearchQuery.toLowerCase()) ||
-                    b.location?.toLowerCase().includes(networkSearchQuery.toLowerCase())
+                  (b) => {
+                    const matchesStatus = branchStatusFilter === "all" ||
+                      (branchStatusFilter === "active" ? b.status === "Active" : b.status === "Inactive");
+                    const query = networkSearchQuery.toLowerCase();
+                    const matchesSearch = b.name?.toLowerCase().includes(query) ||
+                      b.location?.toLowerCase().includes(query);
+                    return matchesStatus && matchesSearch;
+                  }
                 )}
                 isLoading={networkLoading}
                 onRefresh={fetchNetworkData}

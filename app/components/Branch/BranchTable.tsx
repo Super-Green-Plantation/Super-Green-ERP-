@@ -1,8 +1,8 @@
 "use client";
 
-import { deleteBranch } from "@/app/features/branches/actions";
+import { deleteBranch, toggleBranchStatus } from "@/app/features/branches/actions";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { MapPin, Pen, Trash2 } from "lucide-react";
+import { MapPin, Pen, ToggleLeft, ToggleRight, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import BranchModal from "./Model";
@@ -15,6 +15,7 @@ interface Branch {
   name: string;
   location: string;
   code?: string;
+  status: "Active" | "Inactive";
   members: any[];
 }
 
@@ -54,6 +55,20 @@ const BranchTable = ({ data, isLoading, onRefresh }: BranchTableProps) => {
     },
   });
 
+  const statusMutation = useMutation({
+    mutationFn: (id: number) => toggleBranchStatus(id),
+    onSuccess: (result) => {
+      if (!result.success) {
+        toast.error(result.error ?? "Failed to update branch status");
+        return;
+      }
+      toast.success("Branch status updated");
+      queryClient.invalidateQueries({ queryKey: ["branches"] });
+      onRefresh?.();
+    },
+    onError: () => toast.error("Failed to update branch status"),
+  });
+
   const handelUpdate = (branch: Branch) => {
     setSelectedBranch(branch);
     setUpdateModel(true);
@@ -86,6 +101,9 @@ const BranchTable = ({ data, isLoading, onRefresh }: BranchTableProps) => {
               </th>
               <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                 Total Employees
+              </th>
+              <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                Status
               </th>
               <th className="px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-muted-foreground text-center">
                 Action
@@ -137,6 +155,28 @@ const BranchTable = ({ data, isLoading, onRefresh }: BranchTableProps) => {
                       {branch.members?.length || 0} Staff
                     </span>
                   </div>
+                </td>
+
+                <td className="px-6 py-4">
+                  <button
+                    type="button"
+                    onClick={() => statusMutation.mutate(branch.id)}
+                    disabled={statusMutation.isPending}
+                    title={`Mark branch ${branch.status === "Active" ? "Inactive" : "Active"}`}
+                    className="flex items-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {branch.status === "Active" ? (
+                      <>
+                        <ToggleRight size={22} className="text-emerald-500" />
+                        <span className="rounded-md bg-emerald-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">Active</span>
+                      </>
+                    ) : (
+                      <>
+                        <ToggleLeft size={22} className="text-muted-foreground/50" />
+                        <span className="text-xs font-bold uppercase tracking-tight text-muted-foreground">Inactive</span>
+                      </>
+                    )}
+                  </button>
                 </td>
 
                 {/* Action Column */}
