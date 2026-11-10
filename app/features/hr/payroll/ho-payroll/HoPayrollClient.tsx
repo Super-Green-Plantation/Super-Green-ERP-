@@ -441,11 +441,11 @@ export default function HoPayrollClient({
     <div className="w-full min-h-screen p-4 sm:p-8 flex flex-col gap-6 sm:gap-8 font-sans text-gray-900 dark:text-gray-100">
       <div>
         <Heading>Head Office Payroll</Heading>
-        <p className="text-sm text-muted-foreground mt-2 font-medium max-w-2xl">
+        {/* <p className="text-sm text-muted-foreground mt-2 font-medium max-w-2xl">
           Permanent BM/RM/ZM/AGM are volume-gated (basic requires achievement ramp, incentives at 75%/100%, vehicle+fuel at 50%).
           RM and above receive vehicle+fuel unconditionally for their first 4 months.
           Fixed-salary HO staff use flat config amounts.
-        </p>
+        </p> */}
       </div>
 
       {/* Selectors */}
