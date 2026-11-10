@@ -49,7 +49,7 @@ export default function RootLayout({
         <NextTopLoader color="#16a34a" showSpinner={false} />
         <Analytics />
         <Toast>{children}</Toast>
-        <SupportButton />
+        {/* <SupportButton /> */}
         <span className="fixed top-2 right-3 text-xs text-muted-foreground opacity-50 select-none">
   v{process.env.NEXT_PUBLIC_APP_VERSION}
 </span>
