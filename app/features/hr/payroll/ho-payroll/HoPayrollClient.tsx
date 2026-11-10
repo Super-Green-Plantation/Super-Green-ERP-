@@ -437,6 +437,15 @@ export default function HoPayrollClient({
     [preview],
   );
 
+  const tableRows = useMemo(
+    () => [...preview].sort((a, b) => {
+      const aIsChairman = a.position.toLowerCase().includes("chair");
+      const bIsChairman = b.position.toLowerCase().includes("chair");
+      return Number(bIsChairman) - Number(aIsChairman);
+    }),
+    [preview],
+  );
+
   return (
     <div className="w-full min-h-screen p-4 sm:p-8 flex flex-col gap-6 sm:gap-8 font-sans text-gray-900 dark:text-gray-100">
       <div>
@@ -520,7 +529,7 @@ export default function HoPayrollClient({
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {preview.map((row) => {
+                {tableRows.map((row) => {
                   const ov        = overrides[row.memberId] ?? {};
                   const isExpanded = expandedRows.has(row.memberId);
                   const isPaid    = row.status === "PAID";
