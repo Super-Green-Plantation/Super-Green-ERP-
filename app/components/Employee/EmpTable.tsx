@@ -39,6 +39,7 @@ const EmpTable = ({ onEdit, onRefresh, branchId, searchQuery }: EmpTableProps) =
   const [currentPage, setCurrentPage] = useState(1);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [investmentCounts, setInvestmentCounts] = useState<Record<number, number>>({});
+  const [activeFilter, setActiveFilter] = useState<"all" | "active" | "inactive">("all");
 
 
 
@@ -68,7 +69,11 @@ const EmpTable = ({ onEdit, onRefresh, branchId, searchQuery }: EmpTableProps) =
     isFetchingNextPage,
     isLoading,
     isError,
-  } = useEmployees(branchId, debouncedSearchQuery);
+  } = useEmployees(branchId, debouncedSearchQuery, activeFilter);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [branchId, debouncedSearchQuery, activeFilter]);
 
   const allEmployees = data?.pages.flatMap((page) => page.emp) ?? [];
 
@@ -160,9 +165,21 @@ const EmpTable = ({ onEdit, onRefresh, branchId, searchQuery }: EmpTableProps) =
 
   return (
 <div className="w-full overflow-hidden rounded-2xl border border-border/70 bg-card shadow-[0_10px_35px_rgba(34,43,72,0.05)]">
-      <div className="flex items-center justify-between border-b border-border/70 px-5 py-4 sm:px-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/70 px-5 py-4 sm:px-6">
         <div className="flex items-center gap-2.5"><div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary"><User size={16} /></div><div><p className="text-sm font-bold text-foreground">Team directory</p><p className="mt-0.5 text-[10px] font-medium text-muted-foreground">Manage team members and access</p></div></div>
-        <span className="hidden rounded-lg bg-muted px-2.5 py-1 text-[10px] font-bold text-muted-foreground sm:inline-flex">{allEmployees.length} loaded</span>
+        <div className="flex items-center gap-2">
+          <select
+            aria-label="Filter employees by status"
+            value={activeFilter}
+            onChange={(e) => setActiveFilter(e.target.value as "all" | "active" | "inactive")}
+            className="rounded-lg border border-border bg-card px-3 py-2 text-xs font-semibold text-foreground outline-none focus:border-primary/50"
+          >
+            <option value="all">All members</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+          <span className="hidden rounded-lg bg-muted px-2.5 py-1 text-[10px] font-bold text-muted-foreground sm:inline-flex">{allEmployees.length} loaded</span>
+        </div>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[980px] text-left">

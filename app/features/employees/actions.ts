@@ -229,11 +229,14 @@ export async function getEmployeesByBranch(
   branchId: number,
   cursor?: number,
   limit = 10,
-  searchQuery?: string
+  searchQuery?: string,
+  activeFilter: "all" | "active" | "inactive" = "all"
 ) {
   const employees = await prisma.member.findMany({
     where: {
       channel: { not: "Micro" },
+      branches: { some: { branchId } },
+      ...(activeFilter === "all" ? {} : { isActive: activeFilter === "active" }),
       ...(searchQuery && searchQuery.trim() !== ""
         ? {
           OR: [
@@ -242,11 +245,7 @@ export async function getEmployeesByBranch(
             { nic: { contains: searchQuery, mode: "insensitive" } },
           ],
         }
-        : {
-          branches: {
-            some: { branchId },
-          },
-        }),
+        : {}),
     },
 
 

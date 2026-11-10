@@ -4,7 +4,11 @@ import { useInfiniteQuery, InfiniteData } from "@tanstack/react-query";
 import { getEmployeesByBranch } from "../features/employees/actions";
 import { EmployeesPage } from "@/app/types/member";
 
-export const useEmployees = (branchId: number, searchQuery?: string) => {
+export const useEmployees = (
+  branchId: number,
+  searchQuery?: string,
+  activeFilter: "all" | "active" | "inactive" = "all",
+) => {
   return useInfiniteQuery<
   EmployeesPage,
   Error,
@@ -12,9 +16,9 @@ export const useEmployees = (branchId: number, searchQuery?: string) => {
   (string | number | undefined)[],
   number | undefined
 >({
-    queryKey: ["employees", branchId, searchQuery],
+    queryKey: ["employees", branchId, searchQuery, activeFilter],
     queryFn: ({ pageParam }) =>
-      getEmployeesByBranch(branchId, pageParam, 10, searchQuery),
+      getEmployeesByBranch(branchId, pageParam, 10, searchQuery, activeFilter),
     initialPageParam: undefined,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     staleTime: 1000 * 60 * 3,
