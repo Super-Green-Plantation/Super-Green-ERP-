@@ -39,6 +39,7 @@ const UserListPage = () => {
   const [isUpdating, setIsUpdating] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const ITEMS_PER_PAGE = 10;
 
   if (isLoading) return <Loading />
@@ -70,6 +71,9 @@ const UserListPage = () => {
 
   const normalizedQuery = searchQuery.trim().toLowerCase();
   const filteredUsers = users.filter((user) => {
+    const matchesStatus = statusFilter === 'all' ||
+      (statusFilter === 'active' ? user.status : !user.status);
+    if (!matchesStatus) return false;
     if (!normalizedQuery) return true;
     const branch = user.member?.branches?.[0]?.branch;
     return [user.name, user.email, user.role, branch?.name, branch?.location]
@@ -96,16 +100,28 @@ const UserListPage = () => {
         <div className="col-span-2 rounded-lg border border-border/70 bg-card px-3 py-2.5 shadow-sm lg:col-span-1"><p className="text-[9px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Inactive access</p><p className="mt-1 text-base font-black text-muted-foreground tabular-nums">{inactiveUsers}</p></div>
       </div>
 
-      <div className="flex items-center gap-2 rounded-xl border border-border/70 bg-card/70 px-3 py-2 shadow-sm focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/10">
-        <Search size={15} className="shrink-0 text-muted-foreground" />
-        <input
-          value={searchQuery}
-          onChange={(event) => { setSearchQuery(event.target.value); setCurrentPage(1); }}
-          placeholder="Search by name, email, role, branch, or location"
-          className="w-full bg-transparent text-xs font-medium text-foreground outline-none placeholder:text-muted-foreground/70"
-          aria-label="Search users"
-        />
-        {searchQuery && <button onClick={() => { setSearchQuery(''); setCurrentPage(1); }} className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground">Clear</button>}
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border/70 bg-card/70 px-3 py-2 shadow-sm focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/10">
+        <div className="flex min-w-[220px] flex-1 items-center gap-2">
+          <Search size={15} className="shrink-0 text-muted-foreground" />
+          <input
+            value={searchQuery}
+            onChange={(event) => { setSearchQuery(event.target.value); setCurrentPage(1); }}
+            placeholder="Search by name, email, role, branch, or location"
+            className="w-full bg-transparent text-xs font-medium text-foreground outline-none placeholder:text-muted-foreground/70"
+            aria-label="Search users"
+          />
+          {searchQuery && <button onClick={() => { setSearchQuery(''); setCurrentPage(1); }} className="shrink-0 text-[10px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground">Clear</button>}
+        </div>
+        <select
+          aria-label="Filter users by status"
+          value={statusFilter}
+          onChange={(event) => { setStatusFilter(event.target.value as 'all' | 'active' | 'inactive'); setCurrentPage(1); }}
+          className="shrink-0 rounded-lg border border-border bg-card px-3 py-2 text-xs font-semibold text-foreground outline-none focus:border-primary/50"
+        >
+          <option value="all">All users</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
       </div>
 
       <div className="overflow-hidden rounded-xl border border-border/70 bg-card shadow-sm">
