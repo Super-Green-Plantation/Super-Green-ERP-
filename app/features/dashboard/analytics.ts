@@ -474,14 +474,19 @@ export async function getBranchKPIs(year: number, month: number): Promise<Branch
             },
           },
         },
-      }
+      },
+      monthlyTargets: {
+        where: { year, month },
+        select: { target: true },
+        take: 1,
+      },
     },
     orderBy: { name: "asc" },
   });
 
   return branches.map(b => {
     const investmentTotal = b.investments.reduce((s, i) => s + i.amount, 0);
-    const target = b.members.reduce(
+    const calculatedTarget = b.members.reduce(
       (sum, assignment) => {
         const member = assignment.member;
         if (!member.isActive || !member.position || !["BM", "JBM", "SBM"].includes(member.position.title)) {
@@ -491,6 +496,7 @@ export async function getBranchKPIs(year: number, month: number): Promise<Branch
       },
       0,
     );
+    const target = b.monthlyTargets[0]?.target ?? calculatedTarget;
     const achievementPercentage = target > 0
       ? parseFloat(((investmentTotal / target) * 100).toFixed(1))
       : 0;
@@ -506,6 +512,27 @@ export async function getBranchKPIs(year: number, month: number): Promise<Branch
       achievementPercentage,
     };
   });
+}
+
+export async function updateBranchMonthlyTarget(
+  branchId: number,
+  year: number,
+  month: number,
+  target: number,
+): Promise<{ success: true }> {
+  const user = await getCurrentUserWithRole();
+  if (!user || !SYSTEM_DASHBOARD_ROLES.has(user.role)) throw new Error("Unauthorized");
+  if (!Number.isInteger(branchId) || branchId <= 0 || !Number.isInteger(year) ||
+      !Number.isInteger(month) || month < 1 || month > 12 || !Number.isFinite(target) || target < 0) {
+    throw new Error("Invalid branch target");
+  }
+
+  await prisma.branchMonthlyTarget.upsert({
+    where: { branchId_year_month: { branchId, year, month } },
+    create: { branchId, year, month, target },
+    update: { target },
+  });
+  return { success: true };
 }
 
 export type ManagerDashboardStats = {

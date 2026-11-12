@@ -64,7 +64,7 @@ export const PrivilegedView = ({ data, userName, userRole, achieved, achievement
         </section>
       </div>
 
-      <section><div className="mb-3 flex items-end justify-between"><div><p className="saas-eyebrow">Performance</p><h2 className="mt-1 text-lg">Network performance</h2></div><span className="text-[10px] font-semibold text-muted-foreground">Updated just now</span></div><BranchKpiTable /></section>
+      <section><div className="mb-3 flex items-end justify-between"><div><p className="saas-eyebrow">Performance</p><h2 className="mt-1 text-lg">Network performance</h2></div><span className="text-[10px] font-semibold text-muted-foreground">Updated just now</span></div><BranchKpiTable editable /></section>
 
       <section><div className="mb-3"><p className="saas-eyebrow">Pipeline</p><h2 className="mt-1 text-lg">Maturity overview</h2></div>{maturityLoading || !maturityData ? <div className="saas-surface flex min-h-40 items-center justify-center rounded-2xl text-xs text-muted-foreground">Loading pipeline...</div> : <MaturityPipeline investments={maturityData} />}</section>
 

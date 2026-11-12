@@ -34,7 +34,21 @@ model Branch {
   investments               Investment[]
   members                   MemberBranch[]
   monthlyProposals          MonthlyProposal[]
+  monthlyTargets            BranchMonthlyTarget[]
   MonthlyProposalCommission MonthlyProposalCommission[]
+}
+
+model BranchMonthlyTarget {
+  id        Int      @id @default(autoincrement())
+  branchId  Int
+  year      Int
+  month     Int
+  target    Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  branch    Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@unique([branchId, year, month])
 }
 
 model Zone {

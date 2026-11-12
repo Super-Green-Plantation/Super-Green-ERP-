@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   const employees = await prisma.member.findMany({
-    where: { dob: { not: null } },
+    where: { dob: { not: null }, isActive: true },
     select: {
       nameWithInitials: true,
       dob: true,

@@ -1,15 +1,41 @@
 "use client";
 
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useBranchKpis } from "@/app/hooks/useBranchKpis";
+import { updateBranchMonthlyTarget } from "@/app/features/dashboard/analytics";
 import { getRecentMonthOptions } from "@/lib/monthOptions";
-import { ArrowDown, ArrowUp, Trophy } from "lucide-react";
+import { ArrowDown, ArrowUp, Check, Pencil, Trophy, X } from "lucide-react";
 import type { BranchKpi } from "@/app/features/dashboard/analytics";
 
-export const BranchKpiTable = () => {
+export const BranchKpiTable = ({ editable = false }: { editable?: boolean }) => {
   const now = new Date();
   const [selectedPeriod, setSelectedPeriod] = useState({ year: now.getFullYear(), month: now.getMonth() + 1 });
-  const { data, isLoading } = useBranchKpis(selectedPeriod.year, selectedPeriod.month);
+  const { data, isLoading, isError, error } = useBranchKpis(selectedPeriod.year, selectedPeriod.month);
+  const queryClient = useQueryClient();
+  const [editingBranchId, setEditingBranchId] = useState<number | null>(null);
+  const [targetDraft, setTargetDraft] = useState("");
+  const [savingTarget, setSavingTarget] = useState(false);
+  const [targetError, setTargetError] = useState("");
+
+  const saveTarget = async (branchId: number) => {
+    const target = Number(targetDraft);
+    if (!Number.isFinite(target) || target < 0) {
+      setTargetError("Enter a valid non-negative target.");
+      return;
+    }
+    setSavingTarget(true);
+    setTargetError("");
+    try {
+      await updateBranchMonthlyTarget(branchId, selectedPeriod.year, selectedPeriod.month, target);
+      await queryClient.invalidateQueries({ queryKey: ["branch-kpis", selectedPeriod.year, selectedPeriod.month] });
+      setEditingBranchId(null);
+    } catch (error) {
+      setTargetError(error instanceof Error ? error.message : "Failed to save target.");
+    } finally {
+      setSavingTarget(false);
+    }
+  };
 
   const [sortConfig, setSortConfig] = useState<{ key: keyof BranchKpi; direction: "asc" | "desc" }>({
     key: "achievementPercentage",
@@ -110,6 +136,12 @@ export const BranchKpiTable = () => {
                   Loading branch data...
                 </td>
               </tr>
+            ) : isError ? (
+              <tr>
+                <td colSpan={6} className="px-4 py-8 text-center text-red-600 text-xs">
+                  Failed to load branch data: {error instanceof Error ? error.message : "Unknown error"}
+                </td>
+              </tr>
             ) : sortedData.length === 0 ? (
               <tr>
                 <td colSpan={6} className="px-4 py-8 text-center text-gray-500 text-xs">
@@ -134,7 +166,28 @@ export const BranchKpiTable = () => {
                       Rs. {branch.investmentTotal.toLocaleString()}
                     </td>
                     <td className="px-4 py-3 text-right text-xs text-gray-500 dark:text-gray-400">
-                      {branch.target > 0 ? `Rs. ${branch.target.toLocaleString()}` : "—"}
+                      {editingBranchId === branch.branchId ? (
+                        <div className="flex items-center justify-end gap-1">
+                          <input
+                            aria-label={`Target for ${branch.branchName}`}
+                            type="number"
+                            min="0"
+                            step="1000"
+                            autoFocus
+                            value={targetDraft}
+                            onChange={(event) => setTargetDraft(event.target.value)}
+                            onKeyDown={(event) => { if (event.key === "Enter") void saveTarget(branch.branchId); if (event.key === "Escape") setEditingBranchId(null); }}
+                            className="w-32 rounded border border-gray-300 bg-white px-2 py-1 text-right text-xs text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
+                          />
+                          <button type="button" aria-label="Save target" disabled={savingTarget} onClick={() => void saveTarget(branch.branchId)} className="rounded p-1 text-emerald-600 hover:bg-emerald-50 disabled:opacity-50"><Check className="h-4 w-4" /></button>
+                          <button type="button" aria-label="Cancel editing target" disabled={savingTarget} onClick={() => { setEditingBranchId(null); setTargetError(""); }} className="rounded p-1 text-gray-500 hover:bg-gray-100"><X className="h-4 w-4" /></button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-end gap-1">
+                          <span>{branch.target > 0 ? `Rs. ${branch.target.toLocaleString()}` : "—"}</span>
+                          {editable && <button type="button" aria-label={`Edit target for ${branch.branchName}`} onClick={() => { setEditingBranchId(branch.branchId); setTargetDraft(String(branch.target)); setTargetError(""); }} className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800"><Pencil className="h-3 w-3" /></button>}
+                        </div>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
@@ -158,6 +211,8 @@ export const BranchKpiTable = () => {
           </tbody>
         </table>
       </div>
+
+      {targetError && <p role="alert" className="mt-2 text-right text-xs text-red-600">{targetError}</p>}
 
       {/* Legend */}
       <div className="flex items-center gap-4 mt-4 pt-4 border-t border-gray-100 dark:border-gray-800">
