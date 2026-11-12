@@ -4,7 +4,7 @@ export async function GET() {
   const employees = await prisma.member.findMany({
     where: { dob: { not: null }, isActive: true },
     select: {
-      nameWithInitials: true,
+      nameWithInitials: true, 
       dob: true,
       phone: true,
       isActive: true,
