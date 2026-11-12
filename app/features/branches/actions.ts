@@ -43,9 +43,11 @@ export async function createBranch(data: { name: string; location: string; code?
 }
 
 // Get all branches with full details
-export async function getBranches() {
+export async function getBranches(activeOnly = false) {
   try {
     const branches = await prisma.branch.findMany({
+      ...(activeOnly ? { where: { status: "Active" as const } } : {}),
+      orderBy: { id: "asc" },
       include: {
         members: {
           select: {
@@ -108,6 +110,7 @@ export async function getBranchesByMemberId(memberId: number) {
   try {
     const memberBranches = await prisma.memberBranch.findMany({
       where: { memberId },
+      orderBy: { branch: { id: "asc" } },
       include: {
         branch: {
           include: {

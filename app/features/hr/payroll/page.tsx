@@ -79,7 +79,7 @@ export default function PayrollPage() {
 
   // Load branches once
   useEffect(() => {
-    getBranches().then((data: any[]) => {
+    getBranches(true).then((data: any[]) => {
       setBranches(data);
       if (data.length > 0) setSelectedBranchId(data[0].id);
     });
