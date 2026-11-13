@@ -54,7 +54,7 @@ export const CommissionLeaderboard = () => {
           <div className="flex flex-col gap-3">
             {data.map((entry, index) => (
               <div 
-                key={entry.empNo} 
+                key={entry.memberId}
                 className="flex items-center justify-between p-3 rounded-xl bg-[#FAFBF9] dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
               >
                 <div className="flex items-center gap-3">
@@ -71,8 +71,9 @@ export const CommissionLeaderboard = () => {
                   </div>
                 </div>
                 <div className="text-right shrink-0">
+                  <span className="block text-[9px] font-semibold uppercase tracking-wide text-gray-400">Achieved</span>
                   <span className="text-sm font-black text-[#0f5132] dark:text-[#4ade80]">
-                    Rs. {entry.total.toLocaleString()}
+                    Rs. {entry.achieved.toLocaleString()}
                   </span>
                 </div>
               </div>

@@ -614,41 +614,67 @@ export async function getManagerDashboardStats(): Promise<ManagerDashboardStats>
   };
 }
 
-// ─── Phase 4: Commission Leaderboard ─────────────────────────────────────────
+// ─── Phase 4: Achievement Leaderboard ────────────────────────────────────────
 
-export type LeaderboardEntry = {
-  empNo: string;
-  total: number;
-  member: { nameWithInitials: string | null; position: { title: string } } | null;
+export type AchievementLeaderboardEntry = {
+  memberId: number;
+  achieved: number;
+  member: { nameWithInitials: string | null; position: { title: string } | null } | null;
 };
 
-export async function getCommissionLeaderboard(
+export async function getAchievementLeaderboard(
   year: number,
   month: number,
   limit = 10
-): Promise<LeaderboardEntry[]> {
-  const results = await prisma.commission.groupBy({
-    by: ["memberEmpNo"],
-    where: { year, month, type: { in: ["PERSONAL", "EXCESS"] } },
-    _sum: { amount: true },
-    orderBy: { _sum: { amount: "desc" } },
-    take: limit,
-  });
+): Promise<AchievementLeaderboardEntry[]> {
+  const from = new Date(year, month - 1, 1);
+  const to = new Date(year, month, 1);
+  const safeLimit = Math.max(1, Math.min(Math.floor(limit), 100));
 
-  const empNos  = results.map(r => r.memberEmpNo);
-  const members = await prisma.member.findMany({
-    where:  { empNo: { in: empNos } },
-    select: {
-      empNo:            true,
-      nameWithInitials: true,
-      position:         { select: { title: true } },
+  type AchievementRow = {
+    memberId: number;
+    achieved: number;
+    nameWithInitials: string | null;
+    title: string | null;
+  };
+
+  // Credit each investment once to its explicitly assigned advisor, or to the
+  // closest-to-client hierarchy member when no advisor override is set.
+  const results = await prisma.$queryRaw<AchievementRow[]>`
+    WITH credited AS (
+      SELECT
+        COALESCE(i."advisorId", i."faId", i."fmId", i."bmId", i."rmId", i."zmId", i."agmId", i."ccoId") AS "memberId",
+        i."amount"
+      FROM "Investment" i
+      WHERE i."investmentDate" >= ${from}
+        AND i."investmentDate" < ${to}
+        AND i."approvalStatus" = 'APPROVED'
+        AND i."status" = 'Active'
+    ), totals AS (
+      SELECT c."memberId", SUM(c."amount") AS "achieved"
+      FROM credited c
+      WHERE c."memberId" IS NOT NULL
+      GROUP BY c."memberId"
+    )
+    SELECT
+      t."memberId",
+      t."achieved"::double precision AS "achieved",
+      m."nameWithInitials",
+      p."title"::text AS "title"
+    FROM totals t
+    JOIN "Member" m ON m."id" = t."memberId"
+    LEFT JOIN "Position" p ON p."id" = m."positionId"
+    ORDER BY t."achieved" DESC
+    LIMIT ${safeLimit}
+  `;
+
+  return results.map(row => ({
+    memberId: row.memberId,
+    achieved: Number(row.achieved),
+    member: {
+      nameWithInitials: row.nameWithInitials,
+      position: row.title ? { title: row.title } : null,
     },
-  });
-
-  return results.map(r => ({
-    empNo:  r.memberEmpNo,
-    total:  r._sum.amount ?? 0,
-    member: members.find(m => m.empNo === r.memberEmpNo) ?? null,
   }));
 }
 
