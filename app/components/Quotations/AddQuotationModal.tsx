@@ -260,11 +260,9 @@ const AddQuotationModal = ({ isOpen, onClose }: AddQuotationModalProps) => {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6 overflow-y-auto"
-      onClick={onClose}
     >
       <div
         className="w-full max-w-2xl bg-card rounded-2xl shadow-2xl overflow-hidden relative animate-in fade-in zoom-in duration-200 my-auto"
-        onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="p-6 border-b bg-muted/30 flex justify-between items-center">
@@ -272,7 +270,12 @@ const AddQuotationModal = ({ isOpen, onClose }: AddQuotationModalProps) => {
             <h2 className="text-lg font-semibold text-card-foreground">New Quotation</h2>
             <p className="text-sm text-muted-foreground">Generate a plan quotation for a client</p>
           </div>
-          <button onClick={onClose} className="text-muted-foreground/70 hover:text-muted-foreground text-2xl">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close modal"
+            className="text-muted-foreground/70 hover:text-muted-foreground text-2xl"
+          >
             ×
           </button>
         </div>
