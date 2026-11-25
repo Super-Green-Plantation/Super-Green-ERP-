@@ -4,7 +4,7 @@ import { logout } from "@/app/auth/logout/action";
 import {
     BanknoteArrowUp, CalendarClock, Calculator, ChevronLeft, ChevronRight,
 
-  CircleUserRound, IdCardLanyard, Landmark, LayoutDashboard,
+  CircleUserRound, History, IdCardLanyard, Landmark, LayoutDashboard,
   LogOut, Menu, Nfc, Package, Percent, ReceiptText, Target, User, Users, Wallet,
 } from "lucide-react";
 import Image from "next/image";
@@ -44,13 +44,14 @@ const links: NavItem[] = [
   { name: "Accounts", href: "/features/accounts", icon: Wallet, role: ["ADMIN", "HR", "DEV", "ACC", "CHAIRMAN"] },
   { name: "Commissions", href: "/features/commissions", icon: Percent, role: ["ADMIN", "HR", "DEV"] },
   { name: "Users", href: "/features/users", icon: User, role: ["ADMIN", "HR", "DEV"] },
+  { name: "Activity Log", href: "/features/activity-logs", icon: History, role: ["ADMIN", "HR", "DEV"] },
   { name: "Profile", href: "/features/profile", icon: CircleUserRound, role: ["ADMIN", "EMPLOYEE", "HR", "DEV", "BRANCH_MANAGER", "REGIONAL_MANAGER", "ZONAL_MANAGER", "AGM"] },
 ];
 
 const groups = [
   { label: "Workspace", items: ["Dashboard", "Employee", "Clients", "Investments", "Monthly Proposals", "Financial Plans", "Quotations", "Calculations"] },
   { label: "Operations", items: ["Inventory", "Targets", "Payroll", "Accounts", "Commissions"] },
-  { label: "Administration", items: ["Users", "Profile"] },
+  { label: "Administration", items: ["Users", "Activity Log", "Profile"] },
 ];
 
 const MOBILE_BREAKPOINT = 768;
@@ -125,30 +126,37 @@ const Sidebar = ({ role, loading, isCollapsed, setIsCollapsed, onNavigate }: Sid
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         className={`fixed left-0 top-0 z-50 flex h-screen flex-col overflow-y-auto border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-all duration-300 ${isCollapsed ? "-translate-x-full md:translate-x-0 md:w-[76px]" : "translate-x-0 md:w-[248px]"} w-[270px]`}
       >
-        <div className={`relative flex h-[72px] shrink-0 items-center border-b border-sidebar-border px-5 ${showLabels ? "justify-between" : "justify-center"}`}>
+        <div className={`relative flex h-[72px] shrink-0 items-center border-b border-sidebar-border ${showLabels ? "justify-between px-5" : "justify-center px-0"}`}>
           {showLabels ? (
-            <Link href="/features/dashboard" className="flex items-center gap-2.5" onClick={onNavigate}>
-              <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-primary shadow-lg shadow-primary/20">
-                <Image src="/logo.png" alt="SGP ERP" width={30} height={30} className="h-7 w-7 object-cover" />
-              </span>
-              <span className="leading-none">
-                <span className="block text-[15px] font-bold tracking-tight text-foreground">SGP ERP</span>
-                <span className="mt-1 block text-[9px] font-semibold uppercase tracking-[0.17em] text-muted-foreground">Workspace</span>
-              </span>
-            </Link>
+            <>
+              <Link href="/features/dashboard" className="flex items-center gap-2.5" onClick={onNavigate}>
+                <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-primary shadow-lg shadow-primary/20">
+                  <Image src="/logo.png" alt="SGP ERP" width={30} height={30} className="h-7 w-7 object-cover" />
+                </span>
+                <span className="leading-none">
+                  <span className="block text-[15px] font-bold tracking-tight text-foreground">SGP ERP</span>
+                  <span className="mt-1 block text-[9px] font-semibold uppercase tracking-[0.17em] text-muted-foreground">Workspace</span>
+                </span>
+              </Link>
+              <button
+                onClick={() => setIsCollapsed(!isCollapsed)}
+                aria-label="Collapse sidebar"
+                title="Collapse sidebar"
+                className="rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
+              >
+                <ChevronLeft size={17} />
+              </button>
+            </>
           ) : (
-            <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl bg-primary shadow-lg shadow-primary/20">
-              <Image src="/logo.png" alt="SGP ERP" width={30} height={30} className="h-7 w-7 object-cover" />
-            </span>
+            <button
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              aria-label="Expand sidebar"
+              title="Expand sidebar"
+              className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
+            >
+              <ChevronRight size={18} />
+            </button>
           )}
-          <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            className={`rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground ${isCollapsed ? "absolute right-2 top-1/2 hidden -translate-y-1/2 md:block" : ""}`}
-          >
-            {isCollapsed ? <ChevronRight size={17} /> : <ChevronLeft size={17} />}
-          </button>
         </div>
 
         <nav className="flex-1 px-3 py-5">

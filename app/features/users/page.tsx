@@ -1,6 +1,7 @@
 "use client";
 
 import Heading from '@/app/components/Heading';
+import AdministrationTabs from '../AdministrationTabs';
 import Error from '@/app/components/Status/Error';
 import Loading from '@/app/components/Status/Loading';
 import { useUsers } from '@/app/hooks/useUsers';
@@ -86,7 +87,9 @@ const UserListPage = () => {
   const paginatedUsers = filteredUsers.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   return (
-    <div className="min-h-screen w-full space-y-4 px-3 pb-8 pt-4 sm:px-5 lg:px-7">
+    <div className="min-h-screen w-full flex flex-col bg-background">
+      <AdministrationTabs />
+      <div className="space-y-4 px-3 pb-8 pt-4 sm:px-5 lg:px-7">
       <div className="border-b border-border/70 pb-4">
         <Heading>
           Access Control
@@ -242,6 +245,7 @@ const UserListPage = () => {
           </div>
         )}
       </div>
+    </div>
     </div>
   );
 };
