@@ -157,10 +157,10 @@ export default function AccountsView() {
   const isPositive = netCashflow >= 0;
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode; amount: number; color: string }[] = [
-    { id: "investments", label: "Income", icon: <ArrowDownLeft className="h-3.5 w-3.5" />, amount: investmentTotal, color: "text-emerald-600" },
-    { id: "harvest", label: "Harvest", icon: <Leaf className="h-3.5 w-3.5" />, amount: harvestTotal, color: "text-amber-600" },
-    { id: "payroll", label: "Payroll", icon: <Users className="h-3.5 w-3.5" />, amount: payrollTotal, color: "text-blue-600" },
-    { id: "expenses", label: "Expenses", icon: <ReceiptText className="h-3.5 w-3.5" />, amount: expenseTotal, color: "text-red-500" },
+    { id: "investments", label: "Income", icon: <ArrowDownLeft className="h-3.5 w-3.5" />, amount: investmentTotal, color: "text-emerald-600 dark:text-emerald-400" },
+    { id: "harvest", label: "Harvest", icon: <Leaf className="h-3.5 w-3.5" />, amount: harvestTotal, color: "text-amber-600 dark:text-amber-400" },
+    { id: "payroll", label: "Payroll", icon: <Users className="h-3.5 w-3.5" />, amount: payrollTotal, color: "text-blue-600 dark:text-blue-400" },
+    { id: "expenses", label: "Expenses", icon: <ReceiptText className="h-3.5 w-3.5" />, amount: expenseTotal, color: "text-red-500 dark:text-red-400" },
   ];
 
   const handleDeleteConfirm = async () => {
@@ -178,14 +178,18 @@ export default function AccountsView() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-50 pb-12 text-slate-900">
+    <main className="min-h-screen bg-background pb-12 text-foreground">
       {/* ── Hero ── */}
-      <div className="relative mx-auto max-w-7xl overflow-hidden bg-slate-950 px-5 pb-8 pt-7 sm:px-8 sm:pt-8 lg:mt-6 lg:rounded-2xl lg:shadow-xl">
+      <div className="relative mx-auto max-w-7xl overflow-hidden bg-slate-950 px-5 pb-8 pt-7 sm:px-8 sm:pt-8 lg:mt-6 lg:rounded-2xl lg:shadow-xl dark:border dark:border-border/70">
         <div className="pointer-events-none absolute -top-16 -right-16 h-56 w-56 rounded-full border border-white/5" />
         <div className="pointer-events-none absolute -top-8 -right-8 h-36 w-36 rounded-full border border-white/5" />
 
         <div className="relative z-10 flex items-center justify-between">
-            <div><p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-400">FINANCE · OVERVIEW</p><h1 className="text-xl font-semibold tracking-tight text-white sm:text-2xl">Accounts Overview</h1><p className="mt-1 text-xs text-slate-400">Monitor income, operating costs, and cash flow.</p></div>
+          <div>
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-400">FINANCE · OVERVIEW</p>
+            <h1 className="text-xl font-semibold tracking-tight text-white sm:text-2xl">Accounts Overview</h1>
+            <p className="mt-1 text-xs text-slate-400">Monitor income, operating costs, and cash flow.</p>
+          </div>
           <label className="relative inline-flex cursor-pointer items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-xs text-slate-200 transition hover:bg-white/10 focus-within:ring-2 focus-within:ring-emerald-400/70">
             <CalendarDays aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-emerald-300" />
             <span aria-hidden="true" className="font-medium">{monthLabel(globalPeriod)}</span>
@@ -227,13 +231,13 @@ export default function AccountsView() {
 
       {/* ── Stats / Tab Strip ── */}
       <div className="relative z-20 mx-auto -mt-3 max-w-7xl px-4 sm:px-8">
-        <div className="grid grid-cols-2 gap-2 rounded-xl border border-slate-200 bg-white p-2 shadow-sm sm:grid-cols-4 sm:gap-3 sm:p-3">
+        <div className="grid grid-cols-2 gap-2 rounded-xl border border-slate-200 bg-white p-2 shadow-sm sm:grid-cols-4 sm:gap-3 sm:p-3 dark:border-border dark:bg-card">
           {tabs.map((t) => (
             <button key={t.id} onClick={() => setTab(t.id)}
-              className={`flex min-h-[88px] flex-col items-center justify-center gap-1.5 rounded-lg px-2 py-3 transition-colors ${tab === t.id ? "bg-slate-100 ring-1 ring-slate-200" : "hover:bg-slate-50"}`} >
+              className={`flex min-h-[88px] flex-col items-center justify-center gap-1.5 rounded-lg px-2 py-3 transition-colors ${tab === t.id ? "bg-slate-100 ring-1 ring-slate-200 dark:bg-muted dark:ring-border" : "hover:bg-slate-50 dark:hover:bg-muted/50"}`} >
               <span className={`${t.color} ${tab === t.id ? "opacity-100" : "opacity-60"}`}>{t.icon}</span>
-              <span className={`text-[10px] font-medium ${tab === t.id ? "text-gray-800" : "text-gray-400"}`}>{t.label}</span>
-              <span className={`text-[11px] font-bold ${tab === t.id ? t.color : "text-gray-500"}`}>
+              <span className={`text-[10px] font-medium ${tab === t.id ? "text-slate-800 dark:text-foreground font-semibold" : "text-muted-foreground"}`}>{t.label}</span>
+              <span className={`text-[11px] font-bold ${tab === t.id ? t.color : "text-muted-foreground"}`}>
                 {loading ? "…" : fmt(t.amount)}
               </span>
             </button>
@@ -243,9 +247,9 @@ export default function AccountsView() {
 
       {/* ── Add Expense button (expenses tab only) ── */}
       {tab === "expenses" && (
-        <div className="px-4 mt-4 flex justify-end">
+        <div className="mx-auto max-w-7xl px-4 sm:px-8 mt-4 flex justify-end">
           <button onClick={() => setModal({ mode: "create" })}
-            className="flex items-center gap-2 rounded-full bg-[#24b47e] px-4 py-2 text-sm font-semibold text-white shadow-md hover:bg-[#1d9a6b] active:scale-95 transition-all">
+            className="flex items-center gap-2 rounded-full bg-[#24b47e] dark:bg-primary px-4 py-2 text-sm font-semibold text-white dark:text-primary-foreground shadow-md hover:bg-[#1d9a6b] dark:hover:bg-primary/90 active:scale-95 transition-all">
             <Plus className="h-4 w-4" />
             Add Expense
           </button>
@@ -253,15 +257,15 @@ export default function AccountsView() {
       )}
 
       {/* ── Transaction Panel ── */}
-        <div className="mx-auto mt-5 max-w-7xl px-4 sm:px-8">
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <div className="mx-auto mt-5 max-w-7xl px-4 sm:px-8">
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
           {/* Panel header */}
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4 sm:px-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4 sm:px-6 dark:border-border">
             <div className="flex items-center gap-2">
               <span className={tabs.find((t) => t.id === tab)?.color}>
                 {tabs.find((t) => t.id === tab)?.icon}
               </span>
-              <span className="text-sm font-semibold text-slate-900">
+              <span className="text-sm font-semibold text-slate-900 dark:text-foreground">
                 {tab === "investments" && "Incoming Investments"}
                 {tab === "harvest" && "Monthly Harvest"}
                 {tab === "payroll" && "Salaries & Commissions"}
@@ -273,21 +277,21 @@ export default function AccountsView() {
               <div className="flex items-center gap-1 flex-wrap justify-end">
                 {(["day", "week", "month", "alltime"] as const).map((tf) => (
                   <button key={tf} onClick={() => setTimeframe(tf)}
-                    className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${timeframe === tf ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-100"}`}>
+                    className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${timeframe === tf ? "bg-slate-900 text-white dark:bg-primary dark:text-primary-foreground" : "text-slate-600 hover:bg-slate-100 dark:text-muted-foreground dark:hover:bg-muted dark:hover:text-foreground"}`}>
                     {tf === "alltime" ? "All" : tf.charAt(0).toUpperCase() + tf.slice(1)}
                   </button>
                 ))}
                 {timeframe === "day" && (
                   <input type="date" value={dateStr} onChange={(e) => setDateStr(e.target.value)}
-                    className="ml-1 rounded-full border border-gray-200 bg-gray-50 px-2 py-1 text-[11px] outline-none" />
+                    className="ml-1 rounded-lg border border-gray-200 bg-gray-50 px-2 py-1 text-[11px] outline-none dark:border-border dark:bg-background dark:text-foreground" />
                 )}
                 {timeframe === "week" && (
                   <input type="week" value={weekStr} onChange={(e) => setWeekStr(e.target.value)}
-                    className="ml-1 rounded-full border border-gray-200 bg-gray-50 px-2 py-1 text-[11px] outline-none" />
+                    className="ml-1 rounded-lg border border-gray-200 bg-gray-50 px-2 py-1 text-[11px] outline-none dark:border-border dark:bg-background dark:text-foreground" />
                 )}
                 {timeframe === "month" && (
                   <input type="month" value={expensePeriodStr} onChange={(e) => setExpensePeriodStr(e.target.value)}
-                    className="ml-1 rounded-full border border-gray-200 bg-gray-50 px-2 py-1 text-[11px] outline-none" />
+                    className="ml-1 rounded-lg border border-gray-200 bg-gray-50 px-2 py-1 text-[11px] outline-none dark:border-border dark:bg-background dark:text-foreground" />
                 )}
               </div>
             )}
@@ -296,11 +300,11 @@ export default function AccountsView() {
           {/* Body */}
           {loading ? (
             <div className="py-16 text-center">
-              <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-[#24b47e] border-t-transparent" />
-              <p className="mt-3 text-xs text-gray-400">Loading data…</p>
+              <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-[#24b47e] dark:border-primary border-t-transparent" />
+              <p className="mt-3 text-xs text-gray-400 dark:text-muted-foreground">Loading data…</p>
             </div>
           ) : error ? (
-            <div className="m-4 rounded-xl bg-red-50 border border-red-100 p-4 text-sm text-red-600">{error}</div>
+            <div className="m-4 rounded-xl bg-red-50 border border-red-100 p-4 text-sm text-red-600 dark:bg-red-950/40 dark:border-red-900/50 dark:text-red-400">{error}</div>
           ) : (
             <>
               {tab === "investments" && <InvestmentsList rows={investments} total={investmentTotal} />}
@@ -332,25 +336,25 @@ export default function AccountsView() {
 
       {/* ── Delete Confirm Sheet ── */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-          <div className="w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-border dark:bg-card">
             <div className="px-5 py-5">
-              <div className="flex items-center justify-center h-12 w-12 rounded-full bg-red-50 mx-auto mb-4">
-                <Trash2 className="h-5 w-5 text-red-500" />
+              <div className="flex items-center justify-center h-12 w-12 rounded-full bg-red-50 dark:bg-red-950/50 mx-auto mb-4">
+                <Trash2 className="h-5 w-5 text-red-500 dark:text-red-400" />
               </div>
-              <h3 className="text-center text-base font-bold text-gray-900 mb-1">Delete Expense?</h3>
-              <p className="text-center text-sm text-gray-500 mb-1">
-                <span className="font-medium text-gray-700">{deleteTarget.category}</span>
+              <h3 className="text-center text-base font-bold text-gray-900 dark:text-foreground mb-1">Delete Expense?</h3>
+              <p className="text-center text-sm text-gray-500 dark:text-muted-foreground mb-1">
+                <span className="font-medium text-gray-700 dark:text-foreground">{deleteTarget.category}</span>
                 {deleteTarget.description ? ` — ${deleteTarget.description}` : ""}
               </p>
-              <p className="text-center text-sm font-semibold text-red-500 mb-5">{fmtFull(deleteTarget.amount)}</p>
+              <p className="text-center text-sm font-semibold text-red-500 dark:text-red-400 mb-5">{fmtFull(deleteTarget.amount)}</p>
               <div className="flex gap-2">
                 <button onClick={() => setDeleteTarget(null)} disabled={deleting}
-                  className="flex-1 rounded-xl border border-gray-200 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2">
+                  className="flex-1 rounded-xl border border-gray-200 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-border dark:text-muted-foreground dark:hover:bg-muted dark:hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2">
                   Cancel
                 </button>
                 <button onClick={handleDeleteConfirm} disabled={deleting}
-                  className="flex-1 rounded-xl bg-red-500 py-2.5 text-sm font-semibold text-white hover:bg-red-600 disabled:opacity-60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2">
+                  className="flex-1 rounded-xl bg-red-500 py-2.5 text-sm font-semibold text-white hover:bg-red-600 dark:bg-destructive dark:hover:bg-destructive/90 disabled:opacity-60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2">
                   {deleting ? "Deleting…" : "Delete"}
                 </button>
               </div>
@@ -364,17 +368,17 @@ export default function AccountsView() {
 
 /* ─── Shared helpers ──────────────────────────────────────── */
 
-function TotalRow({ label, value, color = "text-gray-800" }: { label: string; value: number; color?: string }) {
+function TotalRow({ label, value, color = "text-gray-800 dark:text-foreground" }: { label: string; value: number; color?: string }) {
   return (
-    <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-5 py-4 sm:px-6">
-      <span className="text-xs font-medium text-gray-500">{label}</span>
+    <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-5 py-4 sm:px-6 dark:border-border dark:bg-muted/40">
+      <span className="text-xs font-medium text-gray-500 dark:text-muted-foreground">{label}</span>
       <span className={`text-sm font-bold ${color}`}>{fmtFull(value)}</span>
     </div>
   );
 }
 
 function EmptyState({ message }: { message: string }) {
-  return <div className="py-16 text-center"><p className="text-sm text-slate-500">{message}</p></div>;
+  return <div className="py-16 text-center"><p className="text-sm text-slate-500 dark:text-muted-foreground">{message}</p></div>;
 }
 
 /* ─── Tab panels ──────────────────────────────────────────── */
@@ -383,24 +387,24 @@ function InvestmentsList({ rows, total }: { rows: Investment[]; total: number })
   if (!rows.length) return <EmptyState message="No investments received this period." />;
   return (
     <div>
-      <div className="divide-y divide-slate-100">
+      <div className="divide-y divide-slate-100 dark:divide-border">
         {rows.map((row) => (
-          <div key={row.id} className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-slate-50 sm:px-6">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-50">
-              <Landmark className="h-4 w-4 text-emerald-600" />
+          <div key={row.id} className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-slate-50 dark:hover:bg-muted/40 sm:px-6">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/40">
+              <Landmark className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-gray-800">{row.clientName}</p>
-              <p className="text-xs text-gray-400">{row.plan}</p>
+              <p className="truncate text-sm font-medium text-gray-800 dark:text-foreground">{row.clientName}</p>
+              <p className="text-xs text-gray-400 dark:text-muted-foreground">{row.plan}</p>
             </div>
             <div className="text-right shrink-0">
-              <p className="text-sm font-semibold text-emerald-600">+{fmtFull(row.amount)}</p>
-              <p className="text-[11px] text-gray-400">{fmtShort(row.receivedAt)}</p>
+              <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">+{fmtFull(row.amount)}</p>
+              <p className="text-[11px] text-gray-400 dark:text-muted-foreground">{fmtShort(row.receivedAt)}</p>
             </div>
           </div>
         ))}
       </div>
-      <TotalRow label="Total received" value={total} color="text-emerald-600" />
+      <TotalRow label="Total received" value={total} color="text-emerald-600 dark:text-emerald-400" />
     </div>
   );
 }
@@ -413,23 +417,23 @@ function HarvestList({ weeks, total }: { weeks: { week: number; rows: Harvest[] 
       {weeks.map(({ week, rows }) =>
         rows.length === 0 ? null : (
           <div key={week}>
-            <div className="flex items-center justify-between border-y border-slate-100 bg-slate-50 px-5 py-2.5 sm:px-6">
-              <span className="text-[11px] font-semibold text-amber-700 tracking-wide">WEEK {week}</span>
-              <span className="text-[11px] text-amber-500">{rows.length} payments · {fmt(rows.reduce((s, r) => s + r.amount, 0))}</span>
+            <div className="flex items-center justify-between border-y border-slate-100 bg-slate-50 px-5 py-2.5 sm:px-6 dark:border-border dark:bg-muted/30">
+              <span className="text-[11px] font-semibold text-amber-700 dark:text-amber-400 tracking-wide">WEEK {week}</span>
+              <span className="text-[11px] text-amber-600/80 dark:text-amber-400/80">{rows.length} payments · {fmt(rows.reduce((s, r) => s + r.amount, 0))}</span>
             </div>
-            <div className="divide-y divide-slate-100">
+            <div className="divide-y divide-slate-100 dark:divide-border">
               {rows.map((row) => (
-                <div key={row.id} className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-slate-50 sm:px-6">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-50">
-                    <Leaf className="h-4 w-4 text-amber-600" />
+                <div key={row.id} className="flex items-center gap-4 px-5 py-4 transition-colors hover:bg-slate-50 dark:hover:bg-muted/40 sm:px-6">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-50 dark:bg-amber-950/40">
+                    <Leaf className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-gray-800">{row.clientName}</p>
-                    <p className="text-xs text-gray-400">{row.plan}</p>
+                    <p className="truncate text-sm font-medium text-gray-800 dark:text-foreground">{row.clientName}</p>
+                    <p className="text-xs text-gray-400 dark:text-muted-foreground">{row.plan}</p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-sm font-semibold text-amber-700">{fmtFull(row.amount)}</p>
-                    <p className="text-[11px] text-gray-400">{fmtShort(row.paymentDate)}</p>
+                    <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">{fmtFull(row.amount)}</p>
+                    <p className="text-[11px] text-gray-400 dark:text-muted-foreground">{fmtShort(row.paymentDate)}</p>
                   </div>
                 </div>
               ))}
@@ -437,39 +441,39 @@ function HarvestList({ weeks, total }: { weeks: { week: number; rows: Harvest[] 
           </div>
         )
       )}
-      <TotalRow label="Total harvest due" value={total} color="text-amber-700" />
+      <TotalRow label="Total harvest due" value={total} color="text-amber-700 dark:text-amber-400" />
     </div>
   );
 }
 
 function PayrollBreakdown({ payroll }: { payroll: Payroll }) {
   const items = [
-    { label: "Gross payroll cost", value: payroll.payrollGross, icon: <Users className="h-4 w-4 text-blue-500" /> },
-    { label: "Net pay to employees", value: payroll.payrollNet, icon: <Wallet className="h-4 w-4 text-blue-400" /> },
-    { label: "Total commissions", value: payroll.commissionTotal, icon: <TrendingUp className="h-4 w-4 text-indigo-500" /> },
+    { label: "Gross payroll cost", value: payroll.payrollGross, icon: <Users className="h-4 w-4 text-blue-500 dark:text-blue-400" /> },
+    { label: "Net pay to employees", value: payroll.payrollNet, icon: <Wallet className="h-4 w-4 text-blue-400 dark:text-blue-300" /> },
+    { label: "Total commissions", value: payroll.commissionTotal, icon: <TrendingUp className="h-4 w-4 text-indigo-500 dark:text-indigo-400" /> },
   ];
   return (
     <div>
-      <div className="divide-y divide-slate-100">
+      <div className="divide-y divide-slate-100 dark:divide-border">
         {items.map((item) => (
-          <div key={item.label} className="flex items-center gap-3 px-3 py-2.5">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-50">{item.icon}</div>
-            <span className="flex-1 text-sm text-gray-700">{item.label}</span>
-            <span className="text-sm font-semibold text-slate-900">{fmtFull(item.value)}</span>
+          <div key={item.label} className="flex items-center gap-3 px-5 py-3 sm:px-6">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950/40">{item.icon}</div>
+            <span className="flex-1 text-sm text-gray-700 dark:text-foreground/90">{item.label}</span>
+            <span className="text-sm font-semibold text-slate-900 dark:text-foreground">{fmtFull(item.value)}</span>
           </div>
         ))}
       </div>
-      <div className="flex items-center gap-4 px-3 py-2.5 bg-gray-50 border-t border-gray-100">
+      <div className="flex items-center gap-4 px-5 py-2.5 sm:px-6 bg-gray-50 border-t border-gray-100 dark:bg-muted/40 dark:border-border">
         <div className="flex items-center gap-1.5">
-          <span className="text-xs text-gray-400">Payroll records:</span>
-          <span className="text-xs font-bold text-gray-600">{payroll.payrollCount}</span>
+          <span className="text-xs text-gray-400 dark:text-muted-foreground">Payroll records:</span>
+          <span className="text-xs font-bold text-gray-600 dark:text-foreground">{payroll.payrollCount}</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="text-xs text-gray-400">Commission records:</span>
-          <span className="text-xs font-bold text-gray-600">{payroll.commissionCount}</span>
+          <span className="text-xs text-gray-400 dark:text-muted-foreground">Commission records:</span>
+          <span className="text-xs font-bold text-gray-600 dark:text-foreground">{payroll.commissionCount}</span>
         </div>
       </div>
-      <TotalRow label="Total payroll outgoing" value={payroll.payrollGross + payroll.commissionTotal} color="text-blue-600" />
+      <TotalRow label="Total payroll outgoing" value={payroll.payrollGross + payroll.commissionTotal} color="text-blue-600 dark:text-blue-400" />
     </div>
   );
 }
@@ -493,47 +497,47 @@ function ExpensesList({
     <div>
       {Object.entries(grouped).map(([category, items]) => (
         <div key={category}>
-          <div className="flex items-center justify-between border-y border-slate-100 bg-slate-50 px-5 py-2.5 sm:px-6">
-            <span className="text-[11px] font-semibold text-red-600 tracking-wide uppercase">{category}</span>
-            <span className="text-[11px] text-red-400">{fmt(items.reduce((s, r) => s + r.amount, 0))}</span>
+          <div className="flex items-center justify-between border-y border-slate-100 bg-slate-50 px-5 py-2.5 sm:px-6 dark:border-border dark:bg-muted/30">
+            <span className="text-[11px] font-semibold text-red-600 dark:text-red-400 tracking-wide uppercase">{category}</span>
+            <span className="text-[11px] text-red-400 dark:text-red-400/80">{fmt(items.reduce((s, r) => s + r.amount, 0))}</span>
           </div>
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-slate-100 dark:divide-border">
             {items.map((row) => (
-              <div key={row.id} className="group flex items-center gap-4 px-5 py-4 transition-colors hover:bg-slate-50 sm:px-6">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red-50">
-                  <ReceiptText className="h-4 w-4 text-red-500" />
+              <div key={row.id} className="group flex items-center gap-4 px-5 py-4 transition-colors hover:bg-slate-50 dark:hover:bg-muted/40 sm:px-6">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-red-50 dark:bg-red-950/40">
+                  <ReceiptText className="h-4 w-4 text-red-500 dark:text-red-400" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-gray-800">{row.description || row.category}</p>
-                  <p className="text-[11px] text-gray-400">{row.createdBy}</p>
+                  <p className="text-sm font-medium text-gray-800 dark:text-foreground">{row.description || row.category}</p>
+                  <p className="text-[11px] text-gray-400 dark:text-muted-foreground">{row.createdBy}</p>
                 </div>
                 {/* Edit / Delete — visible on hover */}
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                   <button
                     onClick={() => onEdit(row)}
-                    className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-blue-50 transition-colors"
+                    className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-blue-50 dark:hover:bg-blue-950/50 transition-colors"
                     title="Edit expense"
                   >
-                    <Pencil className="h-3.5 w-3.5 text-blue-500" />
+                    <Pencil className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" />
                   </button>
                   <button
                     onClick={() => onDelete(row)}
-                    className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-red-50 transition-colors"
+                    className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-red-50 dark:hover:bg-red-950/50 transition-colors"
                     title="Delete expense"
                   >
-                    <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                    <Trash2 className="h-3.5 w-3.5 text-red-500 dark:text-red-400" />
                   </button>
                 </div>
                 <div className="text-right shrink-0 ml-1">
-                  <p className="text-sm font-semibold text-red-500">−{fmtFull(row.amount)}</p>
-                  <p className="text-[11px] text-gray-400">{fmtShort(row.date)}</p>
+                  <p className="text-sm font-semibold text-red-500 dark:text-red-400">−{fmtFull(row.amount)}</p>
+                  <p className="text-[11px] text-gray-400 dark:text-muted-foreground">{fmtShort(row.date)}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
       ))}
-      <TotalRow label="Total expenses" value={total} color="text-red-500" />
+      <TotalRow label="Total expenses" value={total} color="text-red-500 dark:text-red-400" />
     </div>
   );
 }
@@ -576,28 +580,28 @@ function CategoryInput({
         placeholder="e.g. Utility Bills, Travel"
         onFocus={() => setOpen(true)}
         onChange={(e) => { onChange(e.target.value); setOpen(true); }}
-        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15"
+        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15 dark:border-border dark:bg-background dark:text-foreground dark:placeholder:text-muted-foreground dark:focus:border-primary dark:focus:ring-primary/20"
       />
       {open && (filtered.length > 0 || isNew) && (
-        <div className="absolute z-10 mt-1 w-full rounded-xl border border-gray-200 bg-white shadow-lg overflow-hidden max-h-48 overflow-y-auto">
+        <div className="absolute z-10 mt-1 w-full rounded-xl border border-gray-200 bg-white shadow-lg overflow-hidden max-h-48 overflow-y-auto dark:border-border dark:bg-popover dark:text-popover-foreground">
           {filtered.map((cat) => (
             <button
               key={cat}
               type="button"
               onMouseDown={() => { onChange(cat); setOpen(false); }}
-              className={`w-full flex items-center justify-between px-3 py-2.5 text-left text-sm hover:bg-[#f0f4f2] transition-colors ${
-                cat.toLowerCase() === value.toLowerCase() ? "text-[#24b47e] font-medium" : "text-gray-700"
+              className={`w-full flex items-center justify-between px-3 py-2.5 text-left text-sm hover:bg-[#f0f4f2] dark:hover:bg-muted transition-colors ${
+                cat.toLowerCase() === value.toLowerCase() ? "text-[#24b47e] dark:text-primary font-medium" : "text-gray-700 dark:text-foreground"
               }`}
             >
               {cat}
-              {cat.toLowerCase() === value.toLowerCase() && <Check className="h-3.5 w-3.5 text-[#24b47e]" />}
+              {cat.toLowerCase() === value.toLowerCase() && <Check className="h-3.5 w-3.5 text-[#24b47e] dark:text-primary" />}
             </button>
           ))}
           {isNew && (
             <button
               type="button"
               onMouseDown={() => { setOpen(false); }}
-              className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-sm text-[#24b47e] font-medium hover:bg-emerald-50 border-t border-gray-100 transition-colors"
+              className="w-full flex items-center gap-2 px-3 py-2.5 text-left text-sm text-[#24b47e] dark:text-primary font-medium hover:bg-emerald-50 dark:hover:bg-primary/10 border-t border-gray-100 dark:border-border transition-colors"
             >
               <Plus className="h-3.5 w-3.5" />
               Create "{value.trim()}"
@@ -640,66 +644,66 @@ function ExpenseModal({ mode, initial, categories, onClose, onSuccess }: Expense
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm p-4">
-      <div className="w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-          <h2 className="text-base font-bold text-gray-900">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-border dark:bg-card">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-border">
+          <h2 className="text-base font-bold text-gray-900 dark:text-foreground">
             {mode === "edit" ? "Edit Expense" : "New Expense"}
           </h2>
-          <button onClick={onClose} className="rounded-full p-1.5 hover:bg-gray-100 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2">
-            <X className="h-4 w-4 text-gray-500" />
+          <button onClick={onClose} className="rounded-full p-1.5 hover:bg-gray-100 dark:hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2">
+            <X className="h-4 w-4 text-gray-500 dark:text-muted-foreground" />
           </button>
         </div>
 
         {error && (
-          <div className="mx-5 mt-4 rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-600">{error}</div>
+          <div className="mx-5 mt-4 rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-600 dark:bg-red-950/40 dark:border-red-900/50 dark:text-red-400">{error}</div>
         )}
 
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-gray-600">Date</label>
+              <label className="mb-1.5 block text-xs font-medium text-gray-600 dark:text-muted-foreground">Date</label>
               <input
                 required type="date" value={date} onChange={(e) => setDate(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15"
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15 dark:border-border dark:bg-background dark:text-foreground dark:focus:border-primary dark:focus:ring-primary/20"
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-medium text-gray-600">Amount (LKR)</label>
+              <label className="mb-1.5 block text-xs font-medium text-gray-600 dark:text-muted-foreground">Amount (LKR)</label>
               <input
                 required type="number" step="0.01" placeholder="0.00" value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15"
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15 dark:border-border dark:bg-background dark:text-foreground dark:focus:border-primary dark:focus:ring-primary/20"
               />
             </div>
           </div>
 
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-gray-600">
+            <label className="mb-1.5 block text-xs font-medium text-gray-600 dark:text-muted-foreground">
               Category
-              <span className="ml-1.5 text-gray-400 font-normal">— select or type a new one</span>
+              <span className="ml-1.5 text-gray-400 dark:text-muted-foreground/70 font-normal">— select or type a new one</span>
             </label>
             <CategoryInput value={category} onChange={setCategory} categories={categories} />
           </div>
 
           <div>
-            <label className="mb-1.5 block text-xs font-medium text-gray-600">
-              Description <span className="text-gray-400">(optional)</span>
+            <label className="mb-1.5 block text-xs font-medium text-gray-600 dark:text-muted-foreground">
+              Description <span className="text-gray-400 dark:text-muted-foreground/70">(optional)</span>
             </label>
             <input
               type="text" placeholder="Notes about this expense" value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15"
+              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15 dark:border-border dark:bg-background dark:text-foreground dark:focus:border-primary dark:focus:ring-primary/20"
             />
           </div>
 
           <div className="flex gap-2 pt-1">
             <button type="button" onClick={onClose} disabled={loading}
-              className="flex-1 rounded-xl border border-gray-200 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2">
+              className="flex-1 rounded-xl border border-gray-200 py-2.5 text-sm font-medium text-gray-600 hover:bg-gray-50 dark:border-border dark:text-muted-foreground dark:hover:bg-muted dark:hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2">
               Cancel
             </button>
             <button type="submit" disabled={loading}
-              className="flex-1 rounded-xl bg-[#24b47e] py-2.5 text-sm font-semibold text-white hover:bg-[#1d9a6b] disabled:opacity-60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2">
+              className="flex-1 rounded-xl bg-[#24b47e] dark:bg-primary py-2.5 text-sm font-semibold text-white dark:text-primary-foreground hover:bg-[#1d9a6b] dark:hover:bg-primary/90 disabled:opacity-60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2">
               {loading ? "Saving…" : mode === "edit" ? "Save Changes" : "Add Expense"}
             </button>
           </div>
